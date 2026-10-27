@@ -10,6 +10,7 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 use crate::codecs::{CodecError, parse_asm};
+use crate::{MapMetadata, discover_map};
 
 #[derive(Debug, Error)]
 pub enum ProjectError {
@@ -67,6 +68,7 @@ pub struct MapDocument {
     path: PathBuf,
     hash: [u8; 32],
     map: Map,
+    metadata: MapMetadata,
 }
 
 #[derive(Debug, Serialize)]
@@ -77,13 +79,23 @@ pub struct MapSummary<'a> {
     pub block_count: usize,
     pub modified: bool,
     pub content_hash: String,
+    pub metadata: &'a MapMetadata,
 }
 
 impl MapDocument {
     pub fn open(path: &Path, options: &OpenOptions) -> Result<Self, ProjectError> {
+        Self::open_in_project(path, options, None)
+    }
+
+    pub fn open_in_project(
+        path: &Path,
+        options: &OpenOptions,
+        root: Option<&Path>,
+    ) -> Result<Self, ProjectError> {
         let path = fs::canonicalize(path).map_err(|e| ProjectError::io(path, e))?;
         let bytes = read_bounded(&path, 4 * 1024 * 1024)?;
-        let dimensions = filename_dimensions(&path);
+        let metadata = discover_map(&path, root)?;
+        let dimensions = metadata.dimensions;
         let width = options
             .width
             .or(dimensions.map(|d| d.0))
@@ -108,6 +120,7 @@ impl MapDocument {
             hash: Sha256::digest(&bytes).into(),
             map: Map::from_bytes(width, height, blocks)?,
             path,
+            metadata,
         })
     }
     pub fn path(&self) -> &Path {
@@ -115,6 +128,9 @@ impl MapDocument {
     }
     pub fn map(&self) -> &Map {
         &self.map
+    }
+    pub fn metadata(&self) -> &MapMetadata {
+        &self.metadata
     }
     pub fn map_mut(&mut self) -> &mut Map {
         &mut self.map
@@ -127,6 +143,7 @@ impl MapDocument {
             block_count: self.map.blocks().len(),
             modified: self.map.is_modified(),
             content_hash: self.content_hash(),
+            metadata: &self.metadata,
         }
     }
     pub fn content_hash(&self) -> String {
@@ -203,17 +220,4 @@ pub fn read_bounded(path: &Path, limit: usize) -> Result<Vec<u8>, ProjectError> 
         });
     }
     Ok(bytes)
-}
-
-fn filename_dimensions(path: &Path) -> Option<(u16, u16)> {
-    let name = path.file_name()?.to_str()?;
-    for part in name.split('.') {
-        let Some((w, h)) = part.split_once('x') else {
-            continue;
-        };
-        if let (Ok(w), Ok(h)) = (w.parse(), h.parse()) {
-            return Some((w, h));
-        }
-    }
-    None
 }

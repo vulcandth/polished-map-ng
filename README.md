@@ -21,15 +21,18 @@ cargo run -p polished-map-gui --
 cargo run -p polished-map-cli -- --help
 ```
 
-The initial slice opens binary maps with explicit dimensions or names such as
-`Map.20x18.johto.blk`. The GUI asks for a project folder and tileset; the project
-adapter currently supports simple master tilesets with PNG/2bpp/LZ/CHR graphics,
-binary metatiles and tilepal palettes. Metadata discovery, compound graphics,
-roofs, collisions, events and specialist editors are not complete. Work on copies
+The initial slice opens binary maps using project metadata, explicit dimensions,
+or names such as `Map.20x18.johto.blk`. It finds the nearest Makefile and recognizes
+master map constants/headers and numbered tileset aliases. The GUI prefills these
+options for review. Shared block files still require explicit choices. The project
+adapter supports simple master tilesets with PNG/2bpp/LZ/CHR graphics, binary
+metatiles and tilepal palettes. Compound graphics, roofs, collisions, events and
+specialist editors are not complete. Work on copies
 while parity validation is incomplete.
 
 ```text
 cargo run -p polished-map-cli -- inspect path/to/Map.blk --width 20 --height 18
+cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --output map.png
 cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json
 cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json --apply
 cargo run -p polished-map-cli -- render path/to/Map.20x18.johto.blk --root path/to/project --tileset johto --output map.png

@@ -18,6 +18,9 @@ struct Cli {
 #[derive(Args)]
 struct MapArgs {
     map: PathBuf,
+    /// Project directory; otherwise discover the nearest ancestor Makefile.
+    #[arg(long)]
+    root: Option<PathBuf>,
     #[arg(long)]
     width: Option<u16>,
     #[arg(long)]
@@ -26,12 +29,13 @@ struct MapArgs {
 
 impl MapArgs {
     fn open(&self) -> Result<MapDocument, Failure> {
-        MapDocument::open(
+        MapDocument::open_in_project(
             &self.map,
             &OpenOptions {
                 width: self.width,
                 height: self.height,
             },
+            self.root.as_deref(),
         )
         .map_err(Failure::from)
     }
@@ -60,10 +64,9 @@ enum Action {
     Render {
         #[command(flatten)]
         input: MapArgs,
+        /// Override the tileset inferred from filename or project metadata.
         #[arg(long)]
-        root: PathBuf,
-        #[arg(long)]
-        tileset: String,
+        tileset: Option<String>,
         #[arg(long)]
         allow_256: bool,
         #[arg(long)]
@@ -128,7 +131,6 @@ fn run(cli: Cli) -> Result<Value, Failure> {
         }
         Action::Render {
             input,
-            root,
             tileset,
             allow_256,
             output,
@@ -137,7 +139,19 @@ fn run(cli: Cli) -> Result<Value, Failure> {
                 return Err(Failure::new("output_exists", "choose a new output path"));
             }
             let doc = input.open()?;
-            let graphics = load_master_graphics(&root, &tileset, allow_256)?;
+            let root = doc.metadata().root.as_deref().ok_or_else(|| {
+                Failure::new("root_required", "no ancestor Makefile found; supply --root")
+            })?;
+            let tileset = tileset
+                .as_deref()
+                .or(doc.metadata().tileset.as_deref())
+                .ok_or_else(|| {
+                    Failure::new(
+                        "tileset_required",
+                        "no matching tileset found; supply --tileset",
+                    )
+                })?;
+            let graphics = load_master_graphics(root, tileset, allow_256)?;
             let pixels = graphics
                 .render_map(doc.map())
                 .map_err(|e| Failure::new("invalid_graphics", e))?;

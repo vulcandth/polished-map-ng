@@ -8,7 +8,9 @@ use std::{path::PathBuf, sync::mpsc};
 
 use eframe::egui::{self, Color32, Pos2, Rect, Sense, Vec2};
 use polished_map_core::{Command, Graphics, Point};
-use polished_map_project::{MapDocument, OpenOptions, load_master_graphics, write_png};
+use polished_map_project::{
+    MapDocument, OpenOptions, discover_map, load_master_graphics, write_png,
+};
 
 struct Loaded {
     document: MapDocument,
@@ -103,25 +105,28 @@ impl Editor {
     }
 
     pub fn prepare_open(&mut self, path: PathBuf) {
-        let root = path
-            .ancestors()
-            .skip(1)
-            .find(|p| p.join("Makefile").is_file() || p.join("makefile").is_file())
-            .or_else(|| path.parent())
-            .unwrap_or(&path)
-            .to_string_lossy()
-            .into_owned();
-        let stem = path.file_stem().and_then(|s| s.to_str()).unwrap_or("");
-        let parts: Vec<_> = stem.split('.').collect();
-        let tileset = if parts.len() >= 3 {
-            parts[2..].join(".")
-        } else {
-            String::new()
+        let metadata = match discover_map(&path, None) {
+            Ok(metadata) => metadata,
+            Err(error) => {
+                self.error = Some(error.to_string());
+                return;
+            }
         };
         self.open_form = Some(OpenForm {
+            root: metadata
+                .root
+                .as_deref()
+                .or_else(|| path.parent())
+                .unwrap_or(&path)
+                .to_string_lossy()
+                .into_owned(),
+            tileset: metadata
+                .tileset
+                .or(metadata.tileset_hint)
+                .unwrap_or_default(),
+            width: metadata.dimensions.map_or(0, |d| d.0),
+            height: metadata.dimensions.map_or(0, |d| d.1),
             path,
-            root,
-            tileset,
             ..Default::default()
         });
     }
@@ -131,17 +136,27 @@ impl Editor {
         let ctx = ctx.clone();
         std::thread::spawn(move || {
             let result = (|| {
-                let document = MapDocument::open(
+                let root = PathBuf::from(&form.root);
+                let document = MapDocument::open_in_project(
                     &form.path,
                     &OpenOptions {
                         width: (form.width != 0).then_some(form.width),
                         height: (form.height != 0).then_some(form.height),
                     },
+                    Some(&root),
                 )
                 .map_err(|e| e.to_string())?;
-                let graphics =
-                    load_master_graphics(&PathBuf::from(&form.root), &form.tileset, form.allow_256)
-                        .map_err(|e| e.to_string())?;
+                let tileset = if form.tileset.is_empty() {
+                    document
+                        .metadata()
+                        .tileset
+                        .as_deref()
+                        .ok_or("Choose a tileset")?
+                } else {
+                    &form.tileset
+                };
+                let graphics = load_master_graphics(&root, tileset, form.allow_256)
+                    .map_err(|e| e.to_string())?;
                 Ok(Loaded { document, graphics })
             })();
             let _ = sender.send(result);
@@ -305,7 +320,7 @@ impl Editor {
                     ui.add(egui::DragValue::new(&mut form.height).range(0..=255))
                         .labelled_by(label.id);
                 });
-                ui.label("0 uses dimensions from Name.WxH.tileset.blk");
+                ui.label("0 uses dimensions from the filename or project metadata");
                 ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
                 ui.horizontal(|ui| {
                     accept = ui.button("Open map").clicked();

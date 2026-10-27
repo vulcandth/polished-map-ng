@@ -21,3 +21,7 @@ Implementation-specific exceptions will be recorded here with tests and rational
 - Single-file saves compare content rather than just modification timestamps,
   and stage output before replacement. Concurrent writers still have a narrow
   check/replace race; no filesystem-wide compare-and-swap guarantee is claimed.
+- Headless discovery leaves an unmatched tileset unset instead of accepting the
+  GUI's first dropdown item. Callers must supply an explicit choice; this avoids
+  silently rendering or editing an unrelated tileset. Ambiguous compound name
+  ordering and the original full options dropdown remain parity work.

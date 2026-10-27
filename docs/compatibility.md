@@ -4,11 +4,11 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 
 | Area | Reference | State / required evidence |
 |---|---|---|
-| Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O and filename/explicit dimensions tested; metadata dimensions and oversized-file consent pending |
+| Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O and filename/explicit/metadata dimensions tested; oversized-file consent pending |
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core tests and headless GUI drag→undo→redo→save pass; full gesture matrix and resize pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal and DAY colors; collisions, other palettes, compound tilesets and roofs pending |
-| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Pending full precedence and compatible pokecrystal test |
+| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases tested; shared-map options, compound ordering and roof inference need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Pending |
@@ -37,4 +37,11 @@ the original application. Unverified assets never become redistributable fixture
   Neither the game assets nor resulting PNG are included in the repository.
 - Dependency license/source/advisory checks pass with the explicit maintenance
   exceptions in `docs/dependencies.md`; duplicate versions remain warnings.
-- Linux/macOS CI and native smoke tests are not yet verified. No packaged release.
+- Initial foundation CI passed on Windows, Linux and macOS, including MSRV 1.95,
+  Linux snapshots, dependency policy and the C++ bitplane oracle. This verifies
+  builds/headless tests, not native platform interaction. No packaged release.
+- Pinned pokecrystal fixture `bd983395006298e976ae1871ef092e87f3385506`:
+  236 map files discover/open/render across 35 tilesets; 18 shared block files need
+  explicit dimensions/tileset from an owning map. The real-project test checks all
+  254 top-level .blk files without modifying them. New Bark Town's unannotated
+  render was inspected; roof/palette selection and pixel parity remain pending.
