@@ -1,0 +1,65 @@
+name: Rust checks
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-24.04, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev pkg-config
+      - name: Install pinned toolchain
+        run: rustup show
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
+      - run: cargo doc --workspace --no-deps --locked
+  msrv:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev pkg-config
+      - run: rustup toolchain install 1.95 --profile minimal
+      - run: cargo +1.95 check --workspace --all-targets --locked
+  dependencies:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: cargo install cargo-deny --locked
+      - run: cargo deny check
+  reference:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch immutable upstream source
+        run: |
+          git init .reference/master
+          git -C .reference/master remote add origin https://github.com/Rangi42/polished-map.git
+          git -C .reference/master fetch --depth 1 origin 8b9bdc2b8aac8c865809516c2123af69c498da0b
+      - run: python3 tools/reference_oracle.py --checkout .reference/master --output .scratch/reference-2bpp
+      - run: cargo test -p polished-map-project --locked --test reference -- --ignored
+        env:
+          POLISHED_MAP_2BPP_ORACLE: ${{ github.workspace }}/.scratch/reference-2bpp
+  visuals:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev libvulkan1 mesa-vulkan-drivers pkg-config
+      - run: cargo test -p polished-map-gui --locked --features visual-tests
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-differences
+          path: |
+            crates/gui/tests/snapshots/**/*.diff.png
+            crates/gui/tests/snapshots/**/*.new.png

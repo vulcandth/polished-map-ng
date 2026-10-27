@@ -1,0 +1,50 @@
+# Polished Map NG
+
+A Rust rewrite of [Polished Map](https://github.com/Rangi42/polished-map),
+using egui/eframe. **Under development; not yet a replacement for either
+upstream editor.** See [compatibility status](docs/compatibility.md).
+
+The roadmap preserves master and plusplus behavior before unifying them and
+stabilizing a GUI-independent Rust library and JSON CLI. Windows, Linux and
+macOS are intended targets. See [the full roadmap](docs/roadmap.md),
+[architecture](docs/architecture.md), and [contributor instructions](AGENTS.md).
+
+## Development
+
+Install Rust through rustup and the native platform C/C++ build tools. The
+repository pins the toolchain; Cargo.lock pins dependencies. On Linux, install
+the X11/Wayland development dependencies required by eframe and rfd.
+
+```text
+cargo test --workspace --locked
+cargo run -p polished-map-gui --
+cargo run -p polished-map-cli -- --help
+```
+
+The initial slice opens binary maps with explicit dimensions or names such as
+`Map.20x18.johto.blk`. The GUI asks for a project folder and tileset; the project
+adapter currently supports simple master tilesets with PNG/2bpp/LZ/CHR graphics,
+binary metatiles and tilepal palettes. Metadata discovery, compound graphics,
+roofs, collisions, events and specialist editors are not complete. Work on copies
+while parity validation is incomplete.
+
+```text
+cargo run -p polished-map-cli -- inspect path/to/Map.blk --width 20 --height 18
+cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json
+cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json --apply
+cargo run -p polished-map-cli -- render path/to/Map.20x18.johto.blk --root path/to/project --tileset johto --output map.png
+```
+
+Example `edits.json`: `[{"op":"paint","points":[{"x":2,"y":3}],"block":7}]`.
+Edit defaults to preview; `--apply` writes after all commands validate. `--expected-hash`
+can require the original hash from `inspect`. JSON responses are experimental until
+objective four. Map saving currently affects only the map file.
+
+Mouse controls implemented: paint/drag, right-click select, Shift fill, Ctrl
+replace, Alt swap. One drag is one history entry. Ctrl/Cmd+O/S/Z/Y opens, saves,
+undoes and redoes. Print exports an unannotated PNG; clipboard export is pending.
+
+## License
+
+LGPL-3.0-only, preserving upstream attribution. See [NOTICE.md](NOTICE.md),
+[LICENSE.md](LICENSE.md), and [release obligations](docs/releases.md).

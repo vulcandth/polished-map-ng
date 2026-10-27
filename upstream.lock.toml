@@ -1,0 +1,11 @@
+repository = "https://github.com/Rangi42/polished-map"
+license = "LGPL-3.0-only"
+license_git_blob = "0927556b54440825c63fbf61b9e6179894a5547a"
+
+[master]
+commit = "8b9bdc2b8aac8c865809516c2123af69c498da0b"
+version = "4.7.1"
+
+[plusplus]
+commit = "27c1f8479107c7495ac0c1818900190a137da6e1"
+version = "2.7.1"

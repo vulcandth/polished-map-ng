@@ -1,0 +1,27 @@
+[graph]
+targets = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin"]
+
+[advisories]
+# Transitive Linux D-Bus crates were merged into zbus 6. eframe/accesskit still
+# require zbus 5. These maintenance notices are not vulnerability suppressions.
+# Review with every eframe update and no later than 2026-12-01.
+ignore = [
+  { id = "RUSTSEC-2026-0370", reason = "zvariant merged into zbus 6; transitive accesskit/rfd migration pending; review 2026-12-01" },
+  { id = "RUSTSEC-2026-0371", reason = "zbus_names merged into zbus 6; transitive accesskit migration pending; review 2026-12-01" },
+  { id = "RUSTSEC-2026-0372", reason = "zvariant_derive merged into zbus 6; transitive accesskit/rfd migration pending; review 2026-12-01" },
+]
+
+[licenses]
+allow = ["LGPL-3.0-only", "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "Unicode-3.0", "OFL-1.1", "CC0-1.0"]
+
+[[licenses.exceptions]]
+crate = "epaint_default_fonts"
+allow = ["Ubuntu-font-1.0"]
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
