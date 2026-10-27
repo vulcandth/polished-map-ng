@@ -15,6 +15,9 @@ Implementation-specific exceptions will be recorded here with tests and rational
   Evidence: core `undo_after_saving_must_not_lose_unsaved_changes`.
 - Malformed assembly numbers fail explicitly instead of strtol silently turning
   unknown text into zero. LZ reads/back-references/output lengths are checked.
+  RGB palette channels outside 0..31 and incomplete colors/palettes are rejected.
+  Incomplete roof tables return a format error instead of continuing after a GUI
+  warning; a recoverable warning flow remains pending.
 - Binary map length mismatch is currently rejected rather than allowing an
   oversized file to be truncated on save; a faithful warning/consent flow remains
   pending. ASM `.map` imports cannot yet save in-place: Save As is pending.
@@ -25,3 +28,7 @@ Implementation-specific exceptions will be recorded here with tests and rational
   GUI's first dropdown item. Callers must supply an explicit choice; this avoids
   silently rendering or editing an unrelated tileset. Ambiguous compound name
   ordering and the original full options dropdown remain parity work.
+- Palette banks reset per document. Upstream stores palette edits globally and
+  can carry the previous map's custom colors into the next map when no file
+  overrides them. Deliberate reuse/import and persistent preferences remain
+  pending; accidental carry-over is not reproduced in the headless interface.

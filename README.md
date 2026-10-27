@@ -26,13 +26,15 @@ or names such as `Map.20x18.johto.blk`. It finds the nearest Makefile and recogn
 master map constants/headers and numbered tileset aliases. The GUI prefills these
 options for review. Shared block files still require explicit choices. The project
 adapter supports simple master tilesets with PNG/2bpp/LZ/CHR graphics, binary
-metatiles and tilepal palettes. Compound graphics, roofs, collisions, events and
+metatiles, tilepal mappings, all six palette sets, project/special palettes and
+map-group roof colors. Compound graphics, roof tile replacement, collisions, events and
 specialist editors are not complete. Work on copies
 while parity validation is incomplete.
 
 ```text
 cargo run -p polished-map-cli -- inspect path/to/Map.blk --width 20 --height 18
 cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --output map.png
+cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --palette nite --output night.png
 cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json
 cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json --apply
 cargo run -p polished-map-cli -- render path/to/Map.20x18.johto.blk --root path/to/project --tileset johto --output map.png

@@ -7,7 +7,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O and filename/explicit/metadata dimensions tested; oversized-file consent pending |
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core tests and headless GUI drag→undo→redo→save pass; full gesture matrix and resize pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
-| Metatiles, palettes, collisions | master metatileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal and DAY colors; collisions, other palettes, compound tilesets and roofs pending |
+| Metatiles, palettes, collisions | master metatileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection and roof colors tested; collisions, compound tilesets, roof tile replacement and palette editing pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases tested; shared-map options, compound ordering and roof inference need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Pending |
@@ -26,7 +26,7 @@ the original application. Unverified assets never become redistributable fixture
 
 - Windows local workspace tests, Clippy and rustdoc passed during foundation work.
 - `tools/reference_oracle.py` extracts the original conversion function from Git,
-  without modifying it; compiler invocation and generated provenance are retained
+  and all default palette constants without modifying them; compiler invocation and generated provenance are retained
   locally. `tests/reference.rs` exhaustively compares its output. CI has a dedicated
   reference job; the default test command explicitly reports this test as ignored.
 - Headless GUI tests exercise toolbar state, accessible open options, a complete
@@ -44,4 +44,6 @@ the original application. Unverified assets never become redistributable fixture
   236 map files discover/open/render across 35 tilesets; 18 shared block files need
   explicit dimensions/tileset from an owning map. The real-project test checks all
   254 top-level .blk files without modifying them. New Bark Town's unannotated
-  render was inspected; roof/palette selection and pixel parity remain pending.
+  render was inspected, including project palette and roof colors. All 236 maps
+  with named metadata also render with project palettes. Full pixel parity remains
+  pending. All default palette channels match the compiled upstream color table.

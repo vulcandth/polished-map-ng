@@ -2,9 +2,10 @@
 use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Args, Parser, Subcommand};
-use polished_map_core::Command;
+use polished_map_core::{Command, PaletteSet};
 use polished_map_project::{
-    MapDocument, OpenOptions, ProjectError, load_master_graphics, read_bounded, write_png,
+    MapDocument, MasterGraphicsOptions, OpenOptions, ProjectError, load_master_map_graphics,
+    read_bounded, write_png,
 };
 use serde_json::{Value, json};
 
@@ -69,6 +70,9 @@ enum Action {
         tileset: Option<String>,
         #[arg(long)]
         allow_256: bool,
+        /// Override automatic map palette selection.
+        #[arg(long, value_parser = parse_palette_set)]
+        palette: Option<PaletteSet>,
         #[arg(long)]
         output: PathBuf,
     },
@@ -77,6 +81,11 @@ enum Action {
 struct Failure {
     code: String,
     message: String,
+}
+
+fn parse_palette_set(value: &str) -> Result<PaletteSet, String> {
+    serde_json::from_value(Value::String(value.into()))
+        .map_err(|_| "expected morn, day, nite, darkness, indoor, or custom".into())
 }
 impl Failure {
     fn new(code: &str, message: impl ToString) -> Self {
@@ -133,13 +142,14 @@ fn run(cli: Cli) -> Result<Value, Failure> {
             input,
             tileset,
             allow_256,
+            palette,
             output,
         } => {
             if output.exists() {
                 return Err(Failure::new("output_exists", "choose a new output path"));
             }
             let doc = input.open()?;
-            let root = doc.metadata().root.as_deref().ok_or_else(|| {
+            doc.metadata().root.as_deref().ok_or_else(|| {
                 Failure::new("root_required", "no ancestor Makefile found; supply --root")
             })?;
             let tileset = tileset
@@ -151,7 +161,15 @@ fn run(cli: Cli) -> Result<Value, Failure> {
                         "no matching tileset found; supply --tileset",
                     )
                 })?;
-            let graphics = load_master_graphics(root, tileset, allow_256)?;
+            let graphics = load_master_map_graphics(
+                &doc,
+                tileset,
+                &MasterGraphicsOptions {
+                    allow_256,
+                    palette,
+                    ..Default::default()
+                },
+            )?;
             let pixels = graphics
                 .render_map(doc.map())
                 .map_err(|e| Failure::new("invalid_graphics", e))?;

@@ -1,7 +1,10 @@
 //! Real project smoke tests use an ignored, pinned checkout; no game assets are redistributed.
 use std::{collections::BTreeMap, fs, path::PathBuf};
 
-use polished_map_project::{MapDocument, OpenOptions, discover_map, load_master_graphics};
+use polished_map_project::{
+    MapDocument, MasterGraphicsOptions, OpenOptions, discover_map, load_master_graphics,
+    load_master_map_graphics,
+};
 
 #[test]
 #[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
@@ -34,6 +37,10 @@ fn pinned_pokecrystal_maps_discover_open_and_render() {
         assert_eq!(image.width, u32::from(doc.map().width()) * 32);
         assert_eq!(image.height, u32::from(doc.map().height()) * 32);
         assert_eq!(fs::read(&path).unwrap(), doc.map().blocks());
+        // Also exercise project-specific palette files and roof colors for every map.
+        let colored = load_master_map_graphics(&doc, &tileset, &MasterGraphicsOptions::default())
+            .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+        colored.render_map(doc.map()).unwrap();
         opened += 1;
     }
     unresolved.sort();

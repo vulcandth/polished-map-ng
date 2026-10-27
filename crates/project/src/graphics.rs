@@ -5,20 +5,64 @@ use std::{
 
 use polished_map_core::{Graphics, Palette, RgbImage, Tile, day_palettes};
 
-use crate::{ProjectError, codecs, read_bounded};
+use crate::{
+    MapDocument, MasterGraphicsOptions, ProjectError, codecs, palettes::map_palettes, read_bounded,
+};
 
-/// Initial master adapter. Compound tilesets, roofs and metadata discovery are still pending.
+/// Load graphics with per-project palettes, map metadata and roof colors.
+pub fn load_master_map_graphics(
+    doc: &MapDocument,
+    tileset: &str,
+    options: &MasterGraphicsOptions,
+) -> Result<Graphics, ProjectError> {
+    validate_tileset(doc.path(), tileset)?;
+    let root = doc
+        .metadata()
+        .root
+        .as_deref()
+        .ok_or_else(|| ProjectError::Format {
+            path: doc.path().into(),
+            message: "project root is required for graphics".into(),
+        })?;
+    let mut options = options.clone();
+    options.monochrome |= !palette_map_path(root, tileset).is_file();
+    let colors = map_palettes(doc, tileset, &options)?;
+    load_graphics(
+        root,
+        tileset,
+        options.allow_256,
+        &colors,
+        options.monochrome,
+    )
+}
+
+/// Load raw master tilesets with upstream DAY defaults, without map metadata.
 pub fn load_master_graphics(
     root: &Path,
     tileset: &str,
     allow_256: bool,
 ) -> Result<Graphics, ProjectError> {
+    load_graphics(root, tileset, allow_256, &day_palettes(), false)
+}
+
+fn validate_tileset(root: &Path, tileset: &str) -> Result<(), ProjectError> {
     if tileset.is_empty() || tileset.contains(['/', '\\']) || matches!(tileset, "." | "..") {
         return Err(ProjectError::Format {
             path: root.into(),
             message: "tileset must be a project-local name".into(),
         });
     }
+    Ok(())
+}
+
+fn load_graphics(
+    root: &Path,
+    tileset: &str,
+    allow_256: bool,
+    colors: &[Palette; 9],
+    monochrome: bool,
+) -> Result<Graphics, ProjectError> {
+    validate_tileset(root, tileset)?;
     let gfx = if root.join("MAPDATA").is_dir() {
         root.join("MAPDATA")
     } else {
@@ -33,19 +77,12 @@ pub fn load_master_graphics(
     let tiles = read_tiles(&graphics_path)?;
     let base = tileset.split('.').next().unwrap_or(tileset);
     let mut block_paths = Vec::new();
-    let mut palette_paths = Vec::new();
     for name in [tileset, base] {
         block_paths.extend([
             root.join(format!("data/tilesets/{name}_metatiles.bin")),
             root.join(format!("gfx/blocksets/{name}.bst")),
             root.join(format!("MAPDATA/{name}.CEL")),
             root.join(format!("tilesets/{name}_metatiles.bin")),
-        ]);
-        palette_paths.extend([
-            root.join(format!("gfx/tilesets/{name}_palette_map.asm")),
-            root.join(format!("gfx/tilesets/{name}_palette_map.inc")),
-            root.join(format!("color/tilesets/{name}.asm")),
-            root.join(format!("tilesets/{name}_palette_map.asm")),
         ]);
     }
     let blocks_path = first_existing(&block_paths);
@@ -75,8 +112,8 @@ pub fn load_master_graphics(
             block
         })
         .collect();
-    let palette_path = first_existing(&palette_paths);
-    let ids = if palette_path.is_file() {
+    let palette_path = palette_map_path(root, tileset);
+    let ids = if !monochrome && palette_path.is_file() {
         let bytes = read_bounded(&palette_path, 1024 * 1024)?;
         codecs::parse_palette_map(&text(&palette_path, &bytes)?)
             .map_err(|e| ProjectError::codec(&palette_path, e))?
@@ -92,7 +129,6 @@ pub fn load_master_graphics(
     let blank = Tile::new([0; 64])?;
     let mut mapped_tiles = vec![blank; 256];
     let mut palettes = vec![undefined; 256];
-    let day = day_palettes();
     for (i, tile) in tiles.into_iter().enumerate() {
         let j = if !allow_256 && i >= 0x60 {
             if i >= 0xe0 { i - 0x80 } else { i + 0x20 }
@@ -101,10 +137,24 @@ pub fn load_master_graphics(
         };
         mapped_tiles[j] = tile;
         if let Some(&id) = ids.get(i) {
-            palettes[j] = day[usize::from(id & 15)];
+            palettes[j] = colors[if monochrome { 8 } else { usize::from(id & 15) }];
         }
     }
     Ok(Graphics::new(mapped_tiles, palettes, metatiles)?)
+}
+
+fn palette_map_path(root: &Path, tileset: &str) -> PathBuf {
+    let base = tileset.split('.').next().unwrap_or(tileset);
+    let mut paths = Vec::new();
+    for name in [tileset, base] {
+        paths.extend([
+            root.join(format!("gfx/tilesets/{name}_palette_map.asm")),
+            root.join(format!("gfx/tilesets/{name}_palette_map.inc")),
+            root.join(format!("color/tilesets/{name}.asm")),
+            root.join(format!("tilesets/{name}_palette_map.asm")),
+        ]);
+    }
+    first_existing(&paths)
 }
 
 fn first_existing(paths: &[PathBuf]) -> PathBuf {

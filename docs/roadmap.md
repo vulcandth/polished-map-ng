@@ -20,6 +20,11 @@ overlays, export/clipboard, external-change handling and unsaved dialogs.
 Accept only when all matrix entries pass or have an approved exception and
 outputs reopen correctly in upstream. Include pinned compatible pokecrystal.
 
+Implemented slices include map editing/saving, master metadata discovery, six
+palette sets and project/roof colors. The pinned pokecrystal integration now
+covers all 254 top-level block files (18 need explicit shared-map options).
+See the compatibility matrix for the substantial remaining work.
+
 ## 2. Plusplus parity (not started)
 
 Add the expanded tile profile, banks, per-block attributes, flips, priority,

@@ -9,7 +9,8 @@ use std::{path::PathBuf, sync::mpsc};
 use eframe::egui::{self, Color32, Pos2, Rect, Sense, Vec2};
 use polished_map_core::{Command, Graphics, Point};
 use polished_map_project::{
-    MapDocument, OpenOptions, discover_map, load_master_graphics, write_png,
+    MapDocument, MasterGraphicsOptions, OpenOptions, discover_map, load_master_map_graphics,
+    write_png,
 };
 
 struct Loaded {
@@ -134,6 +135,7 @@ impl Editor {
     fn start_load(&mut self, form: OpenForm, ctx: &egui::Context) {
         let (sender, receiver) = mpsc::channel();
         let ctx = ctx.clone();
+        let dark_theme = self.dark;
         std::thread::spawn(move || {
             let result = (|| {
                 let root = PathBuf::from(&form.root);
@@ -155,8 +157,16 @@ impl Editor {
                 } else {
                     &form.tileset
                 };
-                let graphics = load_master_graphics(&root, tileset, form.allow_256)
-                    .map_err(|e| e.to_string())?;
+                let graphics = load_master_map_graphics(
+                    &document,
+                    tileset,
+                    &MasterGraphicsOptions {
+                        allow_256: form.allow_256,
+                        dark_theme,
+                        ..Default::default()
+                    },
+                )
+                .map_err(|e| e.to_string())?;
                 Ok(Loaded { document, graphics })
             })();
             let _ = sender.send(result);
