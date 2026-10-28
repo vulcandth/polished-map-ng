@@ -74,7 +74,7 @@ now auto-loads optional scripts, displays source-derived colored markers, edits
 options/coordinates, drags events, navigates warps and protects reload/unload.
 Event saves join the original Save ordering; map resize stages both domains.
 Source-sized forms and zoomed overlays have inspected snapshots. Exact marker
-typography/bitmap digits, export overlays, persistent
+native typography, export overlays, persistent
 preferences, remaining gestures and native workflows still prevent event parity.
 External script opening, double-click line requests, Tab mode switching and the
 warp-ID shortcut now have headless dispatch/focus coverage. The Windows adapter
@@ -85,6 +85,12 @@ now use source-derived geometry, colors and clipping, with tests for both zooms,
 scrolling, overlapping markers and the original negative-coordinate boundary.
 The complete status-bar layout, global hexadecimal preference and rulers remain
 pending; current guide tests are headless rather than native FLTK comparisons.
+Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
+source harness verifies 8,192 decimal/hex placement and zoomed text cases, including
+the original overflow/truncation differences. Source-derived outline colors,
+diagonal offsets and zoomed label positioning are implemented; native font
+selection and rasterization remain incomplete. Asset provenance is recorded in
+`docs/assets.md` with LGPL attribution retained for the decoded row masks.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.

@@ -180,8 +180,9 @@ canceled destination instead of continuing to save later domains.
 
 Event mode controls temporarily live in Tools while the complete main-menu port
 is unfinished. Source rectangles/colors/alpha, cell sizing, coordinate bounds and
-options geometry are implemented; egui's bundled glyphs and outlined text warp
-IDs are placeholders for the original bold Helvetica and bitmap digits. Event
+options geometry are implemented; event letters and zoomed ID text still use
+egui's bundled fonts rather than native bold Helvetica/monospace faces. Normal
+warp ID pixels now match the original digit sheet. Event
 Options is an embedded modal, and auto-load/show preferences are session-only.
 Event export overlays and native event GUI checks remain explicit parity gaps.
 

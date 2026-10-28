@@ -19,7 +19,12 @@ with generated source/provenance kept outside distributed assets. Assembly byte
 preservation and input validation changes are recorded in `docs/deviations.md`.
 Event marker backgrounds reconstruct the flat fill and one-pixel border from
 the LGPL source's embedded texture data using rectangles and RGB/alpha constants;
-no bitmap payloads or original warp-digit images are distributed.
+no original texture PNG payloads are distributed. Normal-size warp digits adapt
+the embedded `warp_digits_png_buffer` added by Rangi in commit
+8f457b682f35388bb143cfd7c36fc6c109b30898 (2022-03-28), under the repository's
+LGPL-3.0 license. Decoded pixel patterns are stored as row masks; original
+attribution and LGPL-3.0-only terms remain. See `docs/assets.md` for hashes,
+history, verification and the distinction from unaudited toolbar icons.
 External script dispatch and known Windows editor line arguments adapt
 `Main_Window::view_event_script` in master `main-window.cpp`; native calls,
 worker lifetime, validation and error reporting are Rust implementations.
@@ -30,7 +35,7 @@ the original image bytes are not distributed.
 
 ## Assets and fixtures
 
-No upstream game graphics, example maps, fonts, or toolbar icons are currently
+No upstream game graphics, example maps, native font files, or toolbar icons are currently
 redistributed. Tests create synthetic data. The original About dialog credits
 some icons to Yusuke Kamiyamane; those assets require a separate provenance
 review before inclusion. Reference checkouts are ignored and not shipped.

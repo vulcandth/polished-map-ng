@@ -11,7 +11,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
-| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch and mode shortcuts tested; bitmap digits/fonts, export overlays, remaining gestures and native workflows pending |
+| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
@@ -23,6 +23,20 @@ actual C++ differential observations. A source-derived vector is not a run of
 the original application. Unverified assets never become redistributable fixtures.
 
 ## Current evidence (2026-10-28)
+
+- `WarpIdLabel`/`WarpDigit` in core retain the original digit patterns, 5×7 cell
+  offsets, right-to-left draw order and overlapping opaque white borders.
+  `tools/warp_id_oracle.py` extracts the pinned source PNG and compiles unchanged
+  `draw_warp_id`/`draw_warp_id_zoomed` functions with drawing-call recorders. The
+  reference test verifies every one of the 560 source pixels and 8,192 layouts/
+  texts (IDs 1–4096 in decimal and hex). Normal labels retain trailing digits;
+  zoomed labels retain three leading characters. This is compiled function and
+  source-pixel evidence, not native font rendering. A new rendered atlas covers
+  both bases/sizes and overflow cases; pixel assertions independently check the
+  GUI's actual black/white ID-1 glyph. Mesh quads avoid egui dropping 1×1 filled
+  rectangles. The five existing event snapshots change only at ID labels; the
+  atlas and changed views were inspected. Native Helvetica/monospace selection
+  remains pending. See `docs/assets.md` for the glyphs' provenance and licensing.
 
 - Event cursor/guide geometry adapts `Map::block_under`, the block-half helpers,
   `Main_Window::update_event_cursor/update_gameboy_screen`, and

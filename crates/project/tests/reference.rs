@@ -4,6 +4,62 @@ use polished_map_project::codecs::decode_2bpp;
 use std::{fs, process::Command};
 
 #[test]
+#[ignore = "requires POLISHED_MAP_WARP_ID_ORACLE; run in the reference CI job"]
+fn warp_digit_pixels_and_label_layout_match_original() {
+    use polished_map_core::WarpIdLabel;
+    let oracle = std::path::PathBuf::from(
+        std::env::var_os("POLISHED_MAP_WARP_ID_ORACLE").expect("set POLISHED_MAP_WARP_ID_ORACLE"),
+    );
+    let png = image::load_from_memory(&fs::read(oracle.with_extension("png")).unwrap())
+        .unwrap()
+        .to_rgb8();
+    assert_eq!(png.dimensions(), (80, 7));
+    for value in 0..16 {
+        let label = WarpIdLabel::new(if value == 0 { 16 } else { value }, true).unwrap();
+        let digit = label.digits().next().unwrap();
+        assert_eq!(usize::from(digit.value()), value);
+        for y in 0..7 {
+            for x in 0..5 {
+                let channel = if digit.rows()[y] & (1 << (4 - x)) != 0 {
+                    0
+                } else {
+                    255
+                };
+                assert_eq!(
+                    png.get_pixel((value * 5 + x) as u32, y as u32).0,
+                    [channel; 3],
+                    "glyph {value:X} at {x},{y}"
+                );
+            }
+        }
+    }
+    let temp = tempfile::tempdir().unwrap();
+    let output = temp.path().join("labels.tsv");
+    assert!(
+        Command::new(&oracle)
+            .arg(&output)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let expected = fs::read_to_string(output).unwrap();
+    assert_eq!(expected.lines().count(), 8192);
+    for line in expected.lines() {
+        let fields: Vec<_> = line.split('\t').collect();
+        assert_eq!(fields.len(), 4);
+        let id: usize = fields[0].parse().unwrap();
+        let hex = fields[1] == "1";
+        let label = WarpIdLabel::new(id, hex).unwrap();
+        let calls: String = label
+            .digits()
+            .map(|d| format!("{},{},5,7,{},0;", d.x(), d.y(), u16::from(d.value()) * 5))
+            .collect();
+        assert_eq!(calls, fields[2], "ID {id} hex={hex}");
+        assert_eq!(label.zoomed_text(), fields[3], "ID {id} hex={hex}");
+    }
+}
+
+#[test]
 #[ignore = "requires POLISHED_MAP_PALETTE_ORACLE; run in the reference CI job"]
 fn palette_clipboard_and_export_match_compiled_source_with_corrected_labels() {
     use polished_map_core::{ColorSlot, PaletteCommand};

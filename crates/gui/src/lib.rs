@@ -1,6 +1,8 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
 mod block_editor;
 mod block_workflows;
+#[cfg(all(test, feature = "visual-tests"))]
+mod event_label_tests;
 #[cfg(test)]
 mod event_workflow_tests;
 mod event_workflows;

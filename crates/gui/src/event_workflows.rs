@@ -191,6 +191,61 @@ pub(super) fn draw_event_cursor(ui: &egui::Ui, origin: Pos2, cell: f32, state: &
     }
 }
 
+pub(super) fn draw_warp_label(
+    painter: &egui::Painter,
+    area: Rect,
+    label: polished_map_core::WarpIdLabel,
+    zoom: bool,
+) {
+    if !zoom {
+        // Individual 1×1 filled RectShapes are omitted by egui's feathered
+        // tessellator. Explicit quads retain exact opaque bitmap pixels.
+        let mut mesh = egui::Mesh::default();
+        for digit in label.digits() {
+            let origin = area.min + Vec2::new(f32::from(digit.x()), f32::from(digit.y()));
+            mesh.add_colored_rect(
+                Rect::from_min_size(origin, Vec2::new(5.0, 7.0)),
+                Color32::WHITE,
+            );
+            for (y, row) in digit.rows().iter().enumerate() {
+                for x in 0..5 {
+                    if row & (1 << (4 - x)) != 0 {
+                        mesh.add_colored_rect(
+                            Rect::from_min_size(
+                                origin + Vec2::new(x as f32, y as f32),
+                                Vec2::splat(1.0),
+                            ),
+                            Color32::BLACK,
+                        );
+                    }
+                }
+            }
+        }
+        painter.add(egui::Shape::mesh(mesh));
+    } else {
+        let text = label.zoomed_text();
+        // Upstream uses 11 unless the selected native face is Consolas (12).
+        // Our bundled monospace face is Hack; native font matching is pending.
+        let font = egui::FontId::monospace(11.0);
+        let pos = area.right_bottom() - Vec2::new(4.0, 2.0);
+        for delta in [
+            Vec2::new(-1.0, -1.0),
+            Vec2::new(-1.0, 1.0),
+            Vec2::new(1.0, -1.0),
+            Vec2::new(1.0, 1.0),
+        ] {
+            painter.text(
+                pos + delta,
+                egui::Align2::RIGHT_BOTTOM,
+                &text,
+                font.clone(),
+                Color32::WHITE,
+            );
+        }
+        painter.text(pos, egui::Align2::RIGHT_BOTTOM, text, font, Color32::BLACK);
+    }
+}
+
 pub(super) fn canvas_events(
     ui: &mut egui::Ui,
     doc: &EventDocument,
@@ -263,29 +318,9 @@ pub(super) fn canvas_events(
         );
         if state.warp_ids
             && let Some(id) = event.warp_id()
+            && let Some(label) = polished_map_core::WarpIdLabel::new(id, d.hex_coordinates)
         {
-            let text = if d.hex_coordinates {
-                format!("{id:X}")
-            } else {
-                id.to_string()
-            };
-            let font = egui::FontId::monospace(if cell == 32.0 { 12.0 } else { 9.0 });
-            let pos = area.right_bottom() - Vec2::new(2.0, 1.0);
-            for delta in [
-                Vec2::new(-1.0, 0.0),
-                Vec2::new(1.0, 0.0),
-                Vec2::new(0.0, -1.0),
-                Vec2::new(0.0, 1.0),
-            ] {
-                painter.text(
-                    pos + delta,
-                    egui::Align2::RIGHT_BOTTOM,
-                    &text,
-                    font.clone(),
-                    Color32::BLACK,
-                );
-            }
-            painter.text(pos, egui::Align2::RIGHT_BOTTOM, text, font, Color32::WHITE);
+            draw_warp_label(painter, area, label, cell == 32.0);
         }
         if hovered == Some(index) || destination == Some(index) {
             for inset in 0..if cell == 32.0 { 4 } else { 3 } {

@@ -12,6 +12,7 @@ mod raster;
 mod roof;
 mod tileset;
 mod tileset_export;
+mod warp_label;
 
 pub use blockset::{BlockBrush, BlockCommand, Blockset, BlocksetError, CollisionRow};
 pub use events::{Event, EventCommand, EventDefinition, EventError, EventKind, Events};
@@ -22,3 +23,4 @@ pub use roof::Roof;
 pub use tileset::{
     TileCommand, TileSnapshot, Tileset, TilesetError, UNDEFINED_COLORS, UNDEFINED_PALETTE,
 };
+pub use warp_label::{WarpDigit, WarpIdLabel};

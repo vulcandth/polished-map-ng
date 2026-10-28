@@ -293,7 +293,9 @@ rules; the guide disappears over margins without an underlying block and while
 dialogs are active. This option is session-only until preferences are ported.
 Main Save processes edited tileset, roof, blockset and event domains before saving
 the map if needed. Saves are sequential, not one atomic transaction. Event-only
-changes do not rewrite a clean map. Bitmap warp digits, exact font matching,
+changes do not rewrite a clean map. Normal-size warp IDs use the original opaque
+5×7 digit patterns; zoomed IDs use the source outline colors and three-character
+limit. Exact native font matching,
 persistent preferences,
 event overlays in exports and native platform verification remain pending.
 
