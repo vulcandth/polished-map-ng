@@ -64,6 +64,29 @@ pub struct MasterTilesetDocument {
 }
 
 impl MasterTilesetDocument {
+    /// Begin a GUI-style open from an explicit palette session. Resolve the
+    /// returned plan against `palettes_mut` before publishing the final preview.
+    /// Neither the supplied session nor any project files are modified.
+    pub fn begin_for_map(
+        doc: &MapDocument,
+        name: &str,
+        options: &MasterGraphicsOptions,
+        session: &PaletteDocument,
+    ) -> Result<(Self, crate::MapPalettePlan), ProjectError> {
+        let root = doc
+            .metadata()
+            .root
+            .as_deref()
+            .ok_or_else(|| ProjectError::Format {
+                path: doc.path().into(),
+                message: "project root is required for graphics".into(),
+            })?;
+        let mut options = options.clone();
+        options.monochrome |= !palette_map_path(root, name).is_file();
+        let plan = crate::MapPalettePlan::for_map(doc, name, &options)?;
+        let tileset = Self::open_colors(root, name, &options, session.clone())?;
+        Ok((tileset, plan))
+    }
     pub fn open_for_map(
         doc: &MapDocument,
         name: &str,

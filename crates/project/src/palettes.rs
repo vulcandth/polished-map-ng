@@ -98,98 +98,24 @@ fn text(path: &Path) -> Result<String, ProjectError> {
     })
 }
 
-fn apply_file(
-    bank: &mut PaletteBank,
-    path: &Path,
-    selected: PaletteSet,
-) -> Result<PaletteSet, ProjectError> {
-    let palettes = parse_rgb_palettes(&text(path)?).map_err(|message| ProjectError::Format {
-        path: path.into(),
-        message,
-    })?;
-    Ok(bank.apply(&palettes, selected))
-}
-
 pub(crate) fn map_palette_bank(
     doc: &MapDocument,
     tileset: &str,
     options: &MasterGraphicsOptions,
 ) -> Result<(PaletteBank, PaletteSet), ProjectError> {
-    use PaletteSet::*;
-    let metadata = doc.metadata();
-    let root = metadata
-        .root
-        .as_deref()
-        .ok_or_else(|| ProjectError::Format {
-            path: doc.path().into(),
-            message: "project root is required for graphics".into(),
-        })?;
-    let mut bank = PaletteBank::default();
-    let mut selected = Day;
-    if let Some(path) = [
-        root.join("gfx/tilesets/bg_tiles.pal"),
-        root.join("tilesets/bg.pal"),
-    ]
-    .into_iter()
-    .find(|p| p.is_file())
-    {
-        selected = apply_file(&mut bank, &path, selected)?;
+    let mut palettes = crate::PaletteDocument::default();
+    let mut plan = crate::MapPalettePlan::for_map(doc, tileset, options)?;
+    while !plan.is_finished() {
+        // Preserve deterministic headless behavior: absent optional roof colors
+        // are ignored; existing malformed files are still errors.
+        let load =
+            !(plan.next_is_roof_colors() && plan.next_import_path().is_some_and(|p| !p.is_file()));
+        plan.advance(&mut palettes, load)?;
     }
-    if options.special_palettes {
-        let gfx = if root.join("MAPDATA").is_dir() {
-            root.join("MAPDATA")
-        } else {
-            root.join("gfx/tilesets")
-        };
-        let base = tileset.split('.').next().unwrap_or(tileset);
-        let mut paths = Vec::new();
-        if doc.has_backing_file() {
-            paths.push(doc.path().with_extension("pal"));
-        }
-        if !metadata.landmark.is_empty() && !metadata.landmark.contains(['/', '\\']) {
-            paths.push(gfx.join(format!("{}.pal", metadata.landmark)));
-        }
-        paths.extend([
-            gfx.join(format!("{tileset}.pal")),
-            gfx.join(format!("{base}.pal")),
-        ]);
-        if let Some(path) = paths.into_iter().find(|p| p.is_file()) {
-            selected = apply_file(&mut bank, &path, selected)?;
-        }
-    }
-    if selected != Custom {
-        selected = if matches!(
-            metadata.palette.as_str(),
-            "PALETTE_NITE" | "PALETTE_DARK" | "2" | "4"
-        ) {
-            Nite
-        } else if matches!(metadata.environment.as_str(), "INDOOR" | "GATE" | "3" | "6") {
-            Indoor
-        } else if matches!(metadata.palette.as_str(), "PALETTE_MORN" | "3") {
-            Morn
-        } else if options.dark_theme && !options.monochrome {
-            Nite
-        } else {
-            Day
-        };
-    }
-    if options.roof_colors
-        && metadata.group != 0
-        && !options.monochrome
-        && matches!(metadata.environment.as_str(), "TOWN" | "ROUTE" | "1" | "2")
-        && let Some(path) = [
-            root.join("gfx/tilesets/roofs.pal"),
-            root.join("tilesets/roof.pal"),
-        ]
-        .into_iter()
-        .find(|p| p.is_file())
-    {
-        apply_roofs(&mut bank, &path, metadata.group, options.roof_layout)?;
-    }
-    Ok((bank, options.palette.unwrap_or(selected)))
+    Ok((palettes.bank().clone(), palettes.selected()))
 }
 
-fn apply_roofs(
+pub(crate) fn apply_roofs(
     bank: &mut PaletteBank,
     path: &PathBuf,
     group: usize,

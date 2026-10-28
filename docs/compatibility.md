@@ -7,7 +7,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions tested; oversized-file consent pending |
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; resize event shifts and full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
-| Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette color commands/export and GUI, ASM/binary collisions and paired saves tested; cross-map palette lifecycle and full differential coverage pending |
+| Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; persistent preferences and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
@@ -22,7 +22,21 @@ New tests must distinguish synthetic vectors, source-derived expectations, and
 actual C++ differential observations. A source-derived vector is not a run of
 the original application. Unverified assets never become redistributable fixtures.
 
-## Current evidence (2026-10-27)
+## Current evidence (2026-10-28)
+
+- `MapPalettePlan` orders default and special imports, metadata selection and
+  roof colors without global mutable state. `begin_for_map` takes an explicit
+  palette session; regular headless opens remain fresh. Project tests cover
+  partial set overlays, edited-flag transitions, contextual selection, and atomic
+  failed steps that can be retried/skipped. `palette_session_tests` covers actual
+  Open/New workers, pre-map edits, successive opens, per-file Load/Skip decisions,
+  Escape skipping, the missing-default edited-flag quirk, Custom retention,
+  independent roof prompts, optional roof warnings and preservation of the old
+  map/colors/preview on required-import failure. The staged import prompt has an
+  inspected snapshot; the existing visual baselines remain unchanged. The pinned palette integration
+  carries colors from New Bark Town to Violet City with imports skipped and
+  compares accepted imports/full renders against a fresh load. These are project
+  adapter and headless GUI tests; native workflow verification is still pending.
 
 - `MasterTilesetDocument::prepare_replacement` implements the asset reload used
   by `Main_Window::change_tileset_cb`, retaining the palette document, roof name,

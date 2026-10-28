@@ -5,6 +5,9 @@ pub mod geometry;
 mod palette_editor;
 #[cfg(test)]
 mod palette_editor_tests;
+mod palette_session;
+#[cfg(test)]
+mod palette_session_tests;
 #[cfg(test)]
 mod roof_workflow_tests;
 mod roof_workflows;
@@ -34,6 +37,7 @@ use polished_map_project::{
 };
 
 struct Loaded {
+    palette_plan: Option<polished_map_project::MapPalettePlan>,
     document: MapDocument,
     graphics: Graphics,
     blockset: Option<BlocksetDocument>,
@@ -62,6 +66,9 @@ struct ResizeForm {
 
 pub struct Editor {
     loaded: Option<Loaded>,
+    pending_open: Option<Loaded>,
+    pending_palette_warnings: Vec<String>,
+    open_palette_warning: Option<String>,
     textures: Vec<egui::TextureHandle>,
     loading: Option<mpsc::Receiver<LoadResult>>,
     export: Option<mpsc::Receiver<Result<(), String>>>,
@@ -105,6 +112,9 @@ impl Default for Editor {
     fn default() -> Self {
         Self {
             loaded: None,
+            pending_open: None,
+            pending_palette_warnings: Vec::new(),
+            open_palette_warning: None,
             textures: Vec::new(),
             loading: None,
             export: None,
@@ -259,9 +269,11 @@ impl Editor {
     }
 
     fn start_load(&mut self, form: OpenForm, ctx: &egui::Context) {
+        self.pending_palette_warnings.clear();
         let (sender, receiver) = mpsc::channel();
         let ctx = ctx.clone();
         let dark_theme = self.dark;
+        let palette_session = self.palette_document().clone();
         std::thread::spawn(move || {
             let result = (|| {
                 let root = PathBuf::from(&form.root);
@@ -287,7 +299,7 @@ impl Editor {
                 } else {
                     &form.tileset
                 };
-                let source = MasterTilesetDocument::open_for_map(
+                let (source, palette_plan) = MasterTilesetDocument::begin_for_map(
                     &document,
                     tileset,
                     &MasterGraphicsOptions {
@@ -296,6 +308,7 @@ impl Editor {
                         roof: (!form.roof.is_empty()).then_some(form.roof),
                         ..Default::default()
                     },
+                    &palette_session,
                 )
                 .map_err(|e| e.to_string())?;
                 let blockset =
@@ -304,6 +317,7 @@ impl Editor {
                     .graphics(blockset.blockset())
                     .map_err(|e| e.to_string())?;
                 Ok(Loaded {
+                    palette_plan: Some(palette_plan),
                     document,
                     graphics,
                     blockset: Some(blockset),
@@ -329,31 +343,8 @@ impl Editor {
             self.loading = None;
             match result {
                 Ok(loaded) => {
-                    self.textures.clear();
-                    for id in 0..loaded.graphics.block_count() {
-                        match loaded.graphics.render_block(id as u8) {
-                            Ok(rgb) => self.textures.push(ctx.load_texture(
-                                format!("block-{id}"),
-                                egui::ColorImage::from_rgb([32, 32], &rgb.pixels),
-                                egui::TextureOptions::NEAREST,
-                            )),
-                            Err(e) => {
-                                self.error = Some(e.to_string());
-                                return;
-                            }
-                        }
-                    }
-                    self.status = if loaded.document.has_backing_file() {
-                        loaded.document.path().display().to_string()
-                    } else {
-                        "New map (unsaved)".into()
-                    };
-                    self.loaded = Some(loaded);
-                    self.selected = 0;
-                    self.block_clipboard = None;
-                    self.sidebar_drag = None;
-                    self.reset_sidebar_scroll = true;
-                    self.stroke.clear();
+                    self.pending_open = Some(loaded);
+                    self.advance_open_palettes(ctx);
                 }
                 Err(error) => {
                     self.status = "Open failed".into();
@@ -551,6 +542,16 @@ impl Editor {
             });
             return;
         }
+        if let Some(message) = self.open_palette_warning.clone() {
+            egui::Modal::new(egui::Id::unique("open-palette-warning")).show(ctx, |ui| {
+                ui.heading("Roof color warning");
+                ui.label(message);
+                if ui.button("OK").clicked() {
+                    self.open_palette_warning = None;
+                }
+            });
+            return;
+        }
         if self.confirm_discard {
             egui::Modal::new(egui::Id::unique("unsaved")).show(ctx, |ui| {
                 ui.heading("Unsaved changes");
@@ -598,6 +599,10 @@ impl Editor {
         }
         if self.pending_palette_load.is_some() {
             self.palette_load_dialog(ctx);
+            return;
+        }
+        if self.pending_open.is_some() {
+            self.open_palette_dialog(ctx);
             return;
         }
         if self.block_count_form.is_some() {
@@ -1059,7 +1064,9 @@ impl Editor {
             || self.block_count_form.is_some()
             || self.confirm_discard
             || self.error.is_some()
-            || self.loading.is_some();
+            || self.loading.is_some()
+            || self.pending_open.is_some()
+            || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
             if ctx.input_mut(|i| {
                 i.consume_key(

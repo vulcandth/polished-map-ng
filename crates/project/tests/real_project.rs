@@ -99,6 +99,54 @@ fn pinned_contextual_palette_bank_edits_switches_and_exports_without_touching_pr
             .unwrap(),
         original
     );
+    let next_map = MapDocument::open_in_project(
+        &root.join("maps/VioletCity.blk"),
+        &OpenOptions::default(),
+        Some(&root),
+    )
+    .unwrap();
+    let session = tiles.palettes().clone();
+    let (mut next, mut plan) = MasterTilesetDocument::begin_for_map(
+        &next_map,
+        "johto",
+        &MasterGraphicsOptions::default(),
+        &session,
+    )
+    .unwrap();
+    while !plan.is_finished() {
+        plan.advance(next.palettes_mut(), false).unwrap();
+    }
+    assert_eq!(
+        next.palettes().bank(),
+        session.bank(),
+        "skipped imports retain every session set across maps"
+    );
+    let (mut fresh_session, mut plan) = MasterTilesetDocument::begin_for_map(
+        &next_map,
+        "johto",
+        &MasterGraphicsOptions::default(),
+        &PaletteDocument::default(),
+    )
+    .unwrap();
+    while !plan.is_finished() {
+        plan.advance(fresh_session.palettes_mut(), true).unwrap();
+    }
+    let fresh =
+        MasterTilesetDocument::open_for_map(&next_map, "johto", &MasterGraphicsOptions::default())
+            .unwrap();
+    assert_eq!(fresh_session.palettes().bank(), fresh.palettes().bank());
+    assert_eq!(
+        fresh_session
+            .graphics(blocks.blockset())
+            .unwrap()
+            .render_map(next_map.map())
+            .unwrap(),
+        fresh
+            .graphics(blocks.blockset())
+            .unwrap()
+            .render_map(next_map.map())
+            .unwrap()
+    );
 }
 
 #[test]

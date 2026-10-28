@@ -208,6 +208,18 @@ Windows' preview swatch opens the native color chooser. Linux and macOS have
 the same RGB/hex editing controls; a shared egui graphical picker is planned
 for the improvement phase after parity.
 
+Opening or creating a map carries the current palette session forward, including
+colors edited before any map was loaded. Default and special palette files only
+replace the sets they contain. Each automatic import prompts while colors are
+edited: **Skip** (or Escape) keeps those colors and continues opening the map.
+Metadata selects a set after these imports; an active Custom set stays selected.
+Roof colors have their own prompt and retain the palette edited flag. As in
+upstream, accepting a missing default palette file clears that flag without
+resetting colors. Missing/malformed optional roof colors warn and keep the map
+open. A malformed accepted default/special import preserves the previous map.
+Headless opens start from defaults; Rust callers can explicitly share a session
+with `MasterTilesetDocument::begin_for_map` and advance its `MapPalettePlan`.
+
 Saving uses upstream's PNG destinations, including separate compound outputs,
 and writes two-bit grayscale PNGs. Imported 2bpp/CHR/LZ files remain intact;
 subsequent loads prefer the new PNG. Roof overlays remain separate. Palette-map

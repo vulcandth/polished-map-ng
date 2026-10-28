@@ -47,6 +47,18 @@ impl PaletteDocument {
     pub fn mark_modified(&mut self) {
         self.modified = true;
     }
+    pub(crate) fn accept_missing_import(&mut self) {
+        // Main_Window::load_palettes clears edited state even if no file was read.
+        self.modified = false;
+    }
+    pub(crate) fn overlay_roof_colors(
+        &mut self,
+        path: &Path,
+        group: usize,
+        layout: crate::RoofPaletteLayout,
+    ) -> Result<(), ProjectError> {
+        crate::palettes::apply_roofs(&mut self.bank, &path.to_path_buf(), group, layout)
+    }
     pub fn apply_batch(&mut self, commands: &[PaletteCommand]) -> Result<(), ProjectError> {
         self.bank.edit(commands)?;
         self.modified |= !commands.is_empty();

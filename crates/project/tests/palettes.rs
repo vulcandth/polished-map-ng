@@ -40,6 +40,87 @@ fn setup(root: &Path, environment: &str, palette: &str, group: usize) -> MapDocu
     .unwrap()
 }
 
+#[test]
+fn explicit_session_imports_overlay_only_present_sets_and_select_after_imports() {
+    use polished_map_core::{ColorSlot, PaletteCommand};
+    use polished_map_project::{MapPalettePlan, PaletteDocument};
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let doc = setup(root, "TOWN", "PALETTE_NITE", 0);
+    let mut palettes = PaletteDocument::default();
+    palettes
+        .apply_batch(&[PaletteCommand::SetRgb {
+            slot: ColorSlot {
+                set: PaletteSet::Custom,
+                palette: 0,
+                hue: 0,
+            },
+            rgb: [17, 34, 51],
+        }])
+        .unwrap();
+    palettes.select(PaletteSet::Custom);
+    write(
+        root,
+        "gfx/tilesets/bg_tiles.pal",
+        "\tRGB 1,1,1, 2,2,2, 3,3,3, 4,4,4\n".repeat(16),
+    );
+    let mut plan =
+        MapPalettePlan::for_map(&doc, "demo", &MasterGraphicsOptions::default()).unwrap();
+    assert!(plan.next_import_path().unwrap().ends_with("bg_tiles.pal"));
+    plan.advance(&mut palettes, true).unwrap();
+    assert!(!palettes.is_modified());
+    assert_eq!(palettes.selected(), PaletteSet::Day);
+    assert_eq!(
+        palettes.bank().colors(PaletteSet::Custom)[0][0],
+        [17, 34, 51]
+    );
+    assert_eq!(
+        palettes.bank().colors(PaletteSet::Day)[0],
+        [[8; 3], [24; 3], [16; 3], [33; 3]]
+    );
+    assert!(plan.next_import_path().is_none());
+    plan.advance(&mut palettes, true).unwrap();
+    assert!(plan.is_finished());
+    assert_eq!(palettes.selected(), PaletteSet::Nite);
+    // Fresh loads are deterministic and cannot inherit the caller's Custom edits.
+    let fresh = polished_map_project::MasterTilesetDocument::open_for_map(
+        &doc,
+        "demo",
+        &MasterGraphicsOptions::default(),
+    )
+    .unwrap();
+    assert_ne!(
+        fresh.palettes().bank().colors(PaletteSet::Custom)[0][0],
+        [17, 34, 51]
+    );
+}
+
+#[test]
+fn failed_plan_step_can_be_retried_or_skipped_without_partial_colors_or_cursor_changes() {
+    use polished_map_project::{MapPalettePlan, PaletteDocument};
+    let dir = tempfile::tempdir().unwrap();
+    let doc = setup(dir.path(), "TOWN", "PALETTE_AUTO", 0);
+    write(
+        dir.path(),
+        "gfx/tilesets/bg_tiles.pal",
+        "\tRGB 1,2,3, 32,0,0\n",
+    );
+    let mut plan =
+        MapPalettePlan::for_map(&doc, "demo", &MasterGraphicsOptions::default()).unwrap();
+    let mut palettes = PaletteDocument::default();
+    palettes.mark_modified();
+    let path = plan.next_import_path().unwrap().to_path_buf();
+    let before = palettes.content_hash();
+    assert!(plan.advance(&mut palettes, true).is_err());
+    assert_eq!(palettes.content_hash(), before);
+    assert!(palettes.is_modified());
+    assert_eq!(plan.next_import_path(), Some(path.as_path()));
+    plan.advance(&mut palettes, false).unwrap();
+    assert!(palettes.is_modified());
+    plan.advance(&mut palettes, true).unwrap();
+    assert!(plan.is_finished());
+}
+
 fn color(doc: &MapDocument, options: &MasterGraphicsOptions) -> [u8; 3] {
     let rgb = load_master_map_graphics(doc, "demo", options)
         .unwrap()

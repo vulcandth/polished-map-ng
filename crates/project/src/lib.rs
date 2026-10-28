@@ -8,6 +8,7 @@ mod collisions;
 mod discovery;
 mod document;
 mod graphics;
+mod map_palette_plan;
 mod palette_document;
 mod palettes;
 mod roof;
@@ -25,6 +26,7 @@ pub use document::{
     MapDocument, OpenOptions, ProjectError, SaveTarget, prepare_save_as, read_bounded,
 };
 pub use graphics::{load_master_graphics, load_master_map_graphics, write_png};
+pub use map_palette_plan::MapPalettePlan;
 pub use palette_document::{PaletteDocument, prepare_palette_export};
 pub use palettes::{
     MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,

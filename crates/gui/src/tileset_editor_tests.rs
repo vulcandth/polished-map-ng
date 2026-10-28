@@ -49,6 +49,7 @@ pub(super) fn fixture(
         .build_eframe(|cc| Editor::new(cc));
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
+        palette_plan: None,
         document,
         blockset: Some(blocks),
         tileset: Some(tileset),

@@ -45,8 +45,7 @@ Loaded-roof switching/removal now preserves other editing domains, warns before
 discarding roof edits and retains the previous overlay on failed reads. Its
 280×80 client layout and platform button order have headless checks and snapshots;
 all five pinned pokecrystal roof variants match fresh loads after switching.
-Native child windows/clipboard, cross-map palette session behavior and other
-matrix gaps still remain.
+Native child windows/clipboard and other matrix gaps still remain.
 Changing the loaded tileset now reloads graphics, blocks, collisions and the
 current roof while retaining map history and session palettes. Numbered file
 labels, dirty guards, selection/clipboard bounds and same-name reload are tested.
@@ -62,6 +61,11 @@ six-set selector, load/export actions and Windows native chooser are implemented
 Headless interaction tests and four snapshots cover the forms; a focused Windows
 native check verifies shortcut dispatch and chooser cancel/accept. Native file
 dialog workflows and Linux/macOS runtime verification remain pending.
+GUI Open/New now retains the palette session, applies staged per-file import
+decisions and contextual set selection, and handles optional roof-color warnings.
+Headless loads stay independent unless a caller explicitly supplies a session.
+Synthetic interaction tests and a pinned New Bark Town → Violet City transition
+cover carry-over; persistent preferences and remaining native workflows are pending.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.
