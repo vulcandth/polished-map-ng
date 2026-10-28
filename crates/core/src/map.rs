@@ -12,14 +12,81 @@ pub struct Point {
     pub y: u16,
 }
 
-/// A single undoable edit. Painting an entire drag uses one command.
+/// Placement of the old map inside the resized rectangle, as in Resize_Dialog.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ResizeAnchor {
+    TopLeft,
+    TopCenter,
+    TopRight,
+    MiddleLeft,
+    #[default]
+    Center,
+    MiddleRight,
+    BottomLeft,
+    BottomCenter,
+    BottomRight,
+}
+
+impl ResizeAnchor {
+    pub const ALL: [Self; 9] = [
+        Self::TopLeft,
+        Self::TopCenter,
+        Self::TopRight,
+        Self::MiddleLeft,
+        Self::Center,
+        Self::MiddleRight,
+        Self::BottomLeft,
+        Self::BottomCenter,
+        Self::BottomRight,
+    ];
+
+    /// Block-coordinate translation; event coordinates move by twice this amount.
+    pub fn offset(self, old: (u8, u8), new: (u8, u8)) -> (i16, i16) {
+        use ResizeAnchor::*;
+        let dx = i16::from(new.0) - i16::from(old.0);
+        let dy = i16::from(new.1) - i16::from(old.1);
+        let x = match self {
+            TopLeft | MiddleLeft | BottomLeft => 0,
+            TopRight | MiddleRight | BottomRight => dx,
+            _ => dx / 2,
+        };
+        let y = match self {
+            TopLeft | TopCenter | TopRight => 0,
+            BottomLeft | BottomCenter | BottomRight => dy,
+            _ => dy / 2,
+        };
+        (x, y)
+    }
+}
+
+/// An edit operation. Painting a drag is one history entry; resize clears history.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Command {
-    Paint { points: Vec<Point>, block: u8 },
-    Fill { at: Point, block: u8 },
-    Replace { from: u8, to: u8 },
-    Swap { a: u8, b: u8 },
+    Paint {
+        points: Vec<Point>,
+        block: u8,
+    },
+    Fill {
+        at: Point,
+        block: u8,
+    },
+    Replace {
+        from: u8,
+        to: u8,
+    },
+    Swap {
+        a: u8,
+        b: u8,
+    },
+    /// Resize clears both history stacks, matching master Main_Window::resize_map.
+    Resize {
+        width: u16,
+        height: u16,
+        #[serde(default)]
+        anchor: ResizeAnchor,
+    },
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -45,6 +112,20 @@ pub struct Map {
 }
 
 impl Map {
+    /// New, unsaved map of block zero, without an initial undo entry.
+    pub fn blank(width: u16, height: u16) -> Result<Self, MapError> {
+        if !(1..=255).contains(&width) || !(1..=255).contains(&height) {
+            return Err(MapError::Dimensions { width, height });
+        }
+        let mut map = Self::from_bytes(
+            width,
+            height,
+            vec![0; usize::from(width) * usize::from(height)],
+        )?;
+        map.modified = true;
+        Ok(map)
+    }
+
     pub fn from_bytes(width: u16, height: u16, blocks: Vec<u8>) -> Result<Self, MapError> {
         if !(1..=255).contains(&width) || !(1..=255).contains(&height) {
             return Err(MapError::Dimensions { width, height });
@@ -104,6 +185,14 @@ impl Map {
 
     /// Validate the complete command before changing state. Returns whether it changed pixels.
     pub fn apply(&mut self, command: &Command) -> Result<bool, MapError> {
+        if let Command::Resize {
+            width,
+            height,
+            anchor,
+        } = *command
+        {
+            return self.resize(width, height, anchor);
+        }
         let mut next = self.blocks.clone();
         match command {
             Command::Paint { points, block } => {
@@ -157,8 +246,43 @@ impl Map {
                     }
                 }
             }
+            Command::Resize { .. } => unreachable!("handled before allocating edit snapshot"),
         }
         Ok(self.record(next))
+    }
+
+    /// Resize with zero-filled borders and clear history. An unchanged size does nothing.
+    pub fn resize(
+        &mut self,
+        width: u16,
+        height: u16,
+        anchor: ResizeAnchor,
+    ) -> Result<bool, MapError> {
+        if !(1..=255).contains(&width) || !(1..=255).contains(&height) {
+            return Err(MapError::Dimensions { width, height });
+        }
+        let (width, height) = (width as u8, height as u8);
+        if (width, height) == (self.width, self.height) {
+            return Ok(false);
+        }
+        let (dx, dy) = anchor.offset((self.width, self.height), (width, height));
+        let mut blocks = vec![0; usize::from(width) * usize::from(height)];
+        for y in 0..height {
+            for x in 0..width {
+                let (ox, oy) = (i16::from(x) - dx, i16::from(y) - dy);
+                if ox >= 0 && oy >= 0 && ox < i16::from(self.width) && oy < i16::from(self.height) {
+                    blocks[usize::from(y) * usize::from(width) + usize::from(x)] =
+                        self.blocks[oy as usize * usize::from(self.width) + ox as usize];
+                }
+            }
+        }
+        self.blocks = blocks;
+        self.width = width;
+        self.height = height;
+        self.modified = true;
+        self.past.clear();
+        self.future.clear();
+        Ok(true)
     }
 
     // Upstream remembers even a no-op click and keeps its modified flag until save.

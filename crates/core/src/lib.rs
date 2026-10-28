@@ -8,6 +8,6 @@ mod map;
 mod palettes;
 mod raster;
 
-pub use map::{Command, Map, MapError, Point};
+pub use map::{Command, Map, MapError, Point, ResizeAnchor};
 pub use palettes::{PaletteBank, PaletteSet};
 pub use raster::{Graphics, Palette, RasterError, RgbImage, Tile, day_palettes};

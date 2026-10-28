@@ -10,7 +10,7 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 use crate::codecs::{CodecError, parse_asm};
-use crate::{MapMetadata, discover_map};
+use crate::{MapMetadata, discover_map, find_project_root};
 
 #[derive(Debug, Error)]
 pub enum ProjectError {
@@ -22,10 +22,12 @@ pub enum ProjectError {
     },
     #[error("{path}: {message}")]
     Format { path: PathBuf, message: String },
-    #[error("{0} changed on disk since it was opened; reload before saving")]
+    #[error("{0} changed on disk since it was read; reload or preview again before saving")]
     Conflict(PathBuf),
     #[error("map dimensions are unknown; supply width/height or use Name.WxH.tileset.blk")]
     DimensionsRequired,
+    #[error("this map has no backing file; use Save As")]
+    DestinationRequired,
     #[error(transparent)]
     Map(#[from] MapError),
     #[error(transparent)]
@@ -51,6 +53,7 @@ impl ProjectError {
             Self::Format { .. } => "format",
             Self::Conflict(_) => "conflict",
             Self::DimensionsRequired => "dimensions_required",
+            Self::DestinationRequired => "destination_required",
             Self::Map(_) => "invalid_map",
             Self::Raster(_) => "invalid_graphics",
         }
@@ -66,23 +69,108 @@ pub struct OpenOptions {
 #[derive(Debug)]
 pub struct MapDocument {
     path: PathBuf,
-    hash: [u8; 32],
+    hash: Option<[u8; 32]>,
     map: Map,
     metadata: MapMetadata,
 }
 
+/// A destination observed before an overwrite decision. Saving rechecks its content.
+/// Construct with `prepare_save_as`; fields are private so callers cannot skip observation.
+#[derive(Clone, Debug)]
+pub struct SaveTarget {
+    path: PathBuf,
+    hash: Option<[u8; 32]>,
+}
+
+impl SaveTarget {
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+    pub fn exists(&self) -> bool {
+        self.hash.is_some()
+    }
+    pub fn content_hash(&self) -> Option<String> {
+        self.hash.map(hex_hash)
+    }
+}
+
+/// Prepare a binary-map destination; no filesystem writes occur here.
+/// An omitted extension gets `.blk`, as in upstream Save As.
+pub fn prepare_save_as(path: &Path) -> Result<SaveTarget, ProjectError> {
+    let mut path = path.to_path_buf();
+    if path.extension().is_none() {
+        path.set_extension("blk");
+    }
+    if !path
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("blk"))
+    {
+        return Err(ProjectError::Format {
+            path,
+            message: "choose a .blk destination for binary map data".into(),
+        });
+    }
+    let filename = path.file_name().ok_or_else(|| ProjectError::Format {
+        path: path.clone(),
+        message: "destination needs a file name".into(),
+    })?;
+    let parent = path
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    let parent = fs::canonicalize(parent).map_err(|e| ProjectError::io(parent, e))?;
+    let path = parent.join(filename);
+    let hash = optional_hash(&path)?;
+    Ok(SaveTarget { path, hash })
+}
+
+fn optional_hash(path: &Path) -> Result<Option<[u8; 32]>, ProjectError> {
+    match read_bounded(path, 4 * 1024 * 1024) {
+        Ok(bytes) => Ok(Some(Sha256::digest(&bytes).into())),
+        Err(ProjectError::Io { source, .. }) if source.kind() == std::io::ErrorKind::NotFound => {
+            Ok(None)
+        }
+        Err(error) => Err(error),
+    }
+}
+
+fn hex_hash(hash: [u8; 32]) -> String {
+    hash.iter().map(|b| format!("{b:02x}")).collect()
+}
+
 #[derive(Debug, Serialize)]
 pub struct MapSummary<'a> {
-    pub path: &'a Path,
+    pub path: Option<&'a Path>,
     pub width: u8,
     pub height: u8,
     pub block_count: usize,
     pub modified: bool,
-    pub content_hash: String,
+    pub content_hash: Option<String>,
     pub metadata: &'a MapMetadata,
 }
 
 impl MapDocument {
+    /// Create an unsaved zero-filled map. This never creates or overwrites a file.
+    pub fn new_map(root: &Path, width: u16, height: u16) -> Result<Self, ProjectError> {
+        let map = Map::blank(width, height)?;
+        let root = fs::canonicalize(root).map_err(|e| ProjectError::io(root, e))?;
+        if !root.is_dir() {
+            return Err(ProjectError::Format {
+                path: root,
+                message: "project root must be a directory".into(),
+            });
+        }
+        Ok(Self {
+            path: root.join("NewMap.blk"),
+            hash: None,
+            map,
+            metadata: MapMetadata {
+                root: Some(root),
+                ..Default::default()
+            },
+        })
+    }
+
     pub fn open(path: &Path, options: &OpenOptions) -> Result<Self, ProjectError> {
         Self::open_in_project(path, options, None)
     }
@@ -117,14 +205,18 @@ impl MapDocument {
             bytes.clone()
         };
         Ok(Self {
-            hash: Sha256::digest(&bytes).into(),
+            hash: Some(Sha256::digest(&bytes).into()),
             map: Map::from_bytes(width, height, blocks)?,
             path,
             metadata,
         })
     }
+    /// Backing path, or a suggested NewMap.blk path if `has_backing_file` is false.
     pub fn path(&self) -> &Path {
         &self.path
+    }
+    pub fn has_backing_file(&self) -> bool {
+        self.hash.is_some()
     }
     pub fn map(&self) -> &Map {
         &self.map
@@ -137,7 +229,7 @@ impl MapDocument {
     }
     pub fn summary(&self) -> MapSummary<'_> {
         MapSummary {
-            path: &self.path,
+            path: self.has_backing_file().then_some(&self.path),
             width: self.map.width(),
             height: self.map.height(),
             block_count: self.map.blocks().len(),
@@ -146,12 +238,25 @@ impl MapDocument {
             metadata: &self.metadata,
         }
     }
-    pub fn content_hash(&self) -> String {
-        self.hash.iter().map(|b| format!("{b:02x}")).collect()
+    pub fn content_hash(&self) -> Option<String> {
+        self.hash.map(hex_hash)
+    }
+
+    /// Save to a reviewed target, updating this document only after replacement succeeds.
+    /// Existing targets require the caller's overwrite decision after preparation.
+    pub fn save_as(&mut self, target: &SaveTarget) -> Result<(), ProjectError> {
+        persist_map(&target.path, target.hash, self.map.blocks())?;
+        self.path.clone_from(&target.path);
+        self.hash = Some(Sha256::digest(self.map.blocks()).into());
+        // Keep loaded map attributes/tileset; moving to another project changes the root.
+        self.metadata.root = find_project_root(&self.path).or_else(|| self.metadata.root.clone());
+        self.map.mark_saved();
+        Ok(())
     }
 
     /// Replace one file after a content conflict check. This is not a multi-file transaction.
     pub fn save(&mut self) -> Result<(), ProjectError> {
+        let expected = self.hash.ok_or(ProjectError::DestinationRequired)?;
         // ASM import is allowed, but silently writing binary over its source is unsafe.
         if self
             .path
@@ -160,51 +265,69 @@ impl MapDocument {
         {
             return Err(ProjectError::Format {
                 path: self.path.clone(),
-                message: "ASM map import requires a .blk Save As destination (not implemented yet)"
-                    .into(),
+                message: "ASM map import requires a .blk Save As destination".into(),
             });
         }
         let current = read_bounded(&self.path, 4 * 1024 * 1024)?;
         let hash: [u8; 32] = Sha256::digest(&current).into();
-        if hash != self.hash {
+        if hash != expected {
             return Err(ProjectError::Conflict(self.path.clone()));
         }
         if !self.map.is_modified() {
             return Ok(());
         }
-        let parent = self.path.parent().ok_or_else(|| ProjectError::Format {
-            path: self.path.clone(),
-            message: "no parent directory".into(),
-        })?;
-        let mut staged =
-            tempfile::NamedTempFile::new_in(parent).map_err(|e| ProjectError::io(parent, e))?;
-        staged
-            .as_file()
-            .set_permissions(
-                fs::metadata(&self.path)
-                    .map_err(|e| ProjectError::io(&self.path, e))?
-                    .permissions(),
-            )
-            .map_err(|e| ProjectError::io(&self.path, e))?;
-        staged
-            .write_all(self.map.blocks())
-            .map_err(|e| ProjectError::io(&self.path, e))?;
-        staged
-            .as_file()
-            .sync_all()
-            .map_err(|e| ProjectError::io(&self.path, e))?;
-        // Recheck immediately before replacement; external writers do not participate in a lock protocol.
-        let current = read_bounded(&self.path, 4 * 1024 * 1024)?;
-        if <[u8; 32]>::from(Sha256::digest(&current)) != self.hash {
-            return Err(ProjectError::Conflict(self.path.clone()));
-        }
-        staged
-            .persist(&self.path)
-            .map_err(|e| ProjectError::io(&self.path, e.error))?;
-        self.hash = Sha256::digest(self.map.blocks()).into();
+        persist_map(&self.path, Some(expected), self.map.blocks())?;
+        self.hash = Some(Sha256::digest(self.map.blocks()).into());
         self.map.mark_saved();
         Ok(())
     }
+}
+
+fn persist_map(path: &Path, expected: Option<[u8; 32]>, blocks: &[u8]) -> Result<(), ProjectError> {
+    if optional_hash(path)? != expected {
+        return Err(ProjectError::Conflict(path.into()));
+    }
+    let parent = path.parent().ok_or_else(|| ProjectError::Format {
+        path: path.into(),
+        message: "no parent directory".into(),
+    })?;
+    let mut staged =
+        tempfile::NamedTempFile::new_in(parent).map_err(|e| ProjectError::io(parent, e))?;
+    if expected.is_some() {
+        staged
+            .as_file()
+            .set_permissions(
+                fs::metadata(path)
+                    .map_err(|e| ProjectError::io(path, e))?
+                    .permissions(),
+            )
+            .map_err(|e| ProjectError::io(path, e))?;
+    }
+    staged
+        .write_all(blocks)
+        .map_err(|e| ProjectError::io(path, e))?;
+    staged
+        .as_file()
+        .sync_all()
+        .map_err(|e| ProjectError::io(path, e))?;
+    // Recheck immediately before replacement; external writers do not participate in a lock protocol.
+    if optional_hash(path)? != expected {
+        return Err(ProjectError::Conflict(path.into()));
+    }
+    if expected.is_some() {
+        staged
+            .persist(path)
+            .map_err(|e| ProjectError::io(path, e.error))?;
+    } else {
+        staged.persist_noclobber(path).map_err(|e| {
+            if e.error.kind() == std::io::ErrorKind::AlreadyExists {
+                ProjectError::Conflict(path.into())
+            } else {
+                ProjectError::io(path, e.error)
+            }
+        })?;
+    }
+    Ok(())
 }
 
 pub fn read_bounded(path: &Path, limit: usize) -> Result<Vec<u8>, ProjectError> {

@@ -9,7 +9,9 @@ mod graphics;
 mod palettes;
 
 pub use discovery::{MapMetadata, discover_map, find_project_root, list_tilesets, map_constant};
-pub use document::{MapDocument, OpenOptions, ProjectError, read_bounded};
+pub use document::{
+    MapDocument, OpenOptions, ProjectError, SaveTarget, prepare_save_as, read_bounded,
+};
 pub use graphics::{load_master_graphics, load_master_map_graphics, write_png};
 pub use palettes::{
     MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,

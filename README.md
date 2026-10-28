@@ -32,12 +32,14 @@ specialist editors are not complete. Work on copies
 while parity validation is incomplete.
 
 ```text
+cargo run -p polished-map-cli -- create --root path/to/project --width 20 --height 18 --output path/to/project/maps/New.20x18.blk --apply
 cargo run -p polished-map-cli -- inspect path/to/Map.blk --width 20 --height 18
 cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --output map.png
 cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --palette nite --output night.png
 cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json
 cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json --apply
 cargo run -p polished-map-cli -- render path/to/Map.20x18.johto.blk --root path/to/project --tileset johto --output map.png
+cargo run -p polished-map-cli -- save-as path/to/Imported.map --width 20 --height 18 --output path/to/Imported.20x18.blk --apply
 ```
 
 Example `edits.json`: `[{"op":"paint","points":[{"x":2,"y":3}],"block":7}]`.
@@ -45,9 +47,20 @@ Edit defaults to preview; `--apply` writes after all commands validate. `--expec
 can require the original hash from `inspect`. JSON responses are experimental until
 objective four. Map saving currently affects only the map file.
 
+`create` and `save-as` also default to preview. Replacing an existing destination
+requires `--expected-output-hash` from the preview response. New Map starts dirty
+in memory and Save opens Save As. ASM imports always save to a binary `.blk` copy.
+
+Resize is available in Edit → Resize Map and through commands such as
+`{"op":"resize","width":21,"height":19,"anchor":"center"}`. All nine anchors
+are supported. Resizing fills new cells with block zero and clears undo history,
+matching upstream. Dimension constants, filename dimensions and event coordinates
+must be updated separately; event integration is still pending.
+
 Mouse controls implemented: paint/drag, right-click select, Shift fill, Ctrl
 replace, Alt swap. One drag is one history entry. Ctrl/Cmd+O/S/Z/Y opens, saves,
-undoes and redoes. Print exports an unannotated PNG; clipboard export is pending.
+undoes and redoes. Ctrl/Cmd+N creates a new map; Ctrl/Cmd+Shift+S opens Save As.
+Print exports an unannotated PNG; clipboard export is pending.
 
 ## License
 

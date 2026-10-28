@@ -7,10 +7,10 @@ mod tests;
 use std::{path::PathBuf, sync::mpsc};
 
 use eframe::egui::{self, Color32, Pos2, Rect, Sense, Vec2};
-use polished_map_core::{Command, Graphics, Point};
+use polished_map_core::{Command, Graphics, Point, ResizeAnchor};
 use polished_map_project::{
-    MapDocument, MasterGraphicsOptions, OpenOptions, discover_map, load_master_map_graphics,
-    write_png,
+    MapDocument, MasterGraphicsOptions, OpenOptions, discover_map, list_tilesets,
+    load_master_map_graphics, prepare_save_as, write_png,
 };
 
 struct Loaded {
@@ -21,6 +21,7 @@ type LoadResult = Result<Loaded, String>;
 
 #[derive(Default)]
 struct OpenForm {
+    new_map: bool,
     path: PathBuf,
     root: String,
     tileset: String,
@@ -29,12 +30,21 @@ struct OpenForm {
     allow_256: bool,
 }
 
+struct ResizeForm {
+    width: u16,
+    height: u16,
+    anchor: ResizeAnchor,
+}
+
 pub struct Editor {
     loaded: Option<Loaded>,
     textures: Vec<egui::TextureHandle>,
     loading: Option<mpsc::Receiver<LoadResult>>,
     export: Option<mpsc::Receiver<Result<(), String>>>,
     open_form: Option<OpenForm>,
+    resize_form: Option<ResizeForm>,
+    resize_anchor: ResizeAnchor,
+    reset_canvas_scroll: bool,
     error: Option<String>,
     selected: u8,
     stroke: Vec<Point>,
@@ -43,6 +53,7 @@ pub struct Editor {
     dark: bool,
     confirm_discard: bool,
     pending_exit: bool,
+    pending_new: bool,
     exit_approved: bool,
     status: String,
 }
@@ -55,6 +66,9 @@ impl Default for Editor {
             loading: None,
             export: None,
             open_form: None,
+            resize_form: None,
+            resize_anchor: ResizeAnchor::default(),
+            reset_canvas_scroll: false,
             error: None,
             selected: 0,
             stroke: Vec::new(),
@@ -63,6 +77,7 @@ impl Default for Editor {
             dark: false,
             confirm_discard: false,
             pending_exit: false,
+            pending_new: false,
             exit_approved: false,
             status: "Open a map to begin. Development build: master parity is incomplete.".into(),
         }
@@ -93,6 +108,7 @@ impl Editor {
     }
 
     fn choose_open(&mut self) {
+        self.pending_new = false;
         if self.is_modified() {
             self.confirm_discard = true;
             return;
@@ -102,6 +118,44 @@ impl Editor {
             .pick_file()
         {
             self.prepare_open(path);
+        }
+    }
+
+    fn choose_new(&mut self) {
+        self.pending_new = true;
+        if self.is_modified() {
+            self.confirm_discard = true;
+            return;
+        }
+        self.start_new_options();
+    }
+
+    fn start_new_options(&mut self) {
+        let root = self
+            .loaded
+            .as_ref()
+            .and_then(|l| l.document.metadata().root.clone())
+            .or_else(|| rfd::FileDialog::new().pick_folder());
+        self.pending_new = false;
+        if let Some(root) = root {
+            self.prepare_new_in(root);
+        }
+    }
+
+    pub fn prepare_new_in(&mut self, root: PathBuf) {
+        match list_tilesets(&root) {
+            Ok(tilesets) => {
+                self.open_form = Some(OpenForm {
+                    new_map: true,
+                    path: root.join("NewMap.blk"),
+                    root: root.to_string_lossy().into_owned(),
+                    tileset: tilesets.first().cloned().unwrap_or_default(),
+                    width: 10,
+                    height: 9,
+                    ..Default::default()
+                })
+            }
+            Err(error) => self.error = Some(error.to_string()),
         }
     }
 
@@ -139,14 +193,18 @@ impl Editor {
         std::thread::spawn(move || {
             let result = (|| {
                 let root = PathBuf::from(&form.root);
-                let document = MapDocument::open_in_project(
-                    &form.path,
-                    &OpenOptions {
-                        width: (form.width != 0).then_some(form.width),
-                        height: (form.height != 0).then_some(form.height),
-                    },
-                    Some(&root),
-                )
+                let document = if form.new_map {
+                    MapDocument::new_map(&root, form.width, form.height)
+                } else {
+                    MapDocument::open_in_project(
+                        &form.path,
+                        &OpenOptions {
+                            width: (form.width != 0).then_some(form.width),
+                            height: (form.height != 0).then_some(form.height),
+                        },
+                        Some(&root),
+                    )
+                }
                 .map_err(|e| e.to_string())?;
                 let tileset = if form.tileset.is_empty() {
                     document
@@ -201,7 +259,11 @@ impl Editor {
                             }
                         }
                     }
-                    self.status = loaded.document.path().display().to_string();
+                    self.status = if loaded.document.has_backing_file() {
+                        loaded.document.path().display().to_string()
+                    } else {
+                        "New map (unsaved)".into()
+                    };
                     self.loaded = Some(loaded);
                     self.selected = 0;
                     self.stroke.clear();
@@ -228,19 +290,67 @@ impl Editor {
     }
 
     fn apply(&mut self, command: Command) {
-        if let Some(loaded) = &mut self.loaded
-            && let Err(error) = loaded.document.map_mut().apply(&command)
-        {
-            self.error = Some(error.to_string());
+        if let Some(loaded) = &mut self.loaded {
+            match loaded.document.map_mut().apply(&command) {
+                Ok(true) if matches!(command, Command::Resize { .. }) => {
+                    self.reset_canvas_scroll = true
+                }
+                Err(error) => self.error = Some(error.to_string()),
+                _ => {}
+            }
         }
     }
 
     fn save(&mut self) {
+        if self.loaded.as_ref().is_some_and(|l| {
+            !l.document.has_backing_file()
+                || l.document
+                    .path()
+                    .extension()
+                    .is_some_and(|e| e.eq_ignore_ascii_case("map"))
+        }) {
+            self.save_as();
+            return;
+        }
         if let Some(loaded) = &mut self.loaded {
             match loaded.document.save() {
                 Ok(()) => self.status = "Map saved".into(),
                 Err(e) => self.error = Some(e.to_string()),
             }
+        }
+    }
+
+    fn save_as(&mut self) {
+        let Some(loaded) = &self.loaded else {
+            return;
+        };
+        let source = loaded.document.path();
+        let name = source.with_extension("blk");
+        let Some(path) = rfd::FileDialog::new()
+            .add_filter("Map blocks", &["blk"])
+            .set_directory(source.parent().unwrap_or(source))
+            .set_file_name(name.file_name().unwrap_or_default().to_string_lossy())
+            .save_file()
+        else {
+            return;
+        };
+        // The native Save dialog supplies the overwrite decision. Observe the target
+        // immediately after it returns, then recheck before atomic replacement.
+        match prepare_save_as(&path)
+            .and_then(|target| self.loaded.as_mut().unwrap().document.save_as(&target))
+        {
+            Ok(()) => self.status = format!("Saved {}", path.display()),
+            Err(error) => self.error = Some(error.to_string()),
+        }
+    }
+
+    fn prepare_resize(&mut self) {
+        if let Some(loaded) = &self.loaded {
+            self.resize_form = Some(ResizeForm {
+                width: u16::from(loaded.document.map().width()),
+                height: u16::from(loaded.document.map().height()),
+                anchor: self.resize_anchor,
+            });
         }
     }
 
@@ -305,17 +415,116 @@ impl Editor {
                     if ui.button("Cancel").clicked() {
                         self.confirm_discard = false;
                         self.pending_exit = false;
+                        self.pending_new = false;
                     }
                 });
             });
             return;
         }
+        if let Some(mut form) = self.resize_form.take() {
+            let mut accept = false;
+            let mut cancel = false;
+            egui::Modal::new(egui::Id::unique("resize-map")).show(ctx, |ui| {
+                ui.heading("Resize Map");
+                ui.horizontal(|ui| {
+                    ui.vertical(|ui| {
+                        for (label, value) in
+                            [("Width", &mut form.width), ("Height", &mut form.height)]
+                        {
+                            ui.horizontal(|ui| {
+                                let label = ui.label(label);
+                                ui.add(egui::DragValue::new(value).range(1..=255))
+                                    .labelled_by(label.id);
+                            });
+                        }
+                    });
+                    ui.add_space(20.0);
+                    // Original Resize_Dialog: nine 24×24 buttons separated by 2 px.
+                    egui::Grid::new("resize-anchor")
+                        .spacing(Vec2::splat(2.0))
+                        .show(ui, |ui| {
+                            let labels = [
+                                "Top left",
+                                "Top center",
+                                "Top right",
+                                "Middle left",
+                                "Center",
+                                "Middle right",
+                                "Bottom left",
+                                "Bottom center",
+                                "Bottom right",
+                            ];
+                            for (i, anchor) in ResizeAnchor::ALL.into_iter().enumerate() {
+                                let selected = anchor == form.anchor;
+                                let response = ui.add_sized(
+                                    [24.0, 24.0],
+                                    egui::Button::new("").selected(selected),
+                                );
+                                response.widget_info(|| {
+                                    egui::WidgetInfo::labeled(egui::Role::Button, true, labels[i])
+                                });
+                                let active = ResizeAnchor::ALL
+                                    .iter()
+                                    .position(|&a| a == form.anchor)
+                                    .unwrap_or(4);
+                                let direction = Vec2::new(
+                                    (i % 3) as f32 - (active % 3) as f32,
+                                    (i / 3) as f32 - (active / 3) as f32,
+                                );
+                                let color = ui.visuals().text_color();
+                                if selected {
+                                    ui.painter().rect_filled(
+                                        Rect::from_center_size(
+                                            response.rect.center(),
+                                            Vec2::splat(6.0),
+                                        ),
+                                        0.0,
+                                        color,
+                                    );
+                                } else if direction.x.abs() <= 1.0 && direction.y.abs() <= 1.0 {
+                                    let direction = direction.normalized() * 8.0;
+                                    ui.painter().arrow(
+                                        response.rect.center() - direction * 0.5,
+                                        direction,
+                                        egui::Stroke::new(1.0, color),
+                                    );
+                                }
+                                if response.on_hover_text(labels[i]).clicked() {
+                                    form.anchor = anchor;
+                                }
+                                if i % 3 == 2 {
+                                    ui.end_row();
+                                }
+                            }
+                        });
+                });
+                ui.label("New cells use block 0. Resizing clears undo history.");
+                ui.label("Map constants and event scripts are not updated yet.");
+                ui.horizontal(|ui| {
+                    accept = ui.button("Resize").clicked();
+                    cancel = ui.button("Cancel").clicked();
+                });
+            });
+            if accept {
+                self.resize_anchor = form.anchor;
+                self.stroke.clear();
+                self.apply(Command::Resize {
+                    width: form.width,
+                    height: form.height,
+                    anchor: form.anchor,
+                });
+            } else if !cancel {
+                self.resize_form = Some(form);
+            }
+        }
         if let Some(mut form) = self.open_form.take() {
             let mut accept = false;
             let mut cancel = false;
             egui::Modal::new(egui::Id::unique("open-options")).show(ctx, |ui| {
-                ui.heading("Open Map");
-                ui.label(form.path.display().to_string());
+                ui.heading(if form.new_map { "New Map" } else { "Open Map" });
+                if !form.new_map {
+                    ui.label(form.path.display().to_string());
+                }
                 let label = ui.label("Project folder");
                 ui.text_edit_singleline(&mut form.root)
                     .labelled_by(label.id);
@@ -330,10 +539,18 @@ impl Editor {
                     ui.add(egui::DragValue::new(&mut form.height).range(0..=255))
                         .labelled_by(label.id);
                 });
-                ui.label("0 uses dimensions from the filename or project metadata");
+                if !form.new_map {
+                    ui.label("0 uses dimensions from the filename or project metadata");
+                }
                 ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
                 ui.horizontal(|ui| {
-                    accept = ui.button("Open map").clicked();
+                    accept = ui
+                        .button(if form.new_map {
+                            "Create map"
+                        } else {
+                            "Open map"
+                        })
+                        .clicked();
                     cancel = ui.button("Cancel").clicked();
                 });
             });
@@ -349,6 +566,8 @@ impl Editor {
         if self.pending_exit {
             self.exit_approved = true;
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+        } else if self.pending_new {
+            self.start_new_options();
         } else if let Some(path) = rfd::FileDialog::new()
             .add_filter("Map blocks", &["blk", "map"])
             .pick_file()
@@ -453,134 +672,134 @@ impl Editor {
         let map = loaded.document.map();
         let size = layout.block_size;
         let mut command = None;
-        egui::ScrollArea::both()
+        let mut scroll = egui::ScrollArea::both()
             .id_salt("map")
             .auto_shrink([false, false])
             .scroll_source(egui::scroll_area::ScrollSource {
                 drag: egui::scroll_area::DragScroll::Never,
                 ..Default::default()
-            })
-            .show(ui, |ui| {
-                let extent = Vec2::new(
-                    (f32::from(map.width()) + 6.0) * size,
-                    (f32::from(map.height()) + 6.0) * size,
-                );
-                let (rect, response) = ui.allocate_exact_size(extent, Sense::click_and_drag());
-                let clip = ui.clip_rect();
-                // Iterate only rows/columns intersecting the viewport, including the map margin.
-                let origin = rect.min + Vec2::splat(geometry::MAP_MARGIN * size);
-                let min_x = ((clip.left() - origin.x) / size).floor().max(0.0) as usize;
-                let min_y = ((clip.top() - origin.y) / size).floor().max(0.0) as usize;
-                let max_x = (((clip.right() - origin.x) / size).ceil().max(0.0) as usize)
-                    .min(usize::from(map.width()));
-                let max_y = (((clip.bottom() - origin.y) / size).ceil().max(0.0) as usize)
-                    .min(usize::from(map.height()));
-                for y in min_y..max_y {
-                    for x in min_x..max_x {
-                        let point = Point {
-                            x: x as u16,
-                            y: y as u16,
-                        };
-                        let id = if self.stroke.contains(&point) {
-                            self.selected
-                        } else {
-                            map.blocks()[y * usize::from(map.width()) + x]
-                        };
-                        let cell = Rect::from_min_size(
-                            origin + Vec2::new(x as f32 * size, y as f32 * size),
-                            Vec2::splat(size),
+            });
+        if self.reset_canvas_scroll {
+            scroll = scroll.scroll_offset(Vec2::ZERO);
+            self.reset_canvas_scroll = false;
+        }
+        scroll.show(ui, |ui| {
+            let extent = Vec2::new(
+                (f32::from(map.width()) + 6.0) * size,
+                (f32::from(map.height()) + 6.0) * size,
+            );
+            let (rect, response) = ui.allocate_exact_size(extent, Sense::click_and_drag());
+            let clip = ui.clip_rect();
+            // Iterate only rows/columns intersecting the viewport, including the map margin.
+            let origin = rect.min + Vec2::splat(geometry::MAP_MARGIN * size);
+            let min_x = ((clip.left() - origin.x) / size).floor().max(0.0) as usize;
+            let min_y = ((clip.top() - origin.y) / size).floor().max(0.0) as usize;
+            let max_x = (((clip.right() - origin.x) / size).ceil().max(0.0) as usize)
+                .min(usize::from(map.width()));
+            let max_y = (((clip.bottom() - origin.y) / size).ceil().max(0.0) as usize)
+                .min(usize::from(map.height()));
+            for y in min_y..max_y {
+                for x in min_x..max_x {
+                    let point = Point {
+                        x: x as u16,
+                        y: y as u16,
+                    };
+                    let id = if self.stroke.contains(&point) {
+                        self.selected
+                    } else {
+                        map.blocks()[y * usize::from(map.width()) + x]
+                    };
+                    let cell = Rect::from_min_size(
+                        origin + Vec2::new(x as f32 * size, y as f32 * size),
+                        Vec2::splat(size),
+                    );
+                    if let Some(texture) = self.textures.get(usize::from(id)) {
+                        ui.painter().image(
+                            texture.id(),
+                            cell,
+                            Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
+                            Color32::WHITE,
                         );
-                        if let Some(texture) = self.textures.get(usize::from(id)) {
-                            ui.painter().image(
-                                texture.id(),
-                                cell,
-                                Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
-                                Color32::WHITE,
-                            );
-                        } else {
-                            ui.painter().rect_filled(
-                                cell,
-                                0.0,
-                                Color32::from_rgb(0xab, 0xcd, 0xef),
-                            );
-                        }
-                        if self.grid {
-                            ui.painter().rect_stroke(
-                                cell,
-                                0.0,
-                                (1.0, Color32::from_black_alpha(96)),
-                                egui::StrokeKind::Inside,
-                            );
-                        }
+                    } else {
+                        ui.painter()
+                            .rect_filled(cell, 0.0, Color32::from_rgb(0xab, 0xcd, 0xef));
+                    }
+                    if self.grid {
+                        ui.painter().rect_stroke(
+                            cell,
+                            0.0,
+                            (1.0, Color32::from_black_alpha(96)),
+                            egui::StrokeKind::Inside,
+                        );
                     }
                 }
-                if let Some(pos) = response
-                    .interact_pointer_pos()
-                    .or_else(|| response.hover_pos())
+            }
+            if let Some(pos) = response
+                .interact_pointer_pos()
+                .or_else(|| response.hover_pos())
+            {
+                let relative = pos - rect.min;
+                if let Some((x, y)) = layout.hit(relative.x, relative.y, map.width(), map.height())
                 {
-                    let relative = pos - rect.min;
-                    if let Some((x, y)) =
-                        layout.hit(relative.x, relative.y, map.width(), map.height())
-                    {
-                        let point = Point { x, y };
-                        let old = map.blocks()
-                            [usize::from(y) * usize::from(map.width()) + usize::from(x)];
-                        self.status = format!("Block: ${old:02X}    X: {x}    Y: {y}");
-                        if response.secondary_clicked() && usize::from(old) < self.textures.len() {
-                            self.selected = old;
-                        }
-                        let (pressed, down, modifiers) = ui.input(|i| {
-                            (
-                                i.pointer.primary_pressed(),
-                                i.pointer.primary_down(),
-                                i.modifiers,
-                            )
-                        });
-                        if pressed && response.hovered() {
-                            if modifiers.shift {
-                                command = Some(Command::Fill {
-                                    at: point,
-                                    block: self.selected,
-                                });
-                            } else if modifiers.ctrl {
-                                command = Some(Command::Replace {
-                                    from: old,
-                                    to: self.selected,
-                                });
-                            } else if modifiers.alt {
-                                command = Some(Command::Swap {
-                                    a: old,
-                                    b: self.selected,
-                                });
-                            }
-                        }
-                        if down
-                            && (response.hovered() || response.dragged())
-                            && !modifiers.ctrl
-                            && !modifiers.shift
-                            && !modifiers.alt
-                        {
-                            if let Some(&last) = self.stroke.last() {
-                                append_line(&mut self.stroke, last, point);
-                            } else {
-                                self.stroke.push(point);
-                            }
-                        }
-                        if response.clicked()
-                            && !down
-                            && self.stroke.is_empty()
-                            && !modifiers.ctrl
-                            && !modifiers.shift
-                            && !modifiers.alt
-                        {
-                            command = Some(Command::Paint {
-                                points: vec![point],
+                    let point = Point { x, y };
+                    let old =
+                        map.blocks()[usize::from(y) * usize::from(map.width()) + usize::from(x)];
+                    self.status = format!("Block: ${old:02X}    X: {x}    Y: {y}");
+                    if response.secondary_clicked() && usize::from(old) < self.textures.len() {
+                        self.selected = old;
+                    }
+                    let (pressed, down, modifiers) = ui.input(|i| {
+                        (
+                            i.pointer.primary_pressed(),
+                            i.pointer.primary_down(),
+                            i.modifiers,
+                        )
+                    });
+                    if pressed && response.hovered() {
+                        if modifiers.shift {
+                            command = Some(Command::Fill {
+                                at: point,
                                 block: self.selected,
+                            });
+                        } else if modifiers.ctrl {
+                            command = Some(Command::Replace {
+                                from: old,
+                                to: self.selected,
+                            });
+                        } else if modifiers.alt {
+                            command = Some(Command::Swap {
+                                a: old,
+                                b: self.selected,
                             });
                         }
                     }
+                    if down
+                        && (response.hovered() || response.dragged())
+                        && !modifiers.ctrl
+                        && !modifiers.shift
+                        && !modifiers.alt
+                    {
+                        if let Some(&last) = self.stroke.last() {
+                            append_line(&mut self.stroke, last, point);
+                        } else {
+                            self.stroke.push(point);
+                        }
+                    }
+                    if response.clicked()
+                        && !down
+                        && self.stroke.is_empty()
+                        && !modifiers.ctrl
+                        && !modifiers.shift
+                        && !modifiers.alt
+                    {
+                        command = Some(Command::Paint {
+                            points: vec![point],
+                            block: self.selected,
+                        });
+                    }
                 }
-            });
+            }
+        });
         if let Some(command) = command {
             self.apply(command);
         }
@@ -598,14 +817,25 @@ impl Editor {
             self.confirm_discard = true;
         }
         let blocked = self.open_form.is_some()
+            || self.resize_form.is_some()
             || self.confirm_discard
             || self.error.is_some()
             || self.loading.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::N)) {
+                self.choose_new();
+            }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::O)) {
                 self.choose_open();
             }
-            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::S)) {
+            if ctx.input_mut(|i| {
+                i.consume_key(
+                    egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+                    egui::Key::S,
+                )
+            }) {
+                self.save_as();
+            } else if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::S)) {
                 self.save();
             }
             if let Some(l) = &mut self.loaded {
@@ -627,6 +857,10 @@ impl Editor {
             ui.scope_builder(egui::UiBuilder::new().max_rect(menu), |ui| {
                 egui::MenuBar::new().ui(ui, |ui| {
                     ui.menu_button("File", |ui| {
+                        if ui.button("New…").clicked() {
+                            ui.close();
+                            self.choose_new();
+                        }
                         if ui.button("Open…").clicked() {
                             ui.close();
                             self.choose_open();
@@ -635,9 +869,25 @@ impl Editor {
                             ui.close();
                             self.save();
                         }
+                        if ui
+                            .add_enabled(self.loaded.is_some(), egui::Button::new("Save As…"))
+                            .clicked()
+                        {
+                            ui.close();
+                            self.save_as();
+                        }
                         if ui.button("Print…").clicked() {
                             ui.close();
                             self.export_png(&ctx);
+                        }
+                    });
+                    ui.menu_button("Edit", |ui| {
+                        if ui
+                            .add_enabled(self.loaded.is_some(), egui::Button::new("Resize Map…"))
+                            .clicked()
+                        {
+                            ui.close();
+                            self.prepare_resize();
                         }
                     });
                     ui.menu_button("View", |ui| {

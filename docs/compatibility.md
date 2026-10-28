@@ -4,8 +4,8 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 
 | Area | Reference | State / required evidence |
 |---|---|---|
-| Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O and filename/explicit/metadata dimensions tested; oversized-file consent pending |
-| Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core tests and headless GUI drag→undo→redo→save pass; full gesture matrix and resize pending |
+| Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions tested; oversized-file consent pending |
+| Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; resize event shifts and full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection and roof colors tested; collisions, compound tilesets, roof tile replacement and palette editing pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases tested; shared-map options, compound ordering and roof inference need further coverage |
@@ -30,7 +30,7 @@ the original application. Unverified assets never become redistributable fixture
   locally. `tests/reference.rs` exhaustively compares its output. CI has a dedicated
   reference job; the default test command explicitly reports this test as ignored.
 - Headless GUI tests exercise toolbar state, accessible open options, a complete
-  paint/undo/redo/save flow, and source-derived geometry. Optional visual tests:
+  paint/undo/redo/save flow, New Map, resize accept/cancel, and source-derived geometry. Optional visual tests:
   `cargo test -p polished-map-gui --features visual-tests`.
 - CLI rendered the unmodified upstream master Kanto example at 5760×4320. The PNG
   was visually inspected locally; this is a smoke test, not a pixel differential.
@@ -47,3 +47,10 @@ the original application. Unverified assets never become redistributable fixture
   render was inspected, including project palette and roof colors. All 236 maps
   with named metadata also render with project palettes. Full pixel parity remains
   pending. All default palette channels match the compiled upstream color table.
+- Native Windows smoke test: launched the built eframe app; opened NewBarkTown
+  through the Windows picker; checked inferred dimensions/tileset; saved a copy
+  through Ctrl+Shift+S; observed the native overwrite prompt; declined replacement
+  and canceled Save As; closed the app. Copy and source SHA-256 both remained
+  `41a1012a051d22ade1b6cdb14577c4b6ad3e195be7024d6f3a020a9f7f5fedd3`.
+  The pinned reference checkout remained clean. This does not verify DPI changes,
+  clipboard, child viewports, or Linux/macOS native dialogs.

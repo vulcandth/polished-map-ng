@@ -139,7 +139,10 @@ pub(crate) fn map_palettes(
             root.join("gfx/tilesets")
         };
         let base = tileset.split('.').next().unwrap_or(tileset);
-        let mut paths = vec![doc.path().with_extension("pal")];
+        let mut paths = Vec::new();
+        if doc.has_backing_file() {
+            paths.push(doc.path().with_extension("pal"));
+        }
         if !metadata.landmark.is_empty() && !metadata.landmark.contains(['/', '\\']) {
             paths.push(gfx.join(format!("{}.pal", metadata.landmark)));
         }

@@ -20,7 +20,9 @@ Implementation-specific exceptions will be recorded here with tests and rational
   warning; a recoverable warning flow remains pending.
 - Binary map length mismatch is currently rejected rather than allowing an
   oversized file to be truncated on save; a faithful warning/consent flow remains
-  pending. ASM `.map` imports cannot yet save in-place: Save As is pending.
+  pending. ASM `.map` imports use Save As to produce binary `.blk` output;
+  the original source is preserved. Save As currently requires a `.blk` extension
+  (or adds it when omitted), rather than accepting arbitrary binary-file suffixes.
 - Single-file saves compare content rather than just modification timestamps,
   and stage output before replacement. Concurrent writers still have a narrow
   check/replace race; no filesystem-wide compare-and-swap guarantee is claimed.
@@ -32,3 +34,11 @@ Implementation-specific exceptions will be recorded here with tests and rational
   can carry the previous map's custom colors into the next map when no file
   overrides them. Deliberate reuse/import and persistent preferences remain
   pending; accidental carry-over is not reproduced in the headless interface.
+
+## Incomplete resize integration
+
+The block-level resize matches upstream's nine anchors, zero fill, signed division
+and history reset. Event movement is pending with event support. Neither upstream
+nor this port rewrites map dimension constants on resize; users must update those
+and any filename-encoded dimensions before reopening. The current GUI states this
+limitation; the CLI reports `dimensions_changed`.

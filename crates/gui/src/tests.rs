@@ -157,4 +157,120 @@ fn synthetic_editor_appearance() {
     harness.remove_cursor();
     harness.run();
     harness.snapshot("synthetic-dark");
+    harness.state_mut().prepare_resize();
+    harness.run();
+    harness.snapshot("resize-dialog");
+}
+
+#[test]
+fn resize_dialog_anchor_accept_and_cancel_use_shared_command() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("Resize.2x1.demo.blk");
+    std::fs::write(&path, [1, 2]).unwrap();
+    let document = MapDocument::open(&path, &OpenOptions::default()).unwrap();
+    let graphics = Graphics::new(
+        vec![polished_map_core::Tile::new([0; 64]).unwrap()],
+        vec![polished_map_core::day_palettes()[0]],
+        vec![[0; 16]; 3],
+    )
+    .unwrap();
+    let mut harness = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .build_eframe(|cc| Editor::new(cc));
+    let (tx, rx) = mpsc::channel();
+    tx.send(Ok(Loaded { document, graphics })).unwrap();
+    harness.state_mut().loading = Some(rx);
+    harness.run();
+    harness.get_by_label("Edit").click();
+    harness.run();
+    harness.get_by_label("Resize Map…").click();
+    harness.run();
+    harness.get_by_label("Width").set_value_accesskit(3.0);
+    harness.get_by_label("Height").set_value_accesskit(2.0);
+    harness.run();
+    harness.get_by_label("Bottom right").click();
+    harness.run();
+    harness.get_by_label("Resize").click();
+    harness.run();
+    let doc = &harness.state().loaded.as_ref().unwrap().document;
+    assert_eq!(doc.map().blocks(), [0, 0, 0, 0, 1, 2]);
+    assert!(!doc.map().can_undo());
+    assert!(doc.map().is_modified());
+    harness.get_by_label("Edit").click();
+    harness.run();
+    harness.get_by_label("Resize Map…").click();
+    harness.run();
+    harness.get_by_label("Width").set_value_accesskit(8.0);
+    harness.run();
+    harness.get_by_label("Cancel").click();
+    harness.run();
+    assert_eq!(
+        harness
+            .state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .document
+            .map()
+            .width(),
+        3
+    );
+    assert_eq!(std::fs::read(path).unwrap(), [1, 2]);
+}
+
+#[test]
+fn new_map_dialog_creates_in_memory_and_cancel_preserves_it() {
+    let directory = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(directory.path().join("gfx/tilesets")).unwrap();
+    std::fs::create_dir_all(directory.path().join("data/tilesets")).unwrap();
+    std::fs::write(directory.path().join("gfx/tilesets/demo.2bpp"), [0; 16]).unwrap();
+    std::fs::write(
+        directory.path().join("data/tilesets/demo_metatiles.bin"),
+        [0; 16],
+    )
+    .unwrap();
+    let mut harness = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .build_eframe(|cc| Editor::new(cc));
+    harness
+        .state_mut()
+        .prepare_new_in(directory.path().to_path_buf());
+    harness.run();
+    harness.get_by_label("Width").set_value_accesskit(3.0);
+    harness.get_by_label("Height").set_value_accesskit(2.0);
+    harness.run();
+    harness.get_by_label("Create map").click();
+    harness.run();
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while harness.state().loading.is_some() && std::time::Instant::now() < deadline {
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        harness.run();
+    }
+    assert!(
+        harness.state().error.is_none(),
+        "{:?}",
+        harness.state().error
+    );
+    let doc = &harness.state().loaded.as_ref().unwrap().document;
+    assert_eq!(doc.map().blocks(), [0; 6]);
+    assert!(!doc.has_backing_file());
+    assert!(doc.map().is_modified());
+    assert!(!directory.path().join("NewMap.blk").exists());
+    harness
+        .state_mut()
+        .prepare_new_in(directory.path().to_path_buf());
+    harness.run();
+    harness.get_by_label("Cancel").click();
+    harness.run();
+    assert_eq!(
+        harness
+            .state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .document
+            .map()
+            .width(),
+        3
+    );
 }
