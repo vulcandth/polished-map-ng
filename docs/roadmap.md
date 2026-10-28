@@ -36,6 +36,13 @@ dialog with pixel gestures, palette/priority controls, private/image clipboard
 operations, drag copy/swap, deletion, preview refresh and saving. Headless GUI
 tests cover the edit/accept/save flow. Native clipboard/child windows, priority
 overlays and remaining specialist editors still prevent a tileset parity gate.
+The roof draft editor now shares pixel/clipboard commands, preserves the original
+226×228 client geometry and reversed tile rows, and has independent PNG saves.
+The headless roof interface previews and requires an observed hash to apply.
+Compiled upstream comparisons cover safe 8×8 roof image paste; temporary real
+New Bark Town roof edits save/reopen with other pixels and source fixtures intact.
+Changing the loaded roof without reopening, native windows/clipboard, palette-color
+editing and other matrix gaps still remain.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.

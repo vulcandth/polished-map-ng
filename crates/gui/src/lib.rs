@@ -8,6 +8,8 @@ use block_editor::BlockForm;
 #[cfg(test)]
 mod block_workflow_tests;
 #[cfg(test)]
+mod roof_editor_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod tileset_editor_tests;
@@ -139,6 +141,10 @@ impl Editor {
                 || l.tileset
                     .as_ref()
                     .is_some_and(|t| t.tileset().is_modified())
+                || l.tileset
+                    .as_ref()
+                    .and_then(|t| t.roof())
+                    .is_some_and(|r| r.roof().tileset().is_modified())
         })
     }
 
@@ -368,6 +374,9 @@ impl Editor {
                 self.save_blockset();
                 if self.error.is_none() {
                     self.save_tileset();
+                    if self.error.is_none() {
+                        self.save_roof();
+                    }
                 }
             }
             return;
@@ -384,6 +393,9 @@ impl Editor {
         self.save_blockset();
         if self.error.is_none() {
             self.save_tileset();
+            if self.error.is_none() {
+                self.save_roof();
+            }
         }
     }
 
@@ -1000,6 +1012,9 @@ impl Editor {
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::T)) {
                 self.prepare_tileset();
             }
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::F)) {
+                self.prepare_roof();
+            }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::N)) {
                 self.choose_new();
             }
@@ -1068,6 +1083,20 @@ impl Editor {
                             self.save_tileset();
                         }
                         if ui
+                            .add_enabled(
+                                self.loaded
+                                    .as_ref()
+                                    .and_then(|l| l.tileset.as_ref())
+                                    .and_then(|t| t.roof())
+                                    .is_some(),
+                                egui::Button::new("Save Roof"),
+                            )
+                            .clicked()
+                        {
+                            ui.close();
+                            self.save_roof();
+                        }
+                        if ui
                             .add_enabled(self.loaded.is_some(), egui::Button::new("Save As…"))
                             .clicked()
                         {
@@ -1100,6 +1129,20 @@ impl Editor {
                         {
                             ui.close();
                             self.prepare_tileset();
+                        }
+                        if ui
+                            .add_enabled(
+                                self.loaded
+                                    .as_ref()
+                                    .and_then(|l| l.tileset.as_ref())
+                                    .and_then(|t| t.roof())
+                                    .is_some(),
+                                egui::Button::new("Edit Roof…"),
+                            )
+                            .clicked()
+                        {
+                            ui.close();
+                            self.prepare_roof();
                         }
                         if ui
                             .add_enabled(self.loaded.is_some(), egui::Button::new("Resize Map…"))

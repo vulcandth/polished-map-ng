@@ -6,7 +6,10 @@ use egui_kittest::{
 use polished_map_core::TileCommand;
 use std::fs;
 
-fn fixture(allow_256: bool, monochrome: bool) -> (tempfile::TempDir, Harness<'static, Editor>) {
+pub(super) fn fixture(
+    allow_256: bool,
+    monochrome: bool,
+) -> (tempfile::TempDir, Harness<'static, Editor>) {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     fs::create_dir_all(root.join("gfx/tilesets")).unwrap();

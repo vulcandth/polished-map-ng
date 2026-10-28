@@ -1,5 +1,5 @@
-//! master Tileset_Window::{initialize,apply_modifications} and map-buttons.cpp.
-//! Source client area is 466×304, sheet cells 16px and editable pixels 18px.
+//! master Tileset_Window/Roof_Window::{initialize,apply_modifications} and map-buttons.cpp.
+//! Source client areas are 466×304 / 226×228, sheet cells 16px and pixels 18px.
 use super::*;
 use polished_map_core::{TileCommand, TileSnapshot, UNDEFINED_COLORS};
 
@@ -20,6 +20,7 @@ const SWATCHES: [u8; 4] = [0, 2, 1, 3];
 pub(super) struct TilesetForm {
     pub(super) draft: MasterTilesetDocument,
     pub(super) selected: u8,
+    roof: bool,
     hue: u8,
     clipboard: Option<(u8, TileSnapshot)>,
     sheet: Option<egui::TextureHandle>,
@@ -34,21 +35,43 @@ pub(super) struct TilesetForm {
 }
 
 impl TilesetForm {
+    fn model(&self) -> &polished_map_core::Tileset {
+        if self.roof {
+            self.draft
+                .roof()
+                .expect("roof form requires a loaded roof")
+                .roof()
+                .tileset()
+        } else {
+            self.draft.tileset()
+        }
+    }
+
     fn enabled(&self, id: u8) -> bool {
-        self.draft.allow_256()
+        self.roof
+            || self.draft.allow_256()
             || (id < 0x60 || (!self.draft.monochrome() && (0x80..0xe0).contains(&id)))
     }
 
     fn apply(&mut self, command: TileCommand) -> Result<(), String> {
-        self.draft
-            .apply_batch(&[command])
-            .map_err(|e| e.to_string())?;
+        if self.roof {
+            self.draft
+                .roof_mut()
+                .expect("roof form requires a loaded roof")
+                .roof_mut()
+                .apply_batch(&[command])
+                .map_err(|e| e.to_string())?;
+        } else {
+            self.draft
+                .apply_batch(&[command])
+                .map_err(|e| e.to_string())?;
+        }
         self.refresh = true;
         Ok(())
     }
 
     fn colors(&self) -> polished_map_core::Palette {
-        let attr = self.draft.tileset().attributes()[usize::from(self.selected)];
+        let attr = self.model().attributes()[usize::from(self.selected)];
         if attr == 9 {
             UNDEFINED_COLORS
         } else {
@@ -61,10 +84,10 @@ impl TilesetForm {
             return Ok(());
         }
         let mut pixels = vec![0; 128 * 128 * 3];
-        for id in 0..=255u8 {
+        for index in 0..self.model().tiles().len() {
+            let id = index as u8;
             let rgb = self
-                .draft
-                .tileset()
+                .model()
                 .render_tile(id, self.draft.colors())
                 .map_err(|e| e.to_string())?;
             for y in 0..8 {
@@ -86,8 +109,7 @@ impl TilesetForm {
     fn copy(&mut self) -> Result<(), String> {
         self.clipboard = Some((
             self.selected,
-            self.draft
-                .tileset()
+            self.model()
                 .snapshot(self.selected)
                 .map_err(|e| e.to_string())?,
         ));
@@ -116,7 +138,7 @@ impl TilesetForm {
 
     fn copy_image(&self, ctx: &egui::Context) {
         // Tile::draw_for_clipboard deliberately exports monochrome samples.
-        let pixels: Vec<_> = self.draft.tileset().tiles()[usize::from(self.selected)]
+        let pixels: Vec<_> = self.model().tiles()[usize::from(self.selected)]
             .hues()
             .iter()
             .flat_map(|&h| [[255, 85, 170, 0][usize::from(h)]; 3])
@@ -223,7 +245,7 @@ impl TilesetForm {
                             }
                             _ => {}
                         }
-                    } else if key == egui::Key::Delete {
+                    } else if key == egui::Key::Delete && !self.roof {
                         self.apply(TileCommand::Delete {
                             tile: self.selected,
                         })?;
@@ -240,10 +262,9 @@ impl TilesetForm {
                     .iter()
                     .position(|&k| k == key)
                     {
-                        if modifiers.alt && !self.draft.monochrome() {
-                            let priority = self.draft.tileset().attributes()
-                                [usize::from(self.selected)]
-                                & 0x80;
+                        if modifiers.alt && !self.draft.monochrome() && !self.roof {
+                            let priority =
+                                self.model().attributes()[usize::from(self.selected)] & 0x80;
                             self.apply(TileCommand::Palette {
                                 tile: self.selected,
                                 palette: index as u8 | priority,
@@ -262,10 +283,20 @@ impl TilesetForm {
 
 impl Editor {
     pub(super) fn prepare_tileset(&mut self) {
+        self.prepare_tile_form(false);
+    }
+    pub(super) fn prepare_roof(&mut self) {
+        self.prepare_tile_form(true);
+    }
+    fn prepare_tile_form(&mut self, roof: bool) {
         if let Some(doc) = self.loaded.as_ref().and_then(|l| l.tileset.as_ref()) {
+            if roof && doc.roof().is_none() {
+                return;
+            }
             self.tileset_form = Some(TilesetForm {
                 draft: doc.clone(),
-                selected: 0,
+                selected: if roof { 6 } else { 0 },
+                roof,
                 hue: 0,
                 clipboard: None,
                 sheet: None,
@@ -292,12 +323,8 @@ impl Editor {
         let Some(blockset) = &loaded.blockset else {
             return Ok(());
         };
-        // Upstream accepts all 256 draft tiles and marks dirty even without edits.
-        let value = form
-            .draft
-            .tileset()
-            .snapshot(0)
-            .map_err(|e| e.to_string())?;
+        // Upstream accepts the complete draft and marks dirty even without edits.
+        let value = form.model().snapshot(0).map_err(|e| e.to_string())?;
         form.apply(TileCommand::Set { tile: 0, value })?;
         let graphics = form
             .draft
@@ -320,7 +347,12 @@ impl Editor {
             .collect();
         loaded.graphics = graphics;
         loaded.tileset = Some(form.draft.clone());
-        self.status = "Tileset changed".into();
+        self.status = if form.roof {
+            "Roof changed"
+        } else {
+            "Tileset changed"
+        }
+        .into();
         Ok(())
     }
 
@@ -343,6 +375,24 @@ impl Editor {
         }
     }
 
+    pub(super) fn save_roof(&mut self) {
+        let Some(roof) = self
+            .loaded
+            .as_mut()
+            .and_then(|l| l.tileset.as_mut())
+            .and_then(|t| t.roof_mut())
+        else {
+            return;
+        };
+        if !roof.roof().tileset().is_modified() {
+            return;
+        }
+        match roof.save() {
+            Ok(()) => self.status = "Roof saved".into(),
+            Err(e) => self.error = Some(e.to_string()),
+        }
+    }
+
     pub(super) fn tileset_dialog(&mut self, ctx: &egui::Context) {
         let Some(mut form) = self.tileset_form.take() else {
             return;
@@ -355,15 +405,36 @@ impl Editor {
         let mut command = None;
         let mut paste_image = false;
         let modal = egui::Modal::new(egui::Id::unique("edit-tileset")).show(ctx, |ui| {
-            ui.heading("Edit Tileset");
-            let (area, _) = ui.allocate_exact_size(Vec2::new(466.0, 304.0), Sense::hover());
+            ui.heading(if form.roof {
+                "Edit Roof"
+            } else {
+                "Edit Tileset"
+            });
+            let size = if form.roof {
+                Vec2::new(226.0, 228.0)
+            } else {
+                Vec2::new(466.0, 304.0)
+            };
+            let (area, _) = ui.allocate_exact_size(size, Sense::hover());
+            let tile_x = if form.roof { 70.0 } else { 278.0 };
+            let sheet_size = if form.roof { 50.0 } else { 258.0 };
             let rect =
                 |x, y, w, h| Rect::from_min_size(area.min + Vec2::new(x, y), Vec2::new(w, h));
             let font = egui::FontId::proportional(13.0);
             let text = ui.visuals().text_color();
+            let heading_x = if form.roof {
+                216.0
+                    - ui.painter()
+                        .layout_no_wrap("Tile: $FFF".into(), font.clone(), text)
+                        .size()
+                        .x
+                    - 2.0
+            } else {
+                278.0
+            };
             for frame in [
-                rect(10.0, 36.0, 258.0, 258.0),
-                rect(278.0, 36.0, 146.0, 146.0),
+                rect(10.0, 36.0, sheet_size, sheet_size),
+                rect(tile_x, 36.0, 146.0, 146.0),
             ] {
                 ui.painter().rect_stroke(
                     frame,
@@ -372,41 +443,61 @@ impl Editor {
                     egui::StrokeKind::Inside,
                 );
             }
+            // Source Label uses FL_ALIGN_CLIP: long names cannot cover Tile ID.
+            ui.painter()
+                .with_clip_rect(rect(
+                    10.0,
+                    10.0,
+                    if form.roof { heading_x - 10.0 } else { 258.0 },
+                    22.0,
+                ))
+                .text(
+                    area.min + Vec2::new(10.0, 10.0),
+                    egui::Align2::LEFT_TOP,
+                    if form.roof {
+                        format!("Roof: {}", form.draft.roof().unwrap().name())
+                    } else {
+                        format!("Tileset: {}", form.draft.name())
+                    },
+                    font.clone(),
+                    text,
+                );
             ui.painter().text(
-                area.min + Vec2::new(10.0, 10.0),
+                area.min + Vec2::new(heading_x, 10.0),
                 egui::Align2::LEFT_TOP,
-                format!("Tileset: {}", form.draft.name()),
+                format!(
+                    "Tile: ${:02X}",
+                    form.selected + if form.roof { 0x0a } else { 0 }
+                ),
                 font.clone(),
                 text,
             );
-            ui.painter().text(
-                area.min + Vec2::new(278.0, 10.0),
-                egui::Align2::LEFT_TOP,
-                format!("Tile: ${:02X}", form.selected),
-                font.clone(),
-                text,
-            );
+            let toolbar_y = if form.roof { 160.0 } else { 10.0 };
             for (x, label, title) in [
-                (380.0, "C", "Copy tile image"),
-                (402.0, "P", "Paste tile image"),
+                (if form.roof { 16.0 } else { 380.0 }, "C", "Copy tile image"),
+                (
+                    if form.roof { 38.0 } else { 402.0 },
+                    "P",
+                    "Paste tile image",
+                ),
             ] {
                 let key = if label == "C" { "C" } else { "V" };
                 let response = ui
-                    .put(rect(x, 10.0, 22.0, 22.0), egui::Button::new(""))
+                    .put(rect(x, toolbar_y, 22.0, 22.0), egui::Button::new(""))
                     .on_hover_text(format!("{title} (Ctrl/Cmd+Shift+{key})"));
                 response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, title));
                 // Code-drawn clipboard/page symbols; no unaudited upstream assets.
-                let front = rect(x + 8.0, 17.0, 9.0, 11.0);
+                let front = rect(x + 8.0, toolbar_y + 7.0, 9.0, 11.0);
                 if label == "C" {
                     ui.painter().rect_stroke(
-                        rect(x + 5.0, 14.0, 9.0, 11.0),
+                        rect(x + 5.0, toolbar_y + 4.0, 9.0, 11.0),
                         0.0,
                         (1.0, text),
                         egui::StrokeKind::Inside,
                     );
                 } else {
                     ui.painter().rect_stroke(
-                        rect(x + 5.0, 14.0, 12.0, 15.0),
+                        rect(x + 5.0, toolbar_y + 4.0, 12.0, 15.0),
                         0.0,
                         (1.0, text),
                         egui::StrokeKind::Inside,
@@ -424,10 +515,11 @@ impl Editor {
                     }
                 }
             }
-            for id in 0..=255u8 {
+            for index in 0..form.model().tiles().len() {
+                let id = index as u8;
                 let cell = rect(
-                    11.0 + f32::from(id % 16) * 16.0,
-                    37.0 + f32::from(id / 16) * 16.0,
+                    11.0 + f32::from(if form.roof { id % 3 } else { id % 16 }) * 16.0,
+                    37.0 + f32::from(if form.roof { 2 - id / 3 } else { id / 16 }) * 16.0,
                     16.0,
                     16.0,
                 );
@@ -446,7 +538,11 @@ impl Editor {
                     egui::WidgetInfo::labeled(
                         egui::Role::Button,
                         enabled,
-                        format!("Tileset tile ${id:02X}"),
+                        if form.roof {
+                            format!("Roof tile ${:02X}", id + 0x0a)
+                        } else {
+                            format!("Tileset tile ${id:02X}")
+                        },
                     )
                 });
                 if let Some(sheet) = &form.sheet {
@@ -482,10 +578,10 @@ impl Editor {
                 form.drag = None;
             }
             let colors = form.colors();
-            let pixels = *form.draft.tileset().tiles()[usize::from(form.selected)].hues();
+            let pixels = *form.model().tiles()[usize::from(form.selected)].hues();
             for (i, &hue) in pixels.iter().enumerate() {
                 let cell = rect(
-                    279.0 + (i % 8) as f32 * 18.0,
+                    (tile_x + 1.0) + (i % 8) as f32 * 18.0,
                     37.0 + (i / 8) as f32 * 18.0,
                     18.0,
                     18.0,
@@ -558,7 +654,16 @@ impl Editor {
                 form.last_pixel = None;
             }
             for (i, &hue) in SWATCHES.iter().enumerate() {
-                let cell = rect(434.0, 36.0 + i as f32 * 28.0, 22.0, 22.0);
+                let cell = if form.roof {
+                    rect(
+                        10.0 + (i % 2) as f32 * 28.0,
+                        100.0 + (i / 2) as f32 * 28.0,
+                        22.0,
+                        22.0,
+                    )
+                } else {
+                    rect(434.0, 36.0 + i as f32 * 28.0, 22.0, 22.0)
+                };
                 let c = colors[usize::from(hue)];
                 let response = ui.put(
                     cell,
@@ -600,57 +705,64 @@ impl Editor {
                     super::block_editor::selection_border(ui, cell);
                 }
             }
-            let attribute = form.draft.tileset().attributes()[usize::from(form.selected)];
-            let mut palette = attribute & 15;
-            let mut priority = attribute & 0x80 != 0;
-            ui.scope_builder(
-                egui::UiBuilder::new().max_rect(rect(278.0, 192.0, 146.0, 22.0)),
-                |ui| {
-                    ui.add_enabled_ui(!form.draft.monochrome(), |ui| {
-                        ui.horizontal(|ui| {
-                            let label = ui.label("Palette:");
-                            egui::ComboBox::from_id_salt("tile-palette")
-                                .selected_text(PALETTES[usize::from(palette)])
-                                .width(82.0)
-                                .show_ui(ui, |ui| {
-                                    for (id, label) in PALETTES.iter().enumerate().take(8) {
-                                        ui.selectable_value(&mut palette, id as u8, *label);
-                                    }
-                                })
-                                .response
-                                .labelled_by(label.id);
+            if !form.roof {
+                let attribute = form.model().attributes()[usize::from(form.selected)];
+                let mut palette = attribute & 15;
+                let mut priority = attribute & 0x80 != 0;
+                ui.scope_builder(
+                    egui::UiBuilder::new().max_rect(rect(278.0, 192.0, 146.0, 22.0)),
+                    |ui| {
+                        ui.add_enabled_ui(!form.draft.monochrome(), |ui| {
+                            ui.horizontal(|ui| {
+                                let label = ui.label("Palette:");
+                                egui::ComboBox::from_id_salt("tile-palette")
+                                    .selected_text(PALETTES[usize::from(palette)])
+                                    .width(82.0)
+                                    .show_ui(ui, |ui| {
+                                        for (id, label) in PALETTES.iter().enumerate().take(8) {
+                                            ui.selectable_value(&mut palette, id as u8, *label);
+                                        }
+                                    })
+                                    .response
+                                    .labelled_by(label.id);
+                            });
                         });
+                    },
+                );
+                ui.scope_builder(
+                    egui::UiBuilder::new().max_rect(rect(278.0, 218.0, 178.0, 22.0)),
+                    |ui| {
+                        ui.add_enabled_ui(
+                            !form.draft.monochrome() && form.draft.allow_priority() && palette < 8,
+                            |ui| {
+                                ui.checkbox(&mut priority, "Priority (above sprites)");
+                            },
+                        );
+                    },
+                );
+                let updated = palette | if priority { 0x80 } else { 0 };
+                if updated != attribute {
+                    command = Some(TileCommand::Palette {
+                        tile: form.selected,
+                        palette: updated,
                     });
-                },
-            );
-            ui.scope_builder(
-                egui::UiBuilder::new().max_rect(rect(278.0, 218.0, 178.0, 22.0)),
-                |ui| {
-                    ui.add_enabled_ui(
-                        !form.draft.monochrome() && form.draft.allow_priority() && palette < 8,
-                        |ui| {
-                            ui.checkbox(&mut priority, "Priority (above sprites)");
-                        },
-                    );
-                },
-            );
-            let updated = palette | if priority { 0x80 } else { 0 };
-            if updated != attribute {
-                command = Some(TileCommand::Palette {
-                    tile: form.selected,
-                    palette: updated,
-                });
+                }
             }
             let (ok, no) = if form.windows_buttons {
                 (282.0, 376.0)
             } else {
                 (376.0, 282.0)
             };
+            let (ok, no, button_y) = if form.roof {
+                (ok - 240.0, no - 240.0, 196.0)
+            } else {
+                (ok, no, 272.0)
+            };
             accept = ui
-                .put(rect(ok, 272.0, 80.0, 22.0), egui::Button::new("OK"))
+                .put(rect(ok, button_y, 80.0, 22.0), egui::Button::new("OK"))
                 .clicked();
             cancel = ui
-                .put(rect(no, 272.0, 80.0, 22.0), egui::Button::new("Cancel"))
+                .put(rect(no, button_y, 80.0, 22.0), egui::Button::new("Cancel"))
                 .clicked();
         });
         #[cfg(test)]

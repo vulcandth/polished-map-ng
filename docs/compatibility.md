@@ -10,7 +10,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, ASM/binary collisions and paired saves tested; palette editing and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Block and tileset drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count and persistence implemented; native child windows, native clipboard verification, priority overlays, roof and palette-color editors pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset and roof drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count and persistence implemented; native child windows, native clipboard verification, priority overlays, loaded-roof switching and palette-color editors pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
@@ -58,13 +58,28 @@ the original application. Unverified assets never become redistributable fixture
 - The shared `Tileset` draft model now implements pixel paint/fill/replace/swap,
   palette/priority changes, snapshot and live-source copy/swap, deletion, clipped
   RGB image paste and trailing-unused-tile trimming. Commands validate atomically.
-  `tools/tile_editor_oracle.py` compiles six unmodified upstream functions with
+  `tools/tile_editor_oracle.py` compiles seven unmodified upstream functions with
   UI stubs. Rust matches 30,720 fill/replace/swap cases and 88 RGB-paste cases
   across both tile modes and reserved-row/boundary origins. This does not verify
   FLTK dispatch, native clipboard transport, tile-editor controls, or saving.
   Source-derived tests cover palette-map serialization and grayscale export
   pixels, including bank gaps, odd entry padding, partial-line newline behavior,
   and rejected unsafe layouts. These APIs are experimental, not a completed editor.
+- `Roof` and `RoofDocument` provide independent nine-tile editing and saving.
+  Core tests cover atomic invalid batches, copy/swap, contextual palette sync,
+  safe image clipping and file-order export. The compiled upstream oracle adds
+  288 exact-8×8 roof RGB-paste comparisons; other dimensions use the documented
+  safety correction. Project tests cover 24×24 two-bit PNGs, imported-source
+  preservation, separate base/roof dirty state, save/reopen and external changes.
+  CLI tests cover no-write preview, missing/stale apply hashes, rejected commands
+  and reopened pixels. A temporary copy of pinned New Bark Town roof graphics
+  preserves every other pixel and leaves the reference source untouched.
+  `roof_editor_tests` covers cancel/accept, preview refresh, save/conflict/dirty
+  guards, private copy/live-source swap, bounded image paste and reversed rows.
+  Inspected Windows/Unix button-order snapshots use Roof_Window::initialize's
+  226×228 client area, 16px tile cells and 18px pixel cells. These are headless
+  tests; native child windows, clipboard transport and DPI remain unverified.
+  All 25 current GUI tests pass with snapshot comparisons serialized on Windows.
 - `MasterTilesetDocument` connects the draft model to discovery, contextual
   rendering and PNG/palette persistence. Source-derived tests cover two-bit
   grayscale PNG headers and decoded pixels, 2bpp import preservation, roof/base

@@ -2,9 +2,12 @@
 //! Base tiles and roof overlays remain separate; edits never bake a roof into
 //! the base sheet. Multi-file output is staged before any destination is changed.
 use crate::{
-    MapDocument, MasterGraphicsOptions, ProjectError, SaveTarget, codecs,
+    MapDocument, MasterGraphicsOptions, ProjectError, RoofDocument, SaveTarget, codecs,
     document::{optional_hash, prepare_target},
-    graphics::{graphics_path, palette_map_path, read_tiles, tile_slot, validate_tileset},
+    graphics::{
+        encode_grayscale_png, graphics_path, palette_map_path, read_tiles, tile_slot,
+        validate_tileset,
+    },
     palettes::map_palettes,
     read_bounded, tile_palettes,
     transaction::{Change, persist_pair},
@@ -49,8 +52,7 @@ pub struct MasterTilesetDocument {
     initial: Tileset,
     colors: [Palette; 9],
     clear_slots: Vec<bool>,
-    roof: Option<Vec<Tile>>,
-    roof_attributes: Vec<u8>,
+    roof: Option<RoofDocument>,
     sources: Vec<SaveTarget>,
     parts: Vec<Part>,
     palette_source: Option<(SaveTarget, String)>,
@@ -176,25 +178,17 @@ impl MasterTilesetDocument {
             }
         }
         let model = Tileset::new(tiles, attributes)?;
-        let roof = if let Some(roof) = &options.roof {
-            validate_tileset(root, roof)?;
-            let path = graphics_path(&root.join("gfx/tilesets/roofs"), roof);
-            let observed = prepare_target(&path)?;
-            let tiles = read_tiles(&path)?;
-            if tiles.len() != 9 {
-                return Err(ProjectError::Format {
-                    path,
-                    message: "roof graphics must contain exactly nine tiles".into(),
-                });
-            }
-            if optional_hash(&path)? != observed.hash {
-                return Err(ProjectError::Conflict(path));
-            }
-            sources.push(observed);
-            Some(tiles)
-        } else {
-            None
-        };
+        let roof = options
+            .roof
+            .as_ref()
+            .map(|name| {
+                RoofDocument::open_in_project(
+                    root,
+                    name,
+                    std::array::from_fn(|i| ids.get(i + 0x0a).copied().unwrap_or(9)),
+                )
+            })
+            .transpose()?;
         let mut parts = Vec::new();
         if !before_name.is_empty() {
             parts.push(Part {
@@ -218,9 +212,6 @@ impl MasterTilesetDocument {
                 count: None,
             });
         }
-        let roof_attributes = (0x0a..=0x12)
-            .map(|i| ids.get(i).copied().unwrap_or(9))
-            .collect();
         Ok(Self {
             name: name.into(),
             initial: model.clone(),
@@ -228,7 +219,6 @@ impl MasterTilesetDocument {
             colors,
             clear_slots,
             roof,
-            roof_attributes,
             sources,
             parts,
             palette_source,
@@ -243,6 +233,12 @@ impl MasterTilesetDocument {
     }
     pub fn tileset(&self) -> &Tileset {
         &self.model
+    }
+    pub fn roof(&self) -> Option<&RoofDocument> {
+        self.roof.as_ref()
+    }
+    pub fn roof_mut(&mut self) -> Option<&mut RoofDocument> {
+        self.roof.as_mut()
     }
     pub fn colors(&self) -> &[Palette; 9] {
         &self.colors
@@ -304,8 +300,13 @@ impl MasterTilesetDocument {
     }
     pub fn apply_batch(&mut self, commands: &[TileCommand]) -> Result<(), ProjectError> {
         self.model.apply_batch(commands)?;
-        if !commands.is_empty() {
-            self.roof_attributes = self.model.attributes()[0x0a..=0x12].to_vec();
+        if !commands.is_empty()
+            && let Some(roof) = &mut self.roof
+        {
+            roof.roof_mut()
+                .synchronize_attributes(std::array::from_fn(|i| {
+                    self.model.attributes()[i + 0x0a]
+                }))?;
         }
         Ok(())
     }
@@ -330,10 +331,10 @@ impl MasterTilesetDocument {
             });
         }
         if let Some(roof) = &self.roof {
-            for (i, tile) in roof.iter().enumerate() {
+            for (i, tile) in roof.roof().tileset().tiles().iter().enumerate() {
                 let slot = i + 0x0a;
                 tiles[slot] = tile.clone();
-                let attr = self.roof_attributes[i];
+                let attr = roof.roof().tileset().attributes()[i];
                 palettes[slot] = if attr == 9 {
                     UNDEFINED_COLORS
                 } else {
@@ -370,35 +371,7 @@ impl MasterTilesetDocument {
         let mut changes = Vec::new();
         for part in &self.parts {
             let raster = draft.export_region(part.offset, part.count, self.allow_256)?;
-            // Image::write_image packs four grayscale samples, most significant
-            // first. Keep the original two-bit grayscale PNG format; compressed
-            // bytes may differ between libpng/zlib and the Rust encoder.
-            let packed: Vec<u8> = raster
-                .pixels
-                .as_chunks::<12>()
-                .0
-                .iter()
-                .map(|pixels| {
-                    pixels
-                        .as_chunks::<3>()
-                        .0
-                        .iter()
-                        .fold(0, |byte, pixel| (byte << 2) | (pixel[0] / 64))
-                })
-                .collect();
-            let mut bytes = Vec::new();
-            let encoded = (|| -> Result<(), png::EncodingError> {
-                let mut encoder = png::Encoder::new(&mut bytes, raster.width, raster.height);
-                encoder.set_color(png::ColorType::Grayscale);
-                encoder.set_depth(png::BitDepth::Two);
-                let mut writer = encoder.write_header()?;
-                writer.write_image_data(&packed)?;
-                writer.finish()
-            })();
-            encoded.map_err(|e| ProjectError::Format {
-                path: part.output.path.clone(),
-                message: e.to_string(),
-            })?;
+            let bytes = encode_grayscale_png(&part.output.path, &raster)?;
             changes.push(Change {
                 path: part.output.path.clone(),
                 expected: part.output.hash,

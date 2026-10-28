@@ -9,6 +9,7 @@ mod discovery;
 mod document;
 mod graphics;
 mod palettes;
+mod roof;
 mod tile_palettes;
 mod tileset;
 mod transaction;
@@ -23,4 +24,5 @@ pub use graphics::{load_master_graphics, load_master_map_graphics, write_png};
 pub use palettes::{
     MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,
 };
+pub use roof::RoofDocument;
 pub use tileset::{MasterTilesetDocument, TilesetOutput};

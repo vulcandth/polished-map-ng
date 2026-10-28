@@ -23,6 +23,7 @@ def main():
     provenance = []
     for path, names in [
         ("src/tileset-window.cpp", ["void Tileset_Window::flood_fill(", "void Tileset_Window::substitute_hue(", "void Tileset_Window::swap_hues(", "void Tileset_Window::paste_tile_graphics_cb("]),
+        ("src/roof-window.cpp", ["void Roof_Window::paste_tile_graphics_cb("]),
         ("src/colors.cpp", ["uchar Color::desaturated(", "Hue Color::mono_hue("]),
     ]:
         source = subprocess.check_output([args.git, "-C", str(args.checkout), "show", f"{REVISION}:{path}"], text=True)
@@ -100,11 +101,15 @@ struct Tileset_Window {
     void swap_hues(Hue, Hue) const;
     static void paste_tile_graphics_cb(Toolbar_Button *, Tileset_Window *);
 };
+struct Roof_Window : Tileset_Window {
+    static void paste_tile_graphics_cb(Toolbar_Button *, Roof_Window *);
+};
 '''
     driver = r'''
 int main(int argc, char **argv) {
-    if(argc != 3) return 2;
+    if(argc != 4) return 2;
     std::ofstream edits(argv[1], std::ios::binary), images(argv[2], std::ios::binary);
+    std::ofstream roofs(argv[3], std::ios::binary);
     for(int seed=0;seed<40;seed++) for(int op=0;op<3;op++) for(int at=0;at<64;at++) for(int to=0;to<4;to++) {
         Tileset_Window tw;
         for(int i=0;i<64;i++) {
@@ -126,7 +131,15 @@ int main(int argc, char **argv) {
         Tileset_Window::paste_tile_graphics_cb(nullptr,&tw);
         for(auto &tile:tw.tiles) { for(Hue h:tile.pixels) images.put(char(h)); images.put(char(tile.p)); }
     }
-    return edits.good() && images.good() ? 0 : 3;
+    // Upstream's roof paste is only memory-safe for exactly 8x8 images.
+    for(int seed=0;seed<16;seed++) for(int start=0;start<9;start++) for(int palette: {0,9}) {
+        Roof_Window rw; rw._selected=&rw.tiles[10+start]; rw._selected->p=Palette(palette);
+        Fl::image=new Fl_Image(8,8);
+        for(int i=0;i<8*8*3;i++) Fl::image->rgb[i]=char((i*37+i/11+seed*19)&255);
+        Roof_Window::paste_tile_graphics_cb(nullptr,&rw);
+        for(int i=10;i<19;i++) { for(Hue h:rw.tiles[i].pixels) roofs.put(char(h)); roofs.put(char(rw.tiles[i].p)); }
+    }
+    return edits.good() && images.good() && roofs.good() ? 0 : 3;
 }
 '''
     args.output.parent.mkdir(parents=True, exist_ok=True)

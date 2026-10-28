@@ -2,6 +2,79 @@ use serde_json::Value;
 use std::{fs, process::Command};
 
 #[test]
+fn roof_cli_previews_requires_observed_hash_and_saves_only_roof_pixels() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let gfx = root.join("gfx/tilesets/roofs");
+    fs::create_dir_all(&gfx).unwrap();
+    let original = [255; 9 * 16];
+    fs::write(gfx.join("demo.2bpp"), original).unwrap();
+    let commands = root.join("commands.json");
+    fs::write(
+        &commands,
+        r#"[{"op":"paint","tile":6,"points":[{"x":0,"y":0}],"hue":2}]"#,
+    )
+    .unwrap();
+    let run = |action: &str, extra: &[&str]| {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_polished-map"));
+        command.arg(action).arg("demo").arg("--root").arg(root);
+        if action == "edit-roof" {
+            command.arg("--commands").arg(&commands);
+        }
+        let output = command.args(extra).output().unwrap();
+        let value: Value = serde_json::from_slice(&output.stdout).unwrap();
+        (output.status.success(), value)
+    };
+    let (ok, preview) = run("edit-roof", &[]);
+    assert!(ok, "{preview}");
+    let result = &preview["result"];
+    assert_eq!(result["applied"], false);
+    assert_eq!(result["pixels"][6][0], 2);
+    assert_eq!(result["pixels"].as_array().unwrap().len(), 9);
+    assert!(result["planned_output"]["bytes"].as_u64().unwrap() > 0);
+    assert!(!gfx.join("demo.png").exists());
+    let hash = result["previous_hash"].as_str().unwrap();
+    let (ok, missing) = run("edit-roof", &["--apply"]);
+    assert!(!ok);
+    assert_eq!(missing["error"]["code"], "expected_hash_required");
+    fs::write(gfx.join("demo.2bpp"), [0; 9 * 16]).unwrap();
+    let (ok, conflict) = run("edit-roof", &["--apply", "--expected-hash", hash]);
+    assert!(!ok);
+    assert_eq!(conflict["error"]["code"], "conflict");
+    assert!(!gfx.join("demo.png").exists());
+    fs::write(gfx.join("demo.2bpp"), original).unwrap();
+    let (ok, saved) = run("edit-roof", &["--apply", "--expected-hash", hash]);
+    assert!(ok, "{saved}");
+    assert_eq!(saved["result"]["applied"], true);
+    assert_eq!(saved["result"]["planned_output"], result["planned_output"]);
+    let png = fs::read(gfx.join("demo.png")).unwrap();
+    assert_eq!(&png[16..26], &[0, 0, 0, 24, 0, 0, 0, 24, 2, 0]);
+    let (ok, reopened) = run("inspect-roof", &[]);
+    assert!(ok, "{reopened}");
+    assert_eq!(reopened["result"]["pixels"], result["pixels"]);
+    assert_eq!(
+        reopened["result"]["content_hash"],
+        saved["result"]["content_hash"]
+    );
+    fs::write(
+        &commands,
+        r#"[{"op":"paint","tile":0,"points":[{"x":0,"y":0}],"hue":1},{"op":"delete","tile":0}]"#,
+    )
+    .unwrap();
+    let (ok, rejected) = run(
+        "edit-roof",
+        &[
+            "--apply",
+            "--expected-hash",
+            saved["result"]["content_hash"].as_str().unwrap(),
+        ],
+    );
+    assert!(!ok, "{rejected}");
+    assert_eq!(fs::read(gfx.join("demo.png")).unwrap(), png);
+    assert_eq!(fs::read(gfx.join("demo.2bpp")).unwrap(), original);
+}
+
+#[test]
 fn tileset_cli_previews_checks_observed_files_and_applies_shared_commands() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();

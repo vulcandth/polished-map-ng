@@ -18,6 +18,15 @@ allow = ["LGPL-3.0-only", "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "
 crate = "epaint_default_fonts"
 allow = ["Ubuntu-font-1.0"]
 
+# Windows image clipboard dependencies. See docs/dependencies.md and LICENSES.
+[[licenses.exceptions]]
+crate = "clipboard-win"
+allow = ["BSL-1.0"]
+
+[[licenses.exceptions]]
+crate = "error-code"
+allow = ["BSL-1.0"]
+
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"

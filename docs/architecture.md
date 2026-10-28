@@ -40,6 +40,15 @@ and headless editing use this same composition. Save prepares all PNG/ASM bytes
 on a trimmed draft before staging; source imports remain intact when output uses
 the original editor's PNG convention. The GUI pixel editor clones this document
 for its modal draft and validates all block previews before replacing live state.
-Accepting a draft dirties only the tileset and preserves map history. The CLI requires a preview-state hash to apply
+Accepting a base draft dirties only the tileset and preserves map history. The CLI requires a preview-state hash to apply
 tileset writes; library callers also supply the block definitions used for trimming
 and must verify their backing files if they require on-disk conflict protection.
+
+`Roof` wraps a nine-tile command model; `RoofDocument` owns its independent dirty
+state, source/destination observations and 24×24 PNG persistence. The same GUI
+pixel controls operate on either draft. Roof acceptance validates the composed
+previews before commit, while base acceptance synchronizes contextual roof
+attributes without marking roof pixels dirty. Roof attributes are transient;
+only pixels persist. Base and roof hashes/save operations are separate. Save All
+processes map, blockset, base tileset and roof sequentially; it is not one atomic
+transaction across all four domains.

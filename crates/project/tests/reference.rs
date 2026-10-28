@@ -12,10 +12,12 @@ fn tile_pixels_and_rgb_paste_match_compiled_upstream() {
     let dir = tempfile::tempdir().unwrap();
     let edits = dir.path().join("edits.bin");
     let images = dir.path().join("images.bin");
+    let roofs = dir.path().join("roofs.bin");
     assert!(
         Command::new(oracle)
             .arg(&edits)
             .arg(&images)
+            .arg(&roofs)
             .status()
             .unwrap()
             .success()
@@ -96,6 +98,41 @@ fn tile_pixels_and_rgb_paste_match_compiled_upstream() {
                         "allow={allow_256} tile={tile} size={width}x{height} result={i}"
                     );
                     assert_eq!(sheet.attributes()[i], reference[offset + 64]);
+                    offset += 65;
+                }
+            }
+        }
+    }
+    let reference = fs::read(roofs).unwrap();
+    assert_eq!(reference.len(), 16 * 9 * 2 * 9 * 65);
+    let mut offset = 0;
+    for seed in 0..16 {
+        for tile in 0..9 {
+            for palette in [0, 9] {
+                let mut attributes = [9; 9];
+                attributes[usize::from(tile)] = palette;
+                let mut roof = polished_map_core::Roof::new(
+                    std::array::from_fn(|_| Tile::new([0; 64]).unwrap()),
+                    attributes,
+                )
+                .unwrap();
+                roof.apply_batch(&[TileCommand::ImportRgb {
+                    tile,
+                    width: 8,
+                    height: 8,
+                    pixels: (0..8 * 8 * 3)
+                        .map(|i| ((i * 37 + i / 11 + seed * 19) & 255) as u8)
+                        .collect(),
+                    allow_256: false,
+                }])
+                .unwrap();
+                for i in 0..9 {
+                    assert_eq!(
+                        roof.tileset().tiles()[i].hues(),
+                        &reference[offset..offset + 64],
+                        "roof seed={seed} tile={tile} palette={palette} result={i}"
+                    );
+                    assert_eq!(roof.tileset().attributes()[i], reference[offset + 64]);
                     offset += 65;
                 }
             }

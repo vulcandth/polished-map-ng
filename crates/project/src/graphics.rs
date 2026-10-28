@@ -182,3 +182,40 @@ pub fn write_png(path: &Path, raster: &RgbImage) -> Result<(), ProjectError> {
         message: e.to_string(),
     })
 }
+
+/// Same two-bit grayscale format as master Image::write_image.
+pub(crate) fn encode_grayscale_png(
+    path: &Path,
+    raster: &RgbImage,
+) -> Result<Vec<u8>, ProjectError> {
+    // Image::write_image packs four grayscale samples, most significant
+    // first. Keep the original two-bit grayscale PNG format; compressed
+    // bytes may differ between libpng/zlib and the Rust encoder.
+    let packed: Vec<u8> = raster
+        .pixels
+        .as_chunks::<12>()
+        .0
+        .iter()
+        .map(|pixels| {
+            pixels
+                .as_chunks::<3>()
+                .0
+                .iter()
+                .fold(0, |byte, pixel| (byte << 2) | (pixel[0] / 64))
+        })
+        .collect();
+    let mut bytes = Vec::new();
+    let encoded = (|| -> Result<(), png::EncodingError> {
+        let mut encoder = png::Encoder::new(&mut bytes, raster.width, raster.height);
+        encoder.set_color(png::ColorType::Grayscale);
+        encoder.set_depth(png::BitDepth::Two);
+        let mut writer = encoder.write_header()?;
+        writer.write_image_data(&packed)?;
+        writer.finish()
+    })();
+    encoded.map_err(|e| ProjectError::Format {
+        path: path.into(),
+        message: e.to_string(),
+    })?;
+    Ok(bytes)
+}

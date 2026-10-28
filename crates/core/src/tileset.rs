@@ -14,6 +14,8 @@ pub const UNDEFINED_COLORS: Palette = [
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum TilesetError {
+    #[error("roof editing does not support palette assignment or deletion")]
+    RoofCommand,
     #[error("expected 1..=256 tiles and one palette attribute per tile")]
     Length,
     #[error("tile {0} is outside the tileset")]

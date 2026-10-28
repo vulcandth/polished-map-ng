@@ -8,6 +8,41 @@ use polished_map_project::{
 
 #[test]
 #[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
+fn pinned_roof_edit_save_reopen_preserves_other_pixels_and_reference_source() {
+    use polished_map_core::{Point, Tile, TileCommand};
+    use polished_map_project::RoofDocument;
+    let root = PathBuf::from(
+        std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),
+    );
+    let relative = "gfx/tilesets/roofs/new_bark.png";
+    let original = fs::read(root.join(relative)).unwrap();
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join(relative);
+    fs::create_dir_all(path.parent().unwrap()).unwrap();
+    fs::write(&path, &original).unwrap();
+    let mut doc = RoofDocument::open_in_project(temp.path(), "new_bark", [0; 9]).unwrap();
+    let mut expected = doc.roof().tileset().tiles().to_vec();
+    let mut pixels = *expected[6].hues();
+    pixels[0] = (pixels[0] + 1) % 4;
+    expected[6] = Tile::new(pixels).unwrap();
+    doc.roof_mut()
+        .apply_batch(&[TileCommand::Paint {
+            tile: 6,
+            points: vec![Point { x: 0, y: 0 }],
+            hue: pixels[0],
+        }])
+        .unwrap();
+    assert!(doc.preview_save().unwrap().is_some());
+    doc.save().unwrap();
+    let reopened = RoofDocument::open_in_project(temp.path(), "new_bark", [0; 9]).unwrap();
+    assert_eq!(reopened.roof().tileset().tiles(), expected);
+    assert_eq!(reopened.content_hash(), doc.content_hash());
+    assert_eq!(&fs::read(path).unwrap()[24..26], &[2, 0]);
+    assert_eq!(fs::read(root.join(relative)).unwrap(), original);
+}
+
+#[test]
+#[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
 fn pinned_johto_tileset_edit_save_and_reopen_preserves_other_pixels_and_sources() {
     use polished_map_core::{Point, TileCommand};
     use polished_map_project::{BlocksetDocument, MasterTilesetDocument};

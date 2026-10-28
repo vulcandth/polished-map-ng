@@ -80,6 +80,14 @@ the priority bit into UNDEFINED and then indexes beyond its palette-color table
 palette re-enables the checkbox when the project supports priority. The existing
 core validation rejects that invalid combination; a GUI test verifies the guard.
 
+Roof image paste clips to the selected 8×8 tile and leaves uncovered pixels
+unchanged. Upstream `Roof_Window::paste_tile_graphics_cb` iterates to
+`max(width, 8)` and `max(height, 8)`, which can read or write beyond image/tile
+bounds for dimensions other than exactly 8×8. The safe 8×8 behavior is compared
+against compiled original C++; smaller and larger imports have explicit Rust
+tests. The roof command model rejects palette/delete commands absent from the
+original roof editor, and malformed batches leave the entire draft unchanged.
+
 ## Incomplete resize integration
 
 The block-level resize matches upstream's nine anchors, zero fill, signed division

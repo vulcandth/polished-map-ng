@@ -81,6 +81,14 @@ Tile edits have no map undo entries. File → Save Tileset saves PNG/palette fil
 Save also processes the map and blockset. Native clipboard transport and child
 window behavior remain unverified; the current dialog is embedded.
 
+With a roof loaded, Edit → Edit Roof (Ctrl/Cmd+F) opens its nine-tile draft.
+It shares pixel gestures and clipboard commands, with the original reversed
+display rows and no palette/delete controls. File → Save Roof writes only its
+24×24 two-bit grayscale PNG; Save processes it after the map, blockset and tileset.
+Roof dirty state is independent of base graphics. Accepting a roof draft does
+not add map undo entries. Image paste affects only the selected 8×8 tile;
+larger images are clipped and smaller images retain uncovered pixels.
+
 Right-click a sidebar block (or choose Edit → Edit Block) to edit its 4×4 tile
 definition. Left-click paints and right-click picks a tile. Shift/Ctrl/Alt select
 the original eight placement patterns. OK applies the draft; Cancel discards it.
@@ -135,6 +143,20 @@ byte count and hash. Apply requires `previous_hash` from preview (or
 and mode to the observed local paths. It is not a portable asset identifier or
 the hash of the unsaved draft. Use the same `--allow-256`/`--monochrome` flags
 for preview and apply.
+
+Roof commands use file-order indices 0–8 (master slots $0A–$12), independent of
+the reversed GUI rows. They accept the same pixel/copy commands except `palette`
+and `delete`; palette attributes are contextual and are not saved in roof PNGs.
+Standalone inspection/editing therefore reports pixels only:
+
+```text
+cargo run -p polished-map-cli -- inspect-roof violet --root path/to/project
+cargo run -p polished-map-cli -- edit-roof violet --root path/to/project --commands roof.json
+cargo run -p polished-map-cli -- edit-roof violet --root path/to/project --commands roof.json --apply --expected-hash HASH_FROM_PREVIEW
+```
+
+The roof hash binds its observed source and PNG destination. Preview does not
+write; apply requires the observed hash. Existing 2bpp/CHR/LZ sources are retained.
 
 Saving uses upstream's PNG destinations, including separate compound outputs,
 and writes two-bit grayscale PNGs. Imported 2bpp/CHR/LZ files remain intact;

@@ -5,8 +5,8 @@ use clap::{Args, Parser, Subcommand};
 use polished_map_core::{BlockCommand, Command, PaletteSet, TileCommand};
 use polished_map_project::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
-    ProjectError, load_master_map_graphics, prepare_blockset_save_as, prepare_collision_save_as,
-    prepare_save_as, read_bounded, write_png,
+    ProjectError, RoofDocument, load_master_map_graphics, prepare_blockset_save_as,
+    prepare_collision_save_as, prepare_save_as, read_bounded, write_png,
 };
 use serde_json::{Value, json};
 
@@ -45,6 +45,22 @@ impl MapArgs {
 
 #[derive(Subcommand)]
 enum Action {
+    /// Inspect nine roof tiles in file order (indices 0..8, master slots $0A..$12).
+    InspectRoof {
+        #[command(flatten)]
+        input: RoofArgs,
+    },
+    /// Preview roof pixel edits; applying requires the observed file-state hash.
+    EditRoof {
+        #[command(flatten)]
+        input: RoofArgs,
+        #[arg(long)]
+        commands: PathBuf,
+        #[arg(long)]
+        apply: bool,
+        #[arg(long)]
+        expected_hash: Option<String>,
+    },
     /// Inspect master tile pixels, attributes, input hashes and PNG destinations.
     InspectTileset {
         #[command(flatten)]
@@ -155,6 +171,25 @@ enum Action {
 }
 
 #[derive(Args)]
+struct RoofArgs {
+    roof: String,
+    #[arg(long)]
+    root: PathBuf,
+}
+impl RoofArgs {
+    fn open(&self) -> Result<RoofDocument, Failure> {
+        // Standalone pixel edits need no map/tileset; palette attributes are
+        // contextual in the GUI and never serialized into roof PNGs.
+        Ok(RoofDocument::open_in_project(
+            &self.root, &self.roof, [9; 9],
+        )?)
+    }
+}
+fn roof_summary(doc: &RoofDocument) -> Value {
+    json!({"name":doc.name(),"content_hash":doc.content_hash(),"pixels":doc.roof().tileset().tiles().iter().map(|t|t.hues().as_slice()).collect::<Vec<_>>(),"source":doc.source().path(),"output":doc.output().path()})
+}
+
+#[derive(Args)]
 struct TilesetArgs {
     tileset: String,
     #[arg(long)]
@@ -214,6 +249,46 @@ impl From<ProjectError> for Failure {
 
 fn run(cli: Cli) -> Result<Value, Failure> {
     match cli.action {
+        Action::InspectRoof { input } => Ok(roof_summary(&input.open()?)),
+        Action::EditRoof {
+            input,
+            commands,
+            apply,
+            expected_hash,
+        } => {
+            let mut doc = input.open()?;
+            let before_hash = doc.content_hash();
+            if expected_hash
+                .as_ref()
+                .is_some_and(|hash| hash != &before_hash)
+            {
+                return Err(Failure::new(
+                    "conflict",
+                    "roof inputs or output differ from the observed state",
+                ));
+            }
+            if apply && expected_hash.is_none() {
+                return Err(Failure::new(
+                    "expected_hash_required",
+                    "preview first and supply --expected-hash before writing the roof PNG",
+                ));
+            }
+            let commands: Vec<TileCommand> =
+                serde_json::from_slice(&read_bounded(&commands, 4 * 1024 * 1024)?)
+                    .map_err(|e| Failure::new("invalid_commands", e))?;
+            doc.roof_mut()
+                .apply_batch(&commands)
+                .map_err(ProjectError::from)?;
+            let planned = doc.preview_save()?;
+            if apply {
+                doc.save()?;
+            }
+            let mut response = roof_summary(&doc);
+            response["applied"] = json!(apply);
+            response["previous_hash"] = json!(before_hash);
+            response["planned_output"] = json!(planned);
+            Ok(response)
+        }
         Action::InspectTileset { input } => {
             let (doc, blocks) = input.open()?;
             Ok(tileset_summary(&doc, &blocks))

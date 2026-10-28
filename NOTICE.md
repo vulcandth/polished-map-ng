@@ -27,3 +27,8 @@ and egui icons. They remain under their respective Ubuntu Font Licence, SIL OFL,
 MIT, and component notices, copied from epaint_default_fonts 0.37.0 into
 `LICENSES/egui-fonts/`. The Ubuntu Font Licence permits embedding with its
 notice and original license retained. These fonts are not relicensed as LGPL.
+
+Windows image clipboard support includes clipboard-win 5.4.3 and error-code
+3.4.0 by Douman, under the Boost Software License 1.0. Its complete text is
+retained in `LICENSES/BSL-1.0.txt`. These dependencies retain their own license;
+see `docs/dependencies.md` for the scoped review and release requirements.
