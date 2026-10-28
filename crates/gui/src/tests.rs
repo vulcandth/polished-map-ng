@@ -492,12 +492,16 @@ fn new_map_dialog_creates_in_memory_and_cancel_preserves_it() {
         .type_text("test");
     harness.run();
     harness.get_by_label("Create map").click();
-    harness.run();
+    // A worker can request another repaint while the harness is settling.
+    // Process input/loading frame-by-frame; only demand a settled UI afterwards.
+    harness.run_steps(3);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     while harness.state().loading.is_some() && std::time::Instant::now() < deadline {
         std::thread::sleep(std::time::Duration::from_millis(5));
-        harness.run();
+        harness.step();
     }
+    assert!(harness.state().loading.is_none(), "map loading timed out");
+    harness.run();
     assert!(
         harness.state().error.is_none(),
         "{:?}",
