@@ -1,10 +1,11 @@
 //! Logical coordinates from master Block_Window::initialize (466×304).
 use super::*;
-use polished_map_core::{BlockBrush, BlockCommand};
+use polished_map_core::{BlockBrush, BlockCommand, CollisionRow};
 
 pub(super) struct BlockForm {
     id: u8,
     tiles: [u8; 16],
+    collision: Option<CollisionRow>,
     selected: u8,
     textures: Vec<egui::TextureHandle>,
     allow_256: bool,
@@ -38,6 +39,10 @@ impl Editor {
                 self.block_form = Some(BlockForm {
                     id: self.selected,
                     tiles: *tiles,
+                    collision: doc
+                        .blockset()
+                        .collisions()
+                        .map(|rows| rows[usize::from(self.selected)].clone()),
                     selected: 0,
                     textures,
                     allow_256: loaded.allow_256,
@@ -163,6 +168,61 @@ impl Editor {
                     }
                 }
             }
+            let labels = [
+                "Collision top left",
+                "Collision top right",
+                "Collision bottom left",
+                "Collision bottom right",
+            ];
+            match &mut form.collision {
+                Some(CollisionRow::Binary(values)) => {
+                    let font = egui::FontId::proportional(13.0);
+                    let width = ["AA", "FF"]
+                        .into_iter()
+                        .map(|s| {
+                            ui.painter()
+                                .layout_no_wrap(s.into(), font.clone(), text)
+                                .size()
+                                .x
+                        })
+                        .fold(0.0, f32::max)
+                        + 22.0;
+                    for (i, value) in values.iter_mut().enumerate() {
+                        let x = 300.0 + (i % 2) as f32 * (32.0 + width);
+                        let y = 144.0 + (i / 2) as f32 * 26.0;
+                        quadrant_icon(ui, rect(x - 22.0, y + 4.0, 14.0, 14.0), i);
+                        ui.put(
+                            rect(x, y, width, 22.0),
+                            egui::DragValue::new(value)
+                                .range(0..=255)
+                                .hexadecimal(2, false, true),
+                        )
+                        .widget_info(|| {
+                            egui::WidgetInfo::labeled(egui::Role::SpinButton, true, labels[i])
+                        });
+                    }
+                }
+                values => {
+                    let mut empty = std::array::from_fn::<_, 4, _>(|_| String::new());
+                    let enabled = values.is_some();
+                    let fields = if let Some(CollisionRow::Asm(values)) = values {
+                        values
+                    } else {
+                        &mut empty
+                    };
+                    for (i, value) in fields.iter_mut().enumerate() {
+                        let y = 144.0 + i as f32 * 26.0;
+                        quadrant_icon(ui, rect(278.0, y + 4.0, 14.0, 14.0), i);
+                        ui.put(
+                            rect(300.0, y, 156.0, 22.0),
+                            egui::TextEdit::singleline(value).interactive(enabled),
+                        )
+                        .widget_info(|| {
+                            egui::WidgetInfo::labeled(egui::Role::TextInput, enabled, labels[i])
+                        });
+                    }
+                }
+            }
             let (ok_x, cancel_x) = if form.windows_buttons {
                 (282.0, 376.0)
             } else {
@@ -184,12 +244,19 @@ impl Editor {
             if let Some(loaded) = &mut self.loaded
                 && let Some(doc) = &mut loaded.blockset
             {
+                let mut commands = vec![BlockCommand::Set {
+                    block: form.id,
+                    tiles: form.tiles,
+                }];
+                if let Some(collision) = &form.collision {
+                    commands.push(BlockCommand::SetCollisions {
+                        block: form.id,
+                        collision: collision.clone(),
+                    });
+                }
                 let result = doc
                     .blockset_mut()
-                    .apply(&BlockCommand::Set {
-                        block: form.id,
-                        tiles: form.tiles,
-                    })
+                    .apply_batch(&commands)
                     .map_err(|e| e.to_string())
                     .and_then(|()| {
                         loaded
@@ -211,7 +278,10 @@ impl Editor {
                         );
                         self.status = format!("Block ${:02X} changed", form.id);
                     }
-                    Err(e) => self.error = Some(e),
+                    Err(e) => {
+                        self.error = Some(e);
+                        self.block_form = Some(form);
+                    }
                 }
             }
         } else if !cancel {
@@ -234,4 +304,15 @@ fn selection_border(ui: &egui::Ui, cell: Rect) {
             egui::StrokeKind::Inside,
         );
     }
+}
+
+fn quadrant_icon(ui: &egui::Ui, rect: Rect, quadrant: usize) {
+    let color = ui.visuals().text_color();
+    ui.painter()
+        .rect_stroke(rect, 0.0, (1.0, color), egui::StrokeKind::Inside);
+    let cell = Rect::from_min_size(
+        rect.min + Vec2::new((quadrant % 2) as f32 * 7.0, (quadrant / 2) as f32 * 7.0),
+        Vec2::splat(7.0),
+    );
+    ui.painter().rect_filled(cell.shrink(1.0), 0.0, color);
 }

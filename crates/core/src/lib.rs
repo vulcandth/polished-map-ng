@@ -9,7 +9,7 @@ mod map;
 mod palettes;
 mod raster;
 
-pub use blockset::{BlockBrush, BlockCommand, Blockset, BlocksetError};
+pub use blockset::{BlockBrush, BlockCommand, Blockset, BlocksetError, CollisionRow};
 pub use map::{Command, Map, MapError, Point, ResizeAnchor};
 pub use palettes::{PaletteBank, PaletteSet};
 pub use raster::{Graphics, Palette, RasterError, RgbImage, Tile, day_palettes};

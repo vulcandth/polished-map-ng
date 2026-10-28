@@ -5,7 +5,8 @@ use clap::{Args, Parser, Subcommand};
 use polished_map_core::{BlockCommand, Command, PaletteSet};
 use polished_map_project::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, OpenOptions, ProjectError,
-    load_master_map_graphics, prepare_blockset_save_as, prepare_save_as, read_bounded, write_png,
+    load_master_map_graphics, prepare_blockset_save_as, prepare_collision_save_as, prepare_save_as,
+    read_bounded, write_png,
 };
 use serde_json::{Value, json};
 
@@ -45,10 +46,18 @@ impl MapArgs {
 #[derive(Subcommand)]
 enum Action {
     /// Inspect a binary or imported ASM blockset without graphics or a GUI.
-    InspectBlockset { path: PathBuf },
+    InspectBlockset {
+        path: PathBuf,
+        #[arg(long)]
+        collisions: Option<PathBuf>,
+    },
     /// Preview block edits; --apply writes only after all commands validate.
     EditBlockset {
         path: PathBuf,
+        #[arg(long)]
+        collisions: Option<PathBuf>,
+        #[arg(long)]
+        expected_collision_hash: Option<String>,
         #[arg(long)]
         commands: PathBuf,
         #[arg(long)]
@@ -60,6 +69,10 @@ enum Action {
         output: Option<PathBuf>,
         #[arg(long)]
         expected_output_hash: Option<String>,
+        #[arg(long, requires = "output")]
+        output_collisions: Option<PathBuf>,
+        #[arg(long)]
+        expected_output_collision_hash: Option<String>,
     },
     /// Preview or create a new zero-filled map. Project constants are not written.
     Create {
@@ -150,38 +163,65 @@ impl From<ProjectError> for Failure {
 
 fn run(cli: Cli) -> Result<Value, Failure> {
     match cli.action {
-        Action::InspectBlockset { path } => {
-            let doc = BlocksetDocument::open(&path)?;
+        Action::InspectBlockset { path, collisions } => {
+            let doc = BlocksetDocument::open_with_collisions(&path, collisions.as_deref())?;
             Ok(
-                json!({"path":doc.path(), "content_hash":doc.content_hash(), "blocks":doc.blockset().blocks()}),
+                json!({"path":doc.path(), "content_hash":doc.content_hash(), "blocks":doc.blockset().blocks(),"collision_path":doc.collision_path(),"collision_hash":doc.collision_hash(),"collisions":doc.blockset().collisions()}),
             )
         }
         Action::EditBlockset {
             path,
+            collisions,
+            expected_collision_hash,
             commands,
             apply,
             expected_hash,
             output,
             expected_output_hash,
+            output_collisions,
+            expected_output_collision_hash,
         } => {
-            let mut doc = BlocksetDocument::open(&path)?;
+            let mut doc = BlocksetDocument::open_with_collisions(&path, collisions.as_deref())?;
             if expected_hash.is_some_and(|h| h != doc.content_hash()) {
                 return Err(Failure::new("conflict", "input hash does not match"));
             }
+            if expected_collision_hash.is_some_and(|h| Some(h) != doc.collision_hash()) {
+                return Err(Failure::new("conflict", "collision hash does not match"));
+            }
             let before = doc.blockset().bytes();
+            let before_collisions = doc.blockset().collisions().map(|rows| rows.to_vec());
             let commands: Vec<BlockCommand> =
                 serde_json::from_slice(&read_bounded(&commands, 4 * 1024 * 1024)?)
                     .map_err(|e| Failure::new("invalid_commands", e))?;
-            for command in commands {
-                doc.blockset_mut()
-                    .apply(&command)
-                    .map_err(|e| Failure::new("invalid_command", e))?;
-            }
+            doc.blockset_mut()
+                .apply_batch(&commands)
+                .map_err(|e| Failure::new("invalid_command", e))?;
             let target = output
                 .as_deref()
                 .map(prepare_blockset_save_as)
                 .transpose()?;
             let previous_output_hash = target.as_ref().and_then(|t| t.content_hash());
+            let collision_target = output_collisions
+                .as_deref()
+                .map(|path| prepare_collision_save_as(path, doc.binary_collisions()))
+                .transpose()?;
+            if target.is_some() && (doc.collision_path().is_some() != collision_target.is_some()) {
+                return Err(Failure::new(
+                    "collision_destination_required",
+                    "paired Save As requires --output-collisions when collisions are loaded",
+                ));
+            }
+            let previous_output_collision_hash =
+                collision_target.as_ref().and_then(|t| t.content_hash());
+            if expected_output_collision_hash
+                .as_ref()
+                .is_some_and(|h| Some(h) != previous_output_collision_hash.as_ref())
+            {
+                return Err(Failure::new(
+                    "conflict",
+                    "collision destination hash does not match",
+                ));
+            }
             if expected_output_hash
                 .as_ref()
                 .is_some_and(|h| Some(h) != previous_output_hash.as_ref())
@@ -196,13 +236,23 @@ fn run(cli: Cli) -> Result<Value, Failure> {
                             "preview and supply --expected-output-hash before replacing a file",
                         ));
                     }
-                    doc.save_as(target)?;
+                    if let Some(collision_target) = &collision_target {
+                        if collision_target.exists() && expected_output_collision_hash.is_none() {
+                            return Err(Failure::new(
+                                "overwrite_confirmation_required",
+                                "preview and supply --expected-output-collision-hash before replacing collisions",
+                            ));
+                        }
+                        doc.save_as_pair(target, collision_target)?;
+                    } else {
+                        doc.save_as(target)?;
+                    }
                 } else {
                     doc.save()?;
                 }
             }
             Ok(
-                json!({"applied":apply, "changed":doc.blockset().bytes()!=before, "path":doc.path(), "output":target.as_ref().map(|t|t.path()), "previous_output_hash":previous_output_hash, "content_hash":doc.content_hash(), "blocks":doc.blockset().blocks()}),
+                json!({"applied":apply, "changed":doc.blockset().bytes()!=before || doc.blockset().collisions()!=before_collisions.as_deref(), "path":doc.path(), "output":target.as_ref().map(|t|t.path()), "previous_output_hash":previous_output_hash, "content_hash":doc.content_hash(), "blocks":doc.blockset().blocks(),"collisions":doc.blockset().collisions(),"collision_path":doc.collision_path(),"collision_hash":doc.collision_hash(),"output_collisions":collision_target.as_ref().map(|t|t.path()),"previous_output_collision_hash":previous_output_collision_hash}),
             )
         }
         Action::Create {

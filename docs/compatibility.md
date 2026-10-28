@@ -7,15 +7,15 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions tested; oversized-file consent pending |
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; resize event shifts and full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
-| Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roof colors, compound composition and nine-tile roof replacement tested; collisions and palette editing pending |
+| Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, ASM/binary collisions and paired saves tested; palette editing and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Block tile draft editor, eight brushes, pick/accept/cancel, dirty tracking and binary save implemented; collision fields, sidebar drag/copy, block-count GUI, native child windows, and other specialist editors pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Block draft editor, eight brushes, collision fields, pick/accept/cancel, dirty tracking and paired save implemented; sidebar drag/copy, block-count GUI, native child windows, and other specialist editors pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
-| Stable automation / batch recovery | new API | Pending |
+| Stable automation / batch recovery | new API | Paired block/collision preflight, backups and rollback tested; general batch journal discovery/replay and stable schemas pending |
 | Native packaging and runtime | all three OSes | Pending |
 
 New tests must distinguish synthetic vectors, source-derived expectations, and
@@ -38,6 +38,14 @@ the original application. Unverified assets never become redistributable fixture
   Both platform button orders have reviewed synthetic snapshots. The 466×304
   content layout and 16/24-pixel cells come directly from Block_Window::initialize.
   The current dialog is embedded; native child-window verification is still pending.
+- Collision tests cover full/base name and ASM/INC/binary precedence, four-quadrant
+  ordering, short-row defaults, trailing data preservation, copy/swap/resize,
+  ASM comment/line-ending preservation, and paired save conflicts. GUI tests edit
+  both named fields and all four hex spinners. The CLI previews paired copies and
+  requires independent overwrite hashes. A real Johto blockset/collision copy
+  changes the intended first row while leaving the pinned sources untouched.
+  Failure injection verifies rollback and retained backups when an external writer
+  prevents rollback. Process termination/power-loss recovery is not yet verified.
 - Headless GUI tests exercise toolbar state, accessible open options, a complete
   paint/undo/redo/save flow, New Map, resize accept/cancel, and source-derived geometry. Optional visual tests:
   `cargo test -p polished-map-gui --features visual-tests`.

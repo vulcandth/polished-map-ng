@@ -28,10 +28,19 @@ Implementation-specific exceptions will be recorded here with tests and rational
   check/replace race; no filesystem-wide compare-and-swap guarantee is claimed.
 - ASM `.CEL` blockset imports require binary `.bin`/`.bst` Save As. Upstream
   writes binary bytes over the assembly source; the port preserves that source.
-  Existing binary blockset writes preserve row-major tile bytes. Collision files
-  remain untouched by the current tile-only editor; collision editing is pending.
-  GUI Save processes map and blockset separately; recoverable multi-file commits
-  are still required before the stable automation milestone.
+  Existing binary blockset writes preserve row-major tile bytes. Paired Save As
+  requires a separate collision destination instead of modifying source collisions.
+- Collision writes preserve unrelated ASM, untouched rows, inline comments,
+  line endings and trailing binary data. Upstream rewrites the whole collision
+  file into canonical rows and drops other content. Changed field lists retain
+  their original prefix/suffix; newly added rows use upstream's canonical syntax.
+  Partial binary rows, malformed ASM rows, field delimiters and line breaks are
+  rejected. Individual fields are limited to 4096 bytes and files to 4 MiB.
+- Block/collision saves preflight both files, retain before/after bytes, and roll
+  back a completed first write if the second fails. External changes prevent
+  rollback rather than being overwritten; recovery data is retained. GUI Save
+  still processes the map separately. General journal discovery/replay and
+  process-termination tests remain required before the stable automation milestone.
 - Headless discovery leaves an unmatched tileset unset instead of accepting the
   GUI's first dropdown item. Callers must supply an explicit choice; this avoids
   silently rendering or editing an unrelated tileset. Ambiguous compound name

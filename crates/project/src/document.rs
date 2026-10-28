@@ -24,6 +24,10 @@ pub enum ProjectError {
     Format { path: PathBuf, message: String },
     #[error("{0} changed on disk since it was read; reload or preview again before saving")]
     Conflict(PathBuf),
+    #[error(
+        "paired save failed and could not fully roll back; recovery files are in {path}: {message}"
+    )]
+    RecoveryRequired { path: PathBuf, message: String },
     #[error("map dimensions are unknown; supply width/height or use Name.WxH.tileset.blk")]
     DimensionsRequired,
     #[error("this map has no backing file; use Save As")]
@@ -54,6 +58,7 @@ impl ProjectError {
             Self::Io { .. } => "io",
             Self::Format { .. } => "format",
             Self::Conflict(_) => "conflict",
+            Self::RecoveryRequired { .. } => "recovery_required",
             Self::DimensionsRequired => "dimensions_required",
             Self::DestinationRequired => "destination_required",
             Self::Map(_) => "invalid_map",
@@ -131,7 +136,7 @@ pub(crate) fn prepare_target(path: &Path) -> Result<SaveTarget, ProjectError> {
     Ok(SaveTarget { path, hash })
 }
 
-fn optional_hash(path: &Path) -> Result<Option<[u8; 32]>, ProjectError> {
+pub(crate) fn optional_hash(path: &Path) -> Result<Option<[u8; 32]>, ProjectError> {
     match read_bounded(path, 4 * 1024 * 1024) {
         Ok(bytes) => Ok(Some(Sha256::digest(&bytes).into())),
         Err(ProjectError::Io { source, .. }) if source.kind() == std::io::ErrorKind::NotFound => {

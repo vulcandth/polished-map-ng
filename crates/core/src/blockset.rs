@@ -12,6 +12,53 @@ pub enum BlocksetError {
     Block(u8),
     #[error("tile coordinate ({0}, {1}) is outside the 4×4 block")]
     Coordinate(u16, u16),
+    #[error("collision rows must match the block count and use one format")]
+    CollisionLayout,
+    #[error("collision field contains a delimiter, NUL or line break")]
+    CollisionText,
+    #[error("collision fields are limited to 4096 bytes each")]
+    CollisionTextLength,
+}
+
+/// Quadrant order: top left, top right, bottom left, bottom right.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(
+    tag = "format",
+    content = "values",
+    rename_all = "snake_case",
+    deny_unknown_fields
+)]
+pub enum CollisionRow {
+    Asm([String; 4]),
+    Binary([u8; 4]),
+}
+
+impl CollisionRow {
+    pub fn is_binary(&self) -> bool {
+        matches!(self, Self::Binary(_))
+    }
+    fn empty(&self) -> Self {
+        if self.is_binary() {
+            Self::Binary([0; 4])
+        } else {
+            Self::Asm(std::array::from_fn(|_| String::new()))
+        }
+    }
+    fn validate(&self) -> Result<(), BlocksetError> {
+        if let Self::Asm(values) = self
+            && values.iter().any(|v| v.len() > 4096)
+        {
+            return Err(BlocksetError::CollisionTextLength);
+        }
+        if let Self::Asm(values) = self
+            && values
+                .iter()
+                .any(|v| v.contains([',', ';', '\r', '\n', '\0']))
+        {
+            return Err(BlocksetError::CollisionText);
+        }
+        Ok(())
+    }
 }
 
 /// Block definitions have their own sticky dirty flag and no upstream undo stack.
@@ -19,11 +66,16 @@ pub enum BlocksetError {
 pub struct Blockset {
     blocks: Vec<[u8; 16]>,
     modified: bool,
+    collisions: Option<Vec<CollisionRow>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 pub enum BlockCommand {
+    SetCollisions {
+        block: u8,
+        collision: CollisionRow,
+    },
     Paint {
         block: u8,
         at: Point,
@@ -58,10 +110,35 @@ impl Blockset {
         Ok(Self {
             blocks: bytes.as_chunks::<16>().0.to_vec(),
             modified: false,
+            collisions: None,
         })
     }
     pub fn blocks(&self) -> &[[u8; 16]] {
         &self.blocks
+    }
+    pub fn with_collisions(mut self, rows: Vec<CollisionRow>) -> Result<Self, BlocksetError> {
+        if rows.len() != self.blocks.len()
+            || rows.iter().any(|r| r.is_binary() != rows[0].is_binary())
+        {
+            return Err(BlocksetError::CollisionLayout);
+        }
+        for row in &rows {
+            row.validate()?;
+        }
+        self.collisions = Some(rows);
+        Ok(self)
+    }
+    pub fn collisions(&self) -> Option<&[CollisionRow]> {
+        self.collisions.as_deref()
+    }
+    /// Validate the complete draft before changing the active blockset.
+    pub fn apply_batch(&mut self, commands: &[BlockCommand]) -> Result<(), BlocksetError> {
+        let mut draft = self.clone();
+        for command in commands {
+            draft.apply(command)?;
+        }
+        *self = draft;
+        Ok(())
     }
     pub fn bytes(&self) -> Vec<u8> {
         self.blocks.iter().flatten().copied().collect()
@@ -80,6 +157,18 @@ impl Blockset {
     /// Validate before changing anything. Accepting even an unchanged draft marks dirty.
     pub fn apply(&mut self, command: &BlockCommand) -> Result<(), BlocksetError> {
         match command {
+            BlockCommand::SetCollisions { block, collision } => {
+                self.block(*block)?;
+                collision.validate()?;
+                let rows = self
+                    .collisions
+                    .as_mut()
+                    .ok_or(BlocksetError::CollisionLayout)?;
+                if rows[0].is_binary() != collision.is_binary() {
+                    return Err(BlocksetError::CollisionLayout);
+                }
+                rows[usize::from(*block)] = collision.clone();
+            }
             BlockCommand::Paint {
                 block,
                 at,
@@ -99,17 +188,27 @@ impl Blockset {
                 let source = *self.block(*from)?;
                 self.block(*to)?;
                 self.blocks[usize::from(*to)] = source;
+                if let Some(rows) = &mut self.collisions {
+                    rows[usize::from(*to)] = rows[usize::from(*from)].clone();
+                }
             }
             BlockCommand::Swap { a, b } => {
                 self.block(*a)?;
                 self.block(*b)?;
                 self.blocks.swap(usize::from(*a), usize::from(*b));
+                if let Some(rows) = &mut self.collisions {
+                    rows.swap(usize::from(*a), usize::from(*b));
+                }
             }
             BlockCommand::Resize { count } => {
                 if !(1..=256).contains(count) {
                     return Err(BlocksetError::Length);
                 }
                 self.blocks.resize(usize::from(*count), [0; 16]);
+                if let Some(rows) = &mut self.collisions {
+                    let empty = rows[0].empty();
+                    rows.resize(usize::from(*count), empty);
+                }
             }
         }
         self.modified = true;

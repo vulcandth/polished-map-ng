@@ -58,6 +58,8 @@ fn pinned_pokecrystal_roofs_load_without_changing_base_graphics() {
         polished_map_project::BlocksetDocument::open_in_project(&root, "johto").unwrap();
     let source = blocks.path().to_path_buf();
     let before = fs::read(&source).unwrap();
+    let collision_source = blocks.collision_path().unwrap().to_path_buf();
+    let collision_before = fs::read_to_string(&collision_source).unwrap();
     let mut expected = before.clone();
     expected[..16].copy_from_slice(&before[16..32]);
     blocks
@@ -67,7 +69,19 @@ fn pinned_pokecrystal_roofs_load_without_changing_base_graphics() {
     let temp = tempfile::tempdir().unwrap();
     let target =
         polished_map_project::prepare_blockset_save_as(&temp.path().join("copy.bin")).unwrap();
-    blocks.save_as(&target).unwrap();
+    let collision_target =
+        polished_map_project::prepare_collision_save_as(&temp.path().join("copy.asm"), false)
+            .unwrap();
+    blocks.save_as_pair(&target, &collision_target).unwrap();
+    let collision_after = fs::read_to_string(collision_target.path()).unwrap();
+    assert_eq!(
+        collision_after,
+        collision_before.replacen("01, 01, 01, 01", "FLOOR, FLOOR, FLOOR, FLOOR", 1)
+    );
+    assert!(
+        fs::read_to_string(collision_source).unwrap() == collision_before,
+        "reference collisions must stay unchanged"
+    );
     assert!(
         fs::read(target.path()).unwrap() == expected,
         "real blockset copy must preserve all other bytes"

@@ -27,6 +27,8 @@ Headless PNG export uses the same pixels. Use wgpu through eframe 0.37 initially
 ## ADR 4: Fail safely without pretending to have upstream parity
 
 Validate before mutation. Snapshot on-disk content for conflict detection; stage
-single-file replacements before publication. Future multi-file saves need a
-recovery journal, not a claim of atomicity across files. Do not mark data clean
+single-file replacements before publication. Block/collision pairs stage a
+manifest and before/after bytes, preflight both hashes and attempt rollback on
+failure. These are individual replacements, not atomic publication across files.
+General journal discovery/replay remains pending. Do not mark data clean
 until its corresponding writes succeed. UI and CLI use identical commands.

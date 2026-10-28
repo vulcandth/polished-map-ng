@@ -28,7 +28,7 @@ options for review. Shared block files still require explicit choices. The proje
 adapter supports master tilesets with PNG/2bpp/LZ/CHR graphics, binary
 metatiles, tilepal mappings, all six palette sets, project/special palettes and
 map-group roof colors, compound graphics and optional roof tile replacement.
-Block tile editing is available; collisions, events and the other specialist editors
+Block tile/collision editing is available; events and the other specialist editors
 are not complete. Work on copies
 while parity validation is incomplete.
 
@@ -74,10 +74,13 @@ Right-click a sidebar block (or choose Edit → Edit Block) to edit its 4×4 til
 definition. Left-click paints and right-click picks a tile. Shift/Ctrl/Alt select
 the original eight placement patterns. OK applies the draft; Cancel discards it.
 Block edits have separate dirty state and no map undo, matching upstream.
-File → Save Blockset writes just the definitions; Save writes map and blockset.
-Collision fields and blockset drag/copy controls remain pending.
+File → Save Blockset writes definitions and loaded collisions; Save also writes
+the map. Named collision fields or binary hex spinners follow the project format.
+Blockset drag/copy controls remain pending.
 
-Headless blockset commands support `set`, `paint`, `copy`, `swap` and `resize`:
+Headless blockset commands support `set`, `paint`, `copy`, `swap`, `resize` and
+`set_collisions`. Use `--collisions path/to/collision.asm` (or `.bin`) to attach
+collision data. Copy/swap/resize carry that data with the block:
 
 ```text
 cargo run -p polished-map-cli -- inspect-blockset path/to/johto_metatiles.bin
@@ -90,6 +93,19 @@ Example `blocks.json`:
 Preview is the default. `--expected-hash` checks the input; `--output` saves a
 binary copy, requiring `--expected-output-hash` before overwriting an existing
 destination. Imported `.CEL` files require a binary copy so assembly is preserved.
+
+Example collision command:
+`{"op":"set_collisions","block":0,"collision":{"format":"asm","values":["FLOOR","FLOOR","WALL","WALL"]}}`.
+Binary rows use `"format":"binary"` and four byte values. `--expected-collision-hash`
+checks collision input. Paired copies also require `--output-collisions`;
+overwrites require its `--expected-output-collision-hash` from preview.
+
+Paired saves stage before/after bytes and a manifest in a temporary
+`.polished-map-recovery-*` directory beside the blockset. Normal completion or
+successful rollback removes it. Interrupted saves or failed rollback can leave
+it for inspection and manual recovery; preserve it until recovery is resolved.
+Automatic journal discovery/replay is still pending. Unrelated collision ASM
+lines and comments are preserved.
 
 ## License
 

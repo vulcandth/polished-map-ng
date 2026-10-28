@@ -2,6 +2,72 @@ use serde_json::Value;
 use std::{fs, process::Command};
 
 #[test]
+fn collision_cli_previews_paired_copies_and_requires_both_overwrite_hashes() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let path = root.join("blocks.bin");
+    let collisions = root.join("collision.bin");
+    let edits = root.join("edits.json");
+    let output = root.join("out.bin");
+    let out_collision = root.join("out_collision.bin");
+    fs::write(&path, [0; 16]).unwrap();
+    fs::write(&collisions, [1, 2, 3, 4]).unwrap();
+    fs::write(&output, [8; 16]).unwrap();
+    fs::write(&out_collision, [9; 4]).unwrap();
+    fs::write(&edits,r#"[{"op":"set_collisions","block":0,"collision":{"format":"binary","values":[255,254,253,252]}}]"#).unwrap();
+    let run = |extra: &[&str]| {
+        Command::new(env!("CARGO_BIN_EXE_polished-map"))
+            .arg("edit-blockset")
+            .arg(&path)
+            .arg("--collisions")
+            .arg(&collisions)
+            .arg("--commands")
+            .arg(&edits)
+            .arg("--output")
+            .arg(&output)
+            .arg("--output-collisions")
+            .arg(&out_collision)
+            .args(extra)
+            .output()
+            .unwrap()
+    };
+    let preview = run(&[]);
+    assert!(
+        preview.status.success(),
+        "{}",
+        String::from_utf8_lossy(&preview.stdout)
+    );
+    let value: Value = serde_json::from_slice(&preview.stdout).unwrap();
+    assert_eq!(value["result"]["changed"], true);
+    let hash = value["result"]["previous_output_hash"].as_str().unwrap();
+    let collision_hash = value["result"]["previous_output_collision_hash"]
+        .as_str()
+        .unwrap();
+    assert!(
+        !run(&["--apply", "--expected-output-hash", hash])
+            .status
+            .success()
+    );
+    assert_eq!(fs::read(&output).unwrap(), [8; 16]);
+    assert_eq!(fs::read(&out_collision).unwrap(), [9; 4]);
+    assert!(
+        run(&[
+            "--apply",
+            "--expected-output-hash",
+            hash,
+            "--expected-output-collision-hash",
+            collision_hash
+        ])
+        .status
+        .success()
+    );
+    assert_eq!(fs::read(output).unwrap(), [0; 16]);
+    assert_eq!(fs::read(out_collision).unwrap(), [255, 254, 253, 252]);
+    assert_eq!(fs::read(path).unwrap(), [0; 16]);
+    assert_eq!(fs::read(collisions).unwrap(), [1, 2, 3, 4]);
+}
+
+#[test]
 fn blockset_preview_apply_and_invalid_suffix_use_atomic_backend_commands() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("demo.bin");

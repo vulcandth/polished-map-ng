@@ -6,10 +6,12 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("Map.1x1.blk");
     let blocks = dir.path().join("demo.bin");
+    let collisions = dir.path().join("collision.asm");
+    std::fs::write(&collisions, "\ttilecoll FLOOR, FLOOR, WALL, WALL ; 00\n").unwrap();
     std::fs::write(&path, [0]).unwrap();
     std::fs::write(&blocks, [0; 16]).unwrap();
     let document = MapDocument::open(&path, &OpenOptions::default()).unwrap();
-    let blockset = BlocksetDocument::open(&blocks).unwrap();
+    let blockset = BlocksetDocument::open_with_collisions(&blocks, Some(&collisions)).unwrap();
     let graphics = Graphics::new(
         (0..256)
             .map(|i| polished_map_core::Tile::new([i as u8 % 4; 64]).unwrap())
@@ -69,6 +71,14 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
         harness.run();
         harness.get_by_label("Block tile 0, 0").click();
         harness.run();
+        harness.get_by_label("Collision top left").focus();
+        harness.run();
+        harness.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::A);
+        harness.run();
+        harness
+            .get_by_label("Collision top left")
+            .type_text("WATER");
+        harness.run();
         harness
             .get_by_label(if accept { "OK" } else { "Cancel" })
             .click();
@@ -81,6 +91,17 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
         assert!(!loaded.document.map().is_modified());
         assert!(!loaded.document.map().can_undo());
         assert_eq!(harness.state().is_modified(), accept);
+        let polished_map_core::CollisionRow::Asm(values) = &loaded
+            .blockset
+            .as_ref()
+            .unwrap()
+            .blockset()
+            .collisions()
+            .unwrap()[0]
+        else {
+            panic!("expected named collisions");
+        };
+        assert_eq!(values[0], if accept { "WATER" } else { "FLOOR" });
     }
     assert_eq!(
         &harness
@@ -105,6 +126,10 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
     harness.run();
     assert!(!harness.state().is_modified());
     assert_eq!(std::fs::read(&blocks).unwrap()[0], 1);
+    assert_eq!(
+        std::fs::read_to_string(&collisions).unwrap(),
+        "\ttilecoll WATER, FLOOR, WALL, WALL ; 00\n"
+    );
     harness.get_by_label("Edit").click();
     harness.run();
     harness.get_by_label("Edit Block…").click();
@@ -124,6 +149,80 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
     assert!(harness.state().is_modified());
     assert_eq!(std::fs::read(&blocks).unwrap(), [9; 16]);
     assert_eq!(std::fs::read(path).unwrap(), [0]);
+}
+
+#[test]
+fn binary_collision_spinners_edit_all_four_quadrants() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("Map.1x1.blk");
+    let blocks = dir.path().join("blocks.bin");
+    let collisions = dir.path().join("collision.bin");
+    std::fs::write(&path, [0]).unwrap();
+    std::fs::write(&blocks, [0; 16]).unwrap();
+    std::fs::write(&collisions, [1, 2, 3, 4]).unwrap();
+    let document = MapDocument::open(&path, &OpenOptions::default()).unwrap();
+    let blockset = BlocksetDocument::open_with_collisions(&blocks, Some(&collisions)).unwrap();
+    let graphics = Graphics::new(
+        vec![polished_map_core::Tile::new([0; 64]).unwrap(); 256],
+        vec![polished_map_core::day_palettes()[0]; 256],
+        vec![[0; 16]],
+    )
+    .unwrap();
+    let mut harness = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .with_theme(egui::Theme::Light)
+        .build_eframe(|cc| Editor::new(cc));
+    let (tx, rx) = mpsc::channel();
+    tx.send(Ok(Loaded {
+        document,
+        graphics,
+        blockset: Some(blockset),
+        allow_256: false,
+    }))
+    .unwrap();
+    harness.state_mut().loading = Some(rx);
+    harness.run();
+    harness.state_mut().status = "Synthetic binary collisions".into();
+    harness.get_by_label("Edit").click();
+    harness.run();
+    harness.get_by_label("Edit Block…").click();
+    harness.run();
+    #[cfg(feature = "visual-tests")]
+    {
+        harness
+            .state_mut()
+            .block_form
+            .as_mut()
+            .unwrap()
+            .windows_buttons = true;
+        harness.remove_cursor();
+        harness.run();
+        harness.snapshot("block-dialog-binary");
+    }
+    for (i, label) in [
+        "Collision top left",
+        "Collision top right",
+        "Collision bottom left",
+        "Collision bottom right",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        harness
+            .get_by_label(label)
+            .set_value_accesskit(252.0 + i as f64);
+        harness.run();
+    }
+    harness.get_by_label("OK").click();
+    harness.run();
+    harness.state_mut().save_blockset();
+    harness.run();
+    assert!(
+        harness.state().error.is_none(),
+        "{:?}",
+        harness.state().error
+    );
+    assert_eq!(std::fs::read(collisions).unwrap(), [252, 253, 254, 255]);
 }
 
 #[test]

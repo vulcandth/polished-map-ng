@@ -1,6 +1,75 @@
 use polished_map_core::{BlockBrush, BlockCommand, Blockset, Point};
 
 #[test]
+fn collisions_follow_copy_swap_resize_and_invalid_drafts_are_atomic() {
+    use polished_map_core::CollisionRow;
+    let mut set = Blockset::from_bytes(&[0; 32])
+        .unwrap()
+        .with_collisions(vec![
+            CollisionRow::Binary([1, 2, 3, 4]),
+            CollisionRow::Binary([5, 6, 7, 8]),
+        ])
+        .unwrap();
+    set.apply(&BlockCommand::Swap { a: 0, b: 1 }).unwrap();
+    assert_eq!(
+        set.collisions().unwrap()[0],
+        CollisionRow::Binary([5, 6, 7, 8])
+    );
+    set.apply(&BlockCommand::Copy { from: 0, to: 1 }).unwrap();
+    assert_eq!(set.collisions().unwrap()[0], set.collisions().unwrap()[1]);
+    set.apply(&BlockCommand::Resize { count: 3 }).unwrap();
+    assert_eq!(set.collisions().unwrap()[2], CollisionRow::Binary([0; 4]));
+    set.mark_saved();
+    let before = set.bytes();
+    let collisions = set.collisions().unwrap().to_vec();
+    assert!(
+        set.apply_batch(&[
+            BlockCommand::Set {
+                block: 0,
+                tiles: [9; 16]
+            },
+            BlockCommand::SetCollisions {
+                block: 0,
+                collision: CollisionRow::Asm(["FLOOR".into(), "".into(), "".into(), "".into()])
+            }
+        ])
+        .is_err()
+    );
+    assert_eq!(set.bytes(), before);
+    assert_eq!(set.collisions().unwrap(), collisions);
+    assert!(!set.is_modified());
+    assert!(
+        Blockset::from_bytes(&[0; 16])
+            .unwrap()
+            .with_collisions(vec![])
+            .is_err()
+    );
+    let mut asm = Blockset::from_bytes(&[0; 16])
+        .unwrap()
+        .with_collisions(vec![CollisionRow::Asm(std::array::from_fn(|_| {
+            "FLOOR".into()
+        }))])
+        .unwrap();
+    for bad in ["A,B", "A;comment", "A\nB", "A\rB", "A\0B"] {
+        assert!(
+            asm.apply(&BlockCommand::SetCollisions {
+                block: 0,
+                collision: CollisionRow::Asm(std::array::from_fn(|_| bad.into()))
+            })
+            .is_err()
+        );
+        assert!(!asm.is_modified());
+    }
+    assert!(
+        asm.apply(&BlockCommand::SetCollisions {
+            block: 0,
+            collision: CollisionRow::Asm(std::array::from_fn(|_| "A".repeat(4097)))
+        })
+        .is_err()
+    );
+}
+
+#[test]
 fn all_modifier_patterns_match_independent_vectors() {
     let expected = [
         [32, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

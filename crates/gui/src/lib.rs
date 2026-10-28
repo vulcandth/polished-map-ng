@@ -12,7 +12,8 @@ use eframe::egui::{self, Color32, Pos2, Rect, Sense, Vec2};
 use polished_map_core::{Command, Graphics, Point, ResizeAnchor};
 use polished_map_project::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, OpenOptions, discover_map, list_tilesets,
-    load_master_map_graphics, prepare_blockset_save_as, prepare_save_as, write_png,
+    load_master_map_graphics, prepare_blockset_save_as, prepare_collision_save_as, prepare_save_as,
+    write_png,
 };
 
 struct Loaded {
@@ -373,7 +374,21 @@ impl Editor {
             else {
                 return;
             };
-            prepare_blockset_save_as(&path).and_then(|target| doc.save_as(&target))
+            if let Some(collision) = doc.collision_path() {
+                let Some(collision_path) = rfd::FileDialog::new()
+                    .set_title("Save Collision Copy")
+                    .set_file_name(collision.file_name().unwrap_or_default().to_string_lossy())
+                    .save_file()
+                else {
+                    return;
+                };
+                prepare_blockset_save_as(&path).and_then(|target| {
+                    prepare_collision_save_as(&collision_path, doc.binary_collisions())
+                        .and_then(|collision| doc.save_as_pair(&target, &collision))
+                })
+            } else {
+                prepare_blockset_save_as(&path).and_then(|target| doc.save_as(&target))
+            }
         } else {
             doc.save()
         };
