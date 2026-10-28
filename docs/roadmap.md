@@ -41,13 +41,17 @@ The roof draft editor now shares pixel/clipboard commands, preserves the origina
 The headless roof interface previews and requires an observed hash to apply.
 Compiled upstream comparisons cover safe 8×8 roof image paste; temporary real
 New Bark Town roof edits save/reopen with other pixels and source fixtures intact.
-Changing the loaded roof without reopening, native windows/clipboard, palette-color
-editing and other matrix gaps still remain.
+Changing the loaded roof without reopening, native child windows/clipboard,
+cross-map palette session behavior and other matrix gaps still remain.
 Palette-color commands, all-six-set contextual state, explicit RGB5 export and
 the headless palette interface are implemented. Compiled original clipboard and
 export functions verify copy quantization, live swap and export layout; export
 set names use a documented correction to upstream's incomplete label table.
-The color/monochrome GUI forms, load/export actions and native chooser remain next.
+The source-sized color/monochrome forms, channel/hex controls, swatch clipboard,
+six-set selector, load/export actions and Windows native chooser are implemented.
+Headless interaction tests and four snapshots cover the forms; a focused Windows
+native check verifies shortcut dispatch and chooser cancel/accept. Native file
+dialog workflows and Linux/macOS runtime verification remain pending.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.
@@ -75,6 +79,13 @@ No display/GPU required; MCP is deferred.
 Retain the compatibility suite while consolidating duplicated logic and optimizing
 measured bottlenecks. Separate proposals for format preservation, more undo,
 remaining themes, newer project conventions and usability changes.
+
+Plan a shared egui RGB/HSV graphical color picker for Linux, macOS and Windows,
+retaining exact RGB8 edits and the existing RGB5 controls/export rules. The first
+parity version follows upstream: native ChooseColor on Windows, RGB/hex editing
+on every OS. The shared picker is an intentional usability addition after parity;
+separate GTK/macOS native picker integrations are not planned unless a concrete
+platform need justifies them.
 
 ## 6. Platform delivery (not complete)
 

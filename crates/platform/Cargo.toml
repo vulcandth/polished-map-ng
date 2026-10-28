@@ -1,0 +1,20 @@
+[package]
+name = "polished-map-platform"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+raw-window-handle = "0.6"
+windows-sys = { version = "0.61", features = ["Win32_UI_Controls_Dialogs"] }
+
+# This small FFI boundary is intentionally separate from workspace crates that
+# forbid unsafe. Only the audited win32 module opts in; all other code denies it.
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+dbg_macro = "deny"
+todo = "deny"

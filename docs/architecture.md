@@ -8,6 +8,14 @@ discovery, codecs and persistence. `gui` and `cli` depend on these libraries.
 Master/plusplus remain explicit format profiles; shared code must not erase
 their differences. Public interfaces are experimental until objective four.
 
+`polished-map-platform` is a small Windows-only FFI adapter for `ChooseColorW`.
+Core, project, GUI and CLI retain the workspace `unsafe_code = forbid` rule.
+The adapter denies unsafe generally and allows it only in its documented Win32
+module, borrowing eframe's live owner handle during a synchronous modal call.
+Custom color storage belongs to the adapter instance, not a mutable global.
+The two unsafe calls follow Microsoft's
+[CHOOSECOLORW contract](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/ns-commdlg-choosecolorw).
+
 ## ADR 2: Geometry derived from FLTK
 
 Reference main.cpp/main-window.cpp and block-window.cpp at pinned master.
@@ -63,3 +71,11 @@ the upstream layouts onto the current bank; exports quantize RGB8 to RGB5 withou
 changing the in-memory colors. The CLI binds an apply to its observed input and
 requires an additional destination hash for overwrite. Contextual discovery does
 not treat source palette files as implicit write destinations.
+
+The GUI clones palette state for its color/monochrome draft. It validates all
+composed block images before committing colors and textures. Text fields retain
+their own clipboard behavior; selected swatches use the source RGB5 clipboard
+snapshot and exact live swap. As upstream, edited palettes have their own
+load-replacement warning and explicit export, not map history or map Save/close
+dirty state. Cross-map retention and automatic palette reload policy remain to
+be reconciled with the original global session behavior.

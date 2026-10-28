@@ -178,8 +178,18 @@ six sets as RGB5; add `--monochrome` to write their monochrome palettes only.
 Apply requires an explicit output and observed input hash; replacing an existing
 output also requires `--expected-output-hash` from preview. Export quantization
 does not mutate the draft, so its fingerprint can differ after reopening.
-Palette files are exported separately from map/tileset saves. The palette GUI
-controls are still pending.
+Palette files are exported separately from map/tileset saves.
+
+Edit → Edit Current Palettes (Ctrl/Cmd+Shift+L) opens the color or monochrome
+draft. Select a swatch, use the 0–31 RGB controls, or enter hex and press Enter.
+Ctrl/Cmd+C/V/X copy, paste, and swap swatches when a text field is not focused.
+OK accepts; Cancel discards. View → Palettes selects any of the six sets.
+File → Load Palettes (Ctrl/Cmd+L) prompts before replacing edited colors;
+Export Palettes writes them independently. As upstream, palette edits alone
+do not mark the map dirty or trigger its close warning: export them explicitly.
+Windows' preview swatch opens the native color chooser. Linux and macOS have
+the same RGB/hex editing controls; a shared egui graphical picker is planned
+for the improvement phase after parity.
 
 Saving uses upstream's PNG destinations, including separate compound outputs,
 and writes two-bit grayscale PNGs. Imported 2bpp/CHR/LZ files remain intact;

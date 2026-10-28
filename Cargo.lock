@@ -2558,9 +2558,18 @@ dependencies = [
  "eframe",
  "egui_kittest",
  "polished-map-core",
+ "polished-map-platform",
  "polished-map-project",
  "rfd",
  "tempfile",
+]
+
+[[package]]
+name = "polished-map-platform"
+version = "0.1.0"
+dependencies = [
+ "raw-window-handle",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

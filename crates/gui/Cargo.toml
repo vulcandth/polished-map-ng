@@ -16,6 +16,9 @@ eframe.workspace = true
 rfd.workspace = true
 arboard.workspace = true
 
+[target.'cfg(windows)'.dependencies]
+polished-map-platform = { version = "0.1.0", path = "../platform" }
+
 [dev-dependencies]
 egui_kittest.workspace = true
 tempfile.workspace = true

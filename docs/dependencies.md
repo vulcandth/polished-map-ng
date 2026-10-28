@@ -1,5 +1,12 @@
 # Dependency review
 
+The isolated Windows platform adapter directly uses already-locked
+`raw-window-handle` 0.6.2 and `windows-sys` 0.61.2 (MIT/Apache-2.0), enabling only
+the common-dialog API feature. No new third-party package versions were added.
+The GUI invokes the safe adapter with eframe's borrowed live window handle;
+unsafe Win32 calls are confined to the adapter and documented at each call.
+The workspace-wide unsafe-code prohibition remains unchanged.
+
 The project adapter directly uses the already-locked `png` 0.18 encoder to retain
 upstream's two-bit grayscale tileset output. The `image` convenience writer emits
 eight-bit channels; `image` remains responsible for bounded import decoding.

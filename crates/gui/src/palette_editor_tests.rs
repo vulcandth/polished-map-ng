@@ -1,0 +1,241 @@
+use super::*;
+use egui_kittest::{Harness, kittest::Queryable};
+use polished_map_core::{ColorSlot, PaletteSet};
+use polished_map_project::prepare_palette_export;
+use std::fs;
+
+fn open(h: &mut Harness<'_, Editor>) {
+    h.get_by_label("Edit").click();
+    h.run();
+    h.get_by_label("Edit Current Palettes…").click();
+    h.run();
+}
+fn color(h: &Harness<'_, Editor>, palette: u8, hue: u8) -> [u8; 3] {
+    h.state()
+        .palette_form
+        .as_ref()
+        .unwrap()
+        .draft
+        .bank()
+        .color(ColorSlot {
+            set: PaletteSet::Day,
+            palette,
+            hue,
+        })
+        .unwrap()
+}
+
+#[test]
+fn channel_controls_and_set_selection_refresh_colors_without_map_edits() {
+    let (_dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    open(&mut h);
+    hex(&mut h, "037ff9");
+    h.get_by_label("R channel").set_value_accesskit(2.0);
+    h.run();
+    assert_eq!(color(&h, 0, 0), [16, 127, 249]);
+    h.get_by_label("G slider").set_value_accesskit(31.0);
+    h.run();
+    assert_eq!(color(&h, 0, 0), [16, 255, 249]);
+    h.get_by_label("OK").click();
+    h.run();
+    h.get_by_label("View").click();
+    h.run();
+    h.get_by_label("Palettes").click();
+    h.run();
+    h.get_by_label("Night").click();
+    h.run();
+    assert_eq!(h.state().palette_document().selected(), PaletteSet::Nite);
+    assert_eq!(
+        h.state().palette_document().bank().colors(PaletteSet::Day)[0][0],
+        [16, 255, 249]
+    );
+    assert!(h.state().palette_document().is_modified());
+    assert!(!h.state().is_modified());
+}
+
+#[test]
+fn palette_editor_operates_before_loading_a_map() {
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .build_eframe(|cc| Editor::new(cc));
+    open(&mut h);
+    hex(&mut h, "123");
+    assert_eq!(color(&h, 0, 0), [0, 1, 35]);
+    h.get_by_label("OK").click();
+    h.run();
+    assert!(h.state().loaded.is_none());
+    assert_eq!(
+        h.state().palette_document().bank().colors(PaletteSet::Day)[0][0],
+        [0, 1, 35]
+    );
+    assert!(h.state().palette_document().is_modified());
+}
+fn hex(h: &mut Harness<'_, Editor>, value: &str) {
+    let input = h.get_by_label("Hex color");
+    input.click();
+    h.run();
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::A);
+    h.run();
+    h.get_by_label("Hex color").type_text(value);
+    h.run();
+    h.key_press(egui::Key::Enter);
+    h.run();
+}
+
+#[test]
+fn palette_draft_accept_cancel_export_and_load_preserve_map_and_tile_state() {
+    let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    let old = h
+        .state()
+        .loaded
+        .as_ref()
+        .unwrap()
+        .graphics
+        .render_block(0)
+        .unwrap();
+    for accept in [false, true] {
+        open(&mut h);
+        h.get_by_label("GRAY color 3").click();
+        h.run();
+        hex(&mut h, "037ff9");
+        assert!(
+            h.state().palette_form.is_some(),
+            "hex Enter must not accept the dialog"
+        );
+        assert_eq!(color(&h, 0, 1), [3, 127, 249]);
+        h.get_by_label(if accept { "OK" } else { "Cancel" }).click();
+        h.run();
+        assert_eq!(h.state().palette_document().is_modified(), accept);
+        assert!(
+            !h.state().is_modified(),
+            "palette export is separate from map Save"
+        );
+        let loaded = h.state().loaded.as_ref().unwrap();
+        assert!(!loaded.document.map().can_undo());
+        assert!(!loaded.tileset.as_ref().unwrap().tileset().is_modified());
+        let current = loaded.graphics.render_block(0).unwrap();
+        if accept {
+            assert_eq!(current.pixels[..3], [3, 127, 249]);
+        } else {
+            assert_eq!(current, old);
+        }
+    }
+    let target = prepare_palette_export(&dir.path().join("colors.pal")).unwrap();
+    h.state_mut().export_palette_target(&target).unwrap();
+    h.run();
+    assert!(!h.state().palette_document().is_modified());
+    let text = fs::read_to_string(target.path()).unwrap();
+    assert_eq!(text.lines().count(), 54);
+    assert!(text.contains("00,15,31"));
+    open(&mut h);
+    h.get_by_label("OK").click();
+    h.run();
+    assert!(
+        h.state().palette_document().is_modified(),
+        "unchanged acceptance marks palettes edited"
+    );
+    let ctx = h.ctx.clone();
+    h.state_mut()
+        .request_palette_load(&ctx, target.path().into());
+    h.run();
+    h.get_by_label("Cancel").click();
+    h.run();
+    assert!(h.state().palette_document().is_modified());
+    h.state_mut()
+        .request_palette_load(&ctx, target.path().into());
+    h.run();
+    h.get_by_label("Load").click();
+    h.run();
+    assert!(!h.state().palette_document().is_modified());
+    assert_eq!(
+        h.state().palette_document().bank().colors(PaletteSet::Day)[0][1],
+        [0, 123, 255]
+    );
+    let before = h.state().palette_document().content_hash();
+    fs::write(target.path(), "\tRGB 32,0,0\n").unwrap();
+    assert!(
+        h.state_mut()
+            .load_palette_path(&ctx, target.path())
+            .is_err()
+    );
+    assert_eq!(h.state().palette_document().content_hash(), before);
+}
+
+#[test]
+fn palette_private_copy_quantizes_snapshot_and_swap_uses_live_source() {
+    let (_dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    open(&mut h);
+    hex(&mut h, "037ff9");
+    h.get_by_label("GRAY color 1").click();
+    h.run();
+    h.input_mut().events.push(egui::Event::Copy);
+    h.run();
+    hex(&mut h, "112233");
+    h.get_by_label("RED color 2").click();
+    h.run();
+    h.input_mut()
+        .events
+        .push(egui::Event::Paste("ignored".into()));
+    h.run();
+    assert_eq!(color(&h, 1, 2), [0, 123, 255]);
+    h.input_mut().events.push(egui::Event::Cut);
+    h.run();
+    assert_eq!(color(&h, 1, 2), [17, 34, 51]);
+    assert_eq!(color(&h, 0, 0), [0, 123, 255]);
+    h.input_mut().events.push(egui::Event::Cut);
+    h.run();
+    assert_eq!(color(&h, 1, 2), [17, 34, 51]);
+    h.get_by_label("Cancel").click();
+    h.run();
+    assert!(!h.state().palette_document().is_modified());
+}
+
+#[test]
+fn color_palette_form_geometry_and_export_follow_source() {
+    palette_geometry(false);
+}
+
+#[test]
+fn monochrome_palette_form_geometry_and_export_follow_source() {
+    palette_geometry(true);
+}
+
+fn palette_geometry(monochrome: bool) {
+    let (dir, mut h) = super::tileset_editor_tests::fixture(false, monochrome);
+    open(&mut h);
+    let name = if monochrome { "MONOCHROME" } else { "GRAY" };
+    let first = h.get_by_label(&format!("{name} color 1")).rect();
+    let next = h.get_by_label(&format!("{name} color 2")).rect();
+    assert_eq!(first.size(), Vec2::splat(20.0));
+    assert_eq!(next.min - first.min, Vec2::new(21.0, 0.0));
+    if !monochrome {
+        assert_eq!(
+            h.get_by_label("TEXT color 1").rect().min - first.min,
+            Vec2::new(0.0, 147.0)
+        );
+    }
+    assert!(h.state().palette_form.as_ref().unwrap().bounds.height() < 245.0);
+    #[cfg(feature = "visual-tests")]
+    for windows in [true, false] {
+        h.state_mut().palette_form.as_mut().unwrap().windows_buttons = windows;
+        h.remove_cursor();
+        h.run();
+        h.snapshot(format!(
+            "palette-{}-{}",
+            if monochrome { "mono" } else { "color" },
+            if windows { "windows" } else { "unix" }
+        ));
+    }
+    if monochrome {
+        hex(&mut h, "ff0000");
+        assert_eq!(color(&h, 8, 0), [255, 0, 0]);
+    }
+    h.get_by_label("OK").click();
+    h.run();
+    let target = prepare_palette_export(&dir.path().join("colors.pal")).unwrap();
+    h.state_mut().export_palette_target(&target).unwrap();
+    assert_eq!(
+        fs::read_to_string(target.path()).unwrap().lines().count(),
+        if monochrome { 6 } else { 54 }
+    );
+}

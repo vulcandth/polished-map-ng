@@ -2,6 +2,9 @@
 mod block_editor;
 mod block_workflows;
 pub mod geometry;
+mod palette_editor;
+#[cfg(test)]
+mod palette_editor_tests;
 mod tileset_editor;
 use block_editor::BlockForm;
 
@@ -60,6 +63,13 @@ pub struct Editor {
     resize_form: Option<ResizeForm>,
     block_form: Option<BlockForm>,
     tileset_form: Option<tileset_editor::TilesetForm>,
+    palette_form: Option<palette_editor::PaletteForm>,
+    unloaded_palettes: polished_map_project::PaletteDocument,
+    pending_palette_load: Option<PathBuf>,
+    #[cfg(windows)]
+    native_color_request: Option<polished_map_core::ColorSlot>,
+    #[cfg(windows)]
+    native_color_picker: polished_map_platform::ColorPicker,
     block_count_form: Option<u16>,
     block_count_windows_buttons: bool,
     block_clipboard: Option<block_workflows::BlockClipboard>,
@@ -92,6 +102,13 @@ impl Default for Editor {
             resize_form: None,
             block_form: None,
             tileset_form: None,
+            palette_form: None,
+            unloaded_palettes: polished_map_project::PaletteDocument::default(),
+            pending_palette_load: None,
+            #[cfg(windows)]
+            native_color_request: None,
+            #[cfg(windows)]
+            native_color_picker: polished_map_platform::ColorPicker::default(),
             block_count_form: None,
             block_count_windows_buttons: cfg!(target_os = "windows"),
             block_clipboard: None,
@@ -553,6 +570,14 @@ impl Editor {
             self.tileset_dialog(ctx);
             return;
         }
+        if self.palette_form.is_some() {
+            self.palette_dialog(ctx);
+            return;
+        }
+        if self.pending_palette_load.is_some() {
+            self.palette_load_dialog(ctx);
+            return;
+        }
         if self.block_count_form.is_some() {
             self.block_count_dialog(ctx);
             return;
@@ -1003,11 +1028,23 @@ impl Editor {
             || self.resize_form.is_some()
             || self.block_form.is_some()
             || self.tileset_form.is_some()
+            || self.palette_form.is_some()
+            || self.pending_palette_load.is_some()
             || self.block_count_form.is_some()
             || self.confirm_discard
             || self.error.is_some()
             || self.loading.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            if ctx.input_mut(|i| {
+                i.consume_key(
+                    egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+                    egui::Key::L,
+                )
+            }) {
+                self.prepare_palettes();
+            } else if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::L)) {
+                self.choose_palettes(&ctx);
+            }
             self.block_shortcuts(&ctx);
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::T)) {
                 self.prepare_tileset();
@@ -1107,8 +1144,20 @@ impl Editor {
                             ui.close();
                             self.export_png(&ctx);
                         }
+                        if ui.button("Load Palettes…").clicked() {
+                            ui.close();
+                            self.choose_palettes(&ctx);
+                        }
+                        if ui.button("Export Palettes…").clicked() {
+                            ui.close();
+                            self.export_palettes();
+                        }
                     });
                     ui.menu_button("Edit", |ui| {
+                        if ui.button("Edit Current Palettes…").clicked() {
+                            ui.close();
+                            self.prepare_palettes();
+                        }
                         self.block_menu(ui);
                         if ui
                             .add_enabled(
@@ -1153,6 +1202,7 @@ impl Editor {
                         }
                     });
                     ui.menu_button("View", |ui| {
+                        ui.menu_button("Palettes", |ui| self.palette_set_menu(ui));
                         ui.checkbox(&mut self.grid, "Grid");
                         ui.checkbox(&mut self.zoom, "Zoom");
                         if ui.checkbox(&mut self.dark, "Dark appearance").changed() {
@@ -1233,5 +1283,7 @@ fn append_line(points: &mut Vec<Point>, from: Point, to: Point) {
 impl eframe::App for Editor {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.show(ui);
+        #[cfg(windows)]
+        self.choose_palette_color(_frame);
     }
 }
