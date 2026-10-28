@@ -1124,6 +1124,7 @@ impl Editor {
     pub fn show(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
         self.poll_workers(&ctx);
+        self.poll_event_scripts();
         if ctx.input(|i| i.viewport().close_requested())
             && self.is_modified()
             && !self.exit_approved
@@ -1453,6 +1454,8 @@ fn append_line(points: &mut Vec<Point>, from: Point, to: Point) {
 impl eframe::App for Editor {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.show(ui);
+        #[cfg(not(test))]
+        self.dispatch_event_script(ui.ctx(), polished_map_platform::ScriptOpenRequest::open);
         #[cfg(windows)]
         self.choose_palette_color(_frame);
     }

@@ -8,10 +8,13 @@ repository.workspace = true
 
 [target.'cfg(windows)'.dependencies]
 raw-window-handle = "0.6"
-windows-sys = { version = "0.61", features = ["Win32_UI_Controls_Dialogs"] }
+windows-sys = { version = "0.61", features = ["Win32_UI_Controls_Dialogs", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_System_Com"] }
+
+[dev-dependencies]
+tempfile.workspace = true
 
 # This small FFI boundary is intentionally separate from workspace crates that
-# forbid unsafe. Only the audited win32 module opts in; all other code denies it.
+# forbid unsafe. Only the audited Win32 modules opt in; all other code denies it.
 [lints.rust]
 unsafe_code = "deny"
 

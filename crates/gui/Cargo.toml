@@ -15,8 +15,6 @@ polished-map-project.workspace = true
 eframe.workspace = true
 rfd.workspace = true
 arboard.workspace = true
-
-[target.'cfg(windows)'.dependencies]
 polished-map-platform = { version = "0.1.0", path = "../platform" }
 
 [dev-dependencies]

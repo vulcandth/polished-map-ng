@@ -11,7 +11,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
-| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle and resize integration tested; bitmap digits/fonts, external-editor integration, export overlays, remaining gestures and native workflows pending |
+| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch and mode shortcuts tested; bitmap digits/fonts, export overlays, remaining gestures and native workflows pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
@@ -23,6 +23,22 @@ actual C++ differential observations. A source-derived vector is not a run of
 the original application. Unverified assets never become redistributable fixtures.
 
 ## Current evidence (2026-10-28)
+
+- External editor tests capture actual double-click, Shift precedence and File/
+  Ctrl-Cmd-U requests, preserving source line numbers and unsaved event drafts.
+  Injected worker callbacks exercise successful completion and visible failure
+  without launching a desktop application. Tab toggles repeatedly without stealing
+  focus; modal editing suppresses mode/script shortcuts. Platform unit tests cover
+  all six supported Windows executable names, unknown-editor fallback planning,
+  Unicode/verbatim/UNC paths, Windows parameter quoting, invalid lines/files, and
+  Unix argument boundaries including non-UTF8 path bytes. These are planning and
+  dispatch tests, not native association/editor checks. Windows is locally tested;
+  Unix argument tests run in CI on their respective targets.
+  Prior CI run 40780636085 passed all three platform builds/tests and other gates except
+  one Linux snapshot: direct inspection found a 2/255 RGB delta at (249,149) in
+  the dimmed warp glyph; all other differing channels were at most 1/255. Only
+  `event-options-warp` uses a Linux perceptual threshold of 1.0 instead of 0.6;
+  no baseline image, geometry assertion or other snapshot tolerance changed.
 
 - `Events` retains master coordinate bounds, legacy X/Y order, prefix/suffix
   fields, one-based warp IDs, same-map target lookup, sticky modified state and

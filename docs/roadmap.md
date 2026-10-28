@@ -74,8 +74,12 @@ now auto-loads optional scripts, displays source-derived colored markers, edits
 options/coordinates, drags events, navigates warps and protects reload/unload.
 Event saves join the original Save ordering; map resize stages both domains.
 Source-sized forms and zoomed overlays have inspected snapshots. Exact marker
-typography/bitmap digits, external-editor integration, export overlays, persistent
+typography/bitmap digits, export overlays, persistent
 preferences, remaining gestures and native workflows still prevent event parity.
+External script opening, double-click line requests, Tab mode switching and the
+warp-ID shortcut now have headless dispatch/focus coverage. The Windows adapter
+retains the original known-editor line arguments; Linux/macOS use their desktop
+file openers. Actual editor/association behavior still needs native checks.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.

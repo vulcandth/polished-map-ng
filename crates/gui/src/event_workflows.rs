@@ -2,6 +2,7 @@
 //! LGPL-3.0-only. Logical cells are 16/32 points with six event cells of margin.
 use super::*;
 use polished_map_core::{EventCommand, EventDefinition, EventKind, Events};
+use polished_map_platform::{ScriptOpenError, ScriptOpenRequest};
 use polished_map_project::{EventDocument, event_script_path};
 
 pub(super) struct EventUi {
@@ -13,6 +14,8 @@ pub(super) struct EventUi {
     pub form: Option<EventForm>,
     pub change: Option<EventChange>,
     pub warp_path: Option<PathBuf>,
+    pub script_request: Option<ScriptOpenRequest>,
+    script_jobs: Vec<mpsc::Receiver<Result<(), ScriptOpenError>>>,
 }
 impl Default for EventUi {
     fn default() -> Self {
@@ -25,6 +28,8 @@ impl Default for EventUi {
             form: None,
             change: None,
             warp_path: None,
+            script_request: None,
+            script_jobs: Vec::new(),
         }
     }
 }
@@ -37,6 +42,7 @@ pub(super) enum EventAction {
     Move(usize, i16, i16),
     Options(usize),
     Warp(usize),
+    ViewScript(usize),
 }
 pub(super) struct EventForm {
     index: usize,
@@ -268,6 +274,8 @@ pub(super) fn canvas_events(
                 egui::Event::PointerButton {button:egui::PointerButton::Primary,pressed:false,modifiers,..} if modifiers.shift)));
             if response.clicked() && shift_click {
                 action = Some(EventAction::Warp(index));
+            } else if response.double_clicked() {
+                action = Some(EventAction::ViewScript(index));
             }
             response.on_hover_text(event.text());
         }
@@ -293,6 +301,72 @@ pub(super) fn canvas_events(
 }
 
 impl Editor {
+    fn request_event_script(&mut self, index: Option<usize>) {
+        let Some(doc) = self.loaded.as_ref().and_then(|l| l.events.as_ref()) else {
+            return;
+        };
+        let line = match index {
+            Some(index) => {
+                let Some(event) = doc.script().events().entries().get(index) else {
+                    return;
+                };
+                Some(event.definition().line)
+            }
+            None => None,
+        };
+        match ScriptOpenRequest::new(doc.source().path().to_owned(), line) {
+            Ok(request) => self.event_ui.script_request = Some(request),
+            Err(e) => self.error = Some(e.to_string()),
+        }
+    }
+
+    /// The native App adapter supplies the launcher. Headless interaction tests
+    /// retain the request unless explicitly dispatching to a test launcher.
+    pub(super) fn dispatch_event_script(
+        &mut self,
+        ctx: &egui::Context,
+        launch: fn(&ScriptOpenRequest) -> Result<(), ScriptOpenError>,
+    ) {
+        let Some(request) = self.event_ui.script_request.take() else {
+            return;
+        };
+        let (send, receive) = mpsc::channel();
+        let ctx = ctx.clone();
+        match std::thread::Builder::new()
+            .name("event-script-opener".into())
+            .spawn(move || {
+                let result = launch(&request);
+                let _ = send.send(result);
+                ctx.request_repaint();
+            }) {
+            Ok(_) => {
+                self.event_ui.script_jobs.push(receive);
+                self.status = "Opening saved event script in external editor…".into();
+            }
+            Err(e) => self.error = Some(format!("Cannot start the event script opener: {e}")),
+        }
+    }
+
+    pub(super) fn poll_event_scripts(&mut self) {
+        self.event_ui
+            .script_jobs
+            .retain(|receive| match receive.try_recv() {
+                Ok(Ok(())) => {
+                    self.status = "Event script opener completed".into();
+                    false
+                }
+                Ok(Err(e)) => {
+                    self.error = Some(e.to_string());
+                    false
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    self.error = Some("The event script opener stopped unexpectedly".into());
+                    false
+                }
+                Err(mpsc::TryRecvError::Empty) => true,
+            });
+    }
+
     pub(super) fn event_action(&mut self, action: EventAction, ctx: &egui::Context) {
         match action {
             EventAction::Move(index, x, y) => {
@@ -332,6 +406,7 @@ impl Editor {
                 }
             }
             EventAction::Warp(index) => self.request_warp(index, ctx),
+            EventAction::ViewScript(index) => self.request_event_script(Some(index)),
         }
     }
     pub(super) fn request_event_change(&mut self, change: EventChange) {
@@ -415,6 +490,13 @@ impl Editor {
             self.save_events();
         }
         if ui
+            .add_enabled(enabled, egui::Button::new("View Event Script"))
+            .clicked()
+        {
+            ui.close();
+            self.request_event_script(None);
+        }
+        if ui
             .add_enabled(enabled, egui::Button::new("Reload Event Script"))
             .clicked()
         {
@@ -432,6 +514,14 @@ impl Editor {
     }
     pub(super) fn event_shortcuts(&mut self, ctx: &egui::Context) {
         let shift = egui::Modifiers::COMMAND | egui::Modifiers::SHIFT;
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Tab)) {
+            // egui prepares focus traversal before widgets consume input.
+            // Cancel it when Tab is used as the original mode shortcut.
+            ctx.memory_mut(|m| m.move_focus(egui::FocusDirection::None));
+            self.event_ui.mode = !self.event_ui.mode;
+            self.event_ui.drag = None;
+            self.stroke.clear();
+        }
         if ctx.input_mut(|i| i.consume_key(shift, egui::Key::E)) {
             self.event_ui.mode = true;
             self.stroke.clear();
@@ -442,6 +532,12 @@ impl Editor {
         }
         if ctx.input_mut(|i| i.consume_key(shift, egui::Key::V)) {
             self.event_ui.show = !self.event_ui.show;
+        }
+        if ctx.input_mut(|i| i.consume_key(shift, egui::Key::Num3)) {
+            self.event_ui.warp_ids = !self.event_ui.warp_ids;
+        }
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::U)) {
+            self.request_event_script(None);
         }
         if ctx.input_mut(|i| i.consume_key(shift, egui::Key::A)) {
             self.save_events();

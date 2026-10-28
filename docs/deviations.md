@@ -183,5 +183,16 @@ is unfinished. Source rectangles/colors/alpha, cell sizing, coordinate bounds an
 options geometry are implemented; egui's bundled glyphs and outlined text warp
 IDs are placeholders for the original bold Helvetica and bitmap digits. Event
 Options is an embedded modal, and auto-load/show preferences are session-only.
-The external editor, double-click launching, Tab mode switch and event export
-overlays remain explicit parity gaps. No native event GUI checks ran for this slice.
+Event export overlays and native event GUI checks remain explicit parity gaps.
+
+External script opening now follows the original Windows association/known-editor
+line rules and Linux `xdg-open` behavior. macOS uses `/usr/bin/open`, fixing the
+original unconditional Unix `/usr/bin/xdg-open` path. Requests validate a regular
+file, preserve OS path encoding, and report launcher errors instead of silently
+exiting successfully. Known Windows editors are matched by exact case-insensitive
+basename rather than arbitrary suffix (so `evilcode.exe` is not treated as Code).
+Windows uses a worker-owned COM apartment and a null owner window; shell dialogs
+are not parented to the GUI. File opening runs off the GUI thread; the Unix worker
+reaps the opener, which may remain running until its editor exits. No automatic
+save or reload is added. Native association, editor-line navigation, and shell
+dialog behavior still require platform verification.

@@ -8,13 +8,29 @@ discovery, codecs and persistence. `gui` and `cli` depend on these libraries.
 Master/plusplus remain explicit format profiles; shared code must not erase
 their differences. Public interfaces are experimental until objective four.
 
-`polished-map-platform` is a small Windows-only FFI adapter for `ChooseColorW`.
+`polished-map-platform` isolates desktop color dialogs and external script opening.
 Core, project, GUI and CLI retain the workspace `unsafe_code = forbid` rule.
-The adapter denies unsafe generally and allows it only in its documented Win32
-module, borrowing eframe's live owner handle during a synchronous modal call.
+The adapter denies unsafe generally and allows it only in documented Win32
+modules. The color chooser borrows eframe's live owner handle during its modal call.
 Custom color storage belongs to the adapter instance, not a mutable global.
-The two unsafe calls follow Microsoft's
+Its two unsafe calls follow Microsoft's
 [CHOOSECOLORW contract](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/ns-commdlg-choosecolorw).
+
+`ScriptOpenRequest` retains a saved file path and optional one-based source line.
+The GUI queues explicit menu/shortcut/double-click requests; its native adapter
+dispatches workers and reports completion/errors through channels. Headless GUI
+tests capture requests and inject launch callbacks, never opening applications.
+The platform adapter validates an absolute regular-file path. Windows isolates
+COM lifetime, association lookup and shell execution; known-editor arguments
+are quoted as data using the
+[Windows argument rules](https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments).
+The APIs follow the documented
+[FindExecutableW buffer contract](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-findexecutablew)
+and [ShellExecuteW return/COM contract](https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shellexecutew).
+Linux dispatch uses the [xdg-open desktop interface](https://portland.freedesktop.org/doc/xdg-open.html);
+macOS uses Apple's `open` tool. Unix arguments use `Command::arg`, never a shell
+command string. These are desktop adapters only; core/project and CLI operations
+remain independent of display servers and external editors.
 
 ## ADR 2: Geometry derived from FLTK
 

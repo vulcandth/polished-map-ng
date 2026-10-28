@@ -20,6 +20,9 @@ preservation and input validation changes are recorded in `docs/deviations.md`.
 Event marker backgrounds reconstruct the flat fill and one-pixel border from
 the LGPL source's embedded texture data using rectangles and RGB/alpha constants;
 no bitmap payloads or original warp-digit images are distributed.
+External script dispatch and known Windows editor line arguments adapt
+`Main_Window::view_event_script` in master `main-window.cpp`; native calls,
+worker lifetime, validation and error reporting are Rust implementations.
 
 ## Assets and fixtures
 

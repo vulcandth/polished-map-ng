@@ -3,6 +3,151 @@ use super::*;
 use egui_kittest::kittest::Queryable;
 
 #[test]
+fn event_editor_requests_preserve_saved_script_and_dispatch_errors() {
+    let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    let path = dir.path().join("Map ü &.asm");
+    let original = "Header:\n\tdb 42\n\tbg_event 0, 0, SIGN\n";
+    std::fs::write(&path, original).unwrap();
+    h.state_mut()
+        .request_event_change(EventChange::Load(path.clone()));
+    h.state_mut().event_ui.mode = true;
+    h.run();
+    let ctx = h.ctx.clone();
+    h.state_mut().event_action(EventAction::Move(0, 0, 0), &ctx);
+    let pos = h.get_by_label("Event 0: bg_event").rect().center();
+    h.hover_at(pos);
+    h.run();
+    for _ in 0..2 {
+        for pressed in [true, false] {
+            h.input_mut().time = Some(ctx.input(|i| i.time) + 0.05);
+            h.event(egui::Event::PointerButton {
+                pos,
+                button: egui::PointerButton::Primary,
+                pressed,
+                modifiers: egui::Modifiers::NONE,
+            });
+            h.step();
+        }
+    }
+    h.input_mut().time = None;
+    h.run();
+    let request = h
+        .state_mut()
+        .event_ui
+        .script_request
+        .take()
+        .expect("double-click request");
+    assert_eq!(request.path(), path.canonicalize().unwrap());
+    assert_eq!(request.line(), Some(3));
+    assert!(h.state().is_modified());
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
+
+    // Shift has priority even on the second click; a non-warp event does not
+    // launch an editor or navigate anywhere.
+    for _ in 0..2 {
+        for pressed in [true, false] {
+            h.input_mut().time = Some(ctx.input(|i| i.time) + 0.05);
+            h.event_modifiers(
+                egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed,
+                    modifiers: egui::Modifiers::SHIFT,
+                },
+                egui::Modifiers::SHIFT,
+            );
+            h.step();
+        }
+    }
+    h.input_mut().time = None;
+    h.run();
+    assert!(h.state().event_ui.script_request.is_none());
+
+    // Control/Command-U opens the whole saved script, without a line argument.
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::U);
+    h.run();
+    assert_eq!(
+        h.state().event_ui.script_request.as_ref().unwrap().line(),
+        None
+    );
+    h.state_mut().dispatch_event_script(&ctx, |_| {
+        Err(polished_map_platform::ScriptOpenError::Platform(
+            "Synthetic editor failure".into(),
+        ))
+    });
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while h.state().error.is_none() && std::time::Instant::now() < deadline {
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        h.step();
+    }
+    assert_eq!(h.state().error.as_deref(), Some("Synthetic editor failure"));
+    assert!(h.state().event_ui.script_request.is_none());
+    assert!(h.state().is_modified());
+    assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
+    h.state_mut().error = None;
+    h.state_mut().event_action(EventAction::ViewScript(0), &ctx);
+    h.state_mut().dispatch_event_script(&ctx, |request| {
+        assert_eq!(request.line(), Some(3));
+        Ok(())
+    });
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while h.state().status != "Event script opener completed"
+        && std::time::Instant::now() < deadline
+    {
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        h.step();
+    }
+    assert_eq!(h.state().status, "Event script opener completed");
+    assert!(h.state().error.is_none());
+    h.get_by_label("File").click();
+    h.run();
+    h.get_by_label("View Event Script").click();
+    h.run();
+    assert_eq!(
+        h.state().event_ui.script_request.as_ref().unwrap().line(),
+        None
+    );
+}
+
+#[test]
+fn event_mode_shortcuts_respect_modal_and_text_focus() {
+    let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    let path = dir.path().join("Map.asm");
+    std::fs::write(&path, "\tbg_event 0, 0, SIGN\n").unwrap();
+    h.state_mut().request_event_change(EventChange::Load(path));
+    h.run();
+    h.key_press(egui::Key::Tab);
+    h.run();
+    assert!(h.state().event_ui.mode);
+    h.key_press(egui::Key::Tab);
+    h.run();
+    assert!(!h.state().event_ui.mode);
+    let shift = egui::Modifiers::COMMAND | egui::Modifiers::SHIFT;
+    h.key_press_modifiers(shift, egui::Key::Num3);
+    h.run();
+    assert!(!h.state().event_ui.warp_ids);
+    h.key_press_modifiers(shift, egui::Key::E);
+    h.run();
+    assert!(h.state().event_ui.mode);
+    let ctx = h.ctx.clone();
+    h.state_mut().event_action(EventAction::Options(0), &ctx);
+    h.run();
+    h.get_by_label("Event X").click();
+    h.run();
+    h.key_press(egui::Key::Tab);
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::U);
+    h.key_press_modifiers(shift, egui::Key::B);
+    h.run();
+    assert!(h.state().event_ui.mode);
+    assert!(h.state().event_ui.script_request.is_none());
+    h.get_by_label("Cancel").click();
+    h.run();
+    h.key_press_modifiers(shift, egui::Key::B);
+    h.run();
+    assert!(!h.state().event_ui.mode);
+}
+
+#[test]
 #[ignore = "requires POLISHED_MAP_POKECRYSTAL; local headless GUI integration"]
 fn real_new_bark_town_auto_events_edit_and_save_on_temporary_script() {
     let root = PathBuf::from(
@@ -93,7 +238,14 @@ fn event_draft_cancel_accept_reload_unload_and_save_are_independent() {
             .windows_buttons = true;
         h.remove_cursor();
         h.run();
-        h.snapshot("event-options-warp");
+        // Inspected Linux CI artifact 40780636085: one dimmed glyph pixel
+        // differs by 2/255 RGB; the rest differ by at most 1/255. Keep the
+        // default elsewhere and permit only this small perceptual-color delta.
+        h.snapshot_options(
+            "event-options-warp",
+            &egui_kittest::SnapshotOptions::default()
+                .threshold(egui_kittest::OsThreshold::<f32>::default().linux(1.0)),
+        );
     }
     h.get_by_label("Cancel").click();
     h.run();

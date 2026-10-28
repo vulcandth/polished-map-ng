@@ -268,7 +268,8 @@ The GUI automatically loads a map's discovered event script, falling back to an
 adjacent `.asm` file. New maps do not auto-load events. File → Load/Save/Reload/
 Unload Event Script controls the independent script document; failed reloads
 retain the previous edits. Tools → Events Mode (Ctrl/Cmd+Shift+E) enables dragging
-and right-click Event Options; Ctrl/Cmd+Shift+B returns to Blocks Mode. Shift-click
+and right-click Event Options; Ctrl/Cmd+Shift+B returns to Blocks Mode and Tab
+switches modes when no dialog or text control has focus. Shift-click
 a warp to open its destination, with the normal unsaved-change prompt. Event
 Options retains macro-specific prefix/suffix fields, source lines, warp IDs and
 decimal/hex coordinate controls. Cancel discards only the draft.
@@ -276,10 +277,18 @@ decimal/hex coordinate controls. Cancel discards only the draft.
 View → Show Events and Show Warp IDs control overlays; Events Mode always shows
 events. Tools → Auto-Load Events controls subsequent opens (session-only for now).
 Ctrl/Cmd+Shift+A saves events, Ctrl/Cmd+R reloads, and Ctrl/Cmd+Shift+W unloads.
+Ctrl/Cmd+Shift+3 toggles warp IDs. File → View Event Script (Ctrl/Cmd+U) opens the
+saved script in an external editor; double-click an event to request its source
+line. Windows supports line navigation with associated Notepad2/3, Notepad++,
+VS Code and Sublime Text, falling back to the file's `edit` association. Linux
+uses `xdg-open`; macOS uses `open`. Those default application openers do not
+receive a line number. Opening a script never saves pending event edits; save
+first if the external editor should see them. Reload explicitly after editing
+externally. Launcher failures are reported without discarding the current draft.
 Main Save processes edited tileset, roof, blockset and event domains before saving
 the map if needed. Saves are sequential, not one atomic transaction. Event-only
 changes do not rewrite a clean map. Bitmap warp digits, exact font matching,
-external-editor/double-click integration, persistent preferences, Tab mode switching,
+persistent preferences,
 event overlays in exports and native platform verification remain pending.
 
 ## License

@@ -2,10 +2,15 @@
 
 The isolated Windows platform adapter directly uses already-locked
 `raw-window-handle` 0.6.2 and `windows-sys` 0.61.2 (MIT/Apache-2.0), enabling only
-the common-dialog API feature. No new third-party package versions were added.
+the common-dialog, Shell, window-message definitions and COM API features.
+No new third-party package versions were added.
 The GUI invokes the safe adapter with eframe's borrowed live window handle;
 unsafe Win32 calls are confined to the adapter and documented at each call.
-The workspace-wide unsafe-code prohibition remains unchanged.
+The script-opening adapter initializes and balances COM on its worker thread,
+uses bounded UTF-16 buffers for association lookup, and checks ShellExecute's
+return code. The platform crate is now built on all three OSes, with these Win32
+dependencies still target-specific. The workspace-wide unsafe-code prohibition
+remains unchanged.
 
 The project adapter directly uses the already-locked `png` 0.18 encoder to retain
 upstream's two-bit grayscale tileset output. The `image` convenience writer emits
