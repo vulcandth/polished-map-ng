@@ -241,48 +241,18 @@ impl Editor {
                 || ui.input(|i| i.key_pressed(egui::Key::Escape));
         });
         if accept && !cancel {
-            if let Some(loaded) = &mut self.loaded
-                && let Some(doc) = &mut loaded.blockset
-            {
-                let mut commands = vec![BlockCommand::Set {
+            let mut commands = vec![BlockCommand::Set {
+                block: form.id,
+                tiles: form.tiles,
+            }];
+            if let Some(collision) = &form.collision {
+                commands.push(BlockCommand::SetCollisions {
                     block: form.id,
-                    tiles: form.tiles,
-                }];
-                if let Some(collision) = &form.collision {
-                    commands.push(BlockCommand::SetCollisions {
-                        block: form.id,
-                        collision: collision.clone(),
-                    });
-                }
-                let result = doc
-                    .blockset_mut()
-                    .apply_batch(&commands)
-                    .map_err(|e| e.to_string())
-                    .and_then(|()| {
-                        loaded
-                            .graphics
-                            .replace_blocks(doc.blockset())
-                            .map_err(|e| e.to_string())
-                    })
-                    .and_then(|()| {
-                        loaded
-                            .graphics
-                            .render_block(form.id)
-                            .map_err(|e| e.to_string())
-                    });
-                match result {
-                    Ok(rgb) => {
-                        self.textures[usize::from(form.id)].set(
-                            egui::ColorImage::from_rgb([32, 32], &rgb.pixels),
-                            egui::TextureOptions::NEAREST,
-                        );
-                        self.status = format!("Block ${:02X} changed", form.id);
-                    }
-                    Err(e) => {
-                        self.error = Some(e);
-                        self.block_form = Some(form);
-                    }
-                }
+                    collision: collision.clone(),
+                });
+            }
+            if !self.apply_block_commands(ctx, &commands) {
+                self.block_form = Some(form);
             }
         } else if !cancel {
             self.block_form = Some(form);

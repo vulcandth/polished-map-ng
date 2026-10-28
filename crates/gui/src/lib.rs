@@ -1,8 +1,11 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
 mod block_editor;
+mod block_workflows;
 pub mod geometry;
 use block_editor::BlockForm;
 
+#[cfg(test)]
+mod block_workflow_tests;
 #[cfg(test)]
 mod tests;
 
@@ -50,6 +53,12 @@ pub struct Editor {
     open_form: Option<OpenForm>,
     resize_form: Option<ResizeForm>,
     block_form: Option<BlockForm>,
+    block_count_form: Option<u16>,
+    block_count_windows_buttons: bool,
+    block_clipboard: Option<block_workflows::BlockClipboard>,
+    paste_shortcut_handled: bool,
+    sidebar_drag: Option<u8>,
+    reset_sidebar_scroll: bool,
     resize_anchor: ResizeAnchor,
     reset_canvas_scroll: bool,
     error: Option<String>,
@@ -75,6 +84,12 @@ impl Default for Editor {
             open_form: None,
             resize_form: None,
             block_form: None,
+            block_count_form: None,
+            block_count_windows_buttons: cfg!(target_os = "windows"),
+            block_clipboard: None,
+            paste_shortcut_handled: false,
+            sidebar_drag: None,
+            reset_sidebar_scroll: false,
             resize_anchor: ResizeAnchor::default(),
             reset_canvas_scroll: false,
             error: None,
@@ -288,6 +303,9 @@ impl Editor {
                     };
                     self.loaded = Some(loaded);
                     self.selected = 0;
+                    self.block_clipboard = None;
+                    self.sidebar_drag = None;
+                    self.reset_sidebar_scroll = true;
                     self.stroke.clear();
                 }
                 Err(error) => {
@@ -503,6 +521,10 @@ impl Editor {
             self.block_dialog(ctx);
             return;
         }
+        if self.block_count_form.is_some() {
+            self.block_count_dialog(ctx);
+            return;
+        }
         if let Some(mut form) = self.resize_form.take() {
             let mut accept = false;
             let mut cancel = false;
@@ -701,53 +723,94 @@ impl Editor {
     }
 
     fn sidebar(&mut self, ui: &mut egui::Ui, block_size: f32) {
-        egui::ScrollArea::vertical()
+        let mut scroll = egui::ScrollArea::vertical()
             .id_salt("blocks")
             .auto_shrink([false, false])
-            .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
-            .show(ui, |ui| {
-                let rows = self.textures.len().div_ceil(4);
-                let (rect, response) = ui.allocate_exact_size(
-                    Vec2::new(block_size * 4.0, block_size * rows as f32),
-                    Sense::click(),
+            .scroll_source(egui::scroll_area::ScrollSource {
+                drag: egui::scroll_area::DragScroll::Never,
+                ..Default::default()
+            })
+            .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible);
+        if self.reset_sidebar_scroll {
+            scroll = scroll.scroll_offset(Vec2::ZERO);
+            self.reset_sidebar_scroll = false;
+        }
+        scroll.show(ui, |ui| {
+            let rows = self.textures.len().div_ceil(4);
+            let (rect, response) = ui.allocate_exact_size(
+                Vec2::new(block_size * 4.0, block_size * rows as f32),
+                Sense::click_and_drag(),
+            );
+            for (id, texture) in self.textures.iter().enumerate() {
+                let cell = Rect::from_min_size(
+                    rect.min
+                        + Vec2::new((id % 4) as f32 * block_size, (id / 4) as f32 * block_size),
+                    Vec2::splat(block_size),
                 );
-                for (id, texture) in self.textures.iter().enumerate() {
-                    let cell = Rect::from_min_size(
-                        rect.min
-                            + Vec2::new((id % 4) as f32 * block_size, (id / 4) as f32 * block_size),
-                        Vec2::splat(block_size),
+                if ui.is_rect_visible(cell) {
+                    ui.painter().image(
+                        texture.id(),
+                        cell,
+                        Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
+                        Color32::WHITE,
                     );
-                    if ui.is_rect_visible(cell) {
-                        ui.painter().image(
-                            texture.id(),
+                    if id == usize::from(self.selected) {
+                        ui.painter().rect_stroke(
                             cell,
-                            Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
-                            Color32::WHITE,
+                            0.0,
+                            (2.0, Color32::YELLOW),
+                            egui::StrokeKind::Inside,
                         );
-                        if id == usize::from(self.selected) {
-                            ui.painter().rect_stroke(
-                                cell,
-                                0.0,
-                                (2.0, Color32::YELLOW),
-                                egui::StrokeKind::Inside,
-                            );
-                        }
                     }
                 }
-                if (response.clicked() || response.secondary_clicked())
-                    && let Some(pos) = response.interact_pointer_pos()
-                {
-                    let local = pos - rect.min;
-                    let col = (local.x / block_size) as usize;
-                    let id = (local.y / block_size) as usize * 4 + col;
-                    if col < 4 && id < self.textures.len() {
-                        self.selected = id as u8;
-                        if response.secondary_clicked() {
-                            self.prepare_block(ui.ctx());
-                        }
+            }
+            let hit = |pos: Pos2| {
+                let local = pos - rect.min;
+                let col = (local.x / block_size).floor() as i32;
+                let row = (local.y / block_size).floor() as i32;
+                let id = row * 4 + col;
+                (rect.contains(pos)
+                    && ui.clip_rect().contains(pos)
+                    && (0..4).contains(&col)
+                    && row >= 0
+                    && (id as usize) < self.textures.len())
+                .then_some(id as u8)
+            };
+            if response.drag_started_by(egui::PointerButton::Primary) {
+                self.sidebar_drag = ui.input(|i| i.pointer.press_origin()).and_then(hit);
+            }
+            let drop = if response.drag_stopped_by(egui::PointerButton::Primary) {
+                let from = self.sidebar_drag.take();
+                from.zip(response.interact_pointer_pos().and_then(hit))
+            } else {
+                None
+            };
+            if (response.clicked() || response.secondary_clicked())
+                && let Some(pos) = response.interact_pointer_pos()
+            {
+                let local = pos - rect.min;
+                let col = (local.x / block_size) as usize;
+                let id = (local.y / block_size) as usize * 4 + col;
+                if col < 4 && id < self.textures.len() {
+                    self.selected = id as u8;
+                    if response.secondary_clicked() {
+                        self.prepare_block(ui.ctx());
                     }
                 }
-            });
+            }
+            if let Some((from, to)) = drop
+                && from != to
+            {
+                let command = if ui.input(|i| i.modifiers.ctrl) {
+                    polished_map_core::BlockCommand::Copy { from, to }
+                } else {
+                    polished_map_core::BlockCommand::Swap { a: from, b: to }
+                };
+                if self.apply_block_commands(ui.ctx(), &[command]) {
+                    self.selected = to;
+                }
+            }
+        });
     }
 
     fn canvas(&mut self, ui: &mut egui::Ui, layout: &geometry::Layout) {
@@ -907,10 +970,12 @@ impl Editor {
         let blocked = self.open_form.is_some()
             || self.resize_form.is_some()
             || self.block_form.is_some()
+            || self.block_count_form.is_some()
             || self.confirm_discard
             || self.error.is_some()
             || self.loading.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            self.block_shortcuts(&ctx);
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::N)) {
                 self.choose_new();
             }
@@ -981,6 +1046,7 @@ impl Editor {
                         }
                     });
                     ui.menu_button("Edit", |ui| {
+                        self.block_menu(ui);
                         if ui
                             .add_enabled(
                                 self.loaded.as_ref().is_some_and(|l| l.blockset.is_some()),

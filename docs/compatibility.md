@@ -10,7 +10,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, ASM/binary collisions and paired saves tested; palette editing and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Block draft editor, eight brushes, collision fields, pick/accept/cancel, dirty tracking and paired save implemented; sidebar drag/copy, block-count GUI, native child windows, and other specialist editors pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Block draft editor, eight brushes, collisions, clipboard copy/paste/swap, sidebar drag/copy, block-count dialog and paired save implemented; native child windows, native clipboard shortcut verification and other specialist editors pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
@@ -46,6 +46,15 @@ the original application. Unverified assets never become redistributable fixture
   changes the intended first row while leaving the pinned sources untouched.
   Failure injection verifies rollback and retained backups when an external writer
   prevents rollback. Process termination/power-loss recovery is not yet verified.
+- `block_workflow_tests` exercises snapshot paste versus live-source-ID swap,
+  sidebar drag-to-swap and Ctrl-drag-to-copy, invalid drops, count-dialog cancel
+  and unchanged acceptance, shrink selection/clipboard reset, growth to 256,
+  collision movement, preview refresh and paired persistence. Map IDs and map
+  history stay unchanged, including references beyond a shrunken blockset.
+  These are source-derived GUI tests, not a compiled C++ differential.
+  The count dialog uses the original 194×80 client-area equations with reviewed
+  Windows and Unix button-order snapshots. Clipboard event and empty-system-
+  clipboard key-release paths are tested headlessly; native dispatch is pending.
 - Headless GUI tests exercise toolbar state, accessible open options, a complete
   paint/undo/redo/save flow, New Map, resize accept/cancel, and source-derived geometry. Optional visual tests:
   `cargo test -p polished-map-gui --features visual-tests`.

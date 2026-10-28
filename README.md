@@ -76,7 +76,13 @@ the original eight placement patterns. OK applies the draft; Cancel discards it.
 Block edits have separate dirty state and no map undo, matching upstream.
 File → Save Blockset writes definitions and loaded collisions; Save also writes
 the map. Named collision fields or binary hex spinners follow the project format.
-Blockset drag/copy controls remain pending.
+Drag a sidebar block onto another to swap them; Ctrl-drag copies instead.
+Edit → Copy Block stores a snapshot; Paste Block pastes that snapshot, while
+Swap Block swaps with the copied source's current contents. Ctrl/Cmd+C/V/X
+invoke these internal block operations; they do not replace the system clipboard.
+Resize Blockset (Ctrl/Cmd+B) accepts 1–256 blocks. New definitions/collisions
+are empty, and shrinking does not rewrite map IDs. These operations have no
+map undo entries. Native clipboard shortcut verification remains pending.
 
 Headless blockset commands support `set`, `paint`, `copy`, `swap`, `resize` and
 `set_collisions`. Use `--collisions path/to/collision.asm` (or `.bin`) to attach

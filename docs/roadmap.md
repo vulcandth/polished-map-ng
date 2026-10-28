@@ -24,7 +24,9 @@ Implemented slices include New Map, Save As, block resize, map editing/saving, m
 palette sets, project/roof colors, compound graphics and roof tile replacement.
 Block editing now has shared placement/collision commands, a GUI draft editor,
 ASM/binary collision fields and paired persistence with rollback/backups.
-Other block workflows and automatic recovery remain.
+Clipboard copy/paste/swap, sidebar drag/copy and block-count controls are also
+implemented. Native shortcut dispatch, remaining block controls/hotkeys and
+automatic recovery remain.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.
