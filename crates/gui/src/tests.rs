@@ -27,6 +27,8 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
         palette_plan: None,
+        events: None,
+        event_warning: None,
         document,
         graphics,
         blockset: Some(blockset),
@@ -177,6 +179,8 @@ fn binary_collision_spinners_edit_all_four_quadrants() {
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
         palette_plan: None,
+        events: None,
+        event_warning: None,
         document,
         graphics,
         blockset: Some(blockset),
@@ -294,6 +298,8 @@ fn canvas_drag_is_one_undoable_edit_and_save_uses_the_backend() {
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
         palette_plan: None,
+        events: None,
+        event_warning: None,
         document,
         graphics,
         blockset: None,
@@ -381,6 +387,8 @@ fn synthetic_editor_appearance() {
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
         palette_plan: None,
+        events: None,
+        event_warning: None,
         document,
         graphics,
         blockset: None,
@@ -424,6 +432,8 @@ fn resize_dialog_anchor_accept_and_cancel_use_shared_command() {
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
         palette_plan: None,
+        events: None,
+        event_warning: None,
         document,
         graphics,
         blockset: None,

@@ -5,13 +5,13 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Area | Reference | State / required evidence |
 |---|---|---|
 | Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions tested; oversized-file consent pending |
-| Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; resize event shifts and full gesture matrix pending |
+| Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; GUI resize stages map/event shifts; full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; persistent preferences and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
-| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, warp resolution, assembly-preserving saves and CLI tested; GUI overlays/options/dragging/navigation, automatic loading, save lifecycle and map-resize integration pending |
+| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle and resize integration tested; bitmap digits/fonts, external-editor integration, export overlays, remaining gestures and native workflows pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
@@ -38,7 +38,28 @@ the original application. Unverified assets never become redistributable fixture
   This is compiled function evidence, not the original GUI or writer. The pinned
   real-project test reads all 388 map scripts (3,684 events), verifies byte-exact
   no-op round trips and saves/reopens one event change per nonempty script on
-  temporary copies. GUI event workflows and integrated map resize are pending.
+  temporary copies. GUI evidence follows below.
+
+- `event_workflow_tests` covers actual right-click/drag/Shift-click dispatch,
+  source-sized options, hex/prefix edits, cancel/accept, reload/unload protection,
+  independent dirty state, external-change failures and failed-load preservation.
+  Resize tests stage map and event changes, verify twice-block translation and
+  preserve both on invalid resize. Save tests exercise the original ordering and
+  event-only saves with an externally changed clean map. Automatic-load tests
+  cover discovery precedence, sibling fallback, disabled/New behavior, and malformed
+  script warnings while retaining the newly loaded map. Warp tests cancel or
+  discard edits and load destination map/events without writing the source script.
+  Five inspected snapshots cover decimal/hex prefix forms, Windows/Unix buttons,
+  and 16/32-point overlays. Mathematical checks verify positions, form dimensions
+  and original negative drag-boundary behavior. The twelve embedded source marker
+  backgrounds were decoded locally: every pixel matches a flat alpha-128 fill
+  and one-pixel border; GUI rectangles reproduce those colors without bitmap assets.
+  These are source and headless egui checks, not native FLTK comparisons.
+  The local ignored New Bark Town GUI integration auto-loads the pinned real
+  project's events, compares them to a direct backend load, edits through Event
+  Options and saves/reopens a temporary script copy, leaving the real project
+  unchanged. It is not a native platform test. Existing snapshot changes are
+  confined to the resize dialog's now-correct event help text and resulting width.
 
 - `MapPalettePlan` orders default and special imports, metadata selection and
   roof colors without global mutable state. `begin_for_map` takes an explicit

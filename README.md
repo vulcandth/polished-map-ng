@@ -30,7 +30,7 @@ metatiles, tilepal mappings, all six palette sets, project/special palettes and
 map-group roof colors, compound graphics and optional roof tile replacement.
 Block tile/collision editing is available; events and the other specialist editors
 are not complete. Event inspection/editing is available through the Rust API and
-CLI; GUI event overlays, editing and navigation remain pending. Work on copies
+CLI and GUI. Native event workflows and exact marker typography remain pending. Work on copies
 while parity validation is incomplete.
 
 ```text
@@ -57,8 +57,9 @@ in memory and Save opens Save As. ASM imports always save to a binary `.blk` cop
 Resize is available in Edit → Resize Map and through commands such as
 `{"op":"resize","width":21,"height":19,"anchor":"center"}`. All nine anchors
 are supported. Resizing fills new cells with block zero and clears undo history,
-matching upstream. Dimension constants, filename dimensions and event coordinates
-must be updated separately; event integration is still pending.
+matching upstream. Loaded events move by twice the resize anchor's block offset,
+clamped to the original coordinate bounds. Dimension constants and filename
+dimensions must still be updated separately.
 
 Mouse controls implemented: paint/drag, right-click select, Shift fill, Ctrl
 replace, Alt swap. One drag is one history entry. Ctrl/Cmd+O/S/Z/Y opens, saves,
@@ -249,7 +250,7 @@ Commands use zero-based event indices from inspection, for example
 bounded to -6..249. `edit` also accepts optional `prefix` and `suffix` strings
 for fields already present in that macro. `translate` takes `block_dx` and
 `block_dy` in 32px map blocks, doubles them and clamps event coordinates; it does
-not resize a map. GUI map-resize integration remains pending. Events have no
+not resize a map. GUI map resizing updates the loaded event draft too. Events have no
 undo history in the original compatibility model.
 
 Inspection includes source line numbers, macro kinds, one-based warp IDs and
@@ -262,6 +263,24 @@ line endings. Commands validate as a batch before mutation, preview writes
 nothing, and apply requires the preview's content hash. The Rust entry points
 are `Events`, `EventCommand`, `EventScript`, `EventDocument` and
 `event_script_path`; these APIs and JSON output remain experimental.
+
+The GUI automatically loads a map's discovered event script, falling back to an
+adjacent `.asm` file. New maps do not auto-load events. File → Load/Save/Reload/
+Unload Event Script controls the independent script document; failed reloads
+retain the previous edits. Tools → Events Mode (Ctrl/Cmd+Shift+E) enables dragging
+and right-click Event Options; Ctrl/Cmd+Shift+B returns to Blocks Mode. Shift-click
+a warp to open its destination, with the normal unsaved-change prompt. Event
+Options retains macro-specific prefix/suffix fields, source lines, warp IDs and
+decimal/hex coordinate controls. Cancel discards only the draft.
+
+View → Show Events and Show Warp IDs control overlays; Events Mode always shows
+events. Tools → Auto-Load Events controls subsequent opens (session-only for now).
+Ctrl/Cmd+Shift+A saves events, Ctrl/Cmd+R reloads, and Ctrl/Cmd+Shift+W unloads.
+Main Save processes edited tileset, roof, blockset and event domains before saving
+the map if needed. Saves are sequential, not one atomic transaction. Event-only
+changes do not rewrite a clean map. Bitmap warp digits, exact font matching,
+external-editor/double-click integration, persistent preferences, Tab mode switching,
+event overlays in exports and native platform verification remain pending.
 
 ## License
 

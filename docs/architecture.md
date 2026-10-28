@@ -57,9 +57,11 @@ state, source/destination observations and 24×24 PNG persistence. The same GUI
 pixel controls operate on either draft. Roof acceptance validates the composed
 previews before commit, while base acceptance synchronizes contextual roof
 attributes without marking roof pixels dirty. Roof attributes are transient;
-only pixels persist. Base and roof hashes/save operations are separate. Save All
-processes map, blockset, base tileset and roof sequentially; it is not one atomic
-transaction across all four domains.
+only pixels persist. Base and roof hashes/save operations are separate. Main Save
+now follows upstream's edited-domain ordering: base tileset, roof, blockset,
+events, then map if needed. Failure or a canceled blockset destination stops the
+sequence. This is not an atomic transaction across documents; earlier successful
+saves remain published if a later save fails.
 
 `PaletteBank` owns all six sets and atomic color commands. `PaletteDocument`
 tracks the selected set, explicit import source and edited flag. Tileset
@@ -85,6 +87,9 @@ previous live map. Persistent preference handling remains pending.
 warp resolution and sticky edited state. `EventScript` binds immutable source
 spans to those entries; only edited event bodies are regenerated. `EventDocument`
 owns the script's observed file hash and independent save. The CLI exposes the
-same commands with required apply hashes. GUI event lifecycle and integrated map
-resize will consume these models; a standalone `translate` command affects
-events only and does not imply a multi-document transaction.
+same commands with required apply hashes. The GUI's `Loaded` state owns an optional
+event document. Automatic load is part of the map worker, with optional-script
+failures reported after committing the map. Manual replacement prepares the new
+document before replacing the old one. GUI resize clones the map/event drafts,
+validates both, then commits them together in memory. A standalone CLI `translate`
+command affects events only and does not imply a multi-document transaction.

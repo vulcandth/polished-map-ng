@@ -87,6 +87,9 @@ impl Editor {
         } else {
             "New map (unsaved)".into()
         };
+        self.error = loaded.event_warning.take();
+        self.event_ui.drag = None;
+        self.event_ui.form = None;
         self.loaded = Some(loaded);
         self.textures = textures;
         self.selected = 0;

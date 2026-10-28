@@ -137,7 +137,7 @@ remain exact in memory; copying and exporting still use upstream RGB5 quantizati
 ## Incomplete resize integration
 
 The block-level resize matches upstream's nine anchors, zero fill, signed division
-and history reset. Event movement is pending with event support. Neither upstream
+and history reset. The GUI now stages loaded event movement with resize. Neither upstream
 nor this port rewrites map dimension constants on resize; users must update those
 and any filename-encoded dimensions before reopening. The current GUI states this
 limitation; the CLI reports `dimensions_changed`.
@@ -165,4 +165,23 @@ not an assembly expression evaluator. UTF-8 scripts are currently required.
 
 Resize translation uses wide intermediates before clamping, avoiding the original
 int16 narrowing overflow for extreme headless displacements. The model exposes
-this operation, but automatic map-resize integration remains pending.
+this operation, and the GUI now applies it during map resize. Headless map-resize
+and standalone event-translation commands remain separate operations.
+
+## Event GUI safety and remaining visual differences
+
+Failed manual event loads/reloads retain the previous document instead of
+unloading it before parsing. A malformed auto-loaded script warns after the map
+opens, with no partially parsed events. Resize validates both in-memory drafts
+before replacing either; an event serialization-limit error cannot leave only
+the map resized. Event save conflicts stop rather than offering a blind overwrite.
+Main Save now follows the original domain ordering, but stops after a failure or
+canceled destination instead of continuing to save later domains.
+
+Event mode controls temporarily live in Tools while the complete main-menu port
+is unfinished. Source rectangles/colors/alpha, cell sizing, coordinate bounds and
+options geometry are implemented; egui's bundled glyphs and outlined text warp
+IDs are placeholders for the original bold Helvetica and bitmap digits. Event
+Options is an embedded modal, and auto-load/show preferences are session-only.
+The external editor, double-click launching, Tab mode switch and event export
+overlays remain explicit parity gaps. No native event GUI checks ran for this slice.

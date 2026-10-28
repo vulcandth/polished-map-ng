@@ -17,6 +17,9 @@ in `config.cpp`, and resize/drag coordinate rules in `main-window.cpp`/`map.h`.
 The reference harness extracts original event functions and metadata unchanged,
 with generated source/provenance kept outside distributed assets. Assembly byte
 preservation and input validation changes are recorded in `docs/deviations.md`.
+Event marker backgrounds reconstruct the flat fill and one-pixel border from
+the LGPL source's embedded texture data using rectangles and RGB/alpha constants;
+no bitmap payloads or original warp-digit images are distributed.
 
 ## Assets and fixtures
 

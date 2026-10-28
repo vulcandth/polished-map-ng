@@ -1,6 +1,9 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
 mod block_editor;
 mod block_workflows;
+#[cfg(test)]
+mod event_workflow_tests;
+mod event_workflows;
 pub mod geometry;
 mod palette_editor;
 #[cfg(test)]
@@ -37,6 +40,8 @@ use polished_map_project::{
 };
 
 struct Loaded {
+    events: Option<polished_map_project::EventDocument>,
+    event_warning: Option<String>,
     palette_plan: Option<polished_map_project::MapPalettePlan>,
     document: MapDocument,
     graphics: Graphics,
@@ -65,6 +70,7 @@ struct ResizeForm {
 }
 
 pub struct Editor {
+    event_ui: event_workflows::EventUi,
     loaded: Option<Loaded>,
     pending_open: Option<Loaded>,
     pending_palette_warnings: Vec<String>,
@@ -111,6 +117,7 @@ pub struct Editor {
 impl Default for Editor {
     fn default() -> Self {
         Self {
+            event_ui: event_workflows::EventUi::default(),
             loaded: None,
             pending_open: None,
             pending_palette_warnings: Vec::new(),
@@ -176,6 +183,9 @@ impl Editor {
     fn is_modified(&self) -> bool {
         self.loaded.as_ref().is_some_and(|l| {
             l.document.map().is_modified()
+                || l.events
+                    .as_ref()
+                    .is_some_and(|e| e.script().events().is_modified())
                 || l.blockset
                     .as_ref()
                     .is_some_and(|b| b.blockset().is_modified())
@@ -274,6 +284,7 @@ impl Editor {
         let ctx = ctx.clone();
         let dark_theme = self.dark;
         let palette_session = self.palette_document().clone();
+        let auto_events = self.event_ui.auto_load;
         std::thread::spawn(move || {
             let result = (|| {
                 let root = PathBuf::from(&form.root);
@@ -316,7 +327,11 @@ impl Editor {
                 let graphics = source
                     .graphics(blockset.blockset())
                     .map_err(|e| e.to_string())?;
+                let (events, event_warning) =
+                    event_workflows::auto_load_events(&document, auto_events);
                 Ok(Loaded {
+                    events,
+                    event_warning,
                     palette_plan: Some(palette_plan),
                     document,
                     graphics,
@@ -369,54 +384,93 @@ impl Editor {
 
     fn apply(&mut self, command: Command) {
         if let Some(loaded) = &mut self.loaded {
-            match loaded.document.map_mut().apply(&command) {
-                Ok(true) if matches!(command, Command::Resize { .. }) => {
-                    self.reset_canvas_scroll = true
+            if matches!(command, Command::Resize { .. }) {
+                match event_workflows::resize_with_events(loaded, &command) {
+                    Err(error) => self.error = Some(error),
+                    Ok(true) => self.reset_canvas_scroll = true,
+                    Ok(false) => {}
                 }
-                Err(error) => self.error = Some(error.to_string()),
-                _ => {}
+                return;
+            }
+            if let Err(error) = loaded.document.map_mut().apply(&command) {
+                self.error = Some(error.to_string());
             }
         }
     }
 
     fn save(&mut self) {
-        if self.loaded.as_ref().is_some_and(|l| {
-            !l.document.has_backing_file()
-                || l.document
-                    .path()
-                    .extension()
-                    .is_some_and(|e| e.eq_ignore_ascii_case("map"))
-        }) {
-            self.save_as();
-            if self
+        let Some(loaded) = &self.loaded else {
+            return;
+        };
+        let tiles = loaded
+            .tileset
+            .as_ref()
+            .is_some_and(|t| t.tileset().is_modified());
+        let roof = loaded
+            .tileset
+            .as_ref()
+            .and_then(|t| t.roof())
+            .is_some_and(|r| r.roof().tileset().is_modified());
+        let blocks = loaded
+            .blockset
+            .as_ref()
+            .is_some_and(|b| b.blockset().is_modified());
+        let events = loaded
+            .events
+            .as_ref()
+            .is_some_and(|e| e.script().events().is_modified());
+        // Main_Window::save_cb: independent domains first; a clean map need not
+        // be written when only another domain changed. Stop on failure/cancel.
+        if tiles {
+            self.save_tileset();
+        }
+        if self.error.is_some() {
+            return;
+        }
+        if roof {
+            self.save_roof();
+        }
+        if self.error.is_some() {
+            return;
+        }
+        if blocks {
+            self.save_blockset();
+        }
+        if self.error.is_some()
+            || self
                 .loaded
                 .as_ref()
-                .is_some_and(|l| !l.document.map().is_modified())
-            {
-                self.save_blockset();
-                if self.error.is_none() {
-                    self.save_tileset();
-                    if self.error.is_none() {
-                        self.save_roof();
-                    }
-                }
-            }
+                .and_then(|l| l.blockset.as_ref())
+                .is_some_and(|b| b.blockset().is_modified())
+        {
+            return;
+        }
+        if events {
+            self.save_events();
+        }
+        if self.error.is_some() {
+            return;
+        }
+        let Some(loaded) = &self.loaded else {
+            return;
+        };
+        if (tiles || roof || blocks || events) && !loaded.document.map().is_modified() {
+            return;
+        }
+        if !loaded.document.has_backing_file()
+            || loaded
+                .document
+                .path()
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("map"))
+        {
+            self.save_as();
             return;
         }
         if let Some(loaded) = &mut self.loaded {
             match loaded.document.save() {
                 Ok(()) => self.status = "Map saved".into(),
-                Err(e) => {
-                    self.error = Some(e.to_string());
-                    return;
-                }
-            }
-        }
-        self.save_blockset();
-        if self.error.is_none() {
-            self.save_tileset();
-            if self.error.is_none() {
-                self.save_roof();
+                Err(e) => self.error = Some(e.to_string()),
             }
         }
     }
@@ -572,9 +626,14 @@ impl Editor {
                         self.confirm_discard = false;
                         self.pending_exit = false;
                         self.pending_new = false;
+                        self.event_ui.warp_path = None;
                     }
                 });
             });
+            return;
+        }
+        if self.event_ui.change.is_some() || self.event_ui.form.is_some() {
+            self.event_dialog(ctx);
             return;
         }
         if self.block_form.is_some() {
@@ -687,7 +746,7 @@ impl Editor {
                         });
                 });
                 ui.label("New cells use block 0. Resizing clears undo history.");
-                ui.label("Map constants and event scripts are not updated yet.");
+                ui.label("Map constants are not updated. Loaded events move with the map.");
                 ui.horizontal(|ui| {
                     accept = ui.button("Resize").clicked();
                     cancel = ui.button("Cancel").clicked();
@@ -759,6 +818,8 @@ impl Editor {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
         } else if self.pending_new {
             self.start_new_options();
+        } else if let Some(path) = self.event_ui.warp_path.take() {
+            self.open_warp(path, ctx);
         } else if let Some(path) = rfd::FileDialog::new()
             .add_filter("Map blocks", &["blk", "map"])
             .pick_file()
@@ -898,6 +959,11 @@ impl Editor {
     }
 
     fn canvas(&mut self, ui: &mut egui::Ui, layout: &geometry::Layout) {
+        if self.event_ui.mode {
+            self.stroke.clear();
+        } else {
+            self.event_ui.drag = None;
+        }
         let Some(loaded) = &self.loaded else {
             ui.centered_and_justified(|ui| {
                 ui.label("Open a map to edit blocks.");
@@ -907,6 +973,7 @@ impl Editor {
         let map = loaded.document.map();
         let size = layout.block_size;
         let mut command = None;
+        let mut event_action = None;
         let mut scroll = egui::ScrollArea::both()
             .id_salt("map")
             .auto_shrink([false, false])
@@ -969,9 +1036,20 @@ impl Editor {
                     }
                 }
             }
-            if let Some(pos) = response
-                .interact_pointer_pos()
-                .or_else(|| response.hover_pos())
+            if let Some(events) = &loaded.events {
+                event_action = event_workflows::canvas_events(
+                    ui,
+                    events,
+                    origin,
+                    size / 2.0,
+                    (map.width(), map.height()),
+                    &mut self.event_ui,
+                );
+            }
+            if !self.event_ui.mode
+                && let Some(pos) = response
+                    .interact_pointer_pos()
+                    .or_else(|| response.hover_pos())
             {
                 let relative = pos - rect.min;
                 if let Some((x, y)) = layout.hit(relative.x, relative.y, map.width(), map.height())
@@ -1038,6 +1116,9 @@ impl Editor {
         if let Some(command) = command {
             self.apply(command);
         }
+        if let Some(action) = event_action {
+            self.event_action(action, ui.ctx());
+        }
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui) {
@@ -1052,6 +1133,8 @@ impl Editor {
             self.confirm_discard = true;
         }
         let blocked = self.open_form.is_some()
+            || self.event_ui.change.is_some()
+            || self.event_ui.form.is_some()
             || self.resize_form.is_some()
             || self.block_form.is_some()
             || self.tileset_form.is_some()
@@ -1068,6 +1151,7 @@ impl Editor {
             || self.pending_open.is_some()
             || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            self.event_shortcuts(&ctx);
             if ctx.input_mut(|i| {
                 i.consume_key(
                     egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
@@ -1187,6 +1271,7 @@ impl Editor {
                             ui.close();
                             self.export_png(&ctx);
                         }
+                        self.event_file_menu(ui);
                         if ui.button("Load Palettes…").clicked() {
                             ui.close();
                             self.choose_palettes(&ctx);
@@ -1245,6 +1330,8 @@ impl Editor {
                         }
                     });
                     ui.menu_button("View", |ui| {
+                        ui.checkbox(&mut self.event_ui.show, "Show Events");
+                        ui.checkbox(&mut self.event_ui.warp_ids, "Show Warp IDs");
                         ui.menu_button("Palettes", |ui| self.palette_set_menu(ui));
                         ui.checkbox(&mut self.grid, "Grid");
                         ui.checkbox(&mut self.zoom, "Zoom");
@@ -1257,6 +1344,10 @@ impl Editor {
                         }
                     });
                     ui.menu_button("Tools", |ui| {
+                        ui.selectable_value(&mut self.event_ui.mode, false, "Blocks Mode");
+                        ui.selectable_value(&mut self.event_ui.mode, true, "Events Mode");
+                        ui.checkbox(&mut self.event_ui.auto_load, "Auto-Load Events");
+                        ui.separator();
                         if ui
                             .add_enabled(
                                 self.loaded

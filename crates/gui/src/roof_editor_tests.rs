@@ -39,6 +39,8 @@ pub(super) fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
         palette_plan: None,
+        events: None,
+        event_warning: None,
         document: MapDocument::open(&root.join("Map.2x1.blk"), &OpenOptions::default()).unwrap(),
         tileset: Some(tileset),
         blockset: Some(blockset),
