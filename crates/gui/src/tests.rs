@@ -2,6 +2,131 @@ use super::*;
 use egui_kittest::{Harness, kittest::Queryable};
 
 #[test]
+fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("Map.1x1.blk");
+    let blocks = dir.path().join("demo.bin");
+    std::fs::write(&path, [0]).unwrap();
+    std::fs::write(&blocks, [0; 16]).unwrap();
+    let document = MapDocument::open(&path, &OpenOptions::default()).unwrap();
+    let blockset = BlocksetDocument::open(&blocks).unwrap();
+    let graphics = Graphics::new(
+        (0..256)
+            .map(|i| polished_map_core::Tile::new([i as u8 % 4; 64]).unwrap())
+            .collect(),
+        vec![polished_map_core::day_palettes()[2]; 256],
+        vec![[0; 16]],
+    )
+    .unwrap();
+    let mut harness = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .with_theme(egui::Theme::Light)
+        .build_eframe(|cc| Editor::new(cc));
+    let (tx, rx) = mpsc::channel();
+    tx.send(Ok(Loaded {
+        document,
+        graphics,
+        blockset: Some(blockset),
+        allow_256: false,
+    }))
+    .unwrap();
+    harness.state_mut().loading = Some(rx);
+    harness.run();
+    harness.state_mut().status = "Synthetic blockset".into();
+    harness.run();
+    for accept in [false, true] {
+        harness.get_by_label("Edit").click();
+        harness.run();
+        harness.get_by_label("Edit Block…").click();
+        harness.run();
+        #[cfg(feature = "visual-tests")]
+        if !accept {
+            let original = harness.state().block_form.as_ref().unwrap().windows_buttons;
+            for windows in [true, false] {
+                harness
+                    .state_mut()
+                    .block_form
+                    .as_mut()
+                    .unwrap()
+                    .windows_buttons = windows;
+                harness.remove_cursor();
+                harness.run();
+                harness.snapshot(if windows {
+                    "block-dialog-windows"
+                } else {
+                    "block-dialog-unix"
+                });
+            }
+            harness
+                .state_mut()
+                .block_form
+                .as_mut()
+                .unwrap()
+                .windows_buttons = original;
+            harness.run();
+        }
+        harness.get_by_label("Tile $01").click();
+        harness.run();
+        harness.get_by_label("Block tile 0, 0").click();
+        harness.run();
+        harness
+            .get_by_label(if accept { "OK" } else { "Cancel" })
+            .click();
+        harness.run();
+        let loaded = harness.state().loaded.as_ref().unwrap();
+        assert_eq!(
+            loaded.blockset.as_ref().unwrap().blockset().blocks()[0][0],
+            u8::from(accept)
+        );
+        assert!(!loaded.document.map().is_modified());
+        assert!(!loaded.document.map().can_undo());
+        assert_eq!(harness.state().is_modified(), accept);
+    }
+    assert_eq!(
+        &harness
+            .state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .graphics
+            .render_block(0)
+            .unwrap()
+            .pixels[..3],
+        &polished_map_core::day_palettes()[2][1]
+    );
+    harness.state_mut().choose_new();
+    harness.run();
+    assert!(harness.state().confirm_discard);
+    harness.get_by_label("Cancel").click();
+    harness.run();
+    harness.get_by_label("File").click();
+    harness.run();
+    harness.get_by_label("Save Blockset").click();
+    harness.run();
+    assert!(!harness.state().is_modified());
+    assert_eq!(std::fs::read(&blocks).unwrap()[0], 1);
+    harness.get_by_label("Edit").click();
+    harness.run();
+    harness.get_by_label("Edit Block…").click();
+    harness.run();
+    harness.get_by_label("OK").click();
+    harness.run();
+    std::fs::write(&blocks, [9; 16]).unwrap();
+    harness.state_mut().save_blockset();
+    harness.run();
+    assert!(
+        harness
+            .state()
+            .error
+            .as_ref()
+            .is_some_and(|s| s.contains("changed on disk"))
+    );
+    assert!(harness.state().is_modified());
+    assert_eq!(std::fs::read(&blocks).unwrap(), [9; 16]);
+    assert_eq!(std::fs::read(path).unwrap(), [0]);
+}
+
+#[test]
 fn toolbar_controls_toggle_real_state() {
     let mut harness = Harness::builder()
         .with_size(Vec2::new(800.0, 600.0))
@@ -64,7 +189,13 @@ fn canvas_drag_is_one_undoable_edit_and_save_uses_the_backend() {
         .with_size(Vec2::new(800.0, 600.0))
         .build_eframe(|cc| Editor::new(cc));
     let (tx, rx) = mpsc::channel();
-    tx.send(Ok(Loaded { document, graphics })).unwrap();
+    tx.send(Ok(Loaded {
+        document,
+        graphics,
+        blockset: None,
+        allow_256: true,
+    }))
+    .unwrap();
     harness.state_mut().loading = Some(rx);
     harness.run();
     harness.state_mut().selected = 1;
@@ -143,7 +274,13 @@ fn synthetic_editor_appearance() {
         .with_theme(egui::Theme::Light)
         .build_eframe(|cc| Editor::new(cc));
     let (tx, rx) = mpsc::channel();
-    tx.send(Ok(Loaded { document, graphics })).unwrap();
+    tx.send(Ok(Loaded {
+        document,
+        graphics,
+        blockset: None,
+        allow_256: true,
+    }))
+    .unwrap();
     harness.state_mut().loading = Some(rx);
     harness.run();
     harness.state_mut().status = "Synthetic test map".into();
@@ -178,7 +315,13 @@ fn resize_dialog_anchor_accept_and_cancel_use_shared_command() {
         .with_size(Vec2::new(800.0, 600.0))
         .build_eframe(|cc| Editor::new(cc));
     let (tx, rx) = mpsc::channel();
-    tx.send(Ok(Loaded { document, graphics })).unwrap();
+    tx.send(Ok(Loaded {
+        document,
+        graphics,
+        blockset: None,
+        allow_256: true,
+    }))
+    .unwrap();
     harness.state_mut().loading = Some(rx);
     harness.run();
     harness.get_by_label("Edit").click();

@@ -75,6 +75,33 @@ impl Graphics {
         self.metatiles.len()
     }
 
+    pub fn replace_blocks(&mut self, blocks: &crate::Blockset) -> Result<(), RasterError> {
+        for &id in blocks.blocks().iter().flatten() {
+            if usize::from(id) >= self.tiles.len() {
+                return Err(RasterError::MissingTile(id));
+            }
+        }
+        self.metatiles = blocks.blocks().to_vec();
+        Ok(())
+    }
+
+    pub fn render_tile(&self, id: u8) -> Result<RgbImage, RasterError> {
+        let tile = self
+            .tiles
+            .get(usize::from(id))
+            .ok_or(RasterError::MissingTile(id))?;
+        let palette = &self.palettes[usize::from(id)];
+        Ok(RgbImage {
+            width: 8,
+            height: 8,
+            pixels: tile
+                .hues()
+                .iter()
+                .flat_map(|&h| palette[usize::from(h)])
+                .collect(),
+        })
+    }
+
     /// Render a single metatile, used by both canvas and sidebar texture caches.
     pub fn render_block(&self, block: u8) -> Result<RgbImage, RasterError> {
         let Some(metatile) = self.metatiles.get(usize::from(block)) else {

@@ -1,5 +1,7 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
+mod block_editor;
 pub mod geometry;
+use block_editor::BlockForm;
 
 #[cfg(test)]
 mod tests;
@@ -9,13 +11,15 @@ use std::{path::PathBuf, sync::mpsc};
 use eframe::egui::{self, Color32, Pos2, Rect, Sense, Vec2};
 use polished_map_core::{Command, Graphics, Point, ResizeAnchor};
 use polished_map_project::{
-    MapDocument, MasterGraphicsOptions, OpenOptions, discover_map, list_tilesets,
-    load_master_map_graphics, prepare_save_as, write_png,
+    BlocksetDocument, MapDocument, MasterGraphicsOptions, OpenOptions, discover_map, list_tilesets,
+    load_master_map_graphics, prepare_blockset_save_as, prepare_save_as, write_png,
 };
 
 struct Loaded {
     document: MapDocument,
     graphics: Graphics,
+    blockset: Option<BlocksetDocument>,
+    allow_256: bool,
 }
 type LoadResult = Result<Loaded, String>;
 
@@ -44,6 +48,7 @@ pub struct Editor {
     export: Option<mpsc::Receiver<Result<(), String>>>,
     open_form: Option<OpenForm>,
     resize_form: Option<ResizeForm>,
+    block_form: Option<BlockForm>,
     resize_anchor: ResizeAnchor,
     reset_canvas_scroll: bool,
     error: Option<String>,
@@ -68,6 +73,7 @@ impl Default for Editor {
             export: None,
             open_form: None,
             resize_form: None,
+            block_form: None,
             resize_anchor: ResizeAnchor::default(),
             reset_canvas_scroll: false,
             error: None,
@@ -103,9 +109,12 @@ impl Editor {
     }
 
     fn is_modified(&self) -> bool {
-        self.loaded
-            .as_ref()
-            .is_some_and(|l| l.document.map().is_modified())
+        self.loaded.as_ref().is_some_and(|l| {
+            l.document.map().is_modified()
+                || l.blockset
+                    .as_ref()
+                    .is_some_and(|b| b.blockset().is_modified())
+        })
     }
 
     fn choose_open(&mut self) {
@@ -216,7 +225,7 @@ impl Editor {
                 } else {
                     &form.tileset
                 };
-                let graphics = load_master_map_graphics(
+                let mut graphics = load_master_map_graphics(
                     &document,
                     tileset,
                     &MasterGraphicsOptions {
@@ -227,7 +236,17 @@ impl Editor {
                     },
                 )
                 .map_err(|e| e.to_string())?;
-                Ok(Loaded { document, graphics })
+                let blockset =
+                    BlocksetDocument::open_in_project(&root, tileset).map_err(|e| e.to_string())?;
+                graphics
+                    .replace_blocks(blockset.blockset())
+                    .map_err(|e| e.to_string())?;
+                Ok(Loaded {
+                    document,
+                    graphics,
+                    blockset: Some(blockset),
+                    allow_256: form.allow_256,
+                })
             })();
             let _ = sender.send(result);
             ctx.request_repaint();
@@ -312,13 +331,55 @@ impl Editor {
                     .is_some_and(|e| e.eq_ignore_ascii_case("map"))
         }) {
             self.save_as();
+            if self
+                .loaded
+                .as_ref()
+                .is_some_and(|l| !l.document.map().is_modified())
+            {
+                self.save_blockset();
+            }
             return;
         }
         if let Some(loaded) = &mut self.loaded {
             match loaded.document.save() {
                 Ok(()) => self.status = "Map saved".into(),
-                Err(e) => self.error = Some(e.to_string()),
+                Err(e) => {
+                    self.error = Some(e.to_string());
+                    return;
+                }
             }
+        }
+        self.save_blockset();
+    }
+
+    fn save_blockset(&mut self) {
+        let Some(doc) = self.loaded.as_mut().and_then(|l| l.blockset.as_mut()) else {
+            return;
+        };
+        if !doc.blockset().is_modified() {
+            return;
+        }
+        let result = if doc.needs_save_as() {
+            let Some(path) = rfd::FileDialog::new()
+                .add_filter("Binary blockset", &["bin", "bst"])
+                .set_file_name(
+                    doc.path()
+                        .with_extension("bin")
+                        .file_name()
+                        .unwrap_or_default()
+                        .to_string_lossy(),
+                )
+                .save_file()
+            else {
+                return;
+            };
+            prepare_blockset_save_as(&path).and_then(|target| doc.save_as(&target))
+        } else {
+            doc.save()
+        };
+        match result {
+            Ok(()) => self.status = "Blockset saved".into(),
+            Err(e) => self.error = Some(e.to_string()),
         }
     }
 
@@ -400,7 +461,7 @@ impl Editor {
         }
         if self.confirm_discard {
             egui::Modal::new(egui::Id::unique("unsaved")).show(ctx, |ui| {
-                ui.heading("Unsaved map changes");
+                ui.heading("Unsaved changes");
                 ui.label("Save changes before continuing?");
                 ui.horizontal(|ui| {
                     if ui.button("Save").clicked() {
@@ -421,6 +482,10 @@ impl Editor {
                     }
                 });
             });
+            return;
+        }
+        if self.block_form.is_some() {
+            self.block_dialog(ctx);
             return;
         }
         if let Some(mut form) = self.resize_form.take() {
@@ -654,7 +719,7 @@ impl Editor {
                         }
                     }
                 }
-                if response.clicked()
+                if (response.clicked() || response.secondary_clicked())
                     && let Some(pos) = response.interact_pointer_pos()
                 {
                     let local = pos - rect.min;
@@ -662,6 +727,9 @@ impl Editor {
                     let id = (local.y / block_size) as usize * 4 + col;
                     if col < 4 && id < self.textures.len() {
                         self.selected = id as u8;
+                        if response.secondary_clicked() {
+                            self.prepare_block(ui.ctx());
+                        }
                     }
                 }
             });
@@ -823,6 +891,7 @@ impl Editor {
         }
         let blocked = self.open_form.is_some()
             || self.resize_form.is_some()
+            || self.block_form.is_some()
             || self.confirm_discard
             || self.error.is_some()
             || self.loading.is_some();
@@ -875,6 +944,16 @@ impl Editor {
                             self.save();
                         }
                         if ui
+                            .add_enabled(
+                                self.loaded.as_ref().is_some_and(|l| l.blockset.is_some()),
+                                egui::Button::new("Save Blockset"),
+                            )
+                            .clicked()
+                        {
+                            ui.close();
+                            self.save_blockset();
+                        }
+                        if ui
                             .add_enabled(self.loaded.is_some(), egui::Button::new("Save As…"))
                             .clicked()
                         {
@@ -887,6 +966,16 @@ impl Editor {
                         }
                     });
                     ui.menu_button("Edit", |ui| {
+                        if ui
+                            .add_enabled(
+                                self.loaded.as_ref().is_some_and(|l| l.blockset.is_some()),
+                                egui::Button::new("Edit Block…"),
+                            )
+                            .clicked()
+                        {
+                            ui.close();
+                            self.prepare_block(&ctx);
+                        }
                         if ui
                             .add_enabled(self.loaded.is_some(), egui::Button::new("Resize Map…"))
                             .clicked()

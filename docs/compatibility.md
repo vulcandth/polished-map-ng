@@ -10,7 +10,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roof colors, compound composition and nine-tile roof replacement tested; collisions and palette editing pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Block tile draft editor, eight brushes, pick/accept/cancel, dirty tracking and binary save implemented; collision fields, sidebar drag/copy, block-count GUI, native child windows, and other specialist editors pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
@@ -29,6 +29,15 @@ the original application. Unverified assets never become redistributable fixture
   and all default palette constants without modifying them; compiler invocation and generated provenance are retained
   locally. `tests/reference.rs` exhaustively compares its output. CI has a dedicated
   reference job; the default test command explicitly reports this test as ignored.
+- `tools/block_brush_oracle.py` compiles the unmodified master placement callback
+  with minimal UI stubs. All 65,536 combinations of tile mode, modifier pattern,
+  tile ID and click position match Rust, including byte wrap and clipped writes.
+  This verifies the placement math, not FLTK event dispatch. Block editing has
+  separate dirty state and no map undo entries. GUI tests cover draft cancellation,
+  acceptance, preview refresh, unsaved guards, save and external-change conflicts.
+  Both platform button orders have reviewed synthetic snapshots. The 466×304
+  content layout and 16/24-pixel cells come directly from Block_Window::initialize.
+  The current dialog is embedded; native child-window verification is still pending.
 - Headless GUI tests exercise toolbar state, accessible open options, a complete
   paint/undo/redo/save flow, New Map, resize accept/cancel, and source-derived geometry. Optional visual tests:
   `cargo test -p polished-map-gui --features visual-tests`.

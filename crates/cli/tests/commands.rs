@@ -2,6 +2,45 @@ use serde_json::Value;
 use std::{fs, process::Command};
 
 #[test]
+fn blockset_preview_apply_and_invalid_suffix_use_atomic_backend_commands() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("demo.bin");
+    let edits = dir.path().join("blocks.json");
+    fs::write(&path, [0; 16]).unwrap();
+    fs::write(&edits,r#"[{"op":"paint","block":0,"at":{"x":0,"y":0},"tile":95,"brush":{"ctrl":true,"shift":false,"alt":false}}]"#).unwrap();
+    let run = |apply: bool| {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_polished-map"));
+        command
+            .arg("edit-blockset")
+            .arg(&path)
+            .arg("--commands")
+            .arg(&edits);
+        if apply {
+            command.arg("--apply");
+        }
+        command.output().unwrap()
+    };
+    let preview = run(false);
+    assert!(
+        preview.status.success(),
+        "{}",
+        String::from_utf8_lossy(&preview.stdout)
+    );
+    let value: Value = serde_json::from_slice(&preview.stdout).unwrap();
+    assert_eq!(value["result"]["blocks"][0][1], 128);
+    assert_eq!(fs::read(&path).unwrap(), [0; 16]);
+    assert!(run(true).status.success());
+    let before = fs::read(&path).unwrap();
+    fs::write(
+        &edits,
+        r#"[{"op":"resize","count":2},{"op":"copy","from":3,"to":0}]"#,
+    )
+    .unwrap();
+    assert!(!run(true).status.success());
+    assert_eq!(fs::read(path).unwrap(), before);
+}
+
+#[test]
 fn render_roof_option_reaches_shared_compositor_without_modifying_inputs() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();

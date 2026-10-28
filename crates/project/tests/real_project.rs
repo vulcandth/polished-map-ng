@@ -53,6 +53,29 @@ fn pinned_pokecrystal_roofs_load_without_changing_base_graphics() {
         base == reloaded,
         "loading a roof must not change a later base load"
     );
+    // Edit only a temporary copy of the real blockset; never alter the fixture.
+    let mut blocks =
+        polished_map_project::BlocksetDocument::open_in_project(&root, "johto").unwrap();
+    let source = blocks.path().to_path_buf();
+    let before = fs::read(&source).unwrap();
+    let mut expected = before.clone();
+    expected[..16].copy_from_slice(&before[16..32]);
+    blocks
+        .blockset_mut()
+        .apply(&polished_map_core::BlockCommand::Copy { from: 1, to: 0 })
+        .unwrap();
+    let temp = tempfile::tempdir().unwrap();
+    let target =
+        polished_map_project::prepare_blockset_save_as(&temp.path().join("copy.bin")).unwrap();
+    blocks.save_as(&target).unwrap();
+    assert!(
+        fs::read(target.path()).unwrap() == expected,
+        "real blockset copy must preserve all other bytes"
+    );
+    assert!(
+        fs::read(source).unwrap() == before,
+        "reference assets must stay unchanged"
+    );
 }
 
 #[test]

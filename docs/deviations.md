@@ -26,6 +26,12 @@ Implementation-specific exceptions will be recorded here with tests and rational
 - Single-file saves compare content rather than just modification timestamps,
   and stage output before replacement. Concurrent writers still have a narrow
   check/replace race; no filesystem-wide compare-and-swap guarantee is claimed.
+- ASM `.CEL` blockset imports require binary `.bin`/`.bst` Save As. Upstream
+  writes binary bytes over the assembly source; the port preserves that source.
+  Existing binary blockset writes preserve row-major tile bytes. Collision files
+  remain untouched by the current tile-only editor; collision editing is pending.
+  GUI Save processes map and blockset separately; recoverable multi-file commits
+  are still required before the stable automation milestone.
 - Headless discovery leaves an unmatched tileset unset instead of accepting the
   GUI's first dropdown item. Callers must supply an explicit choice; this avoids
   silently rendering or editing an unrelated tileset. Ambiguous compound name

@@ -2,10 +2,10 @@
 use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Args, Parser, Subcommand};
-use polished_map_core::{Command, PaletteSet};
+use polished_map_core::{BlockCommand, Command, PaletteSet};
 use polished_map_project::{
-    MapDocument, MasterGraphicsOptions, OpenOptions, ProjectError, load_master_map_graphics,
-    prepare_save_as, read_bounded, write_png,
+    BlocksetDocument, MapDocument, MasterGraphicsOptions, OpenOptions, ProjectError,
+    load_master_map_graphics, prepare_blockset_save_as, prepare_save_as, read_bounded, write_png,
 };
 use serde_json::{Value, json};
 
@@ -44,6 +44,23 @@ impl MapArgs {
 
 #[derive(Subcommand)]
 enum Action {
+    /// Inspect a binary or imported ASM blockset without graphics or a GUI.
+    InspectBlockset { path: PathBuf },
+    /// Preview block edits; --apply writes only after all commands validate.
+    EditBlockset {
+        path: PathBuf,
+        #[arg(long)]
+        commands: PathBuf,
+        #[arg(long)]
+        apply: bool,
+        #[arg(long)]
+        expected_hash: Option<String>,
+        /// Save a binary copy; required for imported CEL assembly.
+        #[arg(long)]
+        output: Option<PathBuf>,
+        #[arg(long)]
+        expected_output_hash: Option<String>,
+    },
     /// Preview or create a new zero-filled map. Project constants are not written.
     Create {
         #[arg(long)]
@@ -133,6 +150,61 @@ impl From<ProjectError> for Failure {
 
 fn run(cli: Cli) -> Result<Value, Failure> {
     match cli.action {
+        Action::InspectBlockset { path } => {
+            let doc = BlocksetDocument::open(&path)?;
+            Ok(
+                json!({"path":doc.path(), "content_hash":doc.content_hash(), "blocks":doc.blockset().blocks()}),
+            )
+        }
+        Action::EditBlockset {
+            path,
+            commands,
+            apply,
+            expected_hash,
+            output,
+            expected_output_hash,
+        } => {
+            let mut doc = BlocksetDocument::open(&path)?;
+            if expected_hash.is_some_and(|h| h != doc.content_hash()) {
+                return Err(Failure::new("conflict", "input hash does not match"));
+            }
+            let before = doc.blockset().bytes();
+            let commands: Vec<BlockCommand> =
+                serde_json::from_slice(&read_bounded(&commands, 4 * 1024 * 1024)?)
+                    .map_err(|e| Failure::new("invalid_commands", e))?;
+            for command in commands {
+                doc.blockset_mut()
+                    .apply(&command)
+                    .map_err(|e| Failure::new("invalid_command", e))?;
+            }
+            let target = output
+                .as_deref()
+                .map(prepare_blockset_save_as)
+                .transpose()?;
+            let previous_output_hash = target.as_ref().and_then(|t| t.content_hash());
+            if expected_output_hash
+                .as_ref()
+                .is_some_and(|h| Some(h) != previous_output_hash.as_ref())
+            {
+                return Err(Failure::new("conflict", "destination hash does not match"));
+            }
+            if apply {
+                if let Some(target) = &target {
+                    if target.exists() && expected_output_hash.is_none() {
+                        return Err(Failure::new(
+                            "overwrite_confirmation_required",
+                            "preview and supply --expected-output-hash before replacing a file",
+                        ));
+                    }
+                    doc.save_as(target)?;
+                } else {
+                    doc.save()?;
+                }
+            }
+            Ok(
+                json!({"applied":apply, "changed":doc.blockset().bytes()!=before, "path":doc.path(), "output":target.as_ref().map(|t|t.path()), "previous_output_hash":previous_output_hash, "content_hash":doc.content_hash(), "blocks":doc.blockset().blocks()}),
+            )
+        }
         Action::Create {
             root,
             width,

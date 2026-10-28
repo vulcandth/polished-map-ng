@@ -28,7 +28,8 @@ options for review. Shared block files still require explicit choices. The proje
 adapter supports master tilesets with PNG/2bpp/LZ/CHR graphics, binary
 metatiles, tilepal mappings, all six palette sets, project/special palettes and
 map-group roof colors, compound graphics and optional roof tile replacement.
-Collisions, events and specialist editors are not complete. Work on copies
+Block tile editing is available; collisions, events and the other specialist editors
+are not complete. Work on copies
 while parity validation is incomplete.
 
 ```text
@@ -68,6 +69,27 @@ the extension. Leave it empty to use the base tileset. Compound names such as
 `main.before,after` retain the full main filename and load optional companion
 graphics, with upstream's 16-tile row padding. These are rendering options;
 graphics editing and saving are still pending.
+
+Right-click a sidebar block (or choose Edit → Edit Block) to edit its 4×4 tile
+definition. Left-click paints and right-click picks a tile. Shift/Ctrl/Alt select
+the original eight placement patterns. OK applies the draft; Cancel discards it.
+Block edits have separate dirty state and no map undo, matching upstream.
+File → Save Blockset writes just the definitions; Save writes map and blockset.
+Collision fields and blockset drag/copy controls remain pending.
+
+Headless blockset commands support `set`, `paint`, `copy`, `swap` and `resize`:
+
+```text
+cargo run -p polished-map-cli -- inspect-blockset path/to/johto_metatiles.bin
+cargo run -p polished-map-cli -- edit-blockset path/to/johto_metatiles.bin --commands blocks.json
+cargo run -p polished-map-cli -- edit-blockset path/to/johto_metatiles.bin --commands blocks.json --apply
+```
+
+Example `blocks.json`:
+`[{"op":"paint","block":0,"at":{"x":0,"y":0},"tile":32,"brush":{"ctrl":true}}]`.
+Preview is the default. `--expected-hash` checks the input; `--output` saves a
+binary copy, requiring `--expected-output-hash` before overwriting an existing
+destination. Imported `.CEL` files require a binary copy so assembly is preserved.
 
 ## License
 

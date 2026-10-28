@@ -22,6 +22,8 @@ outputs reopen correctly in upstream. Include pinned compatible pokecrystal.
 
 Implemented slices include New Map, Save As, block resize, map editing/saving, master metadata discovery, six
 palette sets, project/roof colors, compound graphics and roof tile replacement.
+Block tile editing now has shared placement commands, a GUI draft editor and
+conflict-checked binary persistence; collision editing and other block workflows remain.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.

@@ -48,7 +48,7 @@ pub fn load_master_graphics(
     load_graphics(root, tileset, allow_256, &day_palettes(), false, None)
 }
 
-fn validate_tileset(root: &Path, tileset: &str) -> Result<(), ProjectError> {
+pub(crate) fn validate_tileset(root: &Path, tileset: &str) -> Result<(), ProjectError> {
     if tileset.is_empty() || tileset.contains(['/', '\\']) || matches!(tileset, "." | "..") {
         return Err(ProjectError::Format {
             path: root.into(),
@@ -89,43 +89,8 @@ fn load_graphics(
         } else {
             tiles.len().div_ceil(16) * 16
         };
-    let base = tileset.split('.').next().unwrap_or(tileset);
-    let mut block_paths = Vec::new();
-    for name in [tileset, base] {
-        block_paths.extend([
-            root.join(format!("data/tilesets/{name}_metatiles.bin")),
-            root.join(format!("gfx/blocksets/{name}.bst")),
-            root.join(format!("MAPDATA/{name}.CEL")),
-            root.join(format!("tilesets/{name}_metatiles.bin")),
-        ]);
-    }
-    let blocks_path = first_existing(&block_paths);
-    let raw = read_bounded(&blocks_path, 4 * 1024 * 1024)?;
-    let bytes = if blocks_path
-        .extension()
-        .is_some_and(|e| e.eq_ignore_ascii_case("cel"))
-    {
-        codecs::parse_asm(&text(&blocks_path, &raw)?)
-            .map_err(|e| ProjectError::codec(&blocks_path, e))?
-    } else {
-        raw
-    };
-    if bytes.is_empty() || bytes.len() > 4096 || !bytes.len().is_multiple_of(16) {
-        return Err(ProjectError::Format {
-            path: blocks_path,
-            message: "expected 1..=256 complete 16-byte metatiles".into(),
-        });
-    }
-    let metatiles = bytes
-        .as_chunks::<16>()
-        .0
-        .iter()
-        .map(|b| {
-            let mut block = [0; 16];
-            block.copy_from_slice(b);
-            block
-        })
-        .collect();
+    let blockset = crate::BlocksetDocument::open_in_project(root, tileset)?;
+    let metatiles = blockset.blockset().blocks().to_vec();
     let palette_path = palette_map_path(root, tileset);
     let ids = if !monochrome && palette_path.is_file() {
         let bytes = read_bounded(&palette_path, 1024 * 1024)?;

@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use polished_map_core::{Map, MapError, RasterError};
+use polished_map_core::{BlocksetError, Map, MapError, RasterError};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use thiserror::Error;
@@ -32,6 +32,8 @@ pub enum ProjectError {
     Map(#[from] MapError),
     #[error(transparent)]
     Raster(#[from] RasterError),
+    #[error(transparent)]
+    Blockset(#[from] BlocksetError),
 }
 
 impl ProjectError {
@@ -56,6 +58,7 @@ impl ProjectError {
             Self::DestinationRequired => "destination_required",
             Self::Map(_) => "invalid_map",
             Self::Raster(_) => "invalid_graphics",
+            Self::Blockset(_) => "invalid_blockset",
         }
     }
 }
@@ -78,8 +81,8 @@ pub struct MapDocument {
 /// Construct with `prepare_save_as`; fields are private so callers cannot skip observation.
 #[derive(Clone, Debug)]
 pub struct SaveTarget {
-    path: PathBuf,
-    hash: Option<[u8; 32]>,
+    pub(crate) path: PathBuf,
+    pub(crate) hash: Option<[u8; 32]>,
 }
 
 impl SaveTarget {
@@ -110,8 +113,12 @@ pub fn prepare_save_as(path: &Path) -> Result<SaveTarget, ProjectError> {
             message: "choose a .blk destination for binary map data".into(),
         });
     }
+    prepare_target(&path)
+}
+
+pub(crate) fn prepare_target(path: &Path) -> Result<SaveTarget, ProjectError> {
     let filename = path.file_name().ok_or_else(|| ProjectError::Format {
-        path: path.clone(),
+        path: path.into(),
         message: "destination needs a file name".into(),
     })?;
     let parent = path
@@ -245,7 +252,17 @@ impl MapDocument {
     /// Save to a reviewed target, updating this document only after replacement succeeds.
     /// Existing targets require the caller's overwrite decision after preparation.
     pub fn save_as(&mut self, target: &SaveTarget) -> Result<(), ProjectError> {
-        persist_map(&target.path, target.hash, self.map.blocks())?;
+        if !target
+            .path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("blk"))
+        {
+            return Err(ProjectError::Format {
+                path: target.path.clone(),
+                message: "binary maps require a .blk destination".into(),
+            });
+        }
+        persist_bytes(&target.path, target.hash, self.map.blocks())?;
         self.path.clone_from(&target.path);
         self.hash = Some(Sha256::digest(self.map.blocks()).into());
         // Keep loaded map attributes/tileset; moving to another project changes the root.
@@ -276,14 +293,18 @@ impl MapDocument {
         if !self.map.is_modified() {
             return Ok(());
         }
-        persist_map(&self.path, Some(expected), self.map.blocks())?;
+        persist_bytes(&self.path, Some(expected), self.map.blocks())?;
         self.hash = Some(Sha256::digest(self.map.blocks()).into());
         self.map.mark_saved();
         Ok(())
     }
 }
 
-fn persist_map(path: &Path, expected: Option<[u8; 32]>, blocks: &[u8]) -> Result<(), ProjectError> {
+pub(crate) fn persist_bytes(
+    path: &Path,
+    expected: Option<[u8; 32]>,
+    blocks: &[u8],
+) -> Result<(), ProjectError> {
     if optional_hash(path)? != expected {
         return Err(ProjectError::Conflict(path.into()));
     }
