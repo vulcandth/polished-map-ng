@@ -321,7 +321,36 @@ pub fn list_tilesets(root: &Path) -> Result<Vec<String>, ProjectError> {
     Ok(names)
 }
 
+/// A selector label may decorate a numbered file; always load/save using `name`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TilesetChoice {
+    pub name: String,
+    pub label: String,
+}
+
+/// master Map_Options_Dialog::guess_tileset_names/add_tileset display labels.
+pub fn tileset_choices(root: &Path) -> Result<Vec<TilesetChoice>, ProjectError> {
+    let constants = tileset_constant_names(root)?;
+    Ok(list_tilesets(root)?
+        .into_iter()
+        .map(|name| {
+            let label = constants
+                .iter()
+                .find(|(number, _)| name.len() == 2 && number == &name)
+                .map_or_else(|| name.clone(), |(_, token)| format!("{name}: {token}"));
+            TilesetChoice { name, label }
+        })
+        .collect())
+}
+
 fn tileset_aliases(root: &Path) -> Result<Vec<(String, String)>, ProjectError> {
+    Ok(tileset_constant_names(root)?
+        .into_iter()
+        .map(|(id, name)| (id, name.to_ascii_lowercase()))
+        .collect())
+}
+
+fn tileset_constant_names(root: &Path) -> Result<Vec<(String, String)>, ProjectError> {
     let Some(path) = first_file(
         root,
         &[
@@ -339,10 +368,7 @@ fn tileset_aliases(root: &Path) -> Result<Vec<(String, String)>, ProjectError> {
         {
             names.push((
                 format!("{:02}", names.len() + 1),
-                token
-                    .strip_prefix("TILESET_")
-                    .unwrap_or(token)
-                    .to_ascii_lowercase(),
+                token.strip_prefix("TILESET_").unwrap_or(token).to_owned(),
             ));
         }
     }

@@ -96,6 +96,16 @@ the current roof reloads it from disk; a failed load retains the previous roof a
 preview. Successful replacement preserves the original sticky roof dirty flag;
 removing the roof clears that domain. Switching alone writes no files.
 
+Tools → Change Tileset (Ctrl/Cmd+H) reloads graphics, block definitions, collisions
+and the current roof. Numbered graphics retain their actual filenames while the
+selector displays names such as `01: JOHTO`. Unsaved blockset/tileset/roof edits
+require confirmation. Map bytes/history, session palette colors and their edited
+state are preserved; palette files are not automatically reloaded by this action.
+Choosing the same tileset reloads it. A smaller blockset leaves map IDs intact,
+resets an out-of-range selected block to zero, and clears an out-of-range copied
+block. Failed replacements preserve the previous assets and preview. Changing
+tilesets does not rewrite map header constants or write any files.
+
 Right-click a sidebar block (or choose Edit → Edit Block) to edit its 4×4 tile
 definition. Left-click paints and right-click picks a tile. Shift/Ctrl/Alt select
 the original eight placement patterns. OK applies the draft; Cancel discards it.

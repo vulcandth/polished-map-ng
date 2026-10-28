@@ -104,6 +104,19 @@ long names are truncated in the closed control and available in full in its
 dropdown/tooltip, instead of overflowing the client area. The selector is an
 embedded modal pending the native child-window parity work.
 
+## Loaded-tileset replacement safety
+
+Upstream clears the live metatileset before loading its replacement, and closes
+the map when loading the new palette map/graphics/blocks fails. The port prepares
+the complete replacement (including collisions and the selected roof) and every
+block preview first; any failure retains the original document and edits. A
+missing or malformed selected roof also fails this transaction instead of
+continuing with a warning and a partially loaded asset set. Successful changes
+retain the original map/history and session palette semantics; switching does
+not update map header constants. The selector refreshes file discovery and
+constrains long closed-control labels like the roof selector. Original compound
+choice ordering and the complete main menu layout remain pending.
+
 ## Palette export labels and validation
 
 Upstream declares six palette sets but initializes the export label table with

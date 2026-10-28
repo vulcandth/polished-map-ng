@@ -311,6 +311,66 @@ fn pinned_pokecrystal_roofs_load_without_changing_base_graphics() {
 
 #[test]
 #[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
+fn pinned_pokecrystal_tileset_switch_matches_fresh_assets_and_preserves_session_colors() {
+    use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
+    use polished_map_project::{BlocksetDocument, MasterTilesetDocument};
+    let root = PathBuf::from(
+        std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),
+    );
+    let map = MapDocument::open_in_project(
+        &root.join("maps/NewBarkTown.blk"),
+        &OpenOptions::default(),
+        Some(&root),
+    )
+    .unwrap();
+    let options = MasterGraphicsOptions {
+        roof: Some("new_bark".into()),
+        ..Default::default()
+    };
+    let mut current = MasterTilesetDocument::open_for_map(&map, "johto", &options).unwrap();
+    current
+        .palettes_mut()
+        .apply_batch(&[PaletteCommand::SetRgb {
+            slot: ColorSlot {
+                set: PaletteSet::Day,
+                palette: 0,
+                hue: 0,
+            },
+            rgb: [17, 34, 51],
+        }])
+        .unwrap();
+    let palette_hash = current.palettes().content_hash();
+    for name in ["kanto", "house", "johto"] {
+        let (new, blocks) = current.prepare_replacement(name).unwrap();
+        let mut fresh = MasterTilesetDocument::open_for_map(&map, name, &options).unwrap();
+        *fresh.palettes_mut() = current.palettes().clone();
+        let fresh_blocks = BlocksetDocument::open_in_project(&root, name).unwrap();
+        assert_eq!(blocks.blockset().blocks(), fresh_blocks.blockset().blocks());
+        assert_eq!(
+            blocks.blockset().collisions(),
+            fresh_blocks.blockset().collisions()
+        );
+        assert_eq!(
+            new.graphics(blocks.blockset())
+                .unwrap()
+                .render_map(map.map())
+                .unwrap(),
+            fresh
+                .graphics(fresh_blocks.blockset())
+                .unwrap()
+                .render_map(map.map())
+                .unwrap()
+        );
+        assert_eq!(new.palettes().content_hash(), palette_hash);
+        assert!(!blocks.blockset().is_modified());
+        assert!(!new.tileset().is_modified());
+        assert!(!new.roof().unwrap().roof().tileset().is_modified());
+        current = new;
+    }
+}
+
+#[test]
+#[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
 fn pinned_pokecrystal_maps_discover_open_and_render() {
     let root = PathBuf::from(
         std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),

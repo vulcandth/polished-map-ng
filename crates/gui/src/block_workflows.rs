@@ -4,7 +4,7 @@ use super::*;
 use polished_map_core::{BlockCommand, CollisionRow};
 
 pub(super) struct BlockClipboard {
-    id: u8,
+    pub(super) id: u8,
     tiles: [u8; 16],
     collision: Option<CollisionRow>,
 }

@@ -17,7 +17,10 @@ mod transaction;
 
 pub use blockset::{BlocksetDocument, prepare_blockset_save_as};
 pub use collisions::prepare_collision_save_as;
-pub use discovery::{MapMetadata, discover_map, find_project_root, list_tilesets, map_constant};
+pub use discovery::{
+    MapMetadata, TilesetChoice, discover_map, find_project_root, list_tilesets, map_constant,
+    tileset_choices,
+};
 pub use document::{
     MapDocument, OpenOptions, ProjectError, SaveTarget, prepare_save_as, read_bounded,
 };

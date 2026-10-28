@@ -10,7 +10,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette color commands/export and GUI, ASM/binary collisions and paired saves tested; cross-map palette lifecycle and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
@@ -24,6 +24,19 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-27)
 
+- `MasterTilesetDocument::prepare_replacement` implements the asset reload used
+  by `Main_Window::change_tileset_cb`, retaining the palette document, roof name,
+  256-tile mode, sticky monochrome mode and enabled priority mode. New assets are
+  clean; `tileset_switch` tests numbered labels, collisions, edited colors, roof
+  reload and failed/malformed loads. It writes no files and leaves the source
+  document intact. `tileset_workflow_tests` covers the menu/shortcut, individual
+  dirty-domain warnings, both cancel stages, same-name reload, smaller/larger
+  blocksets, map undo preservation, valid/invalid copied-block behavior and
+  failure recovery. Two inspected snapshots and rectangle assertions follow
+  `Tileset_Options_Dialog` and `Option_Dialog` geometry. The ignored real-project
+  test switches Johto → Kanto → house → Johto with edited session colors, compares
+  complete map renders and collisions against fresh loads, and leaves pinned
+  project files unchanged. Native dialog/keyboard behavior remains unverified.
 - `roof_workflow_tests` verifies Tools → Change Roof, Ctrl/Cmd+Shift+H, both
   cancellation stages, same-name reload, sticky dirty state, `(none)`, failed-load
   preservation and rendered previews without changing map history, block edits,

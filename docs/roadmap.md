@@ -47,6 +47,12 @@ discarding roof edits and retains the previous overlay on failed reads. Its
 all five pinned pokecrystal roof variants match fresh loads after switching.
 Native child windows/clipboard, cross-map palette session behavior and other
 matrix gaps still remain.
+Changing the loaded tileset now reloads graphics, blocks, collisions and the
+current roof while retaining map history and session palettes. Numbered file
+labels, dirty guards, selection/clipboard bounds and same-name reload are tested.
+The 280×80 chooser has inspected snapshots; a pinned Johto/Kanto/house transition
+checks real assets. Complete discovery ordering, main menu/toolbars and native
+child-window behavior still prevent a parity gate.
 Palette-color commands, all-six-set contextual state, explicit RGB5 export and
 the headless palette interface are implemented. Compiled original clipboard and
 export functions verify copy quantization, live swap and export layout; export

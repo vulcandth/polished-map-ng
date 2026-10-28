@@ -9,6 +9,9 @@ mod palette_editor_tests;
 mod roof_workflow_tests;
 mod roof_workflows;
 mod tileset_editor;
+#[cfg(test)]
+mod tileset_workflow_tests;
+mod tileset_workflows;
 use block_editor::BlockForm;
 
 #[cfg(test)]
@@ -69,6 +72,8 @@ pub struct Editor {
     palette_form: Option<palette_editor::PaletteForm>,
     roof_choice_form: Option<roof_workflows::RoofChoiceForm>,
     confirm_roof_change: bool,
+    tileset_choice_form: Option<tileset_workflows::TilesetChoiceForm>,
+    confirm_tileset_change: bool,
     unloaded_palettes: polished_map_project::PaletteDocument,
     pending_palette_load: Option<PathBuf>,
     #[cfg(windows)]
@@ -110,6 +115,8 @@ impl Default for Editor {
             palette_form: None,
             roof_choice_form: None,
             confirm_roof_change: false,
+            tileset_choice_form: None,
+            confirm_tileset_change: false,
             unloaded_palettes: polished_map_project::PaletteDocument::default(),
             pending_palette_load: None,
             #[cfg(windows)]
@@ -585,6 +592,10 @@ impl Editor {
             self.roof_choice_dialog(ctx);
             return;
         }
+        if self.confirm_tileset_change || self.tileset_choice_form.is_some() {
+            self.tileset_choice_dialog(ctx);
+            return;
+        }
         if self.pending_palette_load.is_some() {
             self.palette_load_dialog(ctx);
             return;
@@ -1042,6 +1053,8 @@ impl Editor {
             || self.palette_form.is_some()
             || self.roof_choice_form.is_some()
             || self.confirm_roof_change
+            || self.tileset_choice_form.is_some()
+            || self.confirm_tileset_change
             || self.pending_palette_load.is_some()
             || self.block_count_form.is_some()
             || self.confirm_discard
@@ -1072,6 +1085,8 @@ impl Editor {
                 )
             }) {
                 self.request_roof_change();
+            } else if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::H)) {
+                self.request_tileset_change();
             }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::N)) {
                 self.choose_new();
@@ -1235,6 +1250,23 @@ impl Editor {
                         }
                     });
                     ui.menu_button("Tools", |ui| {
+                        if ui
+                            .add_enabled(
+                                self.loaded
+                                    .as_ref()
+                                    .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some()),
+                                egui::Button::new("Change Tileset…").shortcut_text(
+                                    ctx.format_shortcut(&egui::KeyboardShortcut::new(
+                                        egui::Modifiers::COMMAND,
+                                        egui::Key::H,
+                                    )),
+                                ),
+                            )
+                            .clicked()
+                        {
+                            ui.close();
+                            self.request_tileset_change();
+                        }
                         if ui
                             .add_enabled(
                                 self.loaded

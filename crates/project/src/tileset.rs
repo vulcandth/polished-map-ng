@@ -1,9 +1,9 @@
-//! master Tileset::{read_graphics,write_graphics}, Main_Window::save_tileset.
+//! master Tileset::{read_graphics,write_graphics}, Main_Window::{save_tileset,change_tileset_cb}.
 //! Base tiles and roof overlays remain separate; edits never bake a roof into
 //! the base sheet. Multi-file output is staged before any destination is changed.
 use crate::{
-    MapDocument, MasterGraphicsOptions, PaletteDocument, ProjectError, RoofDocument, SaveTarget,
-    codecs,
+    BlocksetDocument, MapDocument, MasterGraphicsOptions, PaletteDocument, ProjectError,
+    RoofDocument, SaveTarget, codecs,
     document::{optional_hash, prepare_target},
     graphics::{
         encode_grayscale_png, graphics_path, palette_map_path, read_tiles, tile_slot,
@@ -236,6 +236,30 @@ impl MasterTilesetDocument {
     }
     pub fn root(&self) -> &Path {
         &self.root
+    }
+    /// Prepare master's Change Tileset operation without modifying the caller.
+    /// Retains session palettes, tile mode and roof name; reloads base/roof pixels,
+    /// block definitions and collisions with clean dirty flags. The caller resolves
+    /// unsaved asset edits before replacing its documents. Map bytes/history are
+    /// deliberately outside this operation, including IDs beyond the new blockset.
+    pub fn prepare_replacement(
+        &self,
+        name: &str,
+    ) -> Result<(Self, BlocksetDocument), ProjectError> {
+        let options = MasterGraphicsOptions {
+            allow_256: self.allow_256,
+            monochrome: self.monochrome,
+            roof: self.roof.as_ref().map(|r| r.name().to_owned()),
+            ..Default::default()
+        };
+        let mut tileset = Self::open_colors(&self.root, name, &options, self.palettes.clone())?;
+        // Palette_Map only enables the global priority option; a plain new map
+        // does not switch it off after an earlier priority-capable tileset.
+        tileset.allow_priority |= self.allow_priority;
+        let blocks = BlocksetDocument::open_in_project(&self.root, name)?;
+        // Preflight definitions before returning a replacement to either adapter.
+        tileset.graphics(blocks.blockset())?;
+        Ok((tileset, blocks))
     }
     /// Replace only the roof overlay, preserving base pixels, palettes and edits.
     /// The caller must resolve any unsaved-roof warning before calling this.
