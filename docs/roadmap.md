@@ -27,6 +27,9 @@ ASM/binary collision fields and paired persistence with rollback/backups.
 Clipboard copy/paste/swap, sidebar drag/copy and block-count controls are also
 implemented. Native shortcut dispatch, remaining block controls/hotkeys and
 automatic recovery remain.
+The shared tileset draft/command model and palette-map/grayscale export routines
+are implemented with C++ pixel-operation comparisons. Tileset project persistence
+and the pixel-editor GUI remain to be connected before this counts as a workflow.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.

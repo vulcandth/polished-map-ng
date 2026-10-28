@@ -55,6 +55,17 @@ the original application. Unverified assets never become redistributable fixture
   The count dialog uses the original 194×80 client-area equations with reviewed
   Windows and Unix button-order snapshots. Clipboard event and empty-system-
   clipboard key-release paths are tested headlessly; native dispatch is pending.
+- The shared `Tileset` draft model now implements pixel paint/fill/replace/swap,
+  palette/priority changes, snapshot and live-source copy/swap, deletion, clipped
+  RGB image paste and trailing-unused-tile trimming. Commands validate atomically.
+  `tools/tile_editor_oracle.py` compiles six unmodified upstream functions with
+  UI stubs. Rust matches 30,720 fill/replace/swap cases and 88 RGB-paste cases
+  across both tile modes and reserved-row/boundary origins. This does not verify
+  FLTK dispatch, native clipboard transport, tile-editor controls, or saving.
+  Source-derived tests cover palette-map serialization and grayscale export
+  pixels, including bank gaps, odd entry padding, partial-line newline behavior,
+  and rejected unsafe layouts. Project persistence and GUI integration for this
+  model remain pending; these APIs are experimental, not a completed editor.
 - Headless GUI tests exercise toolbar state, accessible open options, a complete
   paint/undo/redo/save flow, New Map, resize accept/cancel, and source-derived geometry. Optional visual tests:
   `cargo test -p polished-map-gui --features visual-tests`.

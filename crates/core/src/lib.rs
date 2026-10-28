@@ -8,8 +8,13 @@ mod blockset;
 mod map;
 mod palettes;
 mod raster;
+mod tileset;
+mod tileset_export;
 
 pub use blockset::{BlockBrush, BlockCommand, Blockset, BlocksetError, CollisionRow};
 pub use map::{Command, Map, MapError, Point, ResizeAnchor};
 pub use palettes::{PaletteBank, PaletteSet};
 pub use raster::{Graphics, Palette, RasterError, RgbImage, Tile, day_palettes};
+pub use tileset::{
+    TileCommand, TileSnapshot, Tileset, TilesetError, UNDEFINED_COLORS, UNDEFINED_PALETTE,
+};

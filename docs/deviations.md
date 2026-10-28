@@ -50,6 +50,18 @@ Implementation-specific exceptions will be recorded here with tests and rational
   overrides them. Deliberate reuse/import and persistent preferences remain
   pending; accidental carry-over is not reproduced in the headless interface.
 
+## Tileset export safety (backend; GUI integration pending)
+
+The new tileset export routines reject entirely undefined palette maps instead of
+reproducing `Palette_Map::write_palette_map`'s backwards array underflow. Grayscale
+export checks every destination row. In upstream, `Tileset::print_rgb` subtracts
+two tile rows for every slot at or above $80, even when a compound output starts
+there; some offsets/counts therefore address memory before or beyond the image.
+Those combinations return a layout error. Valid layouts retain upstream pixel
+placement, grayscale levels, row padding and palette-map serialization quirks.
+These checks do not yet provide a corrected compound save policy; integrating
+and testing that policy with project writes remains master-parity work.
+
 ## Incomplete resize integration
 
 The block-level resize matches upstream's nine anchors, zero fill, signed division
