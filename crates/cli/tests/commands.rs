@@ -2,6 +2,59 @@ use serde_json::Value;
 use std::{fs, process::Command};
 
 #[test]
+fn event_cli_previews_then_hash_checks_and_preserves_script() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("Town.asm");
+    let commands = temp.path().join("commands.json");
+    let original = "Label:\r\n\twarp_event 1, 2, TOWN, 1\r\n\tdb 42";
+    fs::write(&path, original).unwrap();
+    fs::write(&commands, r#"[{"op":"move","index":0,"x":9,"y":8}]"#).unwrap();
+    let run = |extra: &[&str]| {
+        let result = Command::new(env!("CARGO_BIN_EXE_polished-map"))
+            .arg("edit-events")
+            .arg(&path)
+            .arg("--commands")
+            .arg(&commands)
+            .args(extra)
+            .output()
+            .unwrap();
+        (
+            result.status.success(),
+            serde_json::from_slice::<Value>(&result.stdout).unwrap(),
+        )
+    };
+    let (ok, preview) = run(&[]);
+    assert!(ok, "{preview}");
+    assert_eq!(fs::read_to_string(&path).unwrap(), original);
+    assert_eq!(preview["result"]["events"][0]["definition"]["x"], 9);
+    let hash = preview["result"]["previous_hash"].as_str().unwrap();
+    assert_eq!(
+        run(&["--apply"]).1["error"]["code"],
+        "expected_hash_required"
+    );
+    assert_eq!(
+        run(&["--apply", "--expected-hash", "stale"]).1["error"]["code"],
+        "conflict"
+    );
+    assert!(run(&["--apply", "--expected-hash", hash]).0);
+    assert_eq!(
+        fs::read_to_string(&path).unwrap(),
+        "Label:\r\n\twarp_event  9,  8, TOWN, 1\r\n\tdb 42"
+    );
+    assert_eq!(
+        run(&["--apply", "--expected-hash", hash]).1["error"]["code"],
+        "conflict"
+    );
+    fs::write(
+        &commands,
+        r#"[{"op":"move","index":0,"x":1,"y":1},{"op":"move","index":20,"x":1,"y":1}]"#,
+    )
+    .unwrap();
+    assert!(!run(&[]).0);
+    assert!(fs::read_to_string(&path).unwrap().contains(" 9,  8"));
+}
+
+#[test]
 fn palette_cli_preview_quantization_and_explicit_export_conflict_guards() {
     let dir = tempfile::tempdir().unwrap();
     let input = dir.path().join("input.pal");

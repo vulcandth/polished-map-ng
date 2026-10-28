@@ -12,6 +12,12 @@ contributors. Code is distributed under LGPL-3.0-only. See `LICENSE.md` and
 This port changes implementation language, ownership, validation, architecture,
 and UI toolkit. Individual modules identify upstream algorithm sources.
 
+Event handling adapts master `event.cpp`, `map-events.cpp`, event path discovery
+in `config.cpp`, and resize/drag coordinate rules in `main-window.cpp`/`map.h`.
+The reference harness extracts original event functions and metadata unchanged,
+with generated source/provenance kept outside distributed assets. Assembly byte
+preservation and input validation changes are recorded in `docs/deviations.md`.
+
 ## Assets and fixtures
 
 No upstream game graphics, example maps, fonts, or toolbar icons are currently

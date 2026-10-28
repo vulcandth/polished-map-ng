@@ -141,3 +141,28 @@ and history reset. Event movement is pending with event support. Neither upstrea
 nor this port rewrites map dimension constants on resize; users must update those
 and any filename-encoded dimensions before reopening. The current GUI states this
 limitation; the CLI reports `dimensions_changed`.
+
+## Event assembly preservation and validation
+
+Upstream rewrites every recognized event line with a tab and its tooltip text,
+normalizing indentation/line endings even when untouched. Event saves here retain
+unrelated assembly and unchanged events byte for byte, and replace only the body
+of edited event lines. Original coordinate formatting, macro-specific X/Y order,
+prefix/suffix data and negative hexadecimal representation are retained for those
+edited lines. This avoids unrelated source churn and follows the repository's
+assembly-preservation rule.
+
+Upstream's `strtol` accepts partial coordinate expressions and treats unknown
+symbols as zero. This port rejects unsupported expressions, missing coordinates,
+overflow and values that wrap below -6, rather than silently relocating events.
+Valid integer literals retain the original signed remainder and 32-bit narrowing.
+Warp destination ID interpretation remains permissive as upstream; unresolved
+IDs are reported as zero and do not resolve a local target. Event input/output
+is bounded to four MiB and individual prefix/suffix fields to 64 KiB; embedded
+NUL/CR and field edits that shift coordinates or turn a `warp` event into an
+unrecognized script command are rejected atomically. These are safety changes,
+not an assembly expression evaluator. UTF-8 scripts are currently required.
+
+Resize translation uses wide intermediates before clamping, avoiding the original
+int16 narrowing overflow for extreme headless displacements. The model exposes
+this operation, but automatic map-resize integration remains pending.

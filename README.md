@@ -29,7 +29,8 @@ adapter supports master tilesets with PNG/2bpp/LZ/CHR graphics, binary
 metatiles, tilepal mappings, all six palette sets, project/special palettes and
 map-group roof colors, compound graphics and optional roof tile replacement.
 Block tile/collision editing is available; events and the other specialist editors
-are not complete. Work on copies
+are not complete. Event inspection/editing is available through the Rust API and
+CLI; GUI event overlays, editing and navigation remain pending. Work on copies
 while parity validation is incomplete.
 
 ```text
@@ -233,6 +234,34 @@ successful rollback removes it. Interrupted saves or failed rollback can leave
 it for inspection and manual recovery; preserve it until recovery is resolved.
 Automatic journal discovery/replay is still pending. Unrelated collision ASM
 lines and comments are preserved.
+
+Headless event editing operates on an explicit map script, without opening a map
+or creating a window:
+
+```text
+cargo run -p polished-map-cli -- inspect-events path/to/project/maps/NewBarkTown.asm
+cargo run -p polished-map-cli -- edit-events path/to/project/maps/NewBarkTown.asm --commands events.json
+cargo run -p polished-map-cli -- edit-events path/to/project/maps/NewBarkTown.asm --commands events.json --apply --expected-hash HASH_FROM_PREVIEW
+```
+
+Commands use zero-based event indices from inspection, for example
+`[{"op":"move","index":0,"x":4,"y":7}]`. Coordinates are 16px event cells,
+bounded to -6..249. `edit` also accepts optional `prefix` and `suffix` strings
+for fields already present in that macro. `translate` takes `block_dx` and
+`block_dy` in 32px map blocks, doubles them and clamps event coordinates; it does
+not resize a map. GUI map-resize integration remains pending. Events have no
+undo history in the original compatibility model.
+
+Inspection includes source line numbers, macro kinds, one-based warp IDs and
+parsed warp destinations. All 22 master macros and legacy X/Y orders are
+recognized. Decimal, `$` hexadecimal and `%` binary coordinate literals follow
+the original byte wrapping; unsupported expressions fail explicitly. The parser
+distinguishes pokered `warp` events from pokecrystal `warp` script commands.
+Saving preserves unrelated assembly, untouched event lines, indentation and
+line endings. Commands validate as a batch before mutation, preview writes
+nothing, and apply requires the preview's content hash. The Rust entry points
+are `Events`, `EventCommand`, `EventScript`, `EventDocument` and
+`event_script_path`; these APIs and JSON output remain experimental.
 
 ## License
 

@@ -2,10 +2,12 @@
 use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Args, Parser, Subcommand};
-use polished_map_core::{BlockCommand, Command, PaletteCommand, PaletteSet, TileCommand};
+use polished_map_core::{
+    BlockCommand, Command, EventCommand, PaletteCommand, PaletteSet, TileCommand,
+};
 use polished_map_project::{
-    BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
-    PaletteDocument, ProjectError, RoofDocument, load_master_map_graphics,
+    BlocksetDocument, EventDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument,
+    OpenOptions, PaletteDocument, ProjectError, RoofDocument, load_master_map_graphics,
     prepare_blockset_save_as, prepare_collision_save_as, prepare_palette_export, prepare_save_as,
     read_bounded, write_png,
 };
@@ -46,6 +48,18 @@ impl MapArgs {
 
 #[derive(Subcommand)]
 enum Action {
+    /// Inspect event coordinates, source lines and warp destinations in assembly.
+    InspectEvents { input: PathBuf },
+    /// Preview event edits, preserving unrelated assembly. Apply requires a hash.
+    EditEvents {
+        input: PathBuf,
+        #[arg(long)]
+        commands: PathBuf,
+        #[arg(long)]
+        apply: bool,
+        #[arg(long)]
+        expected_hash: Option<String>,
+    },
     /// Inspect all six palette sets after importing an upstream RGB palette file.
     InspectPalettes { input: PathBuf },
     /// Preview color edits and RGB5 export. Output is always an explicit destination.
@@ -199,6 +213,13 @@ struct RoofArgs {
 fn palette_summary(doc: &PaletteDocument) -> Value {
     json!({"content_hash":doc.content_hash(),"selected":doc.selected(),"sets":PaletteSet::ALL.map(|set| json!({"set":set,"colors":doc.bank().colors(set)}))})
 }
+fn event_summary(doc: &EventDocument) -> Value {
+    json!({"source":doc.source().path(), "content_hash":doc.source().content_hash(),
+        "modified":doc.script().events().is_modified(),
+        "events":doc.script().events().entries().iter().enumerate().map(|(index,e)|
+            json!({"index":index,"definition":e.definition(),"warp_id":e.warp_id(),
+                "warp_destination":e.warp_destination(),"edited_text":e.is_rewritten().then(|| e.text())})).collect::<Vec<_>>()})
+}
 impl RoofArgs {
     fn open(&self) -> Result<RoofDocument, Failure> {
         // Standalone pixel edits need no map/tileset; palette attributes are
@@ -272,6 +293,44 @@ impl From<ProjectError> for Failure {
 
 fn run(cli: Cli) -> Result<Value, Failure> {
     match cli.action {
+        Action::InspectEvents { input } => Ok(event_summary(&EventDocument::open(&input)?)),
+        Action::EditEvents {
+            input,
+            commands,
+            apply,
+            expected_hash,
+        } => {
+            let mut doc = EventDocument::open(&input)?;
+            let before = doc.source().content_hash();
+            if expected_hash
+                .as_ref()
+                .is_some_and(|hash| Some(hash) != before.as_ref())
+            {
+                return Err(Failure::new(
+                    "conflict",
+                    "event script differs from the observed state",
+                ));
+            }
+            if apply && expected_hash.is_none() {
+                return Err(Failure::new(
+                    "expected_hash_required",
+                    "preview first and supply --expected-hash",
+                ));
+            }
+            let commands: Vec<EventCommand> =
+                serde_json::from_slice(&read_bounded(&commands, 4 * 1024 * 1024)?)
+                    .map_err(|e| Failure::new("invalid_commands", e))?;
+            doc.apply(&commands)?;
+            let planned = doc.preview_save()?;
+            if apply {
+                doc.save()?;
+            }
+            let mut response = event_summary(&doc);
+            response["applied"] = json!(apply);
+            response["previous_hash"] = json!(before);
+            response["planned_output"] = json!(planned);
+            Ok(response)
+        }
         Action::InspectPalettes { input } => {
             let mut doc = PaletteDocument::default();
             doc.load(&input)?;

@@ -7,6 +7,7 @@ pub mod codecs;
 mod collisions;
 mod discovery;
 mod document;
+mod events;
 mod graphics;
 mod map_palette_plan;
 mod palette_document;
@@ -25,6 +26,7 @@ pub use discovery::{
 pub use document::{
     MapDocument, OpenOptions, ProjectError, SaveTarget, prepare_save_as, read_bounded,
 };
+pub use events::{EventDocument, EventScript, EventScriptError, event_script_path};
 pub use graphics::{load_master_graphics, load_master_map_graphics, write_png};
 pub use map_palette_plan::MapPalettePlan;
 pub use palette_document::{PaletteDocument, prepare_palette_export};

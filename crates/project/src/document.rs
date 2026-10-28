@@ -42,6 +42,8 @@ pub enum ProjectError {
     Tileset(#[from] polished_map_core::TilesetError),
     #[error(transparent)]
     Palette(#[from] polished_map_core::PaletteError),
+    #[error(transparent)]
+    Event(#[from] polished_map_core::EventError),
 }
 
 impl ProjectError {
@@ -70,6 +72,7 @@ impl ProjectError {
             Self::Blockset(_) => "invalid_blockset",
             Self::Tileset(_) => "invalid_tileset",
             Self::Palette(_) => "invalid_palette",
+            Self::Event(_) => "invalid_event",
         }
     }
 }

@@ -8,6 +8,59 @@ use polished_map_project::{
 
 #[test]
 #[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
+fn pinned_event_scripts_round_trip_and_edit_on_temporary_copies() {
+    use polished_map_core::EventCommand;
+    use polished_map_project::{EventDocument, EventScript};
+    let root = PathBuf::from(
+        std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),
+    );
+    let temp = tempfile::tempdir().unwrap();
+    let (mut scripts, mut events) = (0, 0);
+    for entry in fs::read_dir(root.join("maps")).unwrap() {
+        let path = entry.unwrap().path();
+        if path.extension().is_none_or(|ext| ext != "asm") {
+            continue;
+        }
+        let source = fs::read_to_string(&path).unwrap();
+        let parsed =
+            EventScript::parse(&source).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+        assert_eq!(parsed.render(), source);
+        scripts += 1;
+        events += parsed.events().entries().len();
+        if parsed.events().entries().is_empty() {
+            continue;
+        }
+        let copy = temp.path().join(path.file_name().unwrap());
+        fs::write(&copy, &source).unwrap();
+        let mut doc = EventDocument::open(&copy).unwrap();
+        doc.apply(&[EventCommand::Move {
+            index: 0,
+            x: 17,
+            y: 19,
+        }])
+        .unwrap();
+        doc.save().unwrap();
+        let reopened = EventDocument::open(&copy).unwrap();
+        let actual = reopened.script().events().entries();
+        assert_eq!(
+            (actual[0].definition().x, actual[0].definition().y),
+            (17, 19)
+        );
+        let mut expected = parsed.events().entries()[0].definition().clone();
+        expected.x = 17;
+        expected.y = 19;
+        assert_eq!(actual[0].definition(), &expected);
+        for (old, new) in parsed.events().entries()[1..].iter().zip(&actual[1..]) {
+            assert_eq!(old.definition(), new.definition());
+        }
+        assert_eq!(fs::read_to_string(&path).unwrap(), source);
+    }
+    assert_eq!((scripts, events), (388, 3684));
+    eprintln!("verified {scripts} real event scripts with {events} events");
+}
+
+#[test]
+#[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
 fn pinned_contextual_palette_bank_edits_switches_and_exports_without_touching_project() {
     use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
     use polished_map_project::{

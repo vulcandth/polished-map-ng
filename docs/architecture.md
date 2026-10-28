@@ -77,5 +77,14 @@ composed block images before committing colors and textures. Text fields retain
 their own clipboard behavior; selected swatches use the source RGB5 clipboard
 snapshot and exact live swap. As upstream, edited palettes have their own
 load-replacement warning and explicit export, not map history or map Save/close
-dirty state. Cross-map retention and automatic palette reload policy remain to
-be reconciled with the original global session behavior.
+dirty state. `MapPalettePlan` and the GUI's pending load preserve session colors
+while resolving per-file import decisions; required-load failures retain the
+previous live map. Persistent preference handling remains pending.
+
+`Events` owns typed macro metadata, validated coordinates, field-edit commands,
+warp resolution and sticky edited state. `EventScript` binds immutable source
+spans to those entries; only edited event bodies are regenerated. `EventDocument`
+owns the script's observed file hash and independent save. The CLI exposes the
+same commands with required apply hashes. GUI event lifecycle and integrated map
+resize will consume these models; a standalone `translate` command affects
+events only and does not imply a multi-document transaction.

@@ -11,7 +11,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
-| Events / warp navigation | master event.cpp, map-events.cpp | Pending |
+| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, warp resolution, assembly-preserving saves and CLI tested; GUI overlays/options/dragging/navigation, automatic loading, save lifecycle and map-resize integration pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
@@ -23,6 +23,22 @@ actual C++ differential observations. A source-derived vector is not a run of
 the original application. Unverified assets never become redistributable fixtures.
 
 ## Current evidence (2026-10-28)
+
+- `Events` retains master coordinate bounds, legacy X/Y order, prefix/suffix
+  fields, one-based warp IDs, same-map target lookup, sticky modified state and
+  resize translations without adding history. `EventScript` preserves unowned
+  bytes; `EventDocument` bounds reads/edited output and verifies content before
+  saving. `tests/events.rs` covers 22 macros, script/event `warp` disambiguation,
+  decimal/hex/binary coordinates, negative hex round trips, field normalization,
+  atomic failed batches, discovery precedence, repeated saves and external-change
+  conflicts. CLI tests cover preview, required/stale hashes and unchanged files
+  after invalid batches. `tools/event_oracle.py` extracts seven unmodified C++
+  functions and the original metadata table; 34,188 cases compare parsed X/Y,
+  hex mode, warp classification, marker letter, reformatted text and destination.
+  This is compiled function evidence, not the original GUI or writer. The pinned
+  real-project test reads all 388 map scripts (3,684 events), verifies byte-exact
+  no-op round trips and saves/reopens one event change per nonempty script on
+  temporary copies. GUI event workflows and integrated map resize are pending.
 
 - `MapPalettePlan` orders default and special imports, metadata selection and
   roof colors without global mutable state. `begin_for_map` takes an explicit

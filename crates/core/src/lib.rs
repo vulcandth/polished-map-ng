@@ -5,6 +5,7 @@
 //! Copyright 2026 Polished Map NG contributors; LGPL-3.0-only.
 
 mod blockset;
+mod events;
 mod map;
 mod palettes;
 mod raster;
@@ -13,6 +14,7 @@ mod tileset;
 mod tileset_export;
 
 pub use blockset::{BlockBrush, BlockCommand, Blockset, BlocksetError, CollisionRow};
+pub use events::{Event, EventCommand, EventDefinition, EventError, EventKind, Events};
 pub use map::{Command, Map, MapError, Point, ResizeAnchor};
 pub use palettes::{ColorSlot, PaletteBank, PaletteCommand, PaletteError, PaletteSet};
 pub use raster::{Graphics, Palette, RasterError, RgbImage, Tile, day_palettes};

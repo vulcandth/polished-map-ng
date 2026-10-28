@@ -318,3 +318,67 @@ fn every_bitplane_pair_and_default_palette_match_compiled_upstream() {
         }
     }
 }
+#[test]
+#[ignore = "requires POLISHED_MAP_EVENT_ORACLE; run in the reference CI job"]
+fn event_coordinates_formatting_and_warps_match_compiled_original() {
+    use polished_map_core::EventKind;
+    use polished_map_project::EventScript;
+    let oracle =
+        std::env::var_os("POLISHED_MAP_EVENT_ORACLE").expect("set POLISHED_MAP_EVENT_ORACLE");
+    let dir = tempfile::tempdir().unwrap();
+    let input = dir.path().join("events.asm");
+    let output = dir.path().join("events.tsv");
+    let mut source = String::new();
+    for kind in EventKind::ALL {
+        for n in -6i32..=511 {
+            for base in [10, 16, 2] {
+                let number = |n: i32| match base {
+                    16 => format!("${:x}", n as u32),
+                    2 if n >= 0 => format!("%{n:b}"),
+                    _ => n.to_string(),
+                };
+                let prefix = if kind.has_prefix() { "SPRITE_RED," } else { "" };
+                let suffix = if kind.id_before_map() {
+                    ", $2, ROUTE_1__2_B1F ; comment"
+                } else {
+                    ", ROUTE_1__2_B1F, $2 ; comment"
+                };
+                source.push_str(&format!(
+                    "\t{} {prefix}{}, {}{suffix}\n",
+                    kind.macro_name(),
+                    number(n),
+                    number(505 - n)
+                ));
+            }
+        }
+    }
+    fs::write(&input, &source).unwrap();
+    assert!(
+        Command::new(oracle)
+            .arg(&input)
+            .arg(&output)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let expected = fs::read_to_string(&output).unwrap();
+    let script = EventScript::parse(&source).unwrap();
+    assert_eq!(script.events().entries().len(), 22 * 518 * 3);
+    assert_eq!(expected.lines().count(), script.events().entries().len());
+    for (line, event) in expected.lines().zip(script.events().entries()) {
+        let d = event.definition();
+        let (map, id) = event.warp_destination().unwrap_or_default();
+        let actual = format!(
+            "{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            d.x,
+            d.y,
+            u8::from(d.hex_coordinates),
+            u8::from(d.kind.is_warp()),
+            d.kind.symbol(),
+            event.text(),
+            map,
+            id
+        );
+        assert_eq!(actual, line, "line {}", d.line);
+    }
+}

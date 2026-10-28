@@ -66,6 +66,12 @@ decisions and contextual set selection, and handles optional roof-color warnings
 Headless loads stay independent unless a caller explicitly supplies a session.
 Synthetic interaction tests and a pinned New Bark Town → Violet City transition
 cover carry-over; persistent preferences and remaining native workflows are pending.
+Event models, legacy macro parsing, warp destination resolution, source-preserving
+script saves and hash-checked CLI preview/apply are implemented. The compiled
+original matches 34,188 coordinate/formatting/warp cases; 388 pinned pokecrystal
+scripts with 3,684 events round-trip and edited temporary copies reopen. Event
+GUI rendering/options/dragging/navigation, automatic loading, save lifecycle and
+map-resize integration are still required for this milestone.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.
