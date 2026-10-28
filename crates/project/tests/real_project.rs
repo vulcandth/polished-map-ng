@@ -8,6 +8,65 @@ use polished_map_project::{
 
 #[test]
 #[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
+fn pinned_johto_tileset_edit_save_and_reopen_preserves_other_pixels_and_sources() {
+    use polished_map_core::{Point, TileCommand};
+    use polished_map_project::{BlocksetDocument, MasterTilesetDocument};
+    let root = PathBuf::from(
+        std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),
+    );
+    let temp = tempfile::tempdir().unwrap();
+    let mut originals = Vec::new();
+    for relative in [
+        "gfx/tilesets/johto.png",
+        "gfx/tilesets/johto_palette_map.asm",
+        "data/tilesets/johto_metatiles.bin",
+    ] {
+        let source = root.join(relative);
+        let bytes = fs::read(&source).unwrap();
+        let target = temp.path().join(relative);
+        fs::create_dir_all(target.parent().unwrap()).unwrap();
+        fs::write(target, &bytes).unwrap();
+        originals.push((source, bytes));
+    }
+    let options = MasterGraphicsOptions::default();
+    let blocks = BlocksetDocument::open_in_project(temp.path(), "johto").unwrap();
+    let mut doc = MasterTilesetDocument::open_in_project(temp.path(), "johto", &options).unwrap();
+    let mut expected = doc.tileset().tiles().to_vec();
+    let mut first = *expected[0].hues();
+    let hue = (first[0] + 1) % 4;
+    first[0] = hue;
+    expected[0] = polished_map_core::Tile::new(first).unwrap();
+    let palette = (doc.tileset().attributes()[0] + 1) % 8;
+    doc.apply_batch(&[
+        TileCommand::Paint {
+            tile: 0,
+            points: vec![Point { x: 0, y: 0 }],
+            hue,
+        },
+        TileCommand::Palette { tile: 0, palette },
+    ])
+    .unwrap();
+    let preview = doc.preview_save(blocks.blockset()).unwrap();
+    assert_eq!(preview.len(), 2);
+    doc.save(blocks.blockset()).unwrap();
+    let reopened = MasterTilesetDocument::open_in_project(temp.path(), "johto", &options).unwrap();
+    assert_eq!(reopened.tileset().tiles(), expected);
+    assert_eq!(reopened.tileset().attributes()[0], palette);
+    assert_eq!(
+        doc.content_hash(blocks.blockset()),
+        reopened.content_hash(blocks.blockset())
+    );
+    // Validate decoding and serialization on real data, without claiming an
+    // original-application differential or redistributing its assets.
+    let encoded = fs::read(temp.path().join("gfx/tilesets/johto.png")).unwrap();
+    assert_eq!(&encoded[24..26], &[2, 0]);
+    for (path, bytes) in originals {
+        assert_eq!(fs::read(path).unwrap(), bytes);
+    }
+}
+
+#[test]
+#[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
 fn pinned_pokecrystal_roofs_load_without_changing_base_graphics() {
     let root = PathBuf::from(
         std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),

@@ -1,5 +1,10 @@
 # Dependency review
 
+The project adapter directly uses the already-locked `png` 0.18 encoder to retain
+upstream's two-bit grayscale tileset output. The `image` convenience writer emits
+eight-bit channels; `image` remains responsible for bounded import decoding.
+This adds no new package to the dependency graph. The encoder is MIT/Apache-2.0.
+
 The locked eframe 0.37 stack includes three Linux D-Bus maintenance advisories:
 RUSTSEC-2026-0370 (zvariant), 0371 (zbus_names), and 0372 (zvariant_derive).
 The upstream crates merged into zbus 6; accesskit/atspi and file-dialog dependencies

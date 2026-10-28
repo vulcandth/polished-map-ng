@@ -5,11 +5,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use polished_map_core::{Graphics, Palette, RgbImage, Tile, day_palettes};
+use polished_map_core::{Graphics, RgbImage, Tile};
 
-use crate::{
-    MapDocument, MasterGraphicsOptions, ProjectError, codecs, palettes::map_palettes, read_bounded,
-};
+use crate::{MapDocument, MasterGraphicsOptions, ProjectError, codecs, read_bounded};
 
 /// Load graphics with per-project palettes, map metadata and roof colors.
 pub fn load_master_map_graphics(
@@ -17,7 +15,7 @@ pub fn load_master_map_graphics(
     tileset: &str,
     options: &MasterGraphicsOptions,
 ) -> Result<Graphics, ProjectError> {
-    validate_tileset(doc.path(), tileset)?;
+    let source = crate::MasterTilesetDocument::open_for_map(doc, tileset, options)?;
     let root = doc
         .metadata()
         .root
@@ -26,17 +24,8 @@ pub fn load_master_map_graphics(
             path: doc.path().into(),
             message: "project root is required for graphics".into(),
         })?;
-    let mut options = options.clone();
-    options.monochrome |= !palette_map_path(root, tileset).is_file();
-    let colors = map_palettes(doc, tileset, &options)?;
-    load_graphics(
-        root,
-        tileset,
-        options.allow_256,
-        &colors,
-        options.monochrome,
-        options.roof.as_deref(),
-    )
+    let blocks = crate::BlocksetDocument::open_in_project(root, tileset)?;
+    source.graphics(blocks.blockset())
 }
 
 /// Load raw master tilesets with upstream DAY defaults, without map metadata.
@@ -45,11 +34,23 @@ pub fn load_master_graphics(
     tileset: &str,
     allow_256: bool,
 ) -> Result<Graphics, ProjectError> {
-    load_graphics(root, tileset, allow_256, &day_palettes(), false, None)
+    let source = crate::MasterTilesetDocument::open_in_project(
+        root,
+        tileset,
+        &MasterGraphicsOptions {
+            allow_256,
+            ..Default::default()
+        },
+    )?;
+    let blocks = crate::BlocksetDocument::open_in_project(root, tileset)?;
+    source.graphics(blocks.blockset())
 }
 
 pub(crate) fn validate_tileset(root: &Path, tileset: &str) -> Result<(), ProjectError> {
-    if tileset.is_empty() || tileset.contains(['/', '\\']) || matches!(tileset, "." | "..") {
+    if tileset.is_empty()
+        || tileset.contains(['/', '\\', ':', '\0'])
+        || matches!(tileset, "." | "..")
+    {
         return Err(ProjectError::Format {
             path: root.into(),
             message: "tileset must be a project-local name".into(),
@@ -58,99 +59,7 @@ pub(crate) fn validate_tileset(root: &Path, tileset: &str) -> Result<(), Project
     Ok(())
 }
 
-fn load_graphics(
-    root: &Path,
-    tileset: &str,
-    allow_256: bool,
-    colors: &[Palette; 9],
-    monochrome: bool,
-    roof: Option<&str>,
-) -> Result<Graphics, ProjectError> {
-    validate_tileset(root, tileset)?;
-    let gfx = if root.join("MAPDATA").is_dir() {
-        root.join("MAPDATA")
-    } else {
-        root.join("gfx/tilesets")
-    };
-    let main_path = graphics_path(&gfx, tileset);
-    let tiles = read_tiles(&main_path)?;
-    // The main file keeps the full compound name. Missing companions are ignored,
-    // as Config returns false for them; present but malformed files are errors.
-    let (before_name, after_name) = tileset
-        .split_once('.')
-        .map(|(_, suffix)| suffix.split_once(',').unwrap_or((suffix, "")))
-        .unwrap_or(("", ""));
-    let before = read_companion(&gfx, before_name)?;
-    let after = read_companion(&gfx, after_name)?;
-    let before_end = before.len().div_ceil(16) * 16;
-    let middle_end = before_end
-        + if after.is_empty() {
-            tiles.len()
-        } else {
-            tiles.len().div_ceil(16) * 16
-        };
-    let blockset = crate::BlocksetDocument::open_in_project(root, tileset)?;
-    let metatiles = blockset.blockset().blocks().to_vec();
-    let palette_path = palette_map_path(root, tileset);
-    let ids = if !monochrome && palette_path.is_file() {
-        let bytes = read_bounded(&palette_path, 1024 * 1024)?;
-        codecs::parse_palette_map(&text(&palette_path, &bytes)?)
-            .map_err(|e| ProjectError::codec(&palette_path, e))?
-    } else {
-        vec![8; if allow_256 { 256 } else { 96 }]
-    };
-    let undefined: Palette = [
-        [0xab, 0xcd, 0xef],
-        [0x45, 0x67, 0x89],
-        [0x78, 0x9a, 0xbc],
-        [0x12, 0x34, 0x56],
-    ];
-    let blank = Tile::new([0; 64])?;
-    let mut mapped_tiles = vec![blank.clone(); 256];
-    // Padding gaps retain Tile::clear's white pixels; trailing slots are read
-    // from the (possibly absent) after image, whose out-of-range hue is WHITE.
-    let mut palettes = vec![[[255; 3]; 4]; 256];
-    let palette_for = |i: usize| {
-        ids.get(i).map_or(undefined, |id| {
-            colors[if monochrome { 8 } else { usize::from(id & 15) }]
-        })
-    };
-    for i in 0..256 {
-        let source = if i < before.len() {
-            Some(&before[i])
-        } else if i >= before_end && i < before_end + tiles.len() {
-            Some(&tiles[i - before_end])
-        } else if i >= middle_end {
-            Some(after.get(i - middle_end).unwrap_or(&blank))
-        } else {
-            None
-        };
-        if let Some(tile) = source {
-            let j = tile_slot(i, allow_256);
-            mapped_tiles[j] = tile.clone();
-            palettes[j] = palette_for(i);
-        }
-    }
-    if let Some(roof) = roof {
-        validate_tileset(root, roof)?;
-        let path = graphics_path(&root.join("gfx/tilesets/roofs"), roof);
-        let roof_tiles = read_tiles(&path)?;
-        if roof_tiles.len() != 9 {
-            return Err(ProjectError::Format {
-                path,
-                message: "roof graphics must contain exactly nine tiles".into(),
-            });
-        }
-        for (i, tile) in roof_tiles.into_iter().enumerate() {
-            let slot = 0x0a + i;
-            mapped_tiles[slot] = tile;
-            palettes[slot] = palette_for(slot);
-        }
-    }
-    Ok(Graphics::new(mapped_tiles, palettes, metatiles)?)
-}
-
-fn tile_slot(i: usize, allow_256: bool) -> usize {
+pub(crate) fn tile_slot(i: usize, allow_256: bool) -> usize {
     if !allow_256 && i >= 0x60 {
         if i >= 0xe0 { i - 0x80 } else { i + 0x20 }
     } else {
@@ -158,26 +67,13 @@ fn tile_slot(i: usize, allow_256: bool) -> usize {
     }
 }
 
-fn graphics_path(directory: &Path, name: &str) -> PathBuf {
+pub(crate) fn graphics_path(directory: &Path, name: &str) -> PathBuf {
     first_existing(
         &["png", "2bpp", "CHR", "2bpp.lz"].map(|ext| directory.join(format!("{name}.{ext}"))),
     )
 }
 
-fn read_companion(directory: &Path, name: &str) -> Result<Vec<Tile>, ProjectError> {
-    if name.is_empty() {
-        return Ok(Vec::new());
-    }
-    validate_tileset(directory, name)?;
-    let path = graphics_path(directory, name);
-    if path.is_file() {
-        read_tiles(&path)
-    } else {
-        Ok(Vec::new())
-    }
-}
-
-fn palette_map_path(root: &Path, tileset: &str) -> PathBuf {
+pub(crate) fn palette_map_path(root: &Path, tileset: &str) -> PathBuf {
     let base = tileset.split('.').next().unwrap_or(tileset);
     let mut paths = Vec::new();
     for name in [tileset, base] {

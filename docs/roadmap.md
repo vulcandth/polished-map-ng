@@ -28,8 +28,11 @@ Clipboard copy/paste/swap, sidebar drag/copy and block-count controls are also
 implemented. Native shortcut dispatch, remaining block controls/hotkeys and
 automatic recovery remain.
 The shared tileset draft/command model and palette-map/grayscale export routines
-are implemented with C++ pixel-operation comparisons. Tileset project persistence
-and the pixel-editor GUI remain to be connected before this counts as a workflow.
+are implemented with C++ pixel-operation comparisons. Project persistence now
+stages compound two-bit PNG/palette outputs with conflict checks, and the CLI
+supports preview and hash-checked apply. Save/reopen is tested on a temporary
+copy of the pinned Johto tileset. The pixel-editor GUI remains to be connected;
+this is not yet a completed GUI workflow or a tileset parity gate.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.

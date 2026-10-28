@@ -110,6 +110,17 @@ impl BlocksetDocument {
             .extension()
             .is_some_and(|e| e.eq_ignore_ascii_case("cel"))
     }
+    pub fn verify_unchanged(&self) -> Result<(), ProjectError> {
+        if optional_hash(&self.path)? != Some(self.hash) {
+            return Err(ProjectError::Conflict(self.path.clone()));
+        }
+        if let Some(collision) = &self.collisions
+            && optional_hash(&collision.path)? != Some(collision.hash)
+        {
+            return Err(ProjectError::Conflict(collision.path.clone()));
+        }
+        Ok(())
+    }
     pub fn save(&mut self) -> Result<(), ProjectError> {
         if self.needs_save_as() {
             return Err(ProjectError::Format {
@@ -118,15 +129,7 @@ impl BlocksetDocument {
             });
         }
         if !self.blockset.is_modified() {
-            if optional_hash(&self.path)? != Some(self.hash) {
-                return Err(ProjectError::Conflict(self.path.clone()));
-            }
-            if let Some(collision) = &self.collisions
-                && optional_hash(&collision.path)? != Some(collision.hash)
-            {
-                return Err(ProjectError::Conflict(collision.path.clone()));
-            }
-            return Ok(());
+            return self.verify_unchanged();
         }
         let collision_target = self.collisions.as_ref().map(|c| SaveTarget {
             path: c.path.clone(),

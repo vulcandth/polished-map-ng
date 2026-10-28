@@ -2,11 +2,11 @@
 use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Args, Parser, Subcommand};
-use polished_map_core::{BlockCommand, Command, PaletteSet};
+use polished_map_core::{BlockCommand, Command, PaletteSet, TileCommand};
 use polished_map_project::{
-    BlocksetDocument, MapDocument, MasterGraphicsOptions, OpenOptions, ProjectError,
-    load_master_map_graphics, prepare_blockset_save_as, prepare_collision_save_as, prepare_save_as,
-    read_bounded, write_png,
+    BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
+    ProjectError, load_master_map_graphics, prepare_blockset_save_as, prepare_collision_save_as,
+    prepare_save_as, read_bounded, write_png,
 };
 use serde_json::{Value, json};
 
@@ -45,6 +45,22 @@ impl MapArgs {
 
 #[derive(Subcommand)]
 enum Action {
+    /// Inspect master tile pixels, attributes, input hashes and PNG destinations.
+    InspectTileset {
+        #[command(flatten)]
+        input: TilesetArgs,
+    },
+    /// Preview a project tileset edit; applying requires the preview's state hash.
+    EditTileset {
+        #[command(flatten)]
+        input: TilesetArgs,
+        #[arg(long)]
+        commands: PathBuf,
+        #[arg(long)]
+        apply: bool,
+        #[arg(long)]
+        expected_hash: Option<String>,
+    },
     /// Inspect a binary or imported ASM blockset without graphics or a GUI.
     InspectBlockset {
         path: PathBuf,
@@ -138,6 +154,41 @@ enum Action {
     },
 }
 
+#[derive(Args)]
+struct TilesetArgs {
+    tileset: String,
+    #[arg(long)]
+    root: PathBuf,
+    #[arg(long)]
+    allow_256: bool,
+    #[arg(long)]
+    monochrome: bool,
+}
+
+impl TilesetArgs {
+    fn open(&self) -> Result<(MasterTilesetDocument, BlocksetDocument), Failure> {
+        Ok((
+            MasterTilesetDocument::open_in_project(
+                &self.root,
+                &self.tileset,
+                &MasterGraphicsOptions {
+                    allow_256: self.allow_256,
+                    monochrome: self.monochrome,
+                    ..Default::default()
+                },
+            )?,
+            BlocksetDocument::open_in_project(&self.root, &self.tileset)?,
+        ))
+    }
+}
+
+fn tileset_summary(doc: &MasterTilesetDocument, blocks: &BlocksetDocument) -> Value {
+    json!({"name":doc.name(), "content_hash":doc.content_hash(blocks.blockset()), "allow_256":doc.allow_256(), "monochrome":doc.monochrome(), "allow_priority":doc.allow_priority(),
+        "pixels":doc.tileset().tiles().iter().map(|t| t.hues().as_slice()).collect::<Vec<_>>(), "attributes":doc.tileset().attributes(),
+        "sources":doc.source_files().iter().map(|s| json!({"path":s.path(),"content_hash":s.content_hash()})).collect::<Vec<_>>(),
+        "outputs":doc.outputs().iter().map(|s| json!({"path":s.path(),"content_hash":s.content_hash()})).collect::<Vec<_>>()})
+}
+
 struct Failure {
     code: String,
     message: String,
@@ -163,6 +214,45 @@ impl From<ProjectError> for Failure {
 
 fn run(cli: Cli) -> Result<Value, Failure> {
     match cli.action {
+        Action::InspectTileset { input } => {
+            let (doc, blocks) = input.open()?;
+            Ok(tileset_summary(&doc, &blocks))
+        }
+        Action::EditTileset {
+            input,
+            commands,
+            apply,
+            expected_hash,
+        } => {
+            let (mut doc, blocks) = input.open()?;
+            let before_hash = doc.content_hash(blocks.blockset());
+            if expected_hash.as_ref().is_some_and(|h| h != &before_hash) {
+                return Err(Failure::new(
+                    "conflict",
+                    "tileset inputs or outputs differ from the observed state",
+                ));
+            }
+            if apply && expected_hash.is_none() {
+                return Err(Failure::new(
+                    "expected_hash_required",
+                    "preview first and supply --expected-hash before writing the PNG and palette outputs",
+                ));
+            }
+            let commands: Vec<TileCommand> =
+                serde_json::from_slice(&read_bounded(&commands, 4 * 1024 * 1024)?)
+                    .map_err(|e| Failure::new("invalid_commands", e))?;
+            doc.apply_batch(&commands)?;
+            let planned = doc.preview_save(blocks.blockset())?;
+            blocks.verify_unchanged()?;
+            if apply {
+                doc.save(blocks.blockset())?;
+            }
+            let mut response = tileset_summary(&doc, &blocks);
+            response["applied"] = json!(apply);
+            response["previous_hash"] = json!(before_hash);
+            response["planned_outputs"] = json!(planned);
+            Ok(response)
+        }
         Action::InspectBlockset { path, collisions } => {
             let doc = BlocksetDocument::open_with_collisions(&path, collisions.as_deref())?;
             Ok(

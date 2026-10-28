@@ -2,6 +2,78 @@ use serde_json::Value;
 use std::{fs, process::Command};
 
 #[test]
+fn tileset_cli_previews_checks_observed_files_and_applies_shared_commands() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let gfx = root.join("gfx/tilesets");
+    fs::create_dir_all(&gfx).unwrap();
+    fs::create_dir_all(root.join("data/tilesets")).unwrap();
+    fs::write(root.join("data/tilesets/demo_metatiles.bin"), [1; 16]).unwrap();
+    let original = [255; 32];
+    fs::write(gfx.join("demo.2bpp"), original).unwrap();
+    let palette = "; retained\n\ttilepal 0, GRAY, RED\n";
+    fs::write(gfx.join("demo_palette_map.asm"), palette).unwrap();
+    let commands = root.join("commands.json");
+    fs::write(&commands, r#"[{"op":"paint","tile":0,"points":[{"x":0,"y":0}],"hue":2},{"op":"palette","tile":0,"palette":3}]"#).unwrap();
+    let run = |action: &str, extra: &[&str]| {
+        let mut command = Command::new(env!("CARGO_BIN_EXE_polished-map"));
+        command.arg(action).arg("demo").arg("--root").arg(root);
+        if action == "edit-tileset" {
+            command.arg("--commands").arg(&commands);
+        }
+        let output = command.args(extra).output().unwrap();
+        let value: Value = serde_json::from_slice(&output.stdout).unwrap();
+        (output.status.success(), value)
+    };
+    let (ok, preview) = run("edit-tileset", &[]);
+    assert!(ok, "{preview}");
+    let result = &preview["result"];
+    assert_eq!(result["applied"], false);
+    assert_eq!(result["pixels"][0][0], 2);
+    assert_eq!(result["attributes"][0], 3);
+    assert_eq!(result["planned_outputs"].as_array().unwrap().len(), 2);
+    assert!(!gfx.join("demo.png").exists());
+    assert_eq!(
+        fs::read_to_string(gfx.join("demo_palette_map.asm")).unwrap(),
+        palette
+    );
+    let hash = result["previous_hash"].as_str().unwrap();
+    let (ok, missing) = run("edit-tileset", &["--apply"]);
+    assert!(!ok);
+    assert_eq!(missing["error"]["code"], "expected_hash_required");
+    // A valid external source change invalidates the preview token.
+    fs::write(gfx.join("demo.2bpp"), [0; 32]).unwrap();
+    let (ok, conflict) = run("edit-tileset", &["--apply", "--expected-hash", hash]);
+    assert!(!ok);
+    assert_eq!(conflict["error"]["code"], "conflict");
+    assert!(!gfx.join("demo.png").exists());
+    fs::write(gfx.join("demo.2bpp"), original).unwrap();
+    let (ok, saved) = run("edit-tileset", &["--apply", "--expected-hash", hash]);
+    assert!(ok, "{saved}");
+    assert_eq!(saved["result"]["applied"], true);
+    assert_eq!(
+        saved["result"]["planned_outputs"],
+        result["planned_outputs"]
+    );
+    assert_eq!(fs::read(gfx.join("demo.2bpp")).unwrap(), original);
+    let (ok, reopened) = run("inspect-tileset", &[]);
+    assert!(ok, "{reopened}");
+    assert_eq!(reopened["result"]["pixels"][0][0], 2);
+    assert_eq!(reopened["result"]["attributes"][0], 3);
+    assert_eq!(
+        reopened["result"]["content_hash"],
+        saved["result"]["content_hash"]
+    );
+    let new_hash = reopened["result"]["content_hash"].as_str().unwrap();
+    assert_ne!(new_hash, hash);
+    // Both a new PNG source and block definitions used for trimming are observed.
+    fs::write(root.join("data/tilesets/demo_metatiles.bin"), [0; 16]).unwrap();
+    let (ok, conflict) = run("edit-tileset", &["--apply", "--expected-hash", new_hash]);
+    assert!(!ok);
+    assert_eq!(conflict["error"]["code"], "conflict");
+}
+
+#[test]
 fn collision_cli_previews_paired_copies_and_requires_both_overwrite_hashes() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();

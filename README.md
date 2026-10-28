@@ -67,8 +67,8 @@ Print exports an unannotated PNG; clipboard export is pending.
 Open/New options accept an optional roof name from `gfx/tilesets/roofs`, without
 the extension. Leave it empty to use the base tileset. Compound names such as
 `main.before,after` retain the full main filename and load optional companion
-graphics, with upstream's 16-tile row padding. These are rendering options;
-graphics editing and saving are still pending.
+graphics, with upstream's 16-tile row padding. Tileset pixel editing and saving
+are available through the backend/CLI; the GUI pixel editor is still pending.
 
 Right-click a sidebar block (or choose Edit → Edit Block) to edit its 4×4 tile
 definition. Left-click paints and right-click picks a tile. Shift/Ctrl/Alt select
@@ -106,8 +106,34 @@ Binary rows use `"format":"binary"` and four byte values. `--expected-collision-
 checks collision input. Paired copies also require `--output-collisions`;
 overwrites require its `--expected-output-collision-hash` from preview.
 
-Paired saves stage before/after bytes and a manifest in a temporary
-`.polished-map-recovery-*` directory beside the blockset. Normal completion or
+Headless tileset commands support `paint`, `fill`, `replace`, `swap_hues`,
+`palette`, `set`, `copy`, `swap`, `delete` and `import_rgb`:
+
+```text
+cargo run -p polished-map-cli -- inspect-tileset johto --root path/to/project
+cargo run -p polished-map-cli -- edit-tileset johto --root path/to/project --commands tiles.json
+cargo run -p polished-map-cli -- edit-tileset johto --root path/to/project --commands tiles.json --apply --expected-hash HASH_FROM_PREVIEW
+```
+
+Example `tiles.json`:
+`[{"op":"paint","tile":0,"points":[{"x":0,"y":0}],"hue":2},{"op":"palette","tile":0,"palette":3}]`.
+Hues are white=0, dark=1, light=2, black=3. Palette IDs are 0–7, with bit 7
+for priority. Preview returns the edited draft and every planned destination,
+byte count and hash. Apply requires `previous_hash` from preview (or
+`content_hash` from inspect), binding the inputs, destinations, block definitions
+and mode to the observed local paths. It is not a portable asset identifier or
+the hash of the unsaved draft. Use the same `--allow-256`/`--monochrome` flags
+for preview and apply.
+
+Saving uses upstream's PNG destinations, including separate compound outputs,
+and writes two-bit grayscale PNGs. Imported 2bpp/CHR/LZ files remain intact;
+subsequent loads prefer the new PNG. Roof overlays remain separate. Palette-map
+ASM retains unrelated content and comments; ambiguous structural rewrites fail
+before any file is changed. Monochrome mode saves pixels only, so palette changes
+in that mode do not persist. Unsafe upstream compound export layouts are rejected.
+
+Block/collision and tileset saves stage before/after bytes and a manifest in a temporary
+`.polished-map-recovery-*` directory beside the first output. Normal completion or
 successful rollback removes it. Interrupted saves or failed rollback can leave
 it for inspection and manual recovery; preserve it until recovery is resolved.
 Automatic journal discovery/replay is still pending. Unrelated collision ASM

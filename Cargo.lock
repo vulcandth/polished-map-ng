@@ -2567,6 +2567,7 @@ name = "polished-map-project"
 version = "0.1.0"
 dependencies = [
  "image",
+ "png",
  "polished-map-core",
  "serde",
  "serde_json",

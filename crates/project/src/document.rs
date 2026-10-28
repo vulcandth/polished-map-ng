@@ -38,6 +38,8 @@ pub enum ProjectError {
     Raster(#[from] RasterError),
     #[error(transparent)]
     Blockset(#[from] BlocksetError),
+    #[error(transparent)]
+    Tileset(#[from] polished_map_core::TilesetError),
 }
 
 impl ProjectError {
@@ -64,6 +66,7 @@ impl ProjectError {
             Self::Map(_) => "invalid_map",
             Self::Raster(_) => "invalid_graphics",
             Self::Blockset(_) => "invalid_blockset",
+            Self::Tileset(_) => "invalid_tileset",
         }
     }
 }
@@ -137,7 +140,9 @@ pub(crate) fn prepare_target(path: &Path) -> Result<SaveTarget, ProjectError> {
 }
 
 pub(crate) fn optional_hash(path: &Path) -> Result<Option<[u8; 32]>, ProjectError> {
-    match read_bounded(path, 4 * 1024 * 1024) {
+    // Graphics imports allow eight MiB; format parsers retain their own tighter
+    // bounds. Observation must accept every file the corresponding parser does.
+    match read_bounded(path, 8 * 1024 * 1024) {
         Ok(bytes) => Ok(Some(Sha256::digest(&bytes).into())),
         Err(ProjectError::Io { source, .. }) if source.kind() == std::io::ErrorKind::NotFound => {
             Ok(None)

@@ -1,4 +1,4 @@
-//! Recoverable staging for paired block/collision writes. This is not a filesystem
+//! Recoverable staging for related editor writes. This is not a filesystem
 //! transaction: each replacement is atomic, and external writers must still be checked.
 use crate::{
     ProjectError,
@@ -60,7 +60,7 @@ fn persist_with(
             return Err(ProjectError::Conflict(change.path.clone()));
         }
         before.push(if change.expected.is_some() {
-            Some(read_bounded(&change.path, 4 * 1024 * 1024)?)
+            Some(read_bounded(&change.path, 8 * 1024 * 1024)?)
         } else {
             None
         });
@@ -99,7 +99,13 @@ fn persist_with(
             after_file,
         });
     }
-    let manifest=serde_json::to_vec_pretty(&serde_json::json!({"version":1,"purpose":"paired blockset/collision save","entries":entries})).map_err(|e|ProjectError::Format{path:recovery.path().into(),message:e.to_string()})?;
+    let manifest = serde_json::to_vec_pretty(
+        &serde_json::json!({"version":1,"purpose":"multi-file editor save","entries":entries}),
+    )
+    .map_err(|e| ProjectError::Format {
+        path: recovery.path().into(),
+        message: e.to_string(),
+    })?;
     durable_write(&recovery.path().join("manifest.json"), &manifest)?;
     #[cfg(unix)]
     fs::File::open(recovery.path())
@@ -149,6 +155,37 @@ fn persist_with(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn third_write_failure_rolls_back_replaced_and_new_files() {
+        let dir = tempfile::tempdir().unwrap();
+        let a = dir.path().join("before.png");
+        let b = dir.path().join("main.png");
+        let c = dir.path().join("after.png");
+        fs::write(&a, [1]).unwrap();
+        fs::write(&c, [3]).unwrap();
+        let changes: Vec<_> = [&a, &b, &c]
+            .into_iter()
+            .map(|path| Change {
+                path: path.clone(),
+                expected: optional_hash(path).unwrap(),
+                bytes: vec![8],
+            })
+            .collect();
+        let mut count = 0;
+        let result = persist_with(&changes, |change| {
+            count += 1;
+            if count == 3 {
+                fs::write(&c, [9]).unwrap();
+            }
+            persist_bytes(&change.path, change.expected, &change.bytes)
+        });
+        assert!(matches!(result, Err(ProjectError::Conflict(_))));
+        assert_eq!(fs::read(a).unwrap(), [1]);
+        assert!(!b.exists());
+        assert_eq!(fs::read(c).unwrap(), [9]);
+        assert_eq!(fs::read_dir(dir.path()).unwrap().count(), 2);
+    }
+
     #[test]
     fn failure_removes_new_first_destination_and_duplicate_targets_never_write() {
         let dir = tempfile::tempdir().unwrap();

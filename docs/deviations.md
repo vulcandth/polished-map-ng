@@ -59,8 +59,20 @@ two tile rows for every slot at or above $80, even when a compound output starts
 there; some offsets/counts therefore address memory before or beyond the image.
 Those combinations return a layout error. Valid layouts retain upstream pixel
 placement, grayscale levels, row padding and palette-map serialization quirks.
-These checks do not yet provide a corrected compound save policy; integrating
-and testing that policy with project writes remains master-parity work.
+Project saves use these checks before writing any compound outputs. A corrected
+policy for those unsafe layouts remains separate work. Named missing companions
+with an empty explicit region are also rejected rather than allowing upstream's
+zero-count fallback to copy unrelated regions into a new companion file.
+
+Palette-map writes preserve unrelated ASM, comments and line endings instead of
+replacing the whole file with canonical rows. Resizing a simple table retains its
+comments; interspersed labels/macros with ambiguous ownership cause a preflight
+error. Tests cover both paths. All compound PNG/palette outputs are staged and
+conflict-checked together, using the existing rollback/retained-backup mechanism.
+PNG output preserves the original two-bit grayscale format and decoded samples;
+compression bytes can differ between the Rust encoder and libpng/zlib.
+Project-local names reject drive prefixes and alternate-stream colons in addition
+to directory separators, preventing headless writes outside the selected names.
 
 ## Incomplete resize integration
 

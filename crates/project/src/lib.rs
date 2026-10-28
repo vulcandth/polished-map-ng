@@ -9,6 +9,8 @@ mod discovery;
 mod document;
 mod graphics;
 mod palettes;
+mod tile_palettes;
+mod tileset;
 mod transaction;
 
 pub use blockset::{BlocksetDocument, prepare_blockset_save_as};
@@ -21,3 +23,4 @@ pub use graphics::{load_master_graphics, load_master_map_graphics, write_png};
 pub use palettes::{
     MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,
 };
+pub use tileset::{MasterTilesetDocument, TilesetOutput};

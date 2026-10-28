@@ -15,7 +15,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
-| Stable automation / batch recovery | new API | Paired block/collision preflight, backups and rollback tested; general batch journal discovery/replay and stable schemas pending |
+| Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |
 | Native packaging and runtime | all three OSes | Pending |
 
 New tests must distinguish synthetic vectors, source-derived expectations, and
@@ -64,8 +64,20 @@ the original application. Unverified assets never become redistributable fixture
   FLTK dispatch, native clipboard transport, tile-editor controls, or saving.
   Source-derived tests cover palette-map serialization and grayscale export
   pixels, including bank gaps, odd entry padding, partial-line newline behavior,
-  and rejected unsafe layouts. Project persistence and GUI integration for this
-  model remain pending; these APIs are experimental, not a completed editor.
+  and rejected unsafe layouts. These APIs are experimental, not a completed editor.
+- `MasterTilesetDocument` connects the draft model to discovery, contextual
+  rendering and PNG/palette persistence. Source-derived tests cover two-bit
+  grayscale PNG headers and decoded pixels, 2bpp import preservation, roof/base
+  separation, compound outputs, save/reopen, ASM preservation, priority gaps,
+  ambiguous-ASM refusal, duplicate destinations and external-file conflicts.
+  The CLI tests preview without writes, required/stale hashes, block-definition
+  changes, and apply/reopen. Failure injection on the third file verifies rollback
+  of both a replaced file and a newly created one. A temporary copy of pinned
+  Johto graphics/palette/block definitions saves and reopens with the intended
+  pixel/palette change and all other tile pixels preserved; fixture files remain
+  unchanged. PNG compressed bytes are not claimed to match libpng. This is not
+  an original-application save differential, native GUI validation or power-loss
+  recovery test. The GUI pixel editor and general journal replay remain pending.
 - Headless GUI tests exercise toolbar state, accessible open options, a complete
   paint/undo/redo/save flow, New Map, resize accept/cancel, and source-derived geometry. Optional visual tests:
   `cargo test -p polished-map-gui --features visual-tests`.
