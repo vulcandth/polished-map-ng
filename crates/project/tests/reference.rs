@@ -4,6 +4,93 @@ use polished_map_project::codecs::decode_2bpp;
 use std::{fs, process::Command};
 
 #[test]
+#[ignore = "requires POLISHED_MAP_PALETTE_ORACLE; run in the reference CI job"]
+fn palette_clipboard_and_export_match_compiled_source_with_corrected_labels() {
+    use polished_map_core::{ColorSlot, PaletteCommand};
+    let oracle =
+        std::env::var_os("POLISHED_MAP_PALETTE_ORACLE").expect("set POLISHED_MAP_PALETTE_ORACLE");
+    let dir = tempfile::tempdir().unwrap();
+    let clipboard = dir.path().join("clipboard.bin");
+    let prefix = dir.path().join("export");
+    assert!(
+        Command::new(oracle)
+            .arg(&clipboard)
+            .arg(&prefix)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let reference = fs::read(clipboard).unwrap();
+    assert_eq!(reference.len(), 256 * 9);
+    let a = ColorSlot {
+        set: PaletteSet::Day,
+        palette: 0,
+        hue: 0,
+    };
+    let b = ColorSlot { palette: 1, ..a };
+    for i in 0..256u16 {
+        let mut bank = PaletteBank::default();
+        bank.edit(&[PaletteCommand::SetRgb {
+            slot: a,
+            rgb: [i as u8, (i * 37) as u8, (i * 91) as u8],
+        }])
+        .unwrap();
+        let snapshot = bank.copy_color(a).unwrap();
+        bank.edit(&[
+            PaletteCommand::SetRgb {
+                slot: a,
+                rgb: [i as u8 ^ 0x55, i as u8 ^ 0xaa, i as u8 ^ 0xcc],
+            },
+            PaletteCommand::SetRgb {
+                slot: b,
+                rgb: snapshot,
+            },
+        ])
+        .unwrap();
+        let mut actual = bank.color(b).unwrap().to_vec();
+        bank.edit(&[PaletteCommand::Swap { a, b }]).unwrap();
+        actual.extend(bank.color(a).unwrap());
+        actual.extend(bank.color(b).unwrap());
+        assert_eq!(
+            actual,
+            &reference[usize::from(i) * 9..usize::from(i + 1) * 9]
+        );
+    }
+    for seed in 0..16 {
+        let mut bank = PaletteBank::default();
+        let mut edits = Vec::new();
+        for (l, set) in PaletteSet::ALL.into_iter().enumerate() {
+            for p in 0..9 {
+                for h in 0..4 {
+                    edits.push(PaletteCommand::SetRgb {
+                        slot: ColorSlot {
+                            set,
+                            palette: p,
+                            hue: h,
+                        },
+                        rgb: std::array::from_fn(|c| {
+                            ((l * 71
+                                + usize::from(p) * 37
+                                + usize::from(h) * 19
+                                + c * 13
+                                + seed * 31)
+                                & 255) as u8
+                        }),
+                    });
+                }
+            }
+        }
+        bank.edit(&edits).unwrap();
+        for (mono, name) in [(false, "color"), (true, "mono")] {
+            assert_eq!(
+                bank.export_rgb(mono),
+                fs::read_to_string(dir.path().join(format!("export-{seed}-{name}.pal"))).unwrap()
+            );
+        }
+    }
+}
+
+#[test]
 #[ignore = "requires POLISHED_MAP_TILE_ORACLE; run in the reference CI job"]
 fn tile_pixels_and_rgb_paste_match_compiled_upstream() {
     use polished_map_core::{Point, Tile, TileCommand, Tileset};

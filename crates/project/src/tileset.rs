@@ -2,13 +2,14 @@
 //! Base tiles and roof overlays remain separate; edits never bake a roof into
 //! the base sheet. Multi-file output is staged before any destination is changed.
 use crate::{
-    MapDocument, MasterGraphicsOptions, ProjectError, RoofDocument, SaveTarget, codecs,
+    MapDocument, MasterGraphicsOptions, PaletteDocument, ProjectError, RoofDocument, SaveTarget,
+    codecs,
     document::{optional_hash, prepare_target},
     graphics::{
         encode_grayscale_png, graphics_path, palette_map_path, read_tiles, tile_slot,
         validate_tileset,
     },
-    palettes::map_palettes,
+    palettes::map_palette_bank,
     read_bounded, tile_palettes,
     transaction::{Change, persist_pair},
 };
@@ -50,7 +51,7 @@ pub struct MasterTilesetDocument {
     name: String,
     model: Tileset,
     initial: Tileset,
-    colors: [Palette; 9],
+    palettes: PaletteDocument,
     clear_slots: Vec<bool>,
     roof: Option<RoofDocument>,
     sources: Vec<SaveTarget>,
@@ -78,8 +79,8 @@ impl MasterTilesetDocument {
         validate_tileset(root, name)?;
         let mut options = options.clone();
         options.monochrome |= !palette_map_path(root, name).is_file();
-        let colors = map_palettes(doc, name, &options)?;
-        Self::open_colors(root, name, &options, colors)
+        let (bank, selected) = map_palette_bank(doc, name, &options)?;
+        Self::open_colors(root, name, &options, PaletteDocument::new(bank, selected))
     }
 
     /// DAY defaults without map metadata; use open_for_map for contextual colors.
@@ -88,14 +89,14 @@ impl MasterTilesetDocument {
         name: &str,
         options: &MasterGraphicsOptions,
     ) -> Result<Self, ProjectError> {
-        Self::open_colors(root, name, options, polished_map_core::day_palettes())
+        Self::open_colors(root, name, options, PaletteDocument::default())
     }
 
     fn open_colors(
         root: &Path,
         name: &str,
         options: &MasterGraphicsOptions,
-        colors: [Palette; 9],
+        palettes: PaletteDocument,
     ) -> Result<Self, ProjectError> {
         validate_tileset(root, name)?;
         let gfx = root.join(if root.join("MAPDATA").is_dir() {
@@ -216,7 +217,7 @@ impl MasterTilesetDocument {
             name: name.into(),
             initial: model.clone(),
             model,
-            colors,
+            palettes,
             clear_slots,
             roof,
             sources,
@@ -241,7 +242,13 @@ impl MasterTilesetDocument {
         self.roof.as_mut()
     }
     pub fn colors(&self) -> &[Palette; 9] {
-        &self.colors
+        self.palettes.bank().colors(self.palettes.selected())
+    }
+    pub fn palettes(&self) -> &PaletteDocument {
+        &self.palettes
+    }
+    pub fn palettes_mut(&mut self) -> &mut PaletteDocument {
+        &mut self.palettes
     }
     pub fn allow_256(&self) -> bool {
         self.allow_256
@@ -323,7 +330,7 @@ impl MasterTilesetDocument {
             } else if attr == 9 {
                 UNDEFINED_COLORS
             } else {
-                self.colors[if self.monochrome {
+                self.colors()[if self.monochrome {
                     8
                 } else {
                     usize::from(attr & 15)
@@ -338,7 +345,7 @@ impl MasterTilesetDocument {
                 palettes[slot] = if attr == 9 {
                     UNDEFINED_COLORS
                 } else {
-                    self.colors[if self.monochrome {
+                    self.colors()[if self.monochrome {
                         8
                     } else {
                         usize::from(attr & 15)

@@ -88,6 +88,18 @@ against compiled original C++; smaller and larger imports have explicit Rust
 tests. The roof command model rejects palette/delete commands absent from the
 original roof editor, and malformed batches leave the entire draft unchanged.
 
+## Palette export labels and validation
+
+Upstream declares six palette sets but initializes the export label table with
+only `morn`, `day`, `nite`, `indoor`, `custom`. The sixth pointer is null and is
+passed to `%s`; the fourth/fifth names also describe the wrong sets. Export now
+labels all six sets correctly, including `darkness`. Numeric RGB5 values, hue
+order, whitespace and line endings follow the original writer. The compiled
+oracle records its corrected label table separately from unmodified functions.
+Invalid hex characters and values longer than six ASCII digits are rejected,
+rather than relying on partial C conversion or GUI input filtering. RGB8 edits
+remain exact in memory; copying and exporting still use upstream RGB5 quantization.
+
 ## Incomplete resize integration
 
 The block-level resize matches upstream's nine anchors, zero fill, signed division

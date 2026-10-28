@@ -7,7 +7,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions tested; oversized-file consent pending |
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; resize event shifts and full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
-| Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, ASM/binary collisions and paired saves tested; palette editing and full differential coverage pending |
+| Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette color commands/export, ASM/binary collisions and paired saves tested; palette GUI and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset and roof drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count and persistence implemented; native child windows, native clipboard verification, priority overlays, loaded-roof switching and palette-color editors pending |
@@ -23,6 +23,20 @@ actual C++ differential observations. A source-derived vector is not a run of
 the original application. Unverified assets never become redistributable fixtures.
 
 ## Current evidence (2026-10-27)
+
+- `PaletteBank` supports atomic RGB8/hex, RGB5 channel, quantized copy and exact
+  live swap commands. `PaletteDocument` tracks six sets, independent edited state,
+  bounded imports and explicit conflict-checked exports. CLI tests cover preview,
+  required/stale input hashes, explicit output overwrite hashes and RGB5 reopen.
+  `tools/palette_editor_oracle.py` extracts five original functions: 256 clipboard
+  cases and 32 full-color/monochrome exports match compiled C++. Its harness
+  explicitly corrects the incomplete set-name table while retaining the export
+  function. Core tests separately cover channels, hex, malformed atomic batches
+  and hue order. The GUI editor and native color chooser are still pending.
+  A real pinned New Bark Town context retains all sets, switches rendering to an
+  edited night roof color, exports/reloads RGB5, and leaves project data and map/
+  tile dirty state unchanged. This validates the project adapter, not the original
+  GUI's load/export interactions or cross-map session behavior.
 
 - Windows local workspace tests, Clippy and rustdoc passed during foundation work.
 - `tools/reference_oracle.py` extracts the original conversion function from Git,

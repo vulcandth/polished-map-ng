@@ -2,6 +2,102 @@ use serde_json::Value;
 use std::{fs, process::Command};
 
 #[test]
+fn palette_cli_preview_quantization_and_explicit_export_conflict_guards() {
+    let dir = tempfile::tempdir().unwrap();
+    let input = dir.path().join("input.pal");
+    let output = dir.path().join("output.pal");
+    let commands = dir.path().join("commands.json");
+    let original = "\tRGB 00,01,02, 03,04,05, 06,07,08, 09,10,11\n";
+    fs::write(&input, original).unwrap();
+    fs::write(
+        &commands,
+        r#"[{"op":"hex","slot":{"set":"custom","palette":8,"hue":2},"value":"037ff9"}]"#,
+    )
+    .unwrap();
+    let run = |extra: &[&str]| {
+        let result = Command::new(env!("CARGO_BIN_EXE_polished-map"))
+            .arg("edit-palettes")
+            .arg(&input)
+            .arg("--commands")
+            .arg(&commands)
+            .arg("--output")
+            .arg(&output)
+            .arg("--monochrome")
+            .args(extra)
+            .output()
+            .unwrap();
+        (
+            result.status.success(),
+            serde_json::from_slice::<Value>(&result.stdout).unwrap(),
+        )
+    };
+    let (ok, preview) = run(&[]);
+    assert!(ok, "{preview}");
+    let result = &preview["result"];
+    assert_eq!(
+        result["sets"][5]["colors"][8][2],
+        serde_json::json!([3, 127, 249])
+    );
+    assert!(result["export_rgb"].as_str().unwrap().contains("00,15,31"));
+    assert!(!output.exists());
+    let hash = result["previous_hash"].as_str().unwrap();
+    assert_eq!(
+        run(&["--apply"]).1["error"]["code"],
+        "expected_hash_required"
+    );
+    assert_eq!(
+        run(&["--apply", "--expected-hash", "stale"]).1["error"]["code"],
+        "conflict"
+    );
+    fs::write(&output, "existing").unwrap();
+    assert_eq!(
+        run(&["--apply", "--expected-hash", hash]).1["error"]["code"],
+        "overwrite_confirmation_required"
+    );
+    let (_, overwrite) = run(&[]);
+    let out_hash = overwrite["result"]["previous_output_hash"]
+        .as_str()
+        .unwrap();
+    fs::write(&output, "external").unwrap();
+    assert_eq!(
+        run(&[
+            "--apply",
+            "--expected-hash",
+            hash,
+            "--expected-output-hash",
+            out_hash
+        ])
+        .1["error"]["code"],
+        "conflict"
+    );
+    fs::write(&output, "existing").unwrap();
+    let (ok, saved) = run(&[
+        "--apply",
+        "--expected-hash",
+        hash,
+        "--expected-output-hash",
+        out_hash,
+    ]);
+    assert!(ok, "{saved}");
+    assert_eq!(
+        fs::read_to_string(&output).unwrap(),
+        result["export_rgb"].as_str().unwrap()
+    );
+    assert_eq!(fs::read_to_string(input).unwrap(), original);
+    let inspected = Command::new(env!("CARGO_BIN_EXE_polished-map"))
+        .arg("inspect-palettes")
+        .arg(output)
+        .output()
+        .unwrap();
+    assert!(inspected.status.success());
+    let inspected: Value = serde_json::from_slice(&inspected.stdout).unwrap();
+    assert_eq!(
+        inspected["result"]["sets"][5]["colors"][8][2],
+        serde_json::json!([0, 123, 255])
+    );
+}
+
+#[test]
 fn roof_cli_previews_requires_observed_hash_and_saves_only_roof_pixels() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();

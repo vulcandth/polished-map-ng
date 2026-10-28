@@ -1,5 +1,5 @@
 //! Master project palette-file precedence and metadata selection from config.cpp,
-//! colors.cpp and Main_Window::open_map. Palette editing/writing is separate work.
+//! colors.cpp and Main_Window::open_map.
 use std::path::{Path, PathBuf};
 
 use polished_map_core::{Palette, PaletteBank, PaletteSet};
@@ -110,11 +110,11 @@ fn apply_file(
     Ok(bank.apply(&palettes, selected))
 }
 
-pub(crate) fn map_palettes(
+pub(crate) fn map_palette_bank(
     doc: &MapDocument,
     tileset: &str,
     options: &MasterGraphicsOptions,
-) -> Result<[Palette; 9], ProjectError> {
+) -> Result<(PaletteBank, PaletteSet), ProjectError> {
     use PaletteSet::*;
     let metadata = doc.metadata();
     let root = metadata
@@ -186,7 +186,7 @@ pub(crate) fn map_palettes(
     {
         apply_roofs(&mut bank, &path, metadata.group, options.roof_layout)?;
     }
-    Ok(*bank.colors(options.palette.unwrap_or(selected)))
+    Ok((bank, options.palette.unwrap_or(selected)))
 }
 
 fn apply_roofs(

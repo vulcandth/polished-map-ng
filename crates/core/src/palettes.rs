@@ -3,6 +3,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::Palette;
 
+#[path = "palette_edit.rs"]
+mod edit;
+pub use edit::{ColorSlot, PaletteCommand, PaletteError};
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[repr(usize)]
@@ -27,7 +31,7 @@ impl PaletteSet {
     ];
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PaletteBank {
     colors: [[Palette; 9]; 6],
 }

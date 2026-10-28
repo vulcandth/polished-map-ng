@@ -2,11 +2,12 @@
 use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Args, Parser, Subcommand};
-use polished_map_core::{BlockCommand, Command, PaletteSet, TileCommand};
+use polished_map_core::{BlockCommand, Command, PaletteCommand, PaletteSet, TileCommand};
 use polished_map_project::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
-    ProjectError, RoofDocument, load_master_map_graphics, prepare_blockset_save_as,
-    prepare_collision_save_as, prepare_save_as, read_bounded, write_png,
+    PaletteDocument, ProjectError, RoofDocument, load_master_map_graphics,
+    prepare_blockset_save_as, prepare_collision_save_as, prepare_palette_export, prepare_save_as,
+    read_bounded, write_png,
 };
 use serde_json::{Value, json};
 
@@ -45,6 +46,24 @@ impl MapArgs {
 
 #[derive(Subcommand)]
 enum Action {
+    /// Inspect all six palette sets after importing an upstream RGB palette file.
+    InspectPalettes { input: PathBuf },
+    /// Preview color edits and RGB5 export. Output is always an explicit destination.
+    EditPalettes {
+        input: PathBuf,
+        #[arg(long)]
+        commands: PathBuf,
+        #[arg(long)]
+        output: Option<PathBuf>,
+        #[arg(long)]
+        monochrome: bool,
+        #[arg(long)]
+        apply: bool,
+        #[arg(long)]
+        expected_hash: Option<String>,
+        #[arg(long)]
+        expected_output_hash: Option<String>,
+    },
     /// Inspect nine roof tiles in file order (indices 0..8, master slots $0A..$12).
     InspectRoof {
         #[command(flatten)]
@@ -176,6 +195,10 @@ struct RoofArgs {
     #[arg(long)]
     root: PathBuf,
 }
+
+fn palette_summary(doc: &PaletteDocument) -> Value {
+    json!({"content_hash":doc.content_hash(),"selected":doc.selected(),"sets":PaletteSet::ALL.map(|set| json!({"set":set,"colors":doc.bank().colors(set)}))})
+}
 impl RoofArgs {
     fn open(&self) -> Result<RoofDocument, Failure> {
         // Standalone pixel edits need no map/tileset; palette attributes are
@@ -249,6 +272,71 @@ impl From<ProjectError> for Failure {
 
 fn run(cli: Cli) -> Result<Value, Failure> {
     match cli.action {
+        Action::InspectPalettes { input } => {
+            let mut doc = PaletteDocument::default();
+            doc.load(&input)?;
+            Ok(palette_summary(&doc))
+        }
+        Action::EditPalettes {
+            input,
+            commands,
+            output,
+            monochrome,
+            apply,
+            expected_hash,
+            expected_output_hash,
+        } => {
+            let mut doc = PaletteDocument::default();
+            doc.load(&input)?;
+            let before = doc.content_hash();
+            if expected_hash.as_ref().is_some_and(|h| h != &before) {
+                return Err(Failure::new(
+                    "conflict",
+                    "palette input differs from the observed state",
+                ));
+            }
+            if apply && expected_hash.is_none() {
+                return Err(Failure::new(
+                    "expected_hash_required",
+                    "preview first and supply --expected-hash",
+                ));
+            }
+            let commands: Vec<PaletteCommand> =
+                serde_json::from_slice(&read_bounded(&commands, 4 * 1024 * 1024)?)
+                    .map_err(|e| Failure::new("invalid_commands", e))?;
+            doc.apply_batch(&commands)?;
+            doc.verify_source()?;
+            let target = output.as_deref().map(prepare_palette_export).transpose()?;
+            let previous_output_hash = target.as_ref().and_then(|t| t.content_hash());
+            if expected_output_hash
+                .as_ref()
+                .is_some_and(|h| Some(h) != previous_output_hash.as_ref())
+            {
+                return Err(Failure::new(
+                    "conflict",
+                    "palette output differs from the observed state",
+                ));
+            }
+            if apply {
+                let target = target.as_ref().ok_or_else(|| {
+                    Failure::new("destination_required", "palette export requires --output")
+                })?;
+                if target.exists() && expected_output_hash.is_none() {
+                    return Err(Failure::new(
+                        "overwrite_confirmation_required",
+                        "supply --expected-output-hash from preview to replace the destination",
+                    ));
+                }
+                doc.export(target, monochrome)?;
+            }
+            let mut response = palette_summary(&doc);
+            response["previous_hash"] = json!(before);
+            response["applied"] = json!(apply);
+            response["output"] = json!(target.as_ref().map(|t| t.path()));
+            response["previous_output_hash"] = json!(previous_output_hash);
+            response["export_rgb"] = json!(doc.bank().export_rgb(monochrome));
+            Ok(response)
+        }
         Action::InspectRoof { input } => Ok(roof_summary(&input.open()?)),
         Action::EditRoof {
             input,

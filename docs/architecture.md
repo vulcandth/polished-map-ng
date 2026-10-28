@@ -52,3 +52,14 @@ attributes without marking roof pixels dirty. Roof attributes are transient;
 only pixels persist. Base and roof hashes/save operations are separate. Save All
 processes map, blockset, base tileset and roof sequentially; it is not one atomic
 transaction across all four domains.
+
+`PaletteBank` owns all six sets and atomic color commands. `PaletteDocument`
+tracks the selected set, explicit import source and edited flag. Tileset
+documents retain the complete contextual bank rather than discarding unselected
+sets after discovery. Selection and color edits affect composed rendering without
+dirtying tile pixels or map history. Color export is a separate, explicit
+destination operation, not part of tileset PNG/palette-map saving. Imports overlay
+the upstream layouts onto the current bank; exports quantize RGB8 to RGB5 without
+changing the in-memory colors. The CLI binds an apply to its observed input and
+requires an additional destination hash for overwrite. Contextual discovery does
+not treat source palette files as implicit write destinations.

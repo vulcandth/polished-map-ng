@@ -158,6 +158,29 @@ cargo run -p polished-map-cli -- edit-roof violet --root path/to/project --comma
 The roof hash binds its observed source and PNG destination. Preview does not
 write; apply requires the observed hash. Existing 2bpp/CHR/LZ sources are retained.
 
+Headless palette-color editing imports the original RGB macro layouts into all
+six sets. Commands are `set_rgb`, `channel`, `hex`, `copy` and `swap`. A color
+slot names `set` (`morn`, `day`, `nite`, `darkness`, `indoor`, `custom`), `palette`
+(0–7 game colors, 8 monochrome), and internal `hue` (0 white, 1 dark, 2 light,
+3 black). Channel controls use 0–31; hex and `set_rgb` preserve exact RGB8.
+Copy quantizes to RGB5 as upstream does; swap preserves exact live colors.
+
+```text
+cargo run -p polished-map-cli -- inspect-palettes path/to/bg_tiles.pal
+cargo run -p polished-map-cli -- edit-palettes path/to/bg_tiles.pal --commands colors.json --output edited.pal
+cargo run -p polished-map-cli -- edit-palettes path/to/bg_tiles.pal --commands colors.json --output edited.pal --apply --expected-hash HASH_FROM_PREVIEW
+```
+
+Example `colors.json`:
+`[{"op":"hex","slot":{"set":"day","palette":6,"hue":2},"value":"037ff9"}]`.
+Preview includes the six RGB8 sets and exact `export_rgb` text. Export writes all
+six sets as RGB5; add `--monochrome` to write their monochrome palettes only.
+Apply requires an explicit output and observed input hash; replacing an existing
+output also requires `--expected-output-hash` from preview. Export quantization
+does not mutate the draft, so its fingerprint can differ after reopening.
+Palette files are exported separately from map/tileset saves. The palette GUI
+controls are still pending.
+
 Saving uses upstream's PNG destinations, including separate compound outputs,
 and writes two-bit grayscale PNGs. Imported 2bpp/CHR/LZ files remain intact;
 subsequent loads prefer the new PNG. Roof overlays remain separate. Palette-map

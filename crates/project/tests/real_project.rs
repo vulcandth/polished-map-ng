@@ -8,6 +8,101 @@ use polished_map_project::{
 
 #[test]
 #[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
+fn pinned_contextual_palette_bank_edits_switches_and_exports_without_touching_project() {
+    use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
+    use polished_map_project::{
+        BlocksetDocument, MasterTilesetDocument, PaletteDocument, prepare_palette_export,
+    };
+    let root = PathBuf::from(
+        std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),
+    );
+    let doc = MapDocument::open_in_project(
+        &root.join("maps/NewBarkTown.blk"),
+        &OpenOptions::default(),
+        Some(&root),
+    )
+    .unwrap();
+    let mut tiles =
+        MasterTilesetDocument::open_for_map(&doc, "johto", &MasterGraphicsOptions::default())
+            .unwrap();
+    let blocks = BlocksetDocument::open_in_project(&root, "johto").unwrap();
+    let selected = tiles.palettes().selected();
+    let bank = tiles.palettes().bank().clone();
+    let original = tiles
+        .graphics(blocks.blockset())
+        .unwrap()
+        .render_map(doc.map())
+        .unwrap();
+    let slot = ColorSlot {
+        set: PaletteSet::Nite,
+        palette: 6,
+        hue: 2,
+    };
+    tiles
+        .palettes_mut()
+        .apply_batch(&[PaletteCommand::SetRgb {
+            slot,
+            rgb: [3, 127, 249],
+        }])
+        .unwrap();
+    if selected != PaletteSet::Nite {
+        assert_eq!(
+            tiles
+                .graphics(blocks.blockset())
+                .unwrap()
+                .render_map(doc.map())
+                .unwrap(),
+            original
+        );
+    }
+    tiles.palettes_mut().select(PaletteSet::Nite);
+    assert_eq!(tiles.colors()[6][2], [3, 127, 249]);
+    assert_ne!(
+        tiles
+            .graphics(blocks.blockset())
+            .unwrap()
+            .render_map(doc.map())
+            .unwrap(),
+        original
+    );
+    assert!(!tiles.tileset().is_modified());
+    assert!(!doc.map().is_modified());
+    let temp = tempfile::tempdir().unwrap();
+    let target = prepare_palette_export(&temp.path().join("colors.pal")).unwrap();
+    tiles.palettes_mut().export(&target, false).unwrap();
+    let mut exported = PaletteDocument::default();
+    exported.load(target.path()).unwrap();
+    for set in PaletteSet::ALL {
+        for palette in 0..8 {
+            for hue in 0..4 {
+                let current = ColorSlot { set, palette, hue };
+                assert_eq!(
+                    exported.bank().color(current).unwrap(),
+                    if current == slot {
+                        [0, 123, 255]
+                    } else {
+                        bank.copy_color(current).unwrap()
+                    }
+                );
+            }
+        }
+    }
+    let reloaded =
+        MasterTilesetDocument::open_for_map(&doc, "johto", &MasterGraphicsOptions::default())
+            .unwrap();
+    assert_eq!(reloaded.palettes().bank(), &bank);
+    assert_eq!(
+        reloaded
+            .graphics(blocks.blockset())
+            .unwrap()
+            .render_map(doc.map())
+            .unwrap(),
+        original
+    );
+}
+
+#[test]
+#[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
 fn pinned_roof_edit_save_reopen_preserves_other_pixels_and_reference_source() {
     use polished_map_core::{Point, Tile, TileCommand};
     use polished_map_project::RoofDocument;

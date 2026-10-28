@@ -43,6 +43,11 @@ Compiled upstream comparisons cover safe 8×8 roof image paste; temporary real
 New Bark Town roof edits save/reopen with other pixels and source fixtures intact.
 Changing the loaded roof without reopening, native windows/clipboard, palette-color
 editing and other matrix gaps still remain.
+Palette-color commands, all-six-set contextual state, explicit RGB5 export and
+the headless palette interface are implemented. Compiled original clipboard and
+export functions verify copy quantization, live swap and export layout; export
+set names use a documented correction to upstream's incomplete label table.
+The color/monochrome GUI forms, load/export actions and native chooser remain next.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.

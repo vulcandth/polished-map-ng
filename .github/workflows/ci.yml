@@ -49,11 +49,13 @@ jobs:
       - run: python3 tools/reference_oracle.py --checkout .reference/master --output .scratch/reference-2bpp
       - run: python3 tools/block_brush_oracle.py --checkout .reference/master --output .scratch/reference-block
       - run: python3 tools/tile_editor_oracle.py --checkout .reference/master --output .scratch/reference-tile
+      - run: python3 tools/palette_editor_oracle.py --checkout .reference/master --output .scratch/reference-palette
       - run: cargo test -p polished-map-project --locked --test reference -- --ignored
         env:
           POLISHED_MAP_2BPP_ORACLE: ${{ github.workspace }}/.scratch/reference-2bpp
           POLISHED_MAP_BLOCK_ORACLE: ${{ github.workspace }}/.scratch/reference-block
           POLISHED_MAP_TILE_ORACLE: ${{ github.workspace }}/.scratch/reference-tile
+          POLISHED_MAP_PALETTE_ORACLE: ${{ github.workspace }}/.scratch/reference-palette
   visuals:
     runs-on: ubuntu-24.04
     steps:
