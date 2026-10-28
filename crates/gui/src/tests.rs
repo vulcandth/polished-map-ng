@@ -29,6 +29,7 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
         document,
         graphics,
         blockset: Some(blockset),
+        tileset: None,
         allow_256: false,
     }))
     .unwrap();
@@ -177,6 +178,7 @@ fn binary_collision_spinners_edit_all_four_quadrants() {
         document,
         graphics,
         blockset: Some(blockset),
+        tileset: None,
         allow_256: false,
     }))
     .unwrap();
@@ -292,6 +294,7 @@ fn canvas_drag_is_one_undoable_edit_and_save_uses_the_backend() {
         document,
         graphics,
         blockset: None,
+        tileset: None,
         allow_256: true,
     }))
     .unwrap();
@@ -377,6 +380,7 @@ fn synthetic_editor_appearance() {
         document,
         graphics,
         blockset: None,
+        tileset: None,
         allow_256: true,
     }))
     .unwrap();
@@ -418,6 +422,7 @@ fn resize_dialog_anchor_accept_and_cancel_use_shared_command() {
         document,
         graphics,
         blockset: None,
+        tileset: None,
         allow_256: true,
     }))
     .unwrap();

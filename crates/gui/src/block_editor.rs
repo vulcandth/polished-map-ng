@@ -261,7 +261,7 @@ impl Editor {
 }
 
 /// Original draw_selection_border at unzoomed tile/chip scale.
-fn selection_border(ui: &egui::Ui, cell: Rect) {
+pub(super) fn selection_border(ui: &egui::Ui, cell: Rect) {
     for (inset, color) in [
         (0.0, Color32::BLACK),
         (1.0, Color32::WHITE),

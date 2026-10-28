@@ -5,6 +5,12 @@ upstream's two-bit grayscale tileset output. The `image` convenience writer emit
 eight-bit channels; `image` remains responsible for bounded import decoding.
 This adds no new package to the dependency graph. The encoder is MIT/Apache-2.0.
 
+The GUI directly uses the already-locked MIT/Apache-2.0 `arboard` 3.7 for an
+explicit image-paste button/shortcut. egui exposes image-copy output and incoming
+paste events but no request to read an image on button click. Image/Wayland data
+control features match the existing egui-winit dependency graph. Clipboard reads
+occur only on that user action; native transport still needs platform checks.
+
 The locked eframe 0.37 stack includes three Linux D-Bus maintenance advisories:
 RUSTSEC-2026-0370 (zvariant), 0371 (zbus_names), and 0372 (zvariant_derive).
 The upstream crates merged into zbus 6; accesskit/atspi and file-dialog dependencies

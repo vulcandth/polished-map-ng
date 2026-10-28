@@ -10,7 +10,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, ASM/binary collisions and paired saves tested; palette editing and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Block draft editor, eight brushes, collisions, clipboard copy/paste/swap, sidebar drag/copy, block-count dialog and paired save implemented; native child windows, native clipboard shortcut verification and other specialist editors pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Block and tileset drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count and persistence implemented; native child windows, native clipboard verification, priority overlays, roof and palette-color editors pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
@@ -77,10 +77,27 @@ the original application. Unverified assets never become redistributable fixture
   pixel/palette change and all other tile pixels preserved; fixture files remain
   unchanged. PNG compressed bytes are not claimed to match libpng. This is not
   an original-application save differential, native GUI validation or power-loss
-  recovery test. The GUI pixel editor and general journal replay remain pending.
+  recovery test. General journal replay remains pending.
+- `tileset_editor_tests` covers draft cancel/accept, unchanged acceptance dirtying,
+  paint/fill/replace/swap/pick gestures, palette hotkeys, priority/deletion,
+  private snapshot paste versus live-source swap, swap auto-repeat suppression,
+  empty-clipboard key-release fallback, drag swap/copy, save/reopen and conflicts,
+  dirty guards, unchanged map/block history, grayscale copy output and clipped
+  image-paste event delivery. Geometry assertions check the 16px sheet and 18px
+  pixel grids, reserved-slot mode restrictions and total modal bounds. Windows
+  and Unix button-order snapshots are reviewed. The 466×304 client area comes
+  directly from Tileset_Window::initialize. These are headless GUI tests backed by
+  the separately compared core operations, not FLTK/native event differentials.
+  Native image clipboard transport, separate child windows, priority overlays
+  and comprehensive DPI/theme behavior remain pending. Clipboard icons are drawn
+  in code; upstream image assets have not been redistributed.
 - Headless GUI tests exercise toolbar state, accessible open options, a complete
   paint/undo/redo/save flow, New Map, resize accept/cancel, and source-derived geometry. Optional visual tests:
-  `cargo test -p polished-map-gui --features visual-tests`.
+  `cargo test -p polished-map-gui --features visual-tests -- --test-threads=1`.
+  A local Windows parallel visual run exited with `STATUS_INVALID_HANDLE` before
+  completing; all 22 tests passed serially. CI now serializes the visual suite to
+  avoid concurrent renderer setups. The native-handle failure's root cause is
+  unconfirmed; no assertion or snapshot comparison has been disabled.
 - CLI rendered the unmodified upstream master Kanto example at 5760×4320. The PNG
   was visually inspected locally; this is a smoke test, not a pixel differential.
   Neither the game assets nor resulting PNG are included in the repository.

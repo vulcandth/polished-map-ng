@@ -19,6 +19,7 @@ fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
         )
         .unwrap(),
         blockset: Some(BlocksetDocument::open_with_collisions(&blocks, Some(&collisions)).unwrap()),
+        tileset: None,
         allow_256: true,
     };
     let mut harness = Harness::builder()

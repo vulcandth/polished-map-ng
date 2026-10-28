@@ -34,7 +34,7 @@ fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Part {
     source: Option<SaveTarget>,
     output: SaveTarget,
@@ -42,7 +42,7 @@ struct Part {
     count: Option<usize>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct MasterTilesetDocument {
     name: String,
     model: Tileset,

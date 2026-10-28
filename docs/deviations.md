@@ -50,7 +50,7 @@ Implementation-specific exceptions will be recorded here with tests and rational
   overrides them. Deliberate reuse/import and persistent preferences remain
   pending; accidental carry-over is not reproduced in the headless interface.
 
-## Tileset export safety (backend; GUI integration pending)
+## Tileset editing and export safety
 
 The new tileset export routines reject entirely undefined palette maps instead of
 reproducing `Palette_Map::write_palette_map`'s backwards array underflow. Grayscale
@@ -73,6 +73,12 @@ PNG output preserves the original two-bit grayscale format and decoded samples;
 compression bytes can differ between the Rust encoder and libpng/zlib.
 Project-local names reject drive prefixes and alternate-stream colons in addition
 to directory separators, preventing headless writes outside the selected names.
+
+The GUI disables the priority checkbox for an undefined palette. Upstream ORs
+the priority bit into UNDEFINED and then indexes beyond its palette-color table
+(`Color::color` only recognizes the exact UNDEFINED value). Choosing a defined
+palette re-enables the checkbox when the project supports priority. The existing
+core validation rejects that invalid combination; a GUI test verifies the guard.
 
 ## Incomplete resize integration
 

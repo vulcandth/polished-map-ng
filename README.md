@@ -68,7 +68,18 @@ Open/New options accept an optional roof name from `gfx/tilesets/roofs`, without
 the extension. Leave it empty to use the base tileset. Compound names such as
 `main.before,after` retain the full main filename and load optional companion
 graphics, with upstream's 16-tile row padding. Tileset pixel editing and saving
-are available through the backend/CLI; the GUI pixel editor is still pending.
+use the shared backend in both the GUI and CLI.
+
+Edit → Edit Tileset (Ctrl/Cmd+T) opens a draft. Click/drag to paint; Shift fills,
+Ctrl replaces a hue, Alt swaps hues, and right-click picks a hue. Keys 1–4 choose
+white/light/dark/black; Alt+1–8 chooses a palette. Ctrl/Cmd+C/V/X copies a tile
+snapshot, pastes it, or swaps with its live source. Delete clears a tile. Drag
+tiles to swap; Ctrl-drag copies. The image buttons and Ctrl/Cmd+Shift+C/V use the
+system image clipboard, with grayscale export and bounded RGB import. OK commits
+the draft and marks the tileset dirty even if unchanged; Cancel discards it.
+Tile edits have no map undo entries. File → Save Tileset saves PNG/palette files;
+Save also processes the map and blockset. Native clipboard transport and child
+window behavior remain unverified; the current dialog is embedded.
 
 Right-click a sidebar block (or choose Edit → Edit Block) to edit its 4×4 tile
 definition. Left-click paints and right-click picks a tile. Shift/Ctrl/Alt select

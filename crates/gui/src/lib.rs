@@ -2,27 +2,31 @@
 mod block_editor;
 mod block_workflows;
 pub mod geometry;
+mod tileset_editor;
 use block_editor::BlockForm;
 
 #[cfg(test)]
 mod block_workflow_tests;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tileset_editor_tests;
 
 use std::{path::PathBuf, sync::mpsc};
 
 use eframe::egui::{self, Color32, Pos2, Rect, Sense, Vec2};
 use polished_map_core::{Command, Graphics, Point, ResizeAnchor};
 use polished_map_project::{
-    BlocksetDocument, MapDocument, MasterGraphicsOptions, OpenOptions, discover_map, list_tilesets,
-    load_master_map_graphics, prepare_blockset_save_as, prepare_collision_save_as, prepare_save_as,
-    write_png,
+    BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
+    discover_map, list_tilesets, prepare_blockset_save_as, prepare_collision_save_as,
+    prepare_save_as, write_png,
 };
 
 struct Loaded {
     document: MapDocument,
     graphics: Graphics,
     blockset: Option<BlocksetDocument>,
+    tileset: Option<MasterTilesetDocument>,
     allow_256: bool,
 }
 type LoadResult = Result<Loaded, String>;
@@ -53,6 +57,7 @@ pub struct Editor {
     open_form: Option<OpenForm>,
     resize_form: Option<ResizeForm>,
     block_form: Option<BlockForm>,
+    tileset_form: Option<tileset_editor::TilesetForm>,
     block_count_form: Option<u16>,
     block_count_windows_buttons: bool,
     block_clipboard: Option<block_workflows::BlockClipboard>,
@@ -84,6 +89,7 @@ impl Default for Editor {
             open_form: None,
             resize_form: None,
             block_form: None,
+            tileset_form: None,
             block_count_form: None,
             block_count_windows_buttons: cfg!(target_os = "windows"),
             block_clipboard: None,
@@ -130,6 +136,9 @@ impl Editor {
                 || l.blockset
                     .as_ref()
                     .is_some_and(|b| b.blockset().is_modified())
+                || l.tileset
+                    .as_ref()
+                    .is_some_and(|t| t.tileset().is_modified())
         })
     }
 
@@ -241,7 +250,7 @@ impl Editor {
                 } else {
                     &form.tileset
                 };
-                let mut graphics = load_master_map_graphics(
+                let source = MasterTilesetDocument::open_for_map(
                     &document,
                     tileset,
                     &MasterGraphicsOptions {
@@ -254,13 +263,14 @@ impl Editor {
                 .map_err(|e| e.to_string())?;
                 let blockset =
                     BlocksetDocument::open_in_project(&root, tileset).map_err(|e| e.to_string())?;
-                graphics
-                    .replace_blocks(blockset.blockset())
+                let graphics = source
+                    .graphics(blockset.blockset())
                     .map_err(|e| e.to_string())?;
                 Ok(Loaded {
                     document,
                     graphics,
                     blockset: Some(blockset),
+                    tileset: Some(source),
                     allow_256: form.allow_256,
                 })
             })();
@@ -356,6 +366,9 @@ impl Editor {
                 .is_some_and(|l| !l.document.map().is_modified())
             {
                 self.save_blockset();
+                if self.error.is_none() {
+                    self.save_tileset();
+                }
             }
             return;
         }
@@ -369,6 +382,9 @@ impl Editor {
             }
         }
         self.save_blockset();
+        if self.error.is_none() {
+            self.save_tileset();
+        }
     }
 
     fn save_blockset(&mut self) {
@@ -519,6 +535,10 @@ impl Editor {
         }
         if self.block_form.is_some() {
             self.block_dialog(ctx);
+            return;
+        }
+        if self.tileset_form.is_some() {
+            self.tileset_dialog(ctx);
             return;
         }
         if self.block_count_form.is_some() {
@@ -970,12 +990,16 @@ impl Editor {
         let blocked = self.open_form.is_some()
             || self.resize_form.is_some()
             || self.block_form.is_some()
+            || self.tileset_form.is_some()
             || self.block_count_form.is_some()
             || self.confirm_discard
             || self.error.is_some()
             || self.loading.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
             self.block_shortcuts(&ctx);
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::T)) {
+                self.prepare_tileset();
+            }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::N)) {
                 self.choose_new();
             }
@@ -1034,6 +1058,16 @@ impl Editor {
                             self.save_blockset();
                         }
                         if ui
+                            .add_enabled(
+                                self.loaded.as_ref().is_some_and(|l| l.tileset.is_some()),
+                                egui::Button::new("Save Tileset"),
+                            )
+                            .clicked()
+                        {
+                            ui.close();
+                            self.save_tileset();
+                        }
+                        if ui
                             .add_enabled(self.loaded.is_some(), egui::Button::new("Save As…"))
                             .clicked()
                         {
@@ -1056,6 +1090,16 @@ impl Editor {
                         {
                             ui.close();
                             self.prepare_block(&ctx);
+                        }
+                        if ui
+                            .add_enabled(
+                                self.loaded.as_ref().is_some_and(|l| l.tileset.is_some()),
+                                egui::Button::new("Edit Tileset…"),
+                            )
+                            .clicked()
+                        {
+                            ui.close();
+                            self.prepare_tileset();
                         }
                         if ui
                             .add_enabled(self.loaded.is_some(), egui::Button::new("Resize Map…"))

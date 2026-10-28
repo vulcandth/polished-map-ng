@@ -31,8 +31,11 @@ The shared tileset draft/command model and palette-map/grayscale export routines
 are implemented with C++ pixel-operation comparisons. Project persistence now
 stages compound two-bit PNG/palette outputs with conflict checks, and the CLI
 supports preview and hash-checked apply. Save/reopen is tested on a temporary
-copy of the pinned Johto tileset. The pixel-editor GUI remains to be connected;
-this is not yet a completed GUI workflow or a tileset parity gate.
+copy of the pinned Johto tileset. The GUI now has a source-sized tileset draft
+dialog with pixel gestures, palette/priority controls, private/image clipboard
+operations, drag copy/swap, deletion, preview refresh and saving. Headless GUI
+tests cover the edit/accept/save flow. Native clipboard/child windows, priority
+overlays and remaining specialist editors still prevent a tileset parity gate.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.

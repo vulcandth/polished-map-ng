@@ -38,7 +38,8 @@ until its corresponding writes succeed. UI and CLI use identical commands.
 roof overlay, compound regions and source/destination observations. Rendering
 and headless editing use this same composition. Save prepares all PNG/ASM bytes
 on a trimmed draft before staging; source imports remain intact when output uses
-the original editor's PNG convention. The GUI pixel editor has not yet adopted
-this document's editing lifecycle. The CLI requires a preview-state hash to apply
+the original editor's PNG convention. The GUI pixel editor clones this document
+for its modal draft and validates all block previews before replacing live state.
+Accepting a draft dirties only the tileset and preserves map history. The CLI requires a preview-state hash to apply
 tileset writes; library callers also supply the block definitions used for trimming
 and must verify their backing files if they require on-disk conflict protection.
