@@ -24,6 +24,19 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- Event cursor/guide geometry adapts `Map::block_under`, the block-half helpers,
+  `Main_Window::update_event_cursor/update_gameboy_screen`, and
+  `Game_Boy_Screen::draw`. Independent vectors cover 16/32-point event cells,
+  160×144/320×288 guides, exact half boundaries, invalid floats, empty margins,
+  and C++ truncation that maps event coordinate -1 to block 0. GUI tests cover
+  overlapping markers, no-script operation, decimal hover text, Ctrl/Cmd+M,
+  mode/modal guards, actual wheel scrolling and viewport clipping. Three new
+  normal/zoomed/clipped snapshots were rendered and inspected. The source PNG
+  was decoded locally: all 92,160 pixels are RGBA(224,255,0,64); the guide uses
+  this constant fill and source black/white one-point borders, without a bitmap.
+  Geometry is matched; native callback timing, full status layout, hexadecimal
+  preferences and rulers are not yet verified/implemented as a complete feature.
+
 - External editor tests capture actual double-click, Shift precedence and File/
   Ctrl-Cmd-U requests, preserving source line numbers and unsaved event drafts.
   Injected worker callbacks exercise successful completion and visible failure

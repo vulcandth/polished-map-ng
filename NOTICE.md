@@ -23,6 +23,10 @@ no bitmap payloads or original warp-digit images are distributed.
 External script dispatch and known Windows editor line arguments adapt
 `Main_Window::view_event_script` in master `main-window.cpp`; native calls,
 worker lifetime, validation and error reporting are Rust implementations.
+Event cursor and Game Boy guide placement/borders adapt `map-buttons.cpp`,
+`map.cpp`, `main-window.cpp` and `gameboy-screen.cpp`. The guide's uniformly
+colored source image is represented by a rectangle and its RGBA constant;
+the original image bytes are not distributed.
 
 ## Assets and fixtures
 

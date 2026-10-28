@@ -285,6 +285,12 @@ uses `xdg-open`; macOS uses `open`. Those default application openers do not
 receive a line number. Opening a script never saves pending event edits; save
 first if the external editor should see them. Reload explicitly after editing
 externally. Launcher failures are reported without discarding the current draft.
+In Events Mode, hovering a block shows its 16px event cell and coordinates.
+View → Game Boy Screen (Ctrl/Cmd+M) toggles a translucent 160×144 guide around
+that cell, doubling with zoom. It works without a loaded event script and stays
+clipped to the map viewport. Hovering markers uses the original underlying-block
+rules; the guide disappears over margins without an underlying block and while
+dialogs are active. This option is session-only until preferences are ported.
 Main Save processes edited tileset, roof, blockset and event domains before saving
 the map if needed. Saves are sequential, not one atomic transaction. Event-only
 changes do not rewrite a clean map. Bitmap warp digits, exact font matching,

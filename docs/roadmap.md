@@ -80,6 +80,11 @@ External script opening, double-click line requests, Tab mode switching and the
 warp-ID shortcut now have headless dispatch/focus coverage. The Windows adapter
 retains the original known-editor line arguments; Linux/macOS use their desktop
 file openers. Actual editor/association behavior still needs native checks.
+Event-mode half-block hover, decimal coordinates and the Game Boy screen guide
+now use source-derived geometry, colors and clipping, with tests for both zooms,
+scrolling, overlapping markers and the original negative-coordinate boundary.
+The complete status-bar layout, global hexadecimal preference and rulers remain
+pending; current guide tests are headless rather than native FLTK comparisons.
 The pinned pokecrystal integration now
 covers all 254 top-level block files (18 need explicit shared-map options).
 See the compatibility matrix for the substantial remaining work.

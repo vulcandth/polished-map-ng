@@ -15,6 +15,10 @@ pub(super) struct EventUi {
     pub change: Option<EventChange>,
     pub warp_path: Option<PathBuf>,
     pub script_request: Option<ScriptOpenRequest>,
+    pub game_boy: bool,
+    pub hovered_event: Option<usize>,
+    pub cursor: Option<geometry::EventCursor>,
+    pub screen: Option<Rect>,
     script_jobs: Vec<mpsc::Receiver<Result<(), ScriptOpenError>>>,
 }
 impl Default for EventUi {
@@ -29,6 +33,10 @@ impl Default for EventUi {
             change: None,
             warp_path: None,
             script_request: None,
+            game_boy: false,
+            hovered_event: None,
+            cursor: None,
+            screen: None,
             script_jobs: Vec::new(),
         }
     }
@@ -137,6 +145,52 @@ fn marker_colors(kind: EventKind) -> (Color32, Color32) {
     )
 }
 
+/// master map-buttons.cpp::draw_selection_border and gameboy-screen.cpp::draw.
+pub(super) fn draw_event_cursor(ui: &egui::Ui, origin: Pos2, cell: f32, state: &mut EventUi) {
+    let Some(cursor) = state.cursor else {
+        return;
+    };
+    if state.hovered_event.is_none() {
+        let area = Rect::from_min_size(
+            origin + Vec2::new(f32::from(cursor.event_x), f32::from(cursor.event_y)) * cell,
+            Vec2::splat(cell),
+        );
+        let last = if cell == 32.0 { 3 } else { 2 };
+        for inset in 0..=last {
+            ui.painter().rect_stroke(
+                area.shrink(inset as f32),
+                0.0,
+                (
+                    1.0,
+                    if inset == 0 || inset == last {
+                        Color32::BLACK
+                    } else {
+                        Color32::WHITE
+                    },
+                ),
+                egui::StrokeKind::Inside,
+            );
+        }
+    }
+    if state.game_boy {
+        let r = cursor.game_boy_screen(cell);
+        let area = Rect::from_min_size(origin + Vec2::new(r.x, r.y), Vec2::new(r.width, r.height));
+        state.screen = Some(area);
+        // The original 320x288 embedded PNG is uniformly RGBA(224,255,0,64).
+        // Recreate its flat fill; no source bitmap is included.
+        ui.painter()
+            .rect_filled(area, 0.0, Color32::from_rgba_unmultiplied(224, 255, 0, 64));
+        ui.painter()
+            .rect_stroke(area, 0.0, (1.0, Color32::BLACK), egui::StrokeKind::Inside);
+        ui.painter().rect_stroke(
+            area.shrink(1.0),
+            0.0,
+            (1.0, Color32::WHITE),
+            egui::StrokeKind::Inside,
+        );
+    }
+}
+
 pub(super) fn canvas_events(
     ui: &mut egui::Ui,
     doc: &EventDocument,
@@ -158,7 +212,7 @@ pub(super) fn canvas_events(
     let pointer = ui
         .input(|i| i.pointer.hover_pos())
         .filter(|p| ui.clip_rect().contains(*p));
-    let hovered = if state.mode && ui.is_enabled() {
+    let hovered = if state.mode && ui.is_enabled() && ui.rect_contains_pointer(ui.clip_rect()) {
         pointer.and_then(|p| {
             model
                 .entries()
@@ -175,6 +229,7 @@ pub(super) fn canvas_events(
         .and_then(|s| s.to_str())
         .unwrap_or("");
     let destination = hovered.and_then(|i| model.local_warp_target(i, map_name));
+    state.hovered_event = hovered;
     let mut action = None;
     for (index, event) in model.entries().iter().enumerate() {
         let d = event.definition();
@@ -535,6 +590,9 @@ impl Editor {
         }
         if ctx.input_mut(|i| i.consume_key(shift, egui::Key::Num3)) {
             self.event_ui.warp_ids = !self.event_ui.warp_ids;
+        }
+        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::M)) {
+            self.event_ui.game_boy = !self.event_ui.game_boy;
         }
         if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::U)) {
             self.request_event_script(None);

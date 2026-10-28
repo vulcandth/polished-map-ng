@@ -3,6 +3,161 @@ use super::*;
 use egui_kittest::kittest::Queryable;
 
 #[test]
+fn event_cursor_and_game_boy_guide_follow_hover_zoom_and_modal_guards() {
+    let (_dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    // The cursor and guide work before any event script is loaded.
+    h.state_mut().event_ui.mode = true;
+    h.hover_at(Pos2::new(264.0, 167.0));
+    h.run();
+    assert_eq!(
+        h.state().event_ui.cursor,
+        Some(geometry::EventCursor {
+            block_x: 0,
+            block_y: 0,
+            event_x: 1,
+            event_y: 1,
+        })
+    );
+    assert!(h.state().event_ui.screen.is_none());
+    h.get_by_label("ID: 0    X/Y (0, 0)    Event: X/Y (1, 1)");
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::M);
+    h.run();
+    assert_eq!(
+        h.state().event_ui.screen,
+        Some(Rect::from_min_size(
+            Pos2::new(192.0, 95.0),
+            Vec2::new(160.0, 144.0)
+        ))
+    );
+    #[cfg(feature = "visual-tests")]
+    h.snapshot("gameboy-screen-normal");
+    h.state_mut().zoom = true;
+    h.hover_at(Pos2::new(512.0, 287.0));
+    h.run();
+    assert_eq!(h.state().event_ui.cursor.unwrap().event_x, 1);
+    assert_eq!(
+        h.state().event_ui.screen,
+        Some(Rect::from_min_size(
+            Pos2::new(368.0, 143.0),
+            Vec2::new(320.0, 288.0)
+        ))
+    );
+    #[cfg(feature = "visual-tests")]
+    h.snapshot("gameboy-screen-zoomed");
+    h.state_mut().prepare_resize();
+    h.run();
+    assert!(h.state().event_ui.cursor.is_none());
+    assert!(h.state().event_ui.screen.is_none());
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::M);
+    h.run();
+    assert!(h.state().event_ui.game_boy); // blocked shortcut cannot change it
+    h.get_by_label("Cancel").click();
+    h.run();
+    h.hover_at(Pos2::new(512.0, 287.0));
+    h.run();
+    assert!(h.state().event_ui.screen.is_some());
+    h.key_press(egui::Key::Tab);
+    h.run();
+    assert!(!h.state().event_ui.mode);
+    assert!(h.state().event_ui.screen.is_none());
+    assert!(h.state().event_ui.cursor.is_none());
+    assert!(!h.state().is_modified());
+}
+
+#[test]
+fn event_hover_uses_topmost_marker_and_original_negative_division() {
+    let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    let path = dir.path().join("Map.asm");
+    std::fs::write(
+        &path,
+        "\tbg_event -1, 0, FIRST\n\tbg_event -1, 0, TOP\n\tbg_event -2, 0, OUTSIDE\n",
+    )
+    .unwrap();
+    h.state_mut().request_event_change(EventChange::Load(path));
+    h.state_mut().event_ui.mode = true;
+    h.state_mut().event_ui.game_boy = true;
+    h.run();
+    let pos = h.get_by_label("Event 1: bg_event").rect().center();
+    h.hover_at(pos);
+    h.run();
+    assert_eq!(h.state().event_ui.hovered_event, Some(1));
+    assert_eq!(h.state().event_ui.cursor.unwrap().event_x, 0);
+    assert_eq!(
+        h.state().event_ui.screen.unwrap().size(),
+        Vec2::new(160.0, 144.0)
+    );
+    let pos = h.get_by_label("Event 2: bg_event").rect().center();
+    h.hover_at(pos);
+    h.run();
+    assert_eq!(h.state().event_ui.hovered_event, Some(2));
+    assert!(h.state().event_ui.cursor.is_none());
+    assert!(h.state().event_ui.screen.is_none());
+    h.hover_at(Pos2::new(145.0, 48.0)); // visible canvas margin, no event/block
+    h.run();
+    assert!(h.state().event_ui.hovered_event.is_none());
+    assert!(h.state().event_ui.cursor.is_none());
+    h.hover_at(Pos2::new(30.0, 65.0)); // sidebar
+    h.run();
+    assert!(h.state().event_ui.cursor.is_none());
+    assert!(h.state().event_ui.screen.is_none());
+    assert!(!h.state().is_modified());
+}
+
+#[test]
+fn game_boy_guide_tracks_scrolled_content_and_clips_at_viewport_edge() {
+    let (_dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    h.state_mut().apply(Command::Resize {
+        width: 20,
+        height: 20,
+        anchor: ResizeAnchor::TopLeft,
+    });
+    h.state_mut().event_ui.mode = true;
+    h.state_mut().event_ui.game_boy = true;
+    h.hover_at(Pos2::new(280.0, 183.0));
+    h.run();
+    let before = h.state().event_ui.cursor.unwrap();
+    let frame = h.state().event_ui.screen.unwrap();
+    h.event(egui::Event::MouseWheel {
+        unit: egui::MouseWheelUnit::Point,
+        phase: egui::TouchPhase::Move,
+        source: egui::MouseWheelSource::Unknown,
+        delta: Vec2::new(0.0, -128.0),
+        modifiers: egui::Modifiers::NONE,
+    });
+    h.run();
+    let after = h.state().event_ui.cursor.unwrap();
+    assert_eq!(after.event_x, before.event_x);
+    assert_eq!(after.event_y, before.event_y + 8);
+    assert_eq!(h.state().event_ui.screen.unwrap(), frame);
+    // Move close to the scroll area's top edge: the logical guide extends
+    // outside the viewport, while the painter clips its fill and outlines.
+    h.hover_at(Pos2::new(280.0, 55.0));
+    h.run();
+    assert!(h.state().event_ui.screen.unwrap().top() < 47.0);
+    #[cfg(feature = "visual-tests")]
+    h.snapshot("gameboy-screen-clipped");
+    let blocks = h
+        .state()
+        .loaded
+        .as_ref()
+        .unwrap()
+        .document
+        .map()
+        .blocks()
+        .to_vec();
+    h.get_by_label("View").click();
+    h.run();
+    assert!(h.state().event_ui.screen.is_none());
+    h.get_by_label("Game Boy Screen").click();
+    h.run();
+    assert!(!h.state().event_ui.game_boy);
+    assert_eq!(
+        h.state().loaded.as_ref().unwrap().document.map().blocks(),
+        blocks
+    );
+}
+
+#[test]
 fn event_editor_requests_preserve_saved_script_and_dispatch_errors() {
     let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
     let path = dir.path().join("Map ü &.asm");

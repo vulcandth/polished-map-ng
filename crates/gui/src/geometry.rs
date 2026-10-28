@@ -73,9 +73,100 @@ pub fn snap_to_pixel(point: f32, pixels_per_point: f32) -> f32 {
     (point * pixels_per_point).round() / pixels_per_point
 }
 
+/// master Map::block_under, Block::right_half/bottom_half and
+/// Main_Window::update_event_cursor. Coordinates are relative to the map origin.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct EventCursor {
+    pub block_x: u8,
+    pub block_y: u8,
+    pub event_x: u16,
+    pub event_y: u16,
+}
+impl EventCursor {
+    pub fn at(
+        x: f32,
+        y: f32,
+        block_size: f32,
+        width: u8,
+        height: u8,
+        event: Option<(i16, i16)>,
+    ) -> Option<Self> {
+        if !x.is_finite() || !y.is_finite() || !block_size.is_finite() || block_size <= 0.0 {
+            return None;
+        }
+        // C++ integer division truncates toward zero: an event at -1 maps to
+        // block 0, while an event at -2 is outside. Preserve this boundary quirk.
+        let (bx, by) = event.map_or_else(
+            || ((x / block_size).floor(), (y / block_size).floor()),
+            |(x, y)| (f32::from(x / 2), f32::from(y / 2)),
+        );
+        if bx < 0.0 || by < 0.0 || bx >= f32::from(width) || by >= f32::from(height) {
+            return None;
+        }
+        let (block_x, block_y) = (bx as u8, by as u8);
+        Some(Self {
+            block_x,
+            block_y,
+            event_x: u16::from(block_x) * 2 + u16::from(x >= (bx + 0.5) * block_size),
+            event_y: u16::from(block_y) * 2 + u16::from(y >= (by + 0.5) * block_size),
+        })
+    }
+
+    /// master Main_Window::update_gameboy_screen, in map-relative logical points.
+    pub fn game_boy_screen(self, cell: f32) -> Rect {
+        Rect {
+            x: (f32::from(self.event_x) - 4.0) * cell,
+            y: (f32::from(self.event_y) - 4.0) * cell,
+            width: 10.0 * cell,
+            height: 9.0 * cell,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn event_cursor_halves_margin_quirks_and_screen_geometry() {
+        for size in [32.0, 64.0] {
+            for (x, y, event, expected) in [
+                (0.0, 0.0, None, Some((0, 0, 0, 0))),
+                (0.5, 0.5, None, Some((0, 0, 1, 1))),
+                (1.999, 0.999, None, Some((1, 0, 3, 1))),
+                (2.0, 0.0, None, None),
+                (-0.1, 0.0, None, None),
+                (-0.1, 0.0, Some((-1, 0)), Some((0, 0, 0, 0))),
+                (-1.0, 0.0, Some((-2, 0)), None),
+                (0.0, 0.0, Some((4, 0)), None),
+                (f32::NAN, 0.0, None, None),
+            ] {
+                let cursor = EventCursor::at(x * size, y * size, size, 2, 1, event);
+                assert_eq!(
+                    cursor.map(|c| (c.block_x, c.block_y, c.event_x, c.event_y)),
+                    expected
+                );
+            }
+        }
+        let cursor = EventCursor::at(48.0, 16.0, 32.0, 2, 1, None).unwrap();
+        assert_eq!(
+            cursor.game_boy_screen(16.0),
+            Rect {
+                x: -16.0,
+                y: -48.0,
+                width: 160.0,
+                height: 144.0
+            }
+        );
+        assert_eq!(
+            cursor.game_boy_screen(32.0),
+            Rect {
+                x: -32.0,
+                y: -96.0,
+                width: 320.0,
+                height: 288.0
+            }
+        );
+    }
     #[test]
     fn independent_baseline_rectangles() {
         let l = Layout::new(800.0, 600.0, false, false, 16.0);

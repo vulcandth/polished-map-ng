@@ -959,6 +959,9 @@ impl Editor {
     }
 
     fn canvas(&mut self, ui: &mut egui::Ui, layout: &geometry::Layout) {
+        self.event_ui.cursor = None;
+        self.event_ui.screen = None;
+        self.event_ui.hovered_event = None;
         if self.event_ui.mode {
             self.stroke.clear();
         } else {
@@ -1045,6 +1048,31 @@ impl Editor {
                     (map.width(), map.height()),
                     &mut self.event_ui,
                 );
+            }
+            if self.event_ui.mode
+                && ui.is_enabled()
+                && ui.rect_contains_pointer(clip)
+                && let Some(pos) = ui.input(|i| i.pointer.hover_pos())
+            {
+                let event = self.event_ui.hovered_event.and_then(|index| {
+                    loaded
+                        .events
+                        .as_ref()?
+                        .script()
+                        .events()
+                        .entries()
+                        .get(index)
+                        .map(|event| (event.definition().x, event.definition().y))
+                });
+                self.event_ui.cursor = geometry::EventCursor::at(
+                    pos.x - origin.x,
+                    pos.y - origin.y,
+                    size,
+                    map.width(),
+                    map.height(),
+                    event,
+                );
+                event_workflows::draw_event_cursor(ui, origin, size / 2.0, &mut self.event_ui);
             }
             if !self.event_ui.mode
                 && let Some(pos) = response
@@ -1333,6 +1361,7 @@ impl Editor {
                     ui.menu_button("View", |ui| {
                         ui.checkbox(&mut self.event_ui.show, "Show Events");
                         ui.checkbox(&mut self.event_ui.warp_ids, "Show Warp IDs");
+                        ui.checkbox(&mut self.event_ui.game_boy, "Game Boy Screen");
                         ui.menu_button("Palettes", |ui| self.palette_set_menu(ui));
                         ui.checkbox(&mut self.grid, "Grid");
                         ui.checkbox(&mut self.zoom, "Zoom");
@@ -1421,7 +1450,20 @@ impl Editor {
                         "Saved"
                     });
                     ui.separator();
-                    ui.label(&self.status);
+                    if let Some(cursor) = self.event_ui.cursor
+                        && let Some(loaded) = &self.loaded
+                    {
+                        let map = loaded.document.map();
+                        let id = map.blocks()[usize::from(cursor.block_y)
+                            * usize::from(map.width())
+                            + usize::from(cursor.block_x)];
+                        ui.label(format!(
+                            "ID: {id}    X/Y ({}, {})    Event: X/Y ({}, {})",
+                            cursor.block_x, cursor.block_y, cursor.event_x, cursor.event_y
+                        ));
+                    } else {
+                        ui.label(&self.status);
+                    }
                 });
             });
         });

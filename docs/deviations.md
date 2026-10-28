@@ -196,3 +196,11 @@ are not parented to the GUI. File opening runs off the GUI thread; the Unix work
 reaps the opener, which may remain running until its editor exits. No automatic
 save or reload is added. Native association, editor-line navigation, and shell
 dialog behavior still require platform verification.
+
+The event cursor and Game Boy guide recompute hover from current egui geometry
+and are suppressed under dialogs and popup menus. Their coordinates, zoom sizes,
+fill and border formulas follow source; exact native enter/leave/callback timing
+has not been compared. Hover coordinates currently use the original decimal
+default. The complete status-bar sections, hexadecimal preference and rulers
+remain incomplete; transient operation messages still occupy the status area
+when the event cursor is absent.
