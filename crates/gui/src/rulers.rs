@@ -39,8 +39,10 @@ fn label(coordinate: i32, hex: bool) -> String {
     if !hex {
         coordinate.to_string()
     } else if coordinate < 0 {
-        // The original formatter includes this newline for negative hex ticks.
-        format!("-{:02X}\n", -coordinate)
+        // ruler.cpp adds a trailing newline, but FLTK 1.4.5 fl_draw.cxx consumes
+        // it without adding an empty line. egui would render an extra line, so
+        // omit it here to preserve the original visible text and baseline.
+        format!("-{:02X}", -coordinate)
     } else {
         format!("{coordinate:02X}")
     }
@@ -156,7 +158,7 @@ impl Editor {
                     .text(
                         text_rect.right_bottom(),
                         egui::Align2::RIGHT_BOTTOM,
-                        label(cell.coordinate, false),
+                        label(cell.coordinate, self.hex),
                         egui::FontId::monospace(9.0),
                         if cell.highlighted {
                             background
@@ -330,7 +332,7 @@ mod tests {
             [(-15.5, -7), (0.5, -6), (16.5, -5)]
         );
         assert_eq!(label(-6, false), "-6");
-        assert_eq!(label(-6, true), "-06\n");
+        assert_eq!(label(-6, true), "-06");
         assert_eq!(label(249, true), "F9");
         for (dimension, limit) in [(1, 7), (2, 9), (121, 247), (122, 249), (255, 249)] {
             assert_eq!(maximum(Some(dimension)), limit);

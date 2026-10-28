@@ -9,7 +9,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; persistent preferences and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
-| Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI and ruler geometry/scroll/highlight tests pass; light/dark development snapshots inspected; native fonts/themes, hex preference and initial scroll positioning pending |
+| Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex and block-ID tests pass; light/dark development snapshots inspected; native fonts/themes, persisted preferences and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
@@ -24,6 +24,21 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- Global Hexadecimal and Block IDs controls adapt `Main_Window` and
+  `map-buttons.cpp`. Tests cover decimal/hex widths and prefixes, two zooms,
+  hovered yellow versus ordinary white ID text, View/toolbar/keyboard controls,
+  input/modal guards, and unchanged map bytes and event-script serialization.
+  Event Options retain `$1`/`#2` titles from per-event formats regardless of the
+  global view setting. A rendered ID atlas and three decimal/hex/map/event views
+  were inspected. The 34 changed prior snapshots differ only in toolbar pixels,
+  plus corrected live block-hover text in `rulers-blocks`; automated full-image
+  comparison found no other changed regions. Native Courier Bold metrics,
+  complete status sections, export overlays and persisted settings remain open.
+  Negative hex ruler labels omit the formatter's terminal newline because
+  [FLTK 1.4.5 fl_draw.cxx](https://github.com/fltk/fltk/blob/release-1.4.5/src/fl_draw.cxx)
+  consumes it without creating another line. Passing it unchanged to egui caused
+  an extra line and clipped text; the inspected snapshots verify the adaptation.
+
 - Rulers adapt `Ruler::draw`, `Main_Window::update_layout` and `Map::max_event_x/y`:
   16/32-point cells, six-cell margin, alternating full/half ticks, source text/
   highlight rectangles, capped labels, and tick continuation across the viewport.
@@ -33,8 +48,8 @@ the original application. Unverified assets never become redistributable fixture
   View/Shift+command+R, zoom, both scroll axes, modal guards, leave handling and
   an empty map. Five normal/event/zoomed/scrolled/empty-dark snapshots were rendered
   and inspected. This is source-derived and egui rendering evidence; no compiled
-  FLTK ruler comparison or native font/theme equivalence is claimed. Hex formatting
-  is covered at the helper level but global hex UI/preference support is pending.
+  FLTK ruler comparison or native font/theme equivalence is claimed. Decimal and
+  hexadecimal formatting are covered; preference persistence remains pending.
   The Game Boy shortcut was corrected to Ctrl/Cmd+Shift+M: upstream encodes it with
   uppercase `M`, and its toolbar explicitly names Ctrl+Shift+M. Tests reject
   unshifted command+M and retain the modal guard. See the
@@ -64,7 +79,7 @@ the original application. Unverified assets never become redistributable fixture
   normal/zoomed/clipped snapshots were rendered and inspected. The source PNG
   was decoded locally: all 92,160 pixels are RGBA(224,255,0,64); the guide uses
   this constant fill and source black/white one-point borders, without a bitmap.
-  Geometry is matched; native callback timing, full status layout, hexadecimal
+  Geometry is matched; native callback timing, full status layout and persisted
   preferences are not yet verified/implemented as a complete feature.
 
 - External editor tests capture actual double-click, Shift precedence and File/

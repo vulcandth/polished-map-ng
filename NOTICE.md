@@ -34,6 +34,9 @@ colored source image is represented by a rectangle and its RGBA constant;
 the original image bytes are not distributed.
 Map ruler rectangles, tick/label placement, coordinate limits and paired
 highlighting adapt master `ruler.cpp`, `main-window.cpp` and `map.h`.
+Block-ID overlays and decimal/hexadecimal hover formats adapt master
+`map-buttons.cpp`, `Main_Window::update_status/update_event_cursor` and
+`utils.cpp::draw_outlined_text`. Native font selection/weight remains unfinished.
 
 ## Assets and fixtures
 

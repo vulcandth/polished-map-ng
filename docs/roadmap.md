@@ -85,8 +85,11 @@ now use source-derived geometry, colors and clipping, with tests for both zooms,
 scrolling, overlapping markers and the original negative-coordinate boundary.
 Rulers now use source-derived insets, tick/label geometry, coordinate limits and
 mode-dependent highlights; headless tests cover scrolling, both zooms, menus,
-shortcuts and modal guards. The complete status-bar layout, global hexadecimal
-preference, native theme/font matching and preference persistence remain pending;
+shortcuts and modal guards. Global decimal/hexadecimal display and Block IDs now
+have View, toolbar and keyboard controls, with source-format hover text and
+outlined map/sidebar labels. Event labels and dialogs retain each script's own
+number format. The complete status-bar layout, export overlays, native theme/font
+matching and preference persistence remain pending;
 current ruler/guide tests are headless rather than native FLTK comparisons.
 Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
 source harness verifies 8,192 decimal/hex placement and zoomed text cases, including

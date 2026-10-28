@@ -7,6 +7,7 @@ mod event_label_tests;
 mod event_workflow_tests;
 mod event_workflows;
 pub mod geometry;
+mod map_labels;
 mod palette_editor;
 #[cfg(test)]
 mod palette_editor_tests;
@@ -109,6 +110,8 @@ pub struct Editor {
     stroke: Vec<Point>,
     zoom: bool,
     rulers: bool,
+    ids: bool,
+    hex: bool,
     ruler_scroll: Vec2,
     ruler_cursor: Option<geometry::EventCursor>,
     grid: bool,
@@ -159,6 +162,8 @@ impl Default for Editor {
             stroke: Vec::new(),
             zoom: false,
             rulers: false,
+            ids: false,
+            hex: false,
             ruler_scroll: Vec2::ZERO,
             ruler_cursor: None,
             grid: true,
@@ -865,6 +870,10 @@ impl Editor {
         ui.separator();
         ui.toggle_value(&mut self.grid, "Grid");
         ui.toggle_value(&mut self.zoom, "Zoom");
+        ui.toggle_value(&mut self.ids, "IDs")
+            .on_hover_text("Block IDs (Ctrl/Cmd+I)");
+        ui.toggle_value(&mut self.hex, "Hex")
+            .on_hover_text("Hexadecimal (Ctrl/Cmd+Shift+4)");
         if ui
             .add_enabled(
                 self.loaded.is_some() && self.export.is_none(),
@@ -914,6 +923,16 @@ impl Editor {
                             0.0,
                             (2.0, Color32::YELLOW),
                             egui::StrokeKind::Inside,
+                        );
+                    }
+                    if self.ids {
+                        map_labels::draw_id(
+                            ui.painter(),
+                            cell,
+                            id as u8,
+                            self.hex,
+                            self.zoom,
+                            false,
                         );
                     }
                 }
@@ -1050,6 +1069,12 @@ impl Editor {
                             egui::StrokeKind::Inside,
                         );
                     }
+                    if self.ids {
+                        let hovered = !self.event_ui.mode
+                            && ui.is_enabled()
+                            && ui.rect_contains_pointer(cell.intersect(clip));
+                        map_labels::draw_id(ui.painter(), cell, id, self.hex, self.zoom, hovered);
+                    }
                 }
             }
             if let Some(events) = &loaded.events {
@@ -1100,7 +1125,6 @@ impl Editor {
                     let point = Point { x, y };
                     let old =
                         map.blocks()[usize::from(y) * usize::from(map.width()) + usize::from(x)];
-                    self.status = format!("Block: ${old:02X}    X: {x}    Y: {y}");
                     if response.secondary_clicked() && usize::from(old) < self.textures.len() {
                         self.selected = old;
                     }
@@ -1195,6 +1219,17 @@ impl Editor {
             || self.pending_open.is_some()
             || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::I)) {
+                self.ids = !self.ids;
+            }
+            if ctx.input_mut(|i| {
+                i.consume_key(
+                    egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+                    egui::Key::Num4,
+                )
+            }) {
+                self.hex = !self.hex;
+            }
             self.event_shortcuts(&ctx);
             if ctx.input_mut(|i| {
                 i.consume_key(
@@ -1381,6 +1416,8 @@ impl Editor {
                     });
                     ui.menu_button("View", |ui| {
                         ui.checkbox(&mut self.rulers, "Rulers");
+                        ui.checkbox(&mut self.ids, "Block IDs");
+                        ui.checkbox(&mut self.hex, "Hexadecimal");
                         ui.checkbox(&mut self.event_ui.show, "Show Events");
                         ui.checkbox(&mut self.event_ui.warp_ids, "Show Warp IDs");
                         ui.checkbox(&mut self.event_ui.game_boy, "Game Boy Screen");
@@ -1473,16 +1510,18 @@ impl Editor {
                         "Saved"
                     });
                     ui.separator();
-                    if let Some(cursor) = self.event_ui.cursor
+                    if let Some(cursor) = self.ruler_cursor
                         && let Some(loaded) = &self.loaded
                     {
                         let map = loaded.document.map();
                         let id = map.blocks()[usize::from(cursor.block_y)
                             * usize::from(map.width())
                             + usize::from(cursor.block_x)];
-                        ui.label(format!(
-                            "ID: {id}    X/Y ({}, {})    Event: X/Y ({}, {})",
-                            cursor.block_x, cursor.block_y, cursor.event_x, cursor.event_y
+                        ui.label(map_labels::hover_text(
+                            id,
+                            cursor,
+                            self.hex,
+                            self.event_ui.mode,
                         ));
                     } else {
                         ui.label(&self.status);

@@ -295,8 +295,12 @@ View → Rulers (Ctrl/Cmd+Shift+R) adds horizontal and vertical event-coordinate
 rulers. Their cells track canvas scrolling and zoom, highlighting both halves
 of a block in Blocks Mode and the hovered half in Events Mode. Labels include
 the map margin and stop at the source coordinate limit; ticks span the viewport.
-Rulers currently use decimal labels and the development light/dark theme.
-Global hexadecimal display, native font/theme matching and persistence remain
+View → Hexadecimal (Ctrl/Cmd+Shift+4, or the Hex toolbar button) switches ruler
+and hover coordinates between decimal and hexadecimal. View → Block IDs
+(Ctrl/Cmd+I, or IDs) shows IDs on the map and sidebar in the selected base.
+These are display settings: event labels/options keep the number format read
+from their script, and toggling the display does not edit or save any data.
+Native font/theme matching, export ID options and preference persistence remain
 pending. Ctrl/Cmd+R continues to reload the event script.
 Main Save processes edited tileset, roof, blockset and event domains before saving
 the map if needed. Saves are sequential, not one atomic transaction. Event-only

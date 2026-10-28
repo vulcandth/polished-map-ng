@@ -201,8 +201,8 @@ dialog behavior still require platform verification.
 The event cursor and Game Boy guide recompute hover from current egui geometry
 and are suppressed under dialogs and popup menus. Their coordinates, zoom sizes,
 fill and border formulas follow source; exact native enter/leave/callback timing
-has not been compared. Hover coordinates currently use the original decimal
-default. The complete status-bar sections and hexadecimal preference
+has not been compared. Hover coordinates use the global decimal/hexadecimal
+display setting. The complete status-bar sections and preference persistence
 remain incomplete; transient operation messages still occupy the status area
 when the event cursor is absent.
 
@@ -212,5 +212,15 @@ truncating it to FLTK's integer offset, keeping ticks aligned with the map. At
 integer offsets the formulas agree. Rulers use the current egui foreground,
 panel and inactive-widget colors and bundled 9-point monospace font; original
 native FL_DARK2/theme colors and Courier/Consolas metrics remain unfinished.
-Their decimal display and visibility are session-only until global hex display
-and persisted preferences are ported.
+Their visibility and number-base settings are session-only until persisted
+preferences are ported. The negative hexadecimal formatter omits the source's
+terminal newline to match FLTK's single-line result in egui; this preserves
+visible behavior rather than the intermediate formatting bytes.
+
+Block IDs use the original 14-point logical font size, zoom-dependent offsets,
+four diagonal black outline passes and white/yellow foreground colors. The
+current bundled monospace face does not reproduce native Courier Bold's weight
+and metrics. Existing grid and selection borders, hotkey badges and export ID
+options still need their own parity work. Display-base changes do not alter
+event formats or saved data; the status area now shows live block coordinates
+in both modes, with event coordinates appended only in Events Mode.
