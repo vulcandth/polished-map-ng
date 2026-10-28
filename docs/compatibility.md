@@ -24,6 +24,21 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- `map_buttons` ports bottom/right grid lines, the grid-reserved outer row/column,
+  and opaque black/white/black or black/white/white/black selection rings from
+  `map-buttons.cpp`. The shared renderer is used by the map, sidebar, event
+  half-cell cursor and block/tileset/roof editor selections. Twenty independent
+  cases verify every rendered pixel at 1× and 2× scale, covering both map zooms,
+  grid on/off, selection on/off, light/dark colors and 16/24/32/64-point selections.
+  GUI pixel tests verify map hover/leave, event-mode suppression of the full-block
+  border, Cmd/Ctrl+G, modal suppression, sidebar source/target drag outlines and
+  a no-op invalid drop. These are headless GPU and source-derived expectations,
+  not native DPI or compiled FLTK output comparisons. Native theme completeness,
+  native drag dispatch and hotkey badges remain pending.
+  The border atlas, hover/drag views and representative light/dark, zoomed and
+  modal snapshots were inspected. All 35 updated existing snapshots keep menu,
+  toolbar and status pixels unchanged; differences stay in the editor body.
+
 - Global Hexadecimal and Block IDs controls adapt `Main_Window` and
   `map-buttons.cpp`. Tests cover decimal/hex widths and prefixes, two zooms,
   hovered yellow versus ordinary white ID text, View/toolbar/keyboard controls,

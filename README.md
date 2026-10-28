@@ -302,6 +302,10 @@ These are display settings: event labels/options keep the number format read
 from their script, and toggling the display does not edit or save any data.
 Native font/theme matching, export ID options and preference persistence remain
 pending. Ctrl/Cmd+R continues to reload the event script.
+Grid (Ctrl/Cmd+G) draws the original bottom/right edges in the map and sidebar.
+Selections use black/white inset borders, including map hover and sidebar drag
+source/target feedback. The light/dark grid colors follow upstream Greybird/Dark;
+full native theme matching remains pending.
 Main Save processes edited tileset, roof, blockset and event domains before saving
 the map if needed. Saves are sequential, not one atomic transaction. Event-only
 changes do not rewrite a clean map. Normal-size warp IDs use the original opaque

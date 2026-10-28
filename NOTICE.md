@@ -37,6 +37,9 @@ highlighting adapt master `ruler.cpp`, `main-window.cpp` and `map.h`.
 Block-ID overlays and decimal/hexadecimal hover formats adapt master
 `map-buttons.cpp`, `Main_Window::update_status/update_event_cursor` and
 `utils.cpp::draw_outlined_text`. Native font selection/weight remains unfinished.
+Map/sidebar grids and shared map/event/editor selection rings adapt
+`map-buttons.cpp::draw_map_button/draw_selection_border`. The portable grid colors
+come from the Greybird and Dark inactive colors in master `themes.cpp`.
 
 ## Assets and fixtures
 

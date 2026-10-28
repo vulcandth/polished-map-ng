@@ -91,6 +91,10 @@ outlined map/sidebar labels. Event labels and dialogs retain each script's own
 number format. The complete status-bar layout, export overlays, native theme/font
 matching and preference persistence remain pending;
 current ruler/guide tests are headless rather than native FLTK comparisons.
+Map/sidebar grid edges, hover/selection rings and sidebar drag feedback now
+follow `map-buttons.cpp`, sharing the ring renderer with event and editor cursors.
+Rendered pixel tests cover both map zooms, event/tile/chip sizes and 1×/2× scale;
+native DPI/drag dispatch and complete native themes still need verification.
 Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
 source harness verifies 8,192 decimal/hex placement and zoomed text cases, including
 the original overflow/truncation differences. Source-derived outline colors,

@@ -155,22 +155,7 @@ pub(super) fn draw_event_cursor(ui: &egui::Ui, origin: Pos2, cell: f32, state: &
             origin + Vec2::new(f32::from(cursor.event_x), f32::from(cursor.event_y)) * cell,
             Vec2::splat(cell),
         );
-        let last = if cell == 32.0 { 3 } else { 2 };
-        for inset in 0..=last {
-            ui.painter().rect_stroke(
-                area.shrink(inset as f32),
-                0.0,
-                (
-                    1.0,
-                    if inset == 0 || inset == last {
-                        Color32::BLACK
-                    } else {
-                        Color32::WHITE
-                    },
-                ),
-                egui::StrokeKind::Inside,
-            );
-        }
+        map_buttons::selection(ui.painter(), area, cell == 32.0);
     }
     if state.game_boy {
         let r = cursor.game_boy_screen(cell);

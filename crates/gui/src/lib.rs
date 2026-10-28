@@ -7,6 +7,7 @@ mod event_label_tests;
 mod event_workflow_tests;
 mod event_workflows;
 pub mod geometry;
+mod map_buttons;
 mod map_labels;
 mod palette_editor;
 #[cfg(test)]
@@ -904,39 +905,6 @@ impl Editor {
                 Vec2::new(block_size * 4.0, block_size * rows as f32),
                 Sense::click_and_drag(),
             );
-            for (id, texture) in self.textures.iter().enumerate() {
-                let cell = Rect::from_min_size(
-                    rect.min
-                        + Vec2::new((id % 4) as f32 * block_size, (id / 4) as f32 * block_size),
-                    Vec2::splat(block_size),
-                );
-                if ui.is_rect_visible(cell) {
-                    ui.painter().image(
-                        texture.id(),
-                        cell,
-                        Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
-                        Color32::WHITE,
-                    );
-                    if id == usize::from(self.selected) {
-                        ui.painter().rect_stroke(
-                            cell,
-                            0.0,
-                            (2.0, Color32::YELLOW),
-                            egui::StrokeKind::Inside,
-                        );
-                    }
-                    if self.ids {
-                        map_labels::draw_id(
-                            ui.painter(),
-                            cell,
-                            id as u8,
-                            self.hex,
-                            self.zoom,
-                            false,
-                        );
-                    }
-                }
-            }
             let hit = |pos: Pos2| {
                 let local = pos - rect.min;
                 let col = (local.x / block_size).floor() as i32;
@@ -958,6 +926,44 @@ impl Editor {
             } else {
                 None
             };
+            for (id, texture) in self.textures.iter().enumerate() {
+                let cell = Rect::from_min_size(
+                    rect.min
+                        + Vec2::new((id % 4) as f32 * block_size, (id / 4) as f32 * block_size),
+                    Vec2::splat(block_size),
+                );
+                if ui.is_rect_visible(cell) {
+                    ui.painter().image(
+                        texture.id(),
+                        cell,
+                        Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
+                        Color32::WHITE,
+                    );
+                    let outlined = id == usize::from(self.selected)
+                        || ui.is_enabled()
+                            && self.sidebar_drag.is_some_and(|from| {
+                                id == usize::from(from) || ui.rect_contains_pointer(cell)
+                            });
+                    map_buttons::decorate(
+                        ui.painter(),
+                        cell,
+                        self.zoom,
+                        self.grid,
+                        outlined,
+                        ui.visuals().dark_mode,
+                    );
+                    if self.ids {
+                        map_labels::draw_id(
+                            ui.painter(),
+                            cell,
+                            id as u8,
+                            self.hex,
+                            self.zoom,
+                            false,
+                        );
+                    }
+                }
+            }
             if (response.clicked() || response.secondary_clicked())
                 && let Some(pos) = response.interact_pointer_pos()
             {
@@ -1061,18 +1067,18 @@ impl Editor {
                         ui.painter()
                             .rect_filled(cell, 0.0, Color32::from_rgb(0xab, 0xcd, 0xef));
                     }
-                    if self.grid {
-                        ui.painter().rect_stroke(
-                            cell,
-                            0.0,
-                            (1.0, Color32::from_black_alpha(96)),
-                            egui::StrokeKind::Inside,
-                        );
-                    }
+                    let hovered = !self.event_ui.mode
+                        && ui.is_enabled()
+                        && ui.rect_contains_pointer(cell.intersect(clip));
+                    map_buttons::decorate(
+                        ui.painter(),
+                        cell,
+                        self.zoom,
+                        self.grid,
+                        hovered,
+                        ui.visuals().dark_mode,
+                    );
                     if self.ids {
-                        let hovered = !self.event_ui.mode
-                            && ui.is_enabled()
-                            && ui.rect_contains_pointer(cell.intersect(clip));
                         map_labels::draw_id(ui.painter(), cell, id, self.hex, self.zoom, hovered);
                     }
                 }
@@ -1219,6 +1225,9 @@ impl Editor {
             || self.pending_open.is_some()
             || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::G)) {
+                self.grid = !self.grid;
+            }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::I)) {
                 self.ids = !self.ids;
             }

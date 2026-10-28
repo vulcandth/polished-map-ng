@@ -262,18 +262,7 @@ impl Editor {
 
 /// Original draw_selection_border at unzoomed tile/chip scale.
 pub(super) fn selection_border(ui: &egui::Ui, cell: Rect) {
-    for (inset, color) in [
-        (0.0, Color32::BLACK),
-        (1.0, Color32::WHITE),
-        (2.0, Color32::BLACK),
-    ] {
-        ui.painter().rect_stroke(
-            cell.shrink(inset),
-            0.0,
-            (1.0, color),
-            egui::StrokeKind::Inside,
-        );
-    }
+    map_buttons::selection(ui.painter(), cell, false);
 }
 
 fn quadrant_icon(ui: &egui::Ui, rect: Rect, quadrant: usize) {

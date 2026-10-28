@@ -220,7 +220,16 @@ visible behavior rather than the intermediate formatting bytes.
 Block IDs use the original 14-point logical font size, zoom-dependent offsets,
 four diagonal black outline passes and white/yellow foreground colors. The
 current bundled monospace face does not reproduce native Courier Bold's weight
-and metrics. Existing grid and selection borders, hotkey badges and export ID
-options still need their own parity work. Display-base changes do not alter
+and metrics. Hotkey badges and export ID options still need their own parity
+work. Display-base changes do not alter
 event formats or saved data; the status area now shows live block coordinates
 in both modes, with event coordinates appended only in Events Mode.
+
+Map/sidebar grids now use bottom/right one-point edges and three/four inset
+selection rings from `map-buttons.cpp`. Explicit mesh quads preserve opaque
+pixels instead of relying on egui's antialiased stroke corners. Shared editor
+and event cursors use the same ring geometry. Grid colors are the upstream
+Greybird light (85,85,85) and Dark (38,38,38) inactive colors on every OS; this
+does not reproduce Windows' default Blue theme or the remaining native themes.
+Sidebar drag feedback follows source/target/selected state, while the existing
+egui drag gesture remains in-process rather than the source's native FLTK DND.

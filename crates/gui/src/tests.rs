@@ -244,6 +244,9 @@ fn toolbar_controls_toggle_real_state() {
     harness.get_by_label("Grid").click();
     harness.run();
     assert!(!harness.state().grid);
+    harness.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::G);
+    harness.run();
+    assert!(harness.state().grid);
     harness.get_by_label("Zoom").click();
     harness.run();
     assert!(harness.state().zoom);
