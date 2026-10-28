@@ -25,6 +25,7 @@ struct OpenForm {
     path: PathBuf,
     root: String,
     tileset: String,
+    roof: String,
     width: u16,
     height: u16,
     allow_256: bool,
@@ -221,6 +222,7 @@ impl Editor {
                     &MasterGraphicsOptions {
                         allow_256: form.allow_256,
                         dark_theme,
+                        roof: (!form.roof.is_empty()).then_some(form.roof),
                         ..Default::default()
                     },
                 )
@@ -530,6 +532,9 @@ impl Editor {
                     .labelled_by(label.id);
                 let label = ui.label("Tileset name");
                 ui.text_edit_singleline(&mut form.tileset)
+                    .labelled_by(label.id);
+                let label = ui.label("Roof name (optional)");
+                ui.text_edit_singleline(&mut form.roof)
                     .labelled_by(label.id);
                 ui.horizontal(|ui| {
                     let label = ui.label("Width");

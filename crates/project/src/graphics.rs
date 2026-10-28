@@ -1,3 +1,5 @@
+//! Composition follows master Config::tileset_{before,after}_path and
+//! Tileset::{read_graphics,read_roof_graphics}; immutable source in upstream.lock.toml.
 use std::{
     io::Cursor,
     path::{Path, PathBuf},
@@ -33,6 +35,7 @@ pub fn load_master_map_graphics(
         options.allow_256,
         &colors,
         options.monochrome,
+        options.roof.as_deref(),
     )
 }
 
@@ -42,7 +45,7 @@ pub fn load_master_graphics(
     tileset: &str,
     allow_256: bool,
 ) -> Result<Graphics, ProjectError> {
-    load_graphics(root, tileset, allow_256, &day_palettes(), false)
+    load_graphics(root, tileset, allow_256, &day_palettes(), false, None)
 }
 
 fn validate_tileset(root: &Path, tileset: &str) -> Result<(), ProjectError> {
@@ -61,6 +64,7 @@ fn load_graphics(
     allow_256: bool,
     colors: &[Palette; 9],
     monochrome: bool,
+    roof: Option<&str>,
 ) -> Result<Graphics, ProjectError> {
     validate_tileset(root, tileset)?;
     let gfx = if root.join("MAPDATA").is_dir() {
@@ -68,13 +72,23 @@ fn load_graphics(
     } else {
         root.join("gfx/tilesets")
     };
-    let graphics_path = first_existing(&[
-        gfx.join(format!("{tileset}.png")),
-        gfx.join(format!("{tileset}.2bpp")),
-        gfx.join(format!("{tileset}.CHR")),
-        gfx.join(format!("{tileset}.2bpp.lz")),
-    ]);
-    let tiles = read_tiles(&graphics_path)?;
+    let main_path = graphics_path(&gfx, tileset);
+    let tiles = read_tiles(&main_path)?;
+    // The main file keeps the full compound name. Missing companions are ignored,
+    // as Config returns false for them; present but malformed files are errors.
+    let (before_name, after_name) = tileset
+        .split_once('.')
+        .map(|(_, suffix)| suffix.split_once(',').unwrap_or((suffix, "")))
+        .unwrap_or(("", ""));
+    let before = read_companion(&gfx, before_name)?;
+    let after = read_companion(&gfx, after_name)?;
+    let before_end = before.len().div_ceil(16) * 16;
+    let middle_end = before_end
+        + if after.is_empty() {
+            tiles.len()
+        } else {
+            tiles.len().div_ceil(16) * 16
+        };
     let base = tileset.split('.').next().unwrap_or(tileset);
     let mut block_paths = Vec::new();
     for name in [tileset, base] {
@@ -127,20 +141,75 @@ fn load_graphics(
         [0x12, 0x34, 0x56],
     ];
     let blank = Tile::new([0; 64])?;
-    let mut mapped_tiles = vec![blank; 256];
-    let mut palettes = vec![undefined; 256];
-    for (i, tile) in tiles.into_iter().enumerate() {
-        let j = if !allow_256 && i >= 0x60 {
-            if i >= 0xe0 { i - 0x80 } else { i + 0x20 }
+    let mut mapped_tiles = vec![blank.clone(); 256];
+    // Padding gaps retain Tile::clear's white pixels; trailing slots are read
+    // from the (possibly absent) after image, whose out-of-range hue is WHITE.
+    let mut palettes = vec![[[255; 3]; 4]; 256];
+    let palette_for = |i: usize| {
+        ids.get(i).map_or(undefined, |id| {
+            colors[if monochrome { 8 } else { usize::from(id & 15) }]
+        })
+    };
+    for i in 0..256 {
+        let source = if i < before.len() {
+            Some(&before[i])
+        } else if i >= before_end && i < before_end + tiles.len() {
+            Some(&tiles[i - before_end])
+        } else if i >= middle_end {
+            Some(after.get(i - middle_end).unwrap_or(&blank))
         } else {
-            i
+            None
         };
-        mapped_tiles[j] = tile;
-        if let Some(&id) = ids.get(i) {
-            palettes[j] = colors[if monochrome { 8 } else { usize::from(id & 15) }];
+        if let Some(tile) = source {
+            let j = tile_slot(i, allow_256);
+            mapped_tiles[j] = tile.clone();
+            palettes[j] = palette_for(i);
+        }
+    }
+    if let Some(roof) = roof {
+        validate_tileset(root, roof)?;
+        let path = graphics_path(&root.join("gfx/tilesets/roofs"), roof);
+        let roof_tiles = read_tiles(&path)?;
+        if roof_tiles.len() != 9 {
+            return Err(ProjectError::Format {
+                path,
+                message: "roof graphics must contain exactly nine tiles".into(),
+            });
+        }
+        for (i, tile) in roof_tiles.into_iter().enumerate() {
+            let slot = 0x0a + i;
+            mapped_tiles[slot] = tile;
+            palettes[slot] = palette_for(slot);
         }
     }
     Ok(Graphics::new(mapped_tiles, palettes, metatiles)?)
+}
+
+fn tile_slot(i: usize, allow_256: bool) -> usize {
+    if !allow_256 && i >= 0x60 {
+        if i >= 0xe0 { i - 0x80 } else { i + 0x20 }
+    } else {
+        i
+    }
+}
+
+fn graphics_path(directory: &Path, name: &str) -> PathBuf {
+    first_existing(
+        &["png", "2bpp", "CHR", "2bpp.lz"].map(|ext| directory.join(format!("{name}.{ext}"))),
+    )
+}
+
+fn read_companion(directory: &Path, name: &str) -> Result<Vec<Tile>, ProjectError> {
+    if name.is_empty() {
+        return Ok(Vec::new());
+    }
+    validate_tileset(directory, name)?;
+    let path = graphics_path(directory, name);
+    if path.is_file() {
+        read_tiles(&path)
+    } else {
+        Ok(Vec::new())
+    }
 }
 
 fn palette_map_path(root: &Path, tileset: &str) -> PathBuf {

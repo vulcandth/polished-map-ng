@@ -221,12 +221,17 @@ fn resize_dialog_anchor_accept_and_cancel_use_shared_command() {
 #[test]
 fn new_map_dialog_creates_in_memory_and_cancel_preserves_it() {
     let directory = tempfile::tempdir().unwrap();
-    std::fs::create_dir_all(directory.path().join("gfx/tilesets")).unwrap();
+    std::fs::create_dir_all(directory.path().join("gfx/tilesets/roofs")).unwrap();
     std::fs::create_dir_all(directory.path().join("data/tilesets")).unwrap();
     std::fs::write(directory.path().join("gfx/tilesets/demo.2bpp"), [0; 16]).unwrap();
     std::fs::write(
         directory.path().join("data/tilesets/demo_metatiles.bin"),
-        [0; 16],
+        [0x0a; 16],
+    )
+    .unwrap();
+    std::fs::write(
+        directory.path().join("gfx/tilesets/roofs/test.2bpp"),
+        [255; 9 * 16],
     )
     .unwrap();
     let mut harness = Harness::builder()
@@ -238,6 +243,11 @@ fn new_map_dialog_creates_in_memory_and_cancel_preserves_it() {
     harness.run();
     harness.get_by_label("Width").set_value_accesskit(3.0);
     harness.get_by_label("Height").set_value_accesskit(2.0);
+    harness.get_by_label("Roof name (optional)").focus();
+    harness.run();
+    harness
+        .get_by_label("Roof name (optional)")
+        .type_text("test");
     harness.run();
     harness.get_by_label("Create map").click();
     harness.run();
@@ -255,6 +265,18 @@ fn new_map_dialog_creates_in_memory_and_cancel_preserves_it() {
     assert_eq!(doc.map().blocks(), [0; 6]);
     assert!(!doc.has_backing_file());
     assert!(doc.map().is_modified());
+    assert_eq!(
+        &harness
+            .state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .graphics
+            .render_block(0)
+            .unwrap()
+            .pixels[..3],
+        &[8, 24, 33]
+    );
     assert!(!directory.path().join("NewMap.blk").exists());
     harness
         .state_mut()

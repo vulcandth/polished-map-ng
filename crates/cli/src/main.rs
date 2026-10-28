@@ -100,6 +100,9 @@ enum Action {
         /// Override automatic map palette selection.
         #[arg(long, value_parser = parse_palette_set)]
         palette: Option<PaletteSet>,
+        /// Optional nine-tile graphic replacement from gfx/tilesets/roofs.
+        #[arg(long)]
+        roof: Option<String>,
         #[arg(long)]
         output: PathBuf,
     },
@@ -191,6 +194,7 @@ fn run(cli: Cli) -> Result<Value, Failure> {
             tileset,
             allow_256,
             palette,
+            roof,
             output,
         } => {
             if output.exists() {
@@ -215,6 +219,7 @@ fn run(cli: Cli) -> Result<Value, Failure> {
                 &MasterGraphicsOptions {
                     allow_256,
                     palette,
+                    roof,
                     ..Default::default()
                 },
             )?;

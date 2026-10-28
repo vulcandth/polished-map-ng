@@ -25,6 +25,8 @@ pub struct MasterGraphicsOptions {
     pub special_palettes: bool,
     pub roof_colors: bool,
     pub roof_layout: RoofPaletteLayout,
+    /// Optional graphic replacement from gfx/tilesets/roofs (nine tiles).
+    pub roof: Option<String>,
 }
 
 impl Default for MasterGraphicsOptions {
@@ -37,6 +39,7 @@ impl Default for MasterGraphicsOptions {
             special_palettes: true,
             roof_colors: true,
             roof_layout: RoofPaletteLayout::DayNite,
+            roof: None,
         }
     }
 }

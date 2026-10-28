@@ -8,6 +8,55 @@ use polished_map_project::{
 
 #[test]
 #[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
+fn pinned_pokecrystal_roofs_load_without_changing_base_graphics() {
+    let root = PathBuf::from(
+        std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),
+    );
+    let doc = MapDocument::open_in_project(
+        &root.join("maps/NewBarkTown.blk"),
+        &OpenOptions::default(),
+        Some(&root),
+    )
+    .unwrap();
+    let base = load_master_map_graphics(&doc, "johto", &MasterGraphicsOptions::default())
+        .unwrap()
+        .render_map(doc.map())
+        .unwrap();
+    for roof in ["azalea", "goldenrod", "new_bark", "olivine", "violet"] {
+        let options = MasterGraphicsOptions {
+            roof: Some(roof.into()),
+            ..Default::default()
+        };
+        let image = load_master_map_graphics(&doc, "johto", &options)
+            .unwrap()
+            .render_map(doc.map())
+            .unwrap();
+        assert_eq!((image.width, image.height), (base.width, base.height));
+        if roof == "new_bark" {
+            // The base johto sheet already contains New Bark Town's roof.
+            assert!(
+                image.pixels == base.pixels,
+                "New Bark roof should match base"
+            );
+        } else {
+            assert!(
+                image.pixels != base.pixels,
+                "{roof} should change the rendered roof"
+            );
+        }
+    }
+    let reloaded = load_master_map_graphics(&doc, "johto", &MasterGraphicsOptions::default())
+        .unwrap()
+        .render_map(doc.map())
+        .unwrap();
+    assert!(
+        base == reloaded,
+        "loading a roof must not change a later base load"
+    );
+}
+
+#[test]
+#[ignore = "requires POLISHED_MAP_POKECRYSTAL; run in the real-project CI job"]
 fn pinned_pokecrystal_maps_discover_open_and_render() {
     let root = PathBuf::from(
         std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),

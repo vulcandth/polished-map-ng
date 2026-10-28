@@ -2,6 +2,50 @@ use serde_json::Value;
 use std::{fs, process::Command};
 
 #[test]
+fn render_roof_option_reaches_shared_compositor_without_modifying_inputs() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    fs::create_dir_all(root.join("gfx/tilesets/roofs")).unwrap();
+    fs::create_dir_all(root.join("data/tilesets")).unwrap();
+    fs::write(root.join("Map.1x1.demo.blk"), [0]).unwrap();
+    fs::write(root.join("gfx/tilesets/demo.2bpp"), [0; 16 * 32]).unwrap();
+    fs::write(root.join("gfx/tilesets/roofs/roof.2bpp"), [255; 16 * 9]).unwrap();
+    fs::write(root.join("data/tilesets/demo_metatiles.bin"), [0x0a; 16]).unwrap();
+    let output = root.join("roof.png");
+    let result = Command::new(env!("CARGO_BIN_EXE_polished-map"))
+        .arg("render")
+        .arg(root.join("Map.1x1.demo.blk"))
+        .arg("--root")
+        .arg(root)
+        .args(["--roof", "roof", "--output"])
+        .arg(&output)
+        .output()
+        .unwrap();
+    assert!(
+        result.status.success(),
+        "{}",
+        String::from_utf8_lossy(&result.stdout)
+    );
+    let expected = root.join("expected.png");
+    polished_map_project::write_png(
+        &expected,
+        &polished_map_core::RgbImage {
+            width: 32,
+            height: 32,
+            // Upstream DAY monochrome uses DMG colors; darkest is RGB5(1,3,4).
+            pixels: [8, 24, 33].repeat(32 * 32),
+        },
+    )
+    .unwrap();
+    assert_eq!(fs::read(output).unwrap(), fs::read(expected).unwrap());
+    assert_eq!(fs::read(root.join("Map.1x1.demo.blk")).unwrap(), [0]);
+    assert_eq!(
+        fs::read(root.join("gfx/tilesets/demo.2bpp")).unwrap(),
+        [0; 16 * 32]
+    );
+}
+
+#[test]
 fn preview_then_apply_and_failed_batch_never_partially_writes() {
     let dir = tempfile::tempdir().unwrap();
     let map = dir.path().join("test.2x1.blk");

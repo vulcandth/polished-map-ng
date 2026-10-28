@@ -25,10 +25,10 @@ The initial slice opens binary maps using project metadata, explicit dimensions,
 or names such as `Map.20x18.johto.blk`. It finds the nearest Makefile and recognizes
 master map constants/headers and numbered tileset aliases. The GUI prefills these
 options for review. Shared block files still require explicit choices. The project
-adapter supports simple master tilesets with PNG/2bpp/LZ/CHR graphics, binary
+adapter supports master tilesets with PNG/2bpp/LZ/CHR graphics, binary
 metatiles, tilepal mappings, all six palette sets, project/special palettes and
-map-group roof colors. Compound graphics, roof tile replacement, collisions, events and
-specialist editors are not complete. Work on copies
+map-group roof colors, compound graphics and optional roof tile replacement.
+Collisions, events and specialist editors are not complete. Work on copies
 while parity validation is incomplete.
 
 ```text
@@ -36,6 +36,7 @@ cargo run -p polished-map-cli -- create --root path/to/project --width 20 --heig
 cargo run -p polished-map-cli -- inspect path/to/Map.blk --width 20 --height 18
 cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --output map.png
 cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --palette nite --output night.png
+cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --roof violet --output violet-roof.png
 cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json
 cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json --apply
 cargo run -p polished-map-cli -- render path/to/Map.20x18.johto.blk --root path/to/project --tileset johto --output map.png
@@ -61,6 +62,12 @@ Mouse controls implemented: paint/drag, right-click select, Shift fill, Ctrl
 replace, Alt swap. One drag is one history entry. Ctrl/Cmd+O/S/Z/Y opens, saves,
 undoes and redoes. Ctrl/Cmd+N creates a new map; Ctrl/Cmd+Shift+S opens Save As.
 Print exports an unannotated PNG; clipboard export is pending.
+
+Open/New options accept an optional roof name from `gfx/tilesets/roofs`, without
+the extension. Leave it empty to use the base tileset. Compound names such as
+`main.before,after` retain the full main filename and load optional companion
+graphics, with upstream's 16-tile row padding. These are rendering options;
+graphics editing and saving are still pending.
 
 ## License
 

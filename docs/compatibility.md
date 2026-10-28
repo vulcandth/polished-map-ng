@@ -7,8 +7,8 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions tested; oversized-file consent pending |
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; resize event shifts and full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
-| Metatiles, palettes, collisions | master metatileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection and roof colors tested; collisions, compound tilesets, roof tile replacement and palette editing pending |
-| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases tested; shared-map options, compound ordering and roof inference need further coverage |
+| Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roof colors, compound composition and nine-tile roof replacement tested; collisions and palette editing pending |
+| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Pending |
@@ -47,6 +47,14 @@ the original application. Unverified assets never become redistributable fixture
   render was inspected, including project palette and roof colors. All 236 maps
   with named metadata also render with project palettes. Full pixel parity remains
   pending. All default palette channels match the compiled upstream color table.
+- Compound graphics tests cover full/base path precedence, optional companions,
+  malformed companion errors, 16-tile row padding, palette indices, both slot
+  layouts and the original first-256-slot limit. Roof tests cover slots 0x0a–0x12,
+  exact nine-tile validation and padded LZ rejection. These are source-derived
+  vectors, not compiled C++ composition comparisons. CLI PNG output and GUI
+  option entry exercise the same compositor. All five roofs in pinned pokecrystal
+  load; New Bark matches the base johto graphics and the four alternatives change
+  the rendered roof. Graphics sources remain unmodified.
 - Native Windows smoke test: launched the built eframe app; opened NewBarkTown
   through the Windows picker; checked inferred dimensions/tileset; saved a copy
   through Ctrl+Shift+S; observed the native overwrite prompt; declined replacement
