@@ -83,8 +83,11 @@ file openers. Actual editor/association behavior still needs native checks.
 Event-mode half-block hover, decimal coordinates and the Game Boy screen guide
 now use source-derived geometry, colors and clipping, with tests for both zooms,
 scrolling, overlapping markers and the original negative-coordinate boundary.
-The complete status-bar layout, global hexadecimal preference and rulers remain
-pending; current guide tests are headless rather than native FLTK comparisons.
+Rulers now use source-derived insets, tick/label geometry, coordinate limits and
+mode-dependent highlights; headless tests cover scrolling, both zooms, menus,
+shortcuts and modal guards. The complete status-bar layout, global hexadecimal
+preference, native theme/font matching and preference persistence remain pending;
+current ruler/guide tests are headless rather than native FLTK comparisons.
 Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
 source harness verifies 8,192 decimal/hex placement and zoomed text cases, including
 the original overflow/truncation differences. Source-derived outline colors,

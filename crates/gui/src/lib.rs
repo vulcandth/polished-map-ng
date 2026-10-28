@@ -16,6 +16,7 @@ mod palette_session_tests;
 #[cfg(test)]
 mod roof_workflow_tests;
 mod roof_workflows;
+mod rulers;
 mod tileset_editor;
 #[cfg(test)]
 mod tileset_workflow_tests;
@@ -107,6 +108,9 @@ pub struct Editor {
     selected: u8,
     stroke: Vec<Point>,
     zoom: bool,
+    rulers: bool,
+    ruler_scroll: Vec2,
+    ruler_cursor: Option<geometry::EventCursor>,
     grid: bool,
     dark: bool,
     confirm_discard: bool,
@@ -154,6 +158,9 @@ impl Default for Editor {
             selected: 0,
             stroke: Vec::new(),
             zoom: false,
+            rulers: false,
+            ruler_scroll: Vec2::ZERO,
+            ruler_cursor: None,
             grid: true,
             dark: false,
             confirm_discard: false,
@@ -961,6 +968,8 @@ impl Editor {
     }
 
     fn canvas(&mut self, ui: &mut egui::Ui, layout: &geometry::Layout) {
+        self.ruler_cursor = None;
+        self.ruler_scroll = Vec2::ZERO;
         self.event_ui.cursor = None;
         self.event_ui.screen = None;
         self.event_ui.hovered_event = None;
@@ -990,12 +999,14 @@ impl Editor {
             scroll = scroll.scroll_offset(Vec2::ZERO);
             self.reset_canvas_scroll = false;
         }
+        let viewport_origin = ui.max_rect().min;
         scroll.show(ui, |ui| {
             let extent = Vec2::new(
                 (f32::from(map.width()) + 6.0) * size,
                 (f32::from(map.height()) + 6.0) * size,
             );
             let (rect, response) = ui.allocate_exact_size(extent, Sense::click_and_drag());
+            self.ruler_scroll = viewport_origin - rect.min;
             let clip = ui.clip_rect();
             // Iterate only rows/columns intersecting the viewport, including the map margin.
             let origin = rect.min + Vec2::splat(geometry::MAP_MARGIN * size);
@@ -1051,8 +1062,7 @@ impl Editor {
                     &mut self.event_ui,
                 );
             }
-            if self.event_ui.mode
-                && ui.is_enabled()
+            if ui.is_enabled()
                 && ui.rect_contains_pointer(clip)
                 && let Some(pos) = ui.input(|i| i.pointer.hover_pos())
             {
@@ -1066,7 +1076,7 @@ impl Editor {
                         .get(index)
                         .map(|event| (event.definition().x, event.definition().y))
                 });
-                self.event_ui.cursor = geometry::EventCursor::at(
+                self.ruler_cursor = geometry::EventCursor::at(
                     pos.x - origin.x,
                     pos.y - origin.y,
                     size,
@@ -1074,7 +1084,10 @@ impl Editor {
                     map.height(),
                     event,
                 );
-                event_workflows::draw_event_cursor(ui, origin, size / 2.0, &mut self.event_ui);
+                if self.event_ui.mode {
+                    self.event_ui.cursor = self.ruler_cursor;
+                    event_workflows::draw_event_cursor(ui, origin, size / 2.0, &mut self.event_ui);
+                }
             }
             if !self.event_ui.mode
                 && let Some(pos) = response
@@ -1236,7 +1249,13 @@ impl Editor {
             }
         }
         let bounds = ui.max_rect();
-        let layout = geometry::Layout::new(bounds.width(), bounds.height(), self.zoom, false, 16.0);
+        let layout = geometry::Layout::new(
+            bounds.width(),
+            bounds.height(),
+            self.zoom,
+            self.rulers,
+            16.0,
+        );
         ui.painter()
             .rect_filled(bounds, 0.0, ui.visuals().panel_fill);
         ui.add_enabled_ui(!blocked, |ui| {
@@ -1361,6 +1380,7 @@ impl Editor {
                         }
                     });
                     ui.menu_button("View", |ui| {
+                        ui.checkbox(&mut self.rulers, "Rulers");
                         ui.checkbox(&mut self.event_ui.show, "Show Events");
                         ui.checkbox(&mut self.event_ui.warp_ids, "Show Warp IDs");
                         ui.checkbox(&mut self.event_ui.game_boy, "Game Boy Screen");
@@ -1444,6 +1464,7 @@ impl Editor {
             ui.scope_builder(egui::UiBuilder::new().max_rect(rect(layout.canvas)), |ui| {
                 self.canvas(ui, &layout);
             });
+            self.draw_rulers(ui, &layout, bounds.min);
             ui.scope_builder(egui::UiBuilder::new().max_rect(rect(layout.status)), |ui| {
                 ui.horizontal(|ui| {
                     ui.label(if self.is_modified() {

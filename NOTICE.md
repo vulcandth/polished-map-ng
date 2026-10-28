@@ -32,6 +32,8 @@ Event cursor and Game Boy guide placement/borders adapt `map-buttons.cpp`,
 `map.cpp`, `main-window.cpp` and `gameboy-screen.cpp`. The guide's uniformly
 colored source image is represented by a rectangle and its RGBA constant;
 the original image bytes are not distributed.
+Map ruler rectangles, tick/label placement, coordinate limits and paired
+highlighting adapt master `ruler.cpp`, `main-window.cpp` and `map.h`.
 
 ## Assets and fixtures
 

@@ -19,6 +19,14 @@ pub struct Layout {
     pub canvas: Rect,
     pub status: Rect,
     pub block_size: f32,
+    pub rulers: Option<RulerRects>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct RulerRects {
+    pub horizontal: Rect,
+    pub vertical: Rect,
+    pub corner: Rect,
 }
 
 impl Layout {
@@ -48,6 +56,26 @@ impl Layout {
                 height: STATUS_HEIGHT,
             },
             block_size,
+            rulers: rulers.then_some(RulerRects {
+                horizontal: Rect {
+                    x: sidebar_width + ruler,
+                    y: top,
+                    width: (width - sidebar_width - ruler).max(0.0),
+                    height: ruler,
+                },
+                vertical: Rect {
+                    x: sidebar_width,
+                    y: top + ruler,
+                    width: ruler,
+                    height: (body - ruler).max(0.0),
+                },
+                corner: Rect {
+                    x: sidebar_width,
+                    y: top,
+                    width: ruler,
+                    height: ruler,
+                },
+            }),
         }
     }
 
@@ -189,6 +217,29 @@ mod tests {
             }
         );
         let l = Layout::new(800.0, 600.0, true, true, 16.0);
+        assert_eq!(
+            l.rulers,
+            Some(RulerRects {
+                horizontal: Rect {
+                    x: 288.0,
+                    y: 47.0,
+                    width: 512.0,
+                    height: 16.0
+                },
+                vertical: Rect {
+                    x: 272.0,
+                    y: 63.0,
+                    width: 16.0,
+                    height: 514.0
+                },
+                corner: Rect {
+                    x: 272.0,
+                    y: 47.0,
+                    width: 16.0,
+                    height: 16.0
+                },
+            })
+        );
         assert_eq!(
             l.canvas,
             Rect {

@@ -626,7 +626,7 @@ impl Editor {
         if ctx.input_mut(|i| i.consume_key(shift, egui::Key::Num3)) {
             self.event_ui.warp_ids = !self.event_ui.warp_ids;
         }
-        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::M)) {
+        if ctx.input_mut(|i| i.consume_key(shift, egui::Key::M)) {
             self.event_ui.game_boy = !self.event_ui.game_boy;
         }
         if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::U)) {
@@ -637,7 +637,9 @@ impl Editor {
         } else if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::A)) {
             self.choose_events();
         }
-        if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::R)) {
+        if ctx.input_mut(|i| i.consume_key(shift, egui::Key::R)) {
+            self.rulers = !self.rulers;
+        } else if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::R)) {
             self.request_event_change(EventChange::Reload);
         }
         if ctx.input_mut(|i| i.consume_key(shift, egui::Key::W)) {

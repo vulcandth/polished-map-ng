@@ -22,6 +22,12 @@ fn event_cursor_and_game_boy_guide_follow_hover_zoom_and_modal_guards() {
     h.get_by_label("ID: 0    X/Y (0, 0)    Event: X/Y (1, 1)");
     h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::M);
     h.run();
+    assert!(!h.state().event_ui.game_boy);
+    h.key_press_modifiers(
+        egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+        egui::Key::M,
+    );
+    h.run();
     assert_eq!(
         h.state().event_ui.screen,
         Some(Rect::from_min_size(
@@ -48,7 +54,10 @@ fn event_cursor_and_game_boy_guide_follow_hover_zoom_and_modal_guards() {
     h.run();
     assert!(h.state().event_ui.cursor.is_none());
     assert!(h.state().event_ui.screen.is_none());
-    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::M);
+    h.key_press_modifiers(
+        egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+        egui::Key::M,
+    );
     h.run();
     assert!(h.state().event_ui.game_boy); // blocked shortcut cannot change it
     h.get_by_label("Cancel").click();

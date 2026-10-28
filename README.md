@@ -286,11 +286,18 @@ receive a line number. Opening a script never saves pending event edits; save
 first if the external editor should see them. Reload explicitly after editing
 externally. Launcher failures are reported without discarding the current draft.
 In Events Mode, hovering a block shows its 16px event cell and coordinates.
-View → Game Boy Screen (Ctrl/Cmd+M) toggles a translucent 160×144 guide around
+View → Game Boy Screen (Ctrl/Cmd+Shift+M) toggles a translucent 160×144 guide around
 that cell, doubling with zoom. It works without a loaded event script and stays
 clipped to the map viewport. Hovering markers uses the original underlying-block
 rules; the guide disappears over margins without an underlying block and while
 dialogs are active. This option is session-only until preferences are ported.
+View → Rulers (Ctrl/Cmd+Shift+R) adds horizontal and vertical event-coordinate
+rulers. Their cells track canvas scrolling and zoom, highlighting both halves
+of a block in Blocks Mode and the hovered half in Events Mode. Labels include
+the map margin and stop at the source coordinate limit; ticks span the viewport.
+Rulers currently use decimal labels and the development light/dark theme.
+Global hexadecimal display, native font/theme matching and persistence remain
+pending. Ctrl/Cmd+R continues to reload the event script.
 Main Save processes edited tileset, roof, blockset and event domains before saving
 the map if needed. Saves are sequential, not one atomic transaction. Event-only
 changes do not rewrite a clean map. Normal-size warp IDs use the original opaque

@@ -9,7 +9,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; persistent preferences and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
-| Main window geometry | master main-window.cpp | Derived rectangle/hit-test/DPI tests pass; light/dark development snapshots inspected; native fonts/themes/rulers and initial scroll positioning pending |
+| Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI and ruler geometry/scroll/highlight tests pass; light/dark development snapshots inspected; native fonts/themes, hex preference and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
@@ -23,6 +23,22 @@ actual C++ differential observations. A source-derived vector is not a run of
 the original application. Unverified assets never become redistributable fixtures.
 
 ## Current evidence (2026-10-28)
+
+- Rulers adapt `Ruler::draw`, `Main_Window::update_layout` and `Map::max_event_x/y`:
+  16/32-point cells, six-cell margin, alternating full/half ticks, source text/
+  highlight rectangles, capped labels, and tick continuation across the viewport.
+  Independent vectors verify positions at zero, partial-cell and fractional scroll,
+  including a slightly negative offset from pixel rounding of the content origin,
+  coordinate caps and block-pair versus event-half highlighting. GUI tests verify
+  View/Shift+command+R, zoom, both scroll axes, modal guards, leave handling and
+  an empty map. Five normal/event/zoomed/scrolled/empty-dark snapshots were rendered
+  and inspected. This is source-derived and egui rendering evidence; no compiled
+  FLTK ruler comparison or native font/theme equivalence is claimed. Hex formatting
+  is covered at the helper level but global hex UI/preference support is pending.
+  The Game Boy shortcut was corrected to Ctrl/Cmd+Shift+M: upstream encodes it with
+  uppercase `M`, and its toolbar explicitly names Ctrl+Shift+M. Tests reject
+  unshifted command+M and retain the modal guard. See the
+  [FLTK shortcut contract](https://www.fltk.org/doc-1.1/Fl_Menu_Item.html).
 
 - `WarpIdLabel`/`WarpDigit` in core retain the original digit patterns, 5×7 cell
   offsets, right-to-left draw order and overlapping opaque white borders.
@@ -43,13 +59,13 @@ the original application. Unverified assets never become redistributable fixture
   `Game_Boy_Screen::draw`. Independent vectors cover 16/32-point event cells,
   160×144/320×288 guides, exact half boundaries, invalid floats, empty margins,
   and C++ truncation that maps event coordinate -1 to block 0. GUI tests cover
-  overlapping markers, no-script operation, decimal hover text, Ctrl/Cmd+M,
+  overlapping markers, no-script operation, decimal hover text, Ctrl/Cmd+Shift+M,
   mode/modal guards, actual wheel scrolling and viewport clipping. Three new
   normal/zoomed/clipped snapshots were rendered and inspected. The source PNG
   was decoded locally: all 92,160 pixels are RGBA(224,255,0,64); the guide uses
   this constant fill and source black/white one-point borders, without a bitmap.
   Geometry is matched; native callback timing, full status layout, hexadecimal
-  preferences and rulers are not yet verified/implemented as a complete feature.
+  preferences are not yet verified/implemented as a complete feature.
 
 - External editor tests capture actual double-click, Shift precedence and File/
   Ctrl-Cmd-U requests, preserving source line numbers and unsaved event drafts.

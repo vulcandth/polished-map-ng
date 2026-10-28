@@ -202,6 +202,15 @@ The event cursor and Game Boy guide recompute hover from current egui geometry
 and are suppressed under dialogs and popup menus. Their coordinates, zoom sizes,
 fill and border formulas follow source; exact native enter/leave/callback timing
 has not been compared. Hover coordinates currently use the original decimal
-default. The complete status-bar sections, hexadecimal preference and rulers
+default. The complete status-bar sections and hexadecimal preference
 remain incomplete; transient operation messages still occupy the status area
 when the event cursor is absent.
+
+Ruler geometry and hover pairing follow the pinned source. During egui's smooth
+scrolling, ruler cells use the actual fractional content displacement instead of
+truncating it to FLTK's integer offset, keeping ticks aligned with the map. At
+integer offsets the formulas agree. Rulers use the current egui foreground,
+panel and inactive-widget colors and bundled 9-point monospace font; original
+native FL_DARK2/theme colors and Courier/Consolas metrics remain unfinished.
+Their decimal display and visibility are session-only until global hex display
+and persisted preferences are ported.
