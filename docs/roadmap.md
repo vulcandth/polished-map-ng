@@ -41,8 +41,12 @@ The roof draft editor now shares pixel/clipboard commands, preserves the origina
 The headless roof interface previews and requires an observed hash to apply.
 Compiled upstream comparisons cover safe 8×8 roof image paste; temporary real
 New Bark Town roof edits save/reopen with other pixels and source fixtures intact.
-Changing the loaded roof without reopening, native child windows/clipboard,
-cross-map palette session behavior and other matrix gaps still remain.
+Loaded-roof switching/removal now preserves other editing domains, warns before
+discarding roof edits and retains the previous overlay on failed reads. Its
+280×80 client layout and platform button order have headless checks and snapshots;
+all five pinned pokecrystal roof variants match fresh loads after switching.
+Native child windows/clipboard, cross-map palette session behavior and other
+matrix gaps still remain.
 Palette-color commands, all-six-set contextual state, explicit RGB5 export and
 the headless palette interface are implemented. Compiled original clipboard and
 export functions verify copy quantization, live swap and export layout; export

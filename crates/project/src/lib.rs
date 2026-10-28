@@ -26,5 +26,5 @@ pub use palette_document::{PaletteDocument, prepare_palette_export};
 pub use palettes::{
     MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,
 };
-pub use roof::RoofDocument;
+pub use roof::{RoofDocument, list_roofs};
 pub use tileset::{MasterTilesetDocument, TilesetOutput};

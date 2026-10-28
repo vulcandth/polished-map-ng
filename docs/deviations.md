@@ -88,6 +88,22 @@ against compiled original C++; smaller and larger imports have explicit Rust
 tests. The roof command model rejects palette/delete commands absent from the
 original roof editor, and malformed batches leave the entire draft unchanged.
 
+## Loaded-roof replacement safety
+
+`Main_Window::change_roof_cb` updates the roof name before decoding its graphics.
+Failed decoding can therefore leave the selected name and previous pixels out of
+sync. The port validates the replacement and all block previews before committing
+either. Canceling either the unsaved warning or selector preserves all edits.
+Successful reloads retain upstream's sticky dirty flag, including same-name
+reloads. Removing a roof clears its dirty domain instead of retaining an invisible
+edited flag with no roof to save. Other document domains stay untouched.
+
+The selector refreshes discovered roofs when opened rather than copying the last
+Open Map dialog's cached list. Its fixed 280px client width is retained; unusually
+long names are truncated in the closed control and available in full in its
+dropdown/tooltip, instead of overflowing the client area. The selector is an
+embedded modal pending the native child-window parity work.
+
 ## Palette export labels and validation
 
 Upstream declares six palette sets but initializes the export label table with

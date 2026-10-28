@@ -89,6 +89,13 @@ Roof dirty state is independent of base graphics. Accepting a roof draft does
 not add map undo entries. Image paste affects only the selected 8×8 tile;
 larger images are clipped and smaller images retain uncovered pixels.
 
+Tools → Change Roof (Ctrl/Cmd+Shift+H) switches the loaded overlay or removes it
+with `(none)`. Unsaved roof changes require confirmation; canceling either dialog
+preserves them. Map, blockset, base tileset and palette edits stay intact. Selecting
+the current roof reloads it from disk; a failed load retains the previous roof and
+preview. Successful replacement preserves the original sticky roof dirty flag;
+removing the roof clears that domain. Switching alone writes no files.
+
 Right-click a sidebar block (or choose Edit → Edit Block) to edit its 4×4 tile
 definition. Left-click paints and right-click picks a tile. Shift/Ctrl/Alt select
 the original eight placement patterns. OK applies the draft; Cancel discards it.

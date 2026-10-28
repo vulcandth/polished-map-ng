@@ -211,6 +211,14 @@ fn pinned_pokecrystal_roofs_load_without_changing_base_graphics() {
         .unwrap()
         .render_map(doc.map())
         .unwrap();
+    let blocks_for_switch =
+        polished_map_project::BlocksetDocument::open_in_project(&root, "johto").unwrap();
+    let mut switching = polished_map_project::MasterTilesetDocument::open_for_map(
+        &doc,
+        "johto",
+        &MasterGraphicsOptions::default(),
+    )
+    .unwrap();
     for roof in ["azalea", "goldenrod", "new_bark", "olivine", "violet"] {
         let options = MasterGraphicsOptions {
             roof: Some(roof.into()),
@@ -220,6 +228,17 @@ fn pinned_pokecrystal_roofs_load_without_changing_base_graphics() {
             .unwrap()
             .render_map(doc.map())
             .unwrap();
+        switching.change_roof(Some(roof)).unwrap();
+        assert_eq!(
+            switching
+                .graphics(blocks_for_switch.blockset())
+                .unwrap()
+                .render_map(doc.map())
+                .unwrap(),
+            image
+        );
+        assert!(!switching.tileset().is_modified());
+        assert!(!switching.roof().unwrap().roof().tileset().is_modified());
         assert_eq!((image.width, image.height), (base.width, base.height));
         if roof == "new_bark" {
             // The base johto sheet already contains New Bark Town's roof.
@@ -234,6 +253,15 @@ fn pinned_pokecrystal_roofs_load_without_changing_base_graphics() {
             );
         }
     }
+    switching.change_roof(None).unwrap();
+    assert_eq!(
+        switching
+            .graphics(blocks_for_switch.blockset())
+            .unwrap()
+            .render_map(doc.map())
+            .unwrap(),
+        base
+    );
     let reloaded = load_master_map_graphics(&doc, "johto", &MasterGraphicsOptions::default())
         .unwrap()
         .render_map(doc.map())

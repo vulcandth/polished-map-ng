@@ -48,6 +48,7 @@ struct Part {
 
 #[derive(Clone, Debug)]
 pub struct MasterTilesetDocument {
+    root: PathBuf,
     name: String,
     model: Tileset,
     initial: Tileset,
@@ -214,6 +215,7 @@ impl MasterTilesetDocument {
             });
         }
         Ok(Self {
+            root: std::fs::canonicalize(root).map_err(|e| ProjectError::io(root, e))?,
             name: name.into(),
             initial: model.clone(),
             model,
@@ -231,6 +233,36 @@ impl MasterTilesetDocument {
 
     pub fn name(&self) -> &str {
         &self.name
+    }
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+    /// Replace only the roof overlay, preserving base pixels, palettes and edits.
+    /// The caller must resolve any unsaved-roof warning before calling this.
+    /// Failed reads leave the previous roof intact. A successful reload preserves
+    /// upstream's sticky roof dirty flag; removing a roof clears that domain.
+    pub fn change_roof(&mut self, name: Option<&str>) -> Result<(), ProjectError> {
+        let modified = self
+            .roof
+            .as_ref()
+            .is_some_and(|roof| roof.roof().tileset().is_modified());
+        let roof = name
+            .map(|name| {
+                let mut roof = RoofDocument::open_in_project(
+                    &self.root,
+                    name,
+                    std::array::from_fn(|i| self.model.attributes()[i + 0x0a]),
+                )?;
+                if modified {
+                    let value = roof.roof().tileset().snapshot(0)?;
+                    roof.roof_mut()
+                        .apply_batch(&[TileCommand::Set { tile: 0, value }])?;
+                }
+                Ok::<_, ProjectError>(roof)
+            })
+            .transpose()?;
+        self.roof = roof;
+        Ok(())
     }
     pub fn tileset(&self) -> &Tileset {
         &self.model

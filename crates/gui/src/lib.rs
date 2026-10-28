@@ -5,6 +5,9 @@ pub mod geometry;
 mod palette_editor;
 #[cfg(test)]
 mod palette_editor_tests;
+#[cfg(test)]
+mod roof_workflow_tests;
+mod roof_workflows;
 mod tileset_editor;
 use block_editor::BlockForm;
 
@@ -64,6 +67,8 @@ pub struct Editor {
     block_form: Option<BlockForm>,
     tileset_form: Option<tileset_editor::TilesetForm>,
     palette_form: Option<palette_editor::PaletteForm>,
+    roof_choice_form: Option<roof_workflows::RoofChoiceForm>,
+    confirm_roof_change: bool,
     unloaded_palettes: polished_map_project::PaletteDocument,
     pending_palette_load: Option<PathBuf>,
     #[cfg(windows)]
@@ -103,6 +108,8 @@ impl Default for Editor {
             block_form: None,
             tileset_form: None,
             palette_form: None,
+            roof_choice_form: None,
+            confirm_roof_change: false,
             unloaded_palettes: polished_map_project::PaletteDocument::default(),
             pending_palette_load: None,
             #[cfg(windows)]
@@ -574,6 +581,10 @@ impl Editor {
             self.palette_dialog(ctx);
             return;
         }
+        if self.confirm_roof_change || self.roof_choice_form.is_some() {
+            self.roof_choice_dialog(ctx);
+            return;
+        }
         if self.pending_palette_load.is_some() {
             self.palette_load_dialog(ctx);
             return;
@@ -1029,6 +1040,8 @@ impl Editor {
             || self.block_form.is_some()
             || self.tileset_form.is_some()
             || self.palette_form.is_some()
+            || self.roof_choice_form.is_some()
+            || self.confirm_roof_change
             || self.pending_palette_load.is_some()
             || self.block_count_form.is_some()
             || self.confirm_discard
@@ -1051,6 +1064,14 @@ impl Editor {
             }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::F)) {
                 self.prepare_roof();
+            }
+            if ctx.input_mut(|i| {
+                i.consume_key(
+                    egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+                    egui::Key::H,
+                )
+            }) {
+                self.request_roof_change();
             }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::N)) {
                 self.choose_new();
@@ -1211,6 +1232,25 @@ impl Editor {
                             } else {
                                 egui::Theme::Light
                             });
+                        }
+                    });
+                    ui.menu_button("Tools", |ui| {
+                        if ui
+                            .add_enabled(
+                                self.loaded
+                                    .as_ref()
+                                    .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some()),
+                                egui::Button::new("Change Roof…").shortcut_text(
+                                    ctx.format_shortcut(&egui::KeyboardShortcut::new(
+                                        egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+                                        egui::Key::H,
+                                    )),
+                                ),
+                            )
+                            .clicked()
+                        {
+                            ui.close();
+                            self.request_roof_change();
                         }
                     });
                     ui.menu_button("Help", |ui| {

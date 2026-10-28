@@ -2,7 +2,7 @@ use super::*;
 use egui_kittest::{Harness, kittest::Queryable};
 use std::fs;
 
-fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
+pub(super) fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
     let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
     let root = dir.path();
     fs::create_dir_all(root.join("gfx/tilesets/roofs")).unwrap();

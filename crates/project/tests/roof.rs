@@ -4,6 +4,47 @@ use polished_map_project::{
 };
 use std::{fs, path::Path};
 
+#[test]
+fn discovery_and_roof_switch_preserve_base_and_palette_state_and_failed_reads() {
+    use polished_map_project::list_roofs;
+    let dir = tempfile::tempdir().unwrap();
+    assert!(list_roofs(dir.path()).unwrap().is_empty());
+    fixture(dir.path());
+    let roofs = dir.path().join("gfx/tilesets/roofs");
+    fs::write(roofs.join("other.2bpp"), [0; 9 * 16]).unwrap();
+    fs::write(roofs.join("other.chr"), [0; 9 * 16]).unwrap();
+    fs::write(roofs.join("bad.png"), b"bad").unwrap();
+    fs::write(roofs.join("notes.txt"), b"ignored").unwrap();
+    fs::create_dir(roofs.join("directory.png")).unwrap();
+    assert_eq!(list_roofs(dir.path()).unwrap(), ["bad", "other", "test"]);
+    let mut doc = MasterTilesetDocument::open_in_project(dir.path(), "demo", &options()).unwrap();
+    doc.apply_batch(&[paint(0, 2)]).unwrap();
+    let base = doc.tileset().tiles().to_vec();
+    let bank = doc.palettes().bank().clone();
+    let old_roof = doc.roof().unwrap().content_hash();
+    assert!(doc.change_roof(Some("bad")).is_err());
+    assert_eq!(doc.roof().unwrap().content_hash(), old_roof);
+    doc.change_roof(Some("other")).unwrap();
+    assert_eq!(doc.roof().unwrap().name(), "other");
+    assert_eq!(
+        doc.roof().unwrap().roof().tileset().tiles()[0].hues(),
+        &[0; 64]
+    );
+    assert!(!doc.roof().unwrap().roof().tileset().is_modified());
+    doc.roof_mut()
+        .unwrap()
+        .roof_mut()
+        .apply_batch(&[paint(0, 1)])
+        .unwrap();
+    doc.change_roof(Some("test")).unwrap();
+    assert!(doc.roof().unwrap().roof().tileset().is_modified());
+    doc.change_roof(None).unwrap();
+    assert!(doc.roof().is_none());
+    assert_eq!(doc.tileset().tiles(), base);
+    assert!(doc.tileset().is_modified());
+    assert_eq!(doc.palettes().bank(), &bank);
+}
+
 fn fixture(root: &Path) {
     fs::create_dir_all(root.join("gfx/tilesets/roofs")).unwrap();
     fs::write(root.join("gfx/tilesets/demo.2bpp"), [0; 32 * 16]).unwrap();
