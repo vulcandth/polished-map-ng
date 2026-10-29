@@ -81,6 +81,31 @@ fn pinned_contextual_palette_bank_edits_switches_and_exports_without_touching_pr
     let blocks = BlocksetDocument::open_in_project(&root, "johto").unwrap();
     let selected = tiles.palettes().selected();
     let bank = tiles.palettes().bank().clone();
+    // Explicit manual import matches automatic loading on the real table,
+    // without requiring a GUI or changing the on-disk project.
+    let roof_path = polished_map_project::roof_palette_path(&root);
+    let roof_bytes = fs::read(&roof_path).unwrap();
+    let mut manual = MasterTilesetDocument::open_for_map(
+        &doc,
+        "johto",
+        &MasterGraphicsOptions {
+            roof_colors: false,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    manual
+        .palettes_mut()
+        .load_roof_colors(
+            &roof_path,
+            doc.metadata().group,
+            polished_map_project::RoofPaletteLayout::DayNite,
+        )
+        .unwrap();
+    assert_eq!(manual.palettes().bank(), &bank);
+    assert_eq!(manual.palettes().selected(), selected);
+    assert!(!manual.palettes().is_modified());
+    assert_eq!(fs::read(&roof_path).unwrap(), roof_bytes);
     let original = tiles
         .graphics(blocks.blockset())
         .unwrap()

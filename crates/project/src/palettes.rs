@@ -6,7 +6,7 @@ use polished_map_core::{Palette, PaletteBank, PaletteSet};
 
 use crate::{MapDocument, ProjectError, read_bounded};
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum RoofPaletteLayout {
     Custom,
     #[default]
@@ -14,6 +14,17 @@ pub enum RoofPaletteLayout {
     MornDayNite,
     DayNiteCustom,
     MornDayNiteCustom,
+}
+
+/// Config::roofs_pal_path: prefer the modern table, otherwise return the legacy
+/// path (including when absent, so an explicit load reports the missing file).
+pub fn roof_palette_path(root: &Path) -> PathBuf {
+    let modern = root.join("gfx/tilesets/roofs.pal");
+    if modern.is_file() {
+        modern
+    } else {
+        root.join("tilesets/roof.pal")
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -117,7 +128,7 @@ pub(crate) fn map_palette_bank(
 
 pub(crate) fn apply_roofs(
     bank: &mut PaletteBank,
-    path: &PathBuf,
+    path: &Path,
     group: usize,
     layout: RoofPaletteLayout,
 ) -> Result<(), ProjectError> {

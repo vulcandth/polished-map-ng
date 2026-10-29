@@ -130,6 +130,97 @@ fn color(doc: &MapDocument, options: &MasterGraphicsOptions) -> [u8; 3] {
 }
 
 #[test]
+fn manual_roof_import_preserves_session_and_uses_all_five_source_layouts() {
+    use PaletteSet::{Day, Indoor, Morn, Nite};
+    use polished_map_project::{PaletteDocument, RoofPaletteLayout::*};
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("roofs.pal");
+    let table = (0..32)
+        .map(|v| format!("\tRGB {v},{v},{v}\n"))
+        .collect::<String>();
+    fs::write(&path, &table).unwrap();
+    for (layout, sets, copy_morn) in [
+        (Custom, &[PaletteSet::Custom][..], false),
+        (DayNite, &[Day, Nite][..], true),
+        (MornDayNite, &[Morn, Day, Nite][..], false),
+        (DayNiteCustom, &[Day, Nite, PaletteSet::Custom][..], true),
+        (
+            MornDayNiteCustom,
+            &[Morn, Day, Nite, PaletteSet::Custom][..],
+            false,
+        ),
+    ] {
+        for edited in [false, true] {
+            let mut palettes = PaletteDocument::default();
+            palettes.select(Indoor);
+            if edited {
+                palettes.mark_modified();
+            }
+            let before = palettes.bank().clone();
+            palettes.load_roof_colors(&path, 1, layout).unwrap();
+            for set in PaletteSet::ALL {
+                for p in 0..9 {
+                    for hue in 0..4 {
+                        let at = sets
+                            .iter()
+                            .position(|s| *s == set)
+                            .or_else(|| (copy_morn && set == Morn).then_some(0));
+                        let expected = match (p, hue, at) {
+                            (6, 1 | 2, Some(i)) => {
+                                let channel =
+                                    (sets.len() * 2 + i * 2 + usize::from(hue == 1)) * 33 / 4;
+                                [channel as u8; 3]
+                            }
+                            _ => before.colors(set)[p][hue],
+                        };
+                        assert_eq!(
+                            palettes.bank().colors(set)[p][hue],
+                            expected,
+                            "{layout:?} {set:?} {p} {hue}"
+                        );
+                    }
+                }
+            }
+            assert_eq!(palettes.selected(), Indoor);
+            assert_eq!(palettes.is_modified(), edited);
+        }
+    }
+    assert_eq!(fs::read_to_string(&path).unwrap(), table);
+}
+
+#[test]
+fn roof_import_path_precedence_and_errors_preserve_the_complete_palette_session() {
+    use polished_map_project::{PaletteDocument, RoofPaletteLayout, roof_palette_path};
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    let modern = root.join("gfx/tilesets/roofs.pal");
+    let legacy = root.join("tilesets/roof.pal");
+    assert_eq!(roof_palette_path(root), legacy);
+    write(root, "tilesets/roof.pal", "\tRGB 1,2,3\n".repeat(8));
+    assert_eq!(roof_palette_path(root), legacy);
+    write(root, "gfx/tilesets/roofs.pal", "\tRGB 32,0,0\n");
+    assert_eq!(roof_palette_path(root), modern); // malformed modern does not fall back
+    let mut palettes = PaletteDocument::default();
+    palettes.select(PaletteSet::Custom);
+    palettes.mark_modified();
+    let before = palettes.content_hash();
+    for (path, group) in [
+        (modern.as_path(), 1),
+        (legacy.as_path(), usize::MAX),
+        (legacy.as_path(), 99),
+        (root.join("missing.pal").as_path(), 1),
+    ] {
+        assert!(
+            palettes
+                .load_roof_colors(path, group, RoofPaletteLayout::DayNite)
+                .is_err()
+        );
+        assert_eq!(palettes.content_hash(), before);
+        assert!(palettes.is_modified());
+    }
+}
+
+#[test]
 fn rgb_macros_preserve_hue_order_and_reject_malformed_channels() {
     let text = "RGB 31,31,31\n\tRGB 0,1,2, 3,4,5 ; two colors\n\tRGB 6,7,8, 9,10,31\n";
     let rgb = parse_rgb_colors(text).unwrap();

@@ -13,15 +13,24 @@ keyboard and headless counterparts where applicable.
 | Group | Present in this port | Remaining source items or differences |
 |---|---|---|
 | File | New, Open, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Open Recent (ten entries and Clear Recent). Print's complete options/overlays remain pending. Native close delivery still needs platform verification. |
-| Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes | Manual Load Roof Colors. Event and palette actions moved here from File. |
+| Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialogs and complete popup geometry remain pending. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The extra Edit Block entry is temporary access to the existing editor; upstream opens it through block interactions. Complete context-menu/gesture equivalence is pending. |
 | View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Show Priority, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
-| Options | Auto-Load Events | Monochrome, Tile Priority, 256 Tiles, five Roof Palettes choices, Auto-Load Special Palettes, Auto-Load Roof Colors, Drag and Drop, Overworld Map Size. Some underlying options exist in project/open APIs; that does not establish menu or persistent-preference parity. |
+| Options | Five Roof Palettes choices; Auto-Load Events | Monochrome, Tile Priority, 256 Tiles, Auto-Load Special Palettes, Auto-Load Roof Colors, Drag and Drop, Overworld Map Size. Some underlying options exist in project/open APIs; that does not establish menu or persistent-preference parity. |
 | Help | Inline development status, project attribution and icon licensing links | Original Help and About actions/dialogs, including keyboard shortcuts. Attribution remains available throughout the port. |
 
 ## Geometry and interaction gates
+
+Load Roof Colors requires a known map group and resolves the modern project
+roof table before the legacy path. Manual loading is available for indoor and
+monochrome maps too. It asks OK/Cancel before replacing edited palette colors,
+preserves the edited flag and selected set, updates previews after success and
+shows the original success wording. Failed reads retain the whole session.
+Roof Palettes changes only the interpretation of subsequent manual/automatic
+imports; it does not immediately reload colors. All five choices survive Close
+within the session. Persisting this preference across restarts remains pending.
 
 Close clears loaded map/events/assets, textures, map history, block clipboard,
 selection, gestures and scroll state. It retains palette colors, the selected

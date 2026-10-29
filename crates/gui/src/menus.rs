@@ -76,6 +76,10 @@ impl Editor {
                 if action(ui, true, "Export Palettes…") {
                     self.export_palettes();
                 }
+                ui.separator();
+                if action(ui, self.can_load_roof_colors(), "Load Roof Colors") {
+                    self.request_roof_colors(&ctx);
+                }
             });
             ui.menu_button("Edit", |ui| {
                 let undo = self
@@ -201,6 +205,8 @@ impl Editor {
                 }
             });
             ui.menu_button("Options", |ui| {
+                self.roof_palette_menu(ui);
+                ui.separator();
                 ui.checkbox(&mut self.event_ui.auto_load, "Auto-Load Events");
             });
             ui.menu_button("Help", |ui| {
@@ -312,13 +318,14 @@ mod tests {
             "Unload Event Script",
             "Load Palettes…",
             "Export Palettes…",
+            "Load Roof Colors",
         ] {
             let node = h.get_by_label(name);
             assert!(node.rect().top() >= bottom, "{name}");
             bottom = node.rect().bottom();
             assert_eq!(
                 node.accesskit_node().is_disabled(),
-                name.contains("Event Script"),
+                name.contains("Event Script") || name == "Load Roof Colors",
                 "{name}"
             );
         }
@@ -335,6 +342,16 @@ mod tests {
     #[test]
     fn edit_history_and_mode_menu_actions_use_existing_state_transitions() {
         let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+        // A loaded map alone is insufficient: this fixture has no known group.
+        h.get_by_label("Data").click();
+        h.run();
+        assert!(
+            h.get_by_label("Load Roof Colors")
+                .accesskit_node()
+                .is_disabled()
+        );
+        h.key_press(egui::Key::Escape);
+        h.run();
         h.state_mut().apply(Command::Paint {
             points: vec![Point { x: 0, y: 0 }],
             block: 1,

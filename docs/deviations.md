@@ -267,3 +267,10 @@ and text-measured client geometry still require porting and asset review.
 Close retains palette-only edits exactly as the original session does; Exit
 does not warn for palette-only changes, matching the commented-out upstream
 palette warning. Persistent preferences are still pending.
+
+Manual roof-color loading now uses the source table lookup, layout choices,
+consent and success wording. It stages parsing and preview creation so failure
+cannot partially replace the live palette bank. Errors expose the actual path
+and parse/I/O reason instead of upstream's generic "Could not read" message.
+Warning/success shields, native modal geometry and restart-persisted layout
+preferences remain pending; the five choices currently persist for the session.

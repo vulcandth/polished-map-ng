@@ -51,13 +51,17 @@ impl PaletteDocument {
         // Main_Window::load_palettes clears edited state even if no file was read.
         self.modified = false;
     }
-    pub(crate) fn overlay_roof_colors(
+    /// Import a map group's LIGHT/DARK roof colors using the selected table
+    /// layout. This leaves the selected set, other colors, import source and
+    /// edited flag intact. Failure changes nothing. Callers handle consent for
+    /// edited palettes; this API has no GUI or display dependency.
+    pub fn load_roof_colors(
         &mut self,
         path: &Path,
         group: usize,
         layout: crate::RoofPaletteLayout,
     ) -> Result<(), ProjectError> {
-        crate::palettes::apply_roofs(&mut self.bank, &path.to_path_buf(), group, layout)
+        crate::palettes::apply_roofs(&mut self.bank, path, group, layout)
     }
     pub fn apply_batch(&mut self, commands: &[PaletteCommand]) -> Result<(), ProjectError> {
         self.bank.edit(commands)?;

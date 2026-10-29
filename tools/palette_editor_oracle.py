@@ -1,4 +1,4 @@
-"""Compile original palette clipboard callbacks and export with minimal UI stubs.
+"""Compile original palette clipboard, roof-color import and export functions.
 
 The export function is unmodified. Its incomplete set-name table is replaced by
 six correct labels to avoid upstream's null %s; provenance records that change.
@@ -24,9 +24,12 @@ def main():
     functions, provenance = [], []
     for path, names in [
         ("src/palette-window.cpp", ["void Abstract_Palette_Window::copy_color_cb(", "void Abstract_Palette_Window::paste_color_cb(", "void Abstract_Palette_Window::swap_colors_cb("]),
-        ("src/colors.cpp", ["bool Color::write_palettes(", "Hue Color::ordered_hue("]),
+        ("src/colors.cpp", ["bool Color::write_palettes(", "Hue Color::ordered_hue(", "bool Color::read_roof_colors(",
+                            "void Color::color(Palettes l, Palette p, Hue h, ColorArray",
+                            "void Color::color(Palettes l, Palette p, Hue h, Fl_Color",
+                            "Fl_Color Color::fl_color("]),
     ]:
-        source = subprocess.check_output([args.git, "-C", str(args.checkout), "show", f"{REVISION}:{path}"], text=True)
+        source = subprocess.check_output([args.git, "-C", str(args.checkout), "show", f"{REVISION}:{path}"], text=True, encoding="utf-8")
         for name in names:
             start = source.index(name)
             function = source[start:source.index("\n}\n", start) + 2]
@@ -38,6 +41,8 @@ def main():
 #include <cstdint>
 #include <fstream>
 #include <string>
+#include <array>
+#include <vector>
 using uchar = unsigned char;
 using Fl_Color = uint32_t;
 #define RGB5C(x) (uchar)((x) * 33 / 4)
@@ -45,10 +50,16 @@ using Fl_Color = uint32_t;
 #define NUM_PALETTE_SETS 6
 #define NUM_GAME_PALETTES 8
 #define NUM_HUES 4
+#define NUM_CHANNELS 3
 enum class Hue { WHITE, DARK, LIGHT, BLACK };
 static const Hue hue_order[4] = {Hue::WHITE, Hue::LIGHT, Hue::DARK, Hue::BLACK};
 enum class Palettes { MORN, DAY, NITE, DARKNESS, INDOOR, CUSTOM };
 enum class Palette { GRAY, RED, GREEN, WATER, YELLOW, BROWN, ROOF, TEXT, MONOCHROME };
+enum class Roof_Palettes { ROOF_CUSTOM, ROOF_DAY_NITE, ROOF_MORN_DAY_NITE, ROOF_DAY_NITE_CUSTOM, ROOF_MORN_DAY_NITE_CUSTOM };
+using ColorArray = std::array<uchar,3>;
+using HueArray = std::array<ColorArray,4>;
+using PalVec = std::vector<HueArray>;
+PalVec roof_table;
 Fl_Color fl_rgb_color(uchar r, uchar g, uchar b) { return uint32_t(r)<<16 | uint32_t(g)<<8 | b; }
 namespace Fl { void get_color(Fl_Color c, uchar &r, uchar &g, uchar &b) {r=c>>16; g=c>>8; b=c;} }
 struct Fl_Widget {};
@@ -69,6 +80,12 @@ struct Color {
     static Hue ordered_hue(int);
     static const uchar *color(Palettes l, Palette p, Hue h) { return values[int(l)][int(p)][int(h)]; }
     static bool write_palettes(const char *);
+    static PalVec parse_palettes(const char *) { return roof_table; }
+    static uchar *colors(Palettes l, Palette p, Hue h) { return values[int(l)][int(p)][int(h)]; }
+    static void color(Palettes, Palette, Hue, ColorArray);
+    static void color(Palettes, Palette, Hue, Fl_Color);
+    static Fl_Color fl_color(Palettes, Palette, Hue);
+    static bool read_roof_colors(const char *,uint8_t,Roof_Palettes);
 };
 // Explicit safety correction to DATA, not to the extracted export function.
 static const char *palettes_names[6] = {"morn", "day", "nite", "darkness", "indoor", "custom"};
@@ -98,7 +115,22 @@ int main(int argc, char **argv) {
             if(!Color::write_palettes(path.c_str())) return 3;
         }
     }
-    return clipboard.good()?0:4;
+    // The parser stub supplies complete four-color palettes in internal hue
+    // order. This checks the unmodified roof selection/overlay function, not
+    // FLTK or the upstream ASM parser.
+    std::ofstream roofs(std::string(argv[2])+"-roofs.bin", std::ios::binary);
+    for(int count: {0,1,2,3,4,512}) {
+        roof_table.assign(count,HueArray{});
+        for(int i=0;i<count*4;i++) for(int c=0;c<3;c++)
+            roof_table[i/4][int(Color::ordered_hue(i%4))][c]=(i*7+c*11)%32;
+        for(int layout=0;layout<5;layout++) for(int group: {0,1,2,255}) {
+            for(int l=0;l<6;l++) for(int p=0;p<9;p++) for(int h=0;h<4;h++) for(int c=0;c<3;c++)
+                values[l][p][h][c]=(l*71+p*37+h*19+c*13)&255;
+            roofs.put(Color::read_roof_colors("synthetic",group,Roof_Palettes(layout))?1:0);
+            roofs.write(reinterpret_cast<const char *>(values),sizeof(values));
+        }
+    }
+    return clipboard.good() && roofs.good()?0:4;
 }
 '''
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -107,7 +139,8 @@ int main(int argc, char **argv) {
     subprocess.run([args.cxx, "-std=c++17", "-O2", str(cpp), "-o", str(args.output)], check=True)
     args.output.with_suffix(".provenance.json").write_text(json.dumps({
         "revision": REVISION, "functions": provenance,
-        "data_changes": ["Replace incomplete palettes_names table with morn/day/nite/darkness/indoor/custom to avoid null %s"]
+        "data_changes": ["Replace incomplete palettes_names table with morn/day/nite/darkness/indoor/custom to avoid null %s"],
+        "stubs": ["Roof parse_palettes supplies complete synthetic RGB5 palettes; upstream parser/file I/O is not exercised"]
     }, indent=2) + "\n", encoding="utf-8")
 
 

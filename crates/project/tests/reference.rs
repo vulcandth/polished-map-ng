@@ -144,6 +144,73 @@ fn palette_clipboard_and_export_match_compiled_source_with_corrected_labels() {
             );
         }
     }
+    compare_roof_color_imports(dir.path());
+}
+
+fn compare_roof_color_imports(root: &std::path::Path) {
+    use polished_map_core::{ColorSlot, PaletteCommand};
+    use polished_map_project::{PaletteDocument, RoofPaletteLayout::*};
+    let reference = fs::read(root.join("export-roofs.bin")).unwrap();
+    let mut actual = Vec::new();
+    let path = root.join("roof-input.pal");
+    for count in [0, 1, 2, 3, 4, 512] {
+        let table = (0..count * 4)
+            .map(|i| {
+                format!(
+                    "\tRGB {},{},{}\n",
+                    i * 7 % 32,
+                    (i * 7 + 11) % 32,
+                    (i * 7 + 22) % 32
+                )
+            })
+            .collect::<String>();
+        fs::write(&path, table).unwrap();
+        for layout in [
+            Custom,
+            DayNite,
+            MornDayNite,
+            DayNiteCustom,
+            MornDayNiteCustom,
+        ] {
+            for group in [0, 1, 2, 255] {
+                let mut edits = Vec::new();
+                for (l, set) in PaletteSet::ALL.into_iter().enumerate() {
+                    for p in 0..9 {
+                        for h in 0..4 {
+                            edits.push(PaletteCommand::SetRgb {
+                                slot: ColorSlot {
+                                    set,
+                                    palette: p,
+                                    hue: h,
+                                },
+                                rgb: std::array::from_fn(|c| {
+                                    ((l * 71 + usize::from(p) * 37 + usize::from(h) * 19 + c * 13)
+                                        & 255) as u8
+                                }),
+                            });
+                        }
+                    }
+                }
+                let mut palettes = PaletteDocument::default();
+                palettes.apply_batch(&edits).unwrap();
+                actual.push(u8::from(
+                    palettes.load_roof_colors(&path, group, layout).is_ok(),
+                ));
+                for set in PaletteSet::ALL {
+                    for palette in palettes.bank().colors(set) {
+                        for color in palette {
+                            actual.extend(color);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert_eq!(reference.len(), 120 * (1 + 6 * 9 * 4 * 3));
+    assert_eq!(
+        actual, reference,
+        "120 original roof import outcomes and complete banks"
+    );
 }
 
 #[test]

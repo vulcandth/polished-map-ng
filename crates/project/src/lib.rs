@@ -32,6 +32,7 @@ pub use map_palette_plan::MapPalettePlan;
 pub use palette_document::{PaletteDocument, prepare_palette_export};
 pub use palettes::{
     MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,
+    roof_palette_path,
 };
 pub use roof::{RoofDocument, list_roofs};
 pub use tileset::{MasterTilesetDocument, TilesetOutput};

@@ -18,6 +18,7 @@ mod palette_editor_tests;
 mod palette_session;
 #[cfg(test)]
 mod palette_session_tests;
+mod roof_colors;
 #[cfg(test)]
 mod roof_workflow_tests;
 mod roof_workflows;
@@ -100,6 +101,9 @@ pub struct Editor {
     unloaded_palettes: polished_map_project::PaletteDocument,
     unloaded_monochrome: bool,
     pending_palette_load: Option<PathBuf>,
+    pending_roof_colors: Option<PathBuf>,
+    roof_color_success: Option<String>,
+    roof_palette_layout: polished_map_project::RoofPaletteLayout,
     #[cfg(windows)]
     native_color_request: Option<polished_map_core::ColorSlot>,
     #[cfg(windows)]
@@ -159,6 +163,9 @@ impl Default for Editor {
             unloaded_palettes: polished_map_project::PaletteDocument::default(),
             unloaded_monochrome: false,
             pending_palette_load: None,
+            pending_roof_colors: None,
+            roof_color_success: None,
+            roof_palette_layout: polished_map_project::RoofPaletteLayout::default(),
             #[cfg(windows)]
             native_color_request: None,
             #[cfg(windows)]
@@ -323,6 +330,7 @@ impl Editor {
         let dark_theme = self.dark;
         let palette_session = self.palette_document().clone();
         let auto_events = self.event_ui.auto_load;
+        let roof_layout = self.roof_palette_layout;
         std::thread::spawn(move || {
             let result = (|| {
                 let root = PathBuf::from(&form.root);
@@ -354,6 +362,7 @@ impl Editor {
                     &MasterGraphicsOptions {
                         allow_256: form.allow_256,
                         dark_theme,
+                        roof_layout,
                         roof: (!form.roof.is_empty()).then_some(form.roof),
                         ..Default::default()
                     },
@@ -653,6 +662,10 @@ impl Editor {
         }
         if self.confirm_discard {
             self.discard_dialog(ctx);
+            return;
+        }
+        if self.pending_roof_colors.is_some() || self.roof_color_success.is_some() {
+            self.roof_color_dialog(ctx);
             return;
         }
         if self.event_ui.change.is_some() || self.event_ui.form.is_some() {
@@ -1329,6 +1342,8 @@ impl Editor {
             || self.tileset_choice_form.is_some()
             || self.confirm_tileset_change
             || self.pending_palette_load.is_some()
+            || self.pending_roof_colors.is_some()
+            || self.roof_color_success.is_some()
             || self.block_count_form.is_some()
             || self.confirm_discard
             || self.error.is_some()

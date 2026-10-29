@@ -26,6 +26,13 @@ session edits. Headless tests cover state clearing/retention, all dirty domains,
 map-only writes/conflicts and Close/Exit/event-unload shortcut routing. Native
 warning geometry, preference persistence and recent-file history remain pending.
 
+Manual Load Roof Colors and all five Roof Palettes choices now use a shared
+headless import API. Tests cover consent, dirty-state preservation, failure
+atomicity, live preview updates and the layout used by subsequent map opens.
+The compiled original overlay function matches 120 complete-bank cases; manual
+and automatic imports also agree on the pinned real project. Native dialog
+fidelity and persistence across restarts remain outstanding.
+
 Implemented slices include New Map, Save As, block resize, map editing/saving, master metadata discovery, six
 palette sets, project/roof colors, compound graphics and roof tile replacement.
 Block editing now has shared placement/collision commands, a GUI draft editor,

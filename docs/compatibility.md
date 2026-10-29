@@ -24,6 +24,30 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- Data → Load Roof Colors and Options → Roof Palettes now follow the pinned
+  callbacks, including all five table layouts, known-group enablement, manual
+  indoor/monochrome loading, edited-palette consent, retained selected set/dirty
+  state, atomic preview refresh and success/error handling. Changing layout
+  affects future manual and automatic imports, survives Close and does not
+  recolor immediately. Three headless workflow tests cover these transitions,
+  cancellation, invalid files, live graphics, modal shortcut guards, unchanged
+  map/tileset history and untouched source files. Native dialogs and preference
+  persistence remain pending.
+  `PaletteDocument::load_roof_colors` and `roof_palette_path` expose the same
+  import and precedence without a GUI. Source-derived tests check every palette
+  cell for all five layouts, both dirty states, selected-set retention, missing
+  and malformed files, insufficient groups and index overflow.
+  The extended C++ palette oracle compiles unmodified `Color::read_roof_colors`:
+  all 120 outcomes and complete 648-byte banks match (five layouts, six table
+  lengths, groups 0/1/2/255). Its parser stub supplies complete synthetic
+  palettes; this is an overlay-function differential, not an ASM-parser or
+  native GUI comparison. The pinned New Bark Town palette test also verifies
+  manual import equals automatic loading on the real roof table, without
+  modifying the project.
+  The Data/Options popup changes, five-choice submenu and confirmation/success
+  snapshots were inspected. No other existing baselines changed. These are
+  headless egui snapshots; native shield artwork and modal geometry remain open.
+
 - File Close, Save Map and Exit now follow `Main_Window::close_cb`,
   `save_map_cb`, `exit_cb`, `unsaved` and `modified_filename`. Five headless tests
   cover all five dirty domains, warning filenames, Cancel preservation, discard

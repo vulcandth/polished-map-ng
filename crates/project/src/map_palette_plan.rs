@@ -109,17 +109,8 @@ impl MapPalettePlan {
             && !options.monochrome
             && matches!(metadata.environment.as_str(), "TOWN" | "ROUTE" | "1" | "2")
         {
-            let paths = [
-                root.join("gfx/tilesets/roofs.pal"),
-                root.join("tilesets/roof.pal"),
-            ];
-            let path = paths
-                .iter()
-                .find(|p| p.is_file())
-                .unwrap_or(&paths[1])
-                .clone();
             steps.push_back(Step::Roof {
-                path,
+                path: crate::roof_palette_path(root),
                 group: metadata.group,
                 layout: options.roof_layout,
             });
@@ -176,7 +167,7 @@ impl MapPalettePlan {
                 path,
                 group,
                 layout,
-            } if load => draft.overlay_roof_colors(path, *group, *layout)?,
+            } if load => draft.load_roof_colors(path, *group, *layout)?,
             _ => {}
         }
         *palettes = draft;
