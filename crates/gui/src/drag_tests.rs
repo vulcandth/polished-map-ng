@@ -311,6 +311,15 @@ fn asset_drag_feedback_matches_selection_border_geometry() {
                 ["GRAY color 1", "GRAY color 2"]
             }
         };
+        // These drag snapshots use Windows order on every host. The dedicated
+        // form geometry tests cover both orders. CI 40816806957 differed only
+        // in native-default OK/Cancel labels; do not relax pixel thresholds.
+        if let Some(form) = h.state_mut().tileset_form.as_mut() {
+            form.windows_buttons = true;
+        }
+        if let Some(form) = h.state_mut().palette_form.as_mut() {
+            form.windows_buttons = true;
+        }
         h.run();
         let from = h.get_by_label(labels[0]).rect();
         let to = h.get_by_label(labels[1]).rect();

@@ -31,6 +31,14 @@ one palette case and the canvas height needed to contain it. Formatting,
 workspace Clippy/tests/docs and visual-feature Clippy pass locally. The final
 visual suite passes 105 tests with one independent-oracle test ignored by default.
 
+CI 40816806957 passed the three OS test jobs, reference/real-project checks, MSRV
+and dependency audit, but failed the three new drag snapshots on Linux. Inspected
+artifacts show all differences over 2/255 confined to native-default OK/Cancel
+labels (palette: x=412..543/y=381..390; tileset: x=470..601/y=438..447;
+roof: x=350..481/y=400..409). The drag snapshot fixture now explicitly selects
+Windows button order on every host, preserving its baseline and thresholds.
+Existing editor geometry tests continue to cover both platform button orders.
+
 ## Other master parity evidence
 
 Overworld Map Size follows `Overworld_Map_Size_Dialog` and
