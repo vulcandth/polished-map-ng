@@ -1,5 +1,41 @@
 # Compatibility evidence
 
+## Initial map position on Open and New
+
+Pinned master `Main_Window::open_map` computes the initial map position after
+creating its block group. For each axis, `k = content - workspace + scrollbar`;
+the result is the three-block margin when `k` exceeds that margin, zero when
+`k < 0`, and integer `k / 2` otherwise. The scrollbar allowance is unconditional.
+The strict comparison produces an intentional jump from half-margin to full
+margin; it is not ordinary centering followed by a clamp.
+
+The GUI now requests this positioning only after a new document, textures and
+palette decisions are successfully published. It uses the current client layout,
+zoom and rulers, clears the prior map's scroll request, and applies the position
+without old-frame inertia. Canceled/failed opens and pending oversized-map
+warnings preserve the previous view. Resize still resets to zero, while normal
+window resizing and later frames do not reapply the opening position. Close
+clears the request so it cannot suppress a subsequent Open or New.
+
+`open_scroll_tests` checks 16 independent arithmetic boundary vectors and 44
+Open/New combinations through actual worker/UI routes, at both DPI scales, both
+zoom sizes, rulers, mixed small/large axes and the minimum 335×262 client size.
+It also checks failed/canceled opens, acknowledgment timing, old/new document
+identity, one-time positioning, scroll after opening, file bytes and clean/new
+history state. These are source-derived and headless checks; native FLTK/eframe
+positioning and window-resize comparisons remain separate verification work.
+
+Three new rendered snapshots were inspected: the 15×12 partial-centering case
+places the map origin at `(224, 112)` in an 800×600 client; the large zoomed/ruler
+case starts at `(288, 63)`; the 335×262 zoomed/ruler case uses that same origin
+with a 31-point content viewport before the vertical scrollbar. These positions
+match `workspace origin + three-block margin - opening offset`. Existing visual
+baselines remain unchanged.
+
+Local formatting, workspace and visual-feature Clippy with warnings denied,
+workspace tests and rustdoc pass. The full visual suite passes 181 tests with
+four existing ignored tests, including the three reviewed new snapshots.
+
 ## Middle-button workspace panning
 
 Pinned master `widgets.cpp::Workspace::handle` intercepts middle presses before
@@ -1026,7 +1062,7 @@ inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pas
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; persistent preferences and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
-| Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex and block-ID tests pass; light/dark development snapshots inspected; native fonts/themes, persisted preferences and initial scroll positioning pending |
+| Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-seven implemented settings plus recent history restore/save with malformed-record protection; Print flags/Copy/Export and internal Drag and Drop join the tested view, import and size options. Legacy import, remaining preferences, native storage/placement, complete overlays and native print/clipboard parity pending |
@@ -1188,7 +1224,7 @@ the original application. Unverified assets never become redistributable fixture
   [Fl_Slider::scrollvalue](https://github.com/fltk/fltk/blob/release-1.4.5/src/Fl_Slider.cxx)
   (range includes position plus viewport size). These are source-derived and
   headless egui tests, not a native FLTK interaction differential; native wheel,
-  initial positioning and resize remain pending. Middle-button source/headless
+  initial positioning and resize still need native checks. Initial-position and middle-button source/headless
   coverage is now documented above; native panning remains unverified.
   Three zoom snapshots (scrolled normal, enlarged and far-edge space) were
   rendered and inspected. All 39 changed existing baselines differ only within

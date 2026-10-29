@@ -117,6 +117,20 @@ pub fn zoom_scroll(offset: f32, zoom: bool) -> f32 {
     }
 }
 
+/// Main_Window::open_map's initial position, shared by Open and New.
+/// The source adds a scrollbar allowance even before visibility is resolved.
+/// Its strict margin comparison and integer half are intentional: this is not
+/// equivalent to clamping the half-surplus to the margin.
+pub fn open_scroll(content: f32, viewport: f32, block_size: f32, scrollbar: f32) -> f32 {
+    let surplus = content.trunc() - viewport.trunc() + scrollbar.trunc();
+    let margin = MAP_MARGIN * block_size;
+    if surplus > margin {
+        margin
+    } else {
+        (surplus.max(0.0) / 2.0).floor()
+    }
+}
+
 /// master Map::block_under, Block::right_half/bottom_half and
 /// Main_Window::update_event_cursor. Coordinates are relative to the map origin.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

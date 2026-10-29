@@ -70,6 +70,7 @@ impl Editor {
         self.stroke.clear();
         self.reset_sidebar_scroll = true;
         self.reset_canvas_scroll = true;
+        self.initial_canvas_scroll = false;
         self.canvas_scroll = Vec2::ZERO;
         self.canvas_pan.reset();
         self.sidebar_pan.reset();

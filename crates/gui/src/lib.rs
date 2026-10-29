@@ -22,6 +22,8 @@ mod map_labels;
 mod map_open_tests;
 mod menu_popup;
 mod menus;
+#[cfg(test)]
+mod open_scroll_tests;
 mod overworld;
 mod palette_editor;
 #[cfg(test)]
@@ -168,6 +170,7 @@ pub struct Editor {
     reset_sidebar_scroll: bool,
     resize_anchor: ResizeAnchor,
     reset_canvas_scroll: bool,
+    initial_canvas_scroll: bool,
     canvas_zoom: bool,
     canvas_scroll: Vec2,
     sidebar_scroll: f32,
@@ -258,6 +261,7 @@ impl Default for Editor {
             reset_sidebar_scroll: false,
             resize_anchor: ResizeAnchor::default(),
             reset_canvas_scroll: false,
+            initial_canvas_scroll: false,
             canvas_zoom: false,
             canvas_scroll: Vec2::ZERO,
             canvas_pan: Default::default(),
@@ -542,7 +546,10 @@ impl Editor {
             if matches!(command, Command::Resize { .. }) {
                 match event_workflows::resize_with_events(loaded, &command) {
                     Err(error) => self.error = Some(error),
-                    Ok(true) => self.reset_canvas_scroll = true,
+                    Ok(true) => {
+                        self.reset_canvas_scroll = true;
+                        self.initial_canvas_scroll = false;
+                    }
                     Ok(false) => {}
                 }
                 return;
@@ -1433,7 +1440,7 @@ impl Editor {
     }
 
     fn canvas(&mut self, ui: &mut egui::Ui, layout: &geometry::Layout) {
-        if self.reset_canvas_scroll || self.canvas_zoom != self.zoom {
+        if self.reset_canvas_scroll || self.initial_canvas_scroll || self.canvas_zoom != self.zoom {
             self.canvas_pan.reset();
         }
         let content = self.loaded.as_ref().map_or(Vec2::ZERO, |loaded| {
@@ -1494,7 +1501,7 @@ impl Editor {
                     ..egui::scroll_area::ScrollSource::NONE
                 });
         }
-        if self.reset_canvas_scroll || self.canvas_zoom != self.zoom {
+        if self.reset_canvas_scroll || self.initial_canvas_scroll || self.canvas_zoom != self.zoom {
             // egui starts physics against the previous frame's bounds. A source
             // zoom/reset is immediate, even when it exceeds those old bounds.
             ui.spacing_mut().scroll.kinetic.rubber_band = false;
@@ -1504,6 +1511,24 @@ impl Editor {
             retained_scroll = Vec2::ZERO;
             scroll = scroll.scroll_offset(Vec2::ZERO);
             self.reset_canvas_scroll = false;
+            self.initial_canvas_scroll = false;
+        } else if self.initial_canvas_scroll {
+            retained_scroll = Vec2::new(
+                geometry::open_scroll(
+                    content.x,
+                    layout.canvas.width,
+                    size,
+                    ui.spacing().scroll.bar_width,
+                ),
+                geometry::open_scroll(
+                    content.y,
+                    layout.canvas.height,
+                    size,
+                    ui.spacing().scroll.bar_width,
+                ),
+            );
+            scroll = scroll.scroll_offset(retained_scroll);
+            self.initial_canvas_scroll = false;
         } else if self.canvas_zoom != self.zoom {
             retained_scroll = Vec2::new(
                 geometry::zoom_scroll(self.canvas_scroll.x, self.zoom),

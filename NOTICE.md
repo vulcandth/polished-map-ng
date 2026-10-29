@@ -47,6 +47,9 @@ Parent middle-button interception, integer anchored panning, scroll limits and
 correlated ruler updates adapt `widgets.cpp::Workspace::{handle,scroll_to}` and
 `Main_Window::update_layout`, under LGPL-3.0-only. Transient capture cancellation
 and egui viewport sizing are Rust integration code.
+Initial Open/New positioning adapts the integer scrollbar/margin formula in
+`Main_Window::open_map`, under LGPL-3.0-only. Applying it only after successful
+staged document publication preserves the port's failure-atomic opening boundary.
 Numeric block assignment, selection reveal and digit badges adapt
 `Main_Window::{handle_hotkey,select_metatile,force_add_sub_metatiles,close_cb}`,
 `Metatile_Button::draw` and `utils.cpp::draw_outlined_text`. Map picking adapts

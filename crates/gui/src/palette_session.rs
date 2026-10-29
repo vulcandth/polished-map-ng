@@ -129,6 +129,8 @@ impl Editor {
         self.block_hotkeys = Default::default();
         self.sidebar_reveal = None;
         self.reset_sidebar_scroll = true;
+        self.reset_canvas_scroll = false;
+        self.initial_canvas_scroll = true;
         self.stroke.clear();
         if !self.pending_palette_warnings.is_empty() {
             self.open_palette_warning =

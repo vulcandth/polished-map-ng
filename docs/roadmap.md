@@ -230,7 +230,12 @@ Rendered pixel tests cover both map zooms, event/tile/chip sizes and 1×/2× sca
 native DPI/drag dispatch and complete native themes still need verification.
 Zoom now scales map offsets with source integer rounding, resets the sidebar,
 and preserves far-edge blank space until scrolling back. Headless controls and
-edge tests pass; initial positioning and native pan/scroll checks remain pending.
+edge tests pass. Open/New now use the original per-axis opening position, including
+unconditional scrollbar allowance, integer halves and the strict three-block
+margin threshold. Failed/canceled opens and pending warnings retain the old view;
+successful publication applies the position once at the current client geometry.
+Source-vector and worker/UI tests cover both zoom/DPI sizes and rulers. Native
+initial positioning, window-resize and pan/scroll checks remain pending.
 Print's shared CPU compositor now covers its five independent flags, native
 32-pixel blocks, priority/grid/ID ordering and events with per-event warp bases.
 It accepts bounded font coverage from an adapter and runs without GUI/GPU/IO.
