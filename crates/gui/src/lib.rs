@@ -146,6 +146,7 @@ pub struct Editor {
     block_clipboard: Option<block_workflows::BlockClipboard>,
     paste_shortcut_handled: bool,
     sidebar_drag: Option<u8>,
+    sidebar_press: Option<(egui::PointerButton, u8)>,
     reset_sidebar_scroll: bool,
     resize_anchor: ResizeAnchor,
     reset_canvas_scroll: bool,
@@ -228,6 +229,7 @@ impl Default for Editor {
             block_clipboard: None,
             paste_shortcut_handled: false,
             sidebar_drag: None,
+            sidebar_press: None,
             reset_sidebar_scroll: false,
             resize_anchor: ResizeAnchor::default(),
             reset_canvas_scroll: false,
@@ -1096,7 +1098,7 @@ impl Editor {
                     && (id as usize) < self.textures.len())
                 .then_some(id as u8)
             };
-            if !self.drag_and_drop {
+            if !self.drag_and_drop || !ui.is_enabled() {
                 self.sidebar_drag = None;
             }
             if self.drag_and_drop && response.drag_started_by(egui::PointerButton::Primary) {
@@ -1108,6 +1110,46 @@ impl Editor {
             } else {
                 None
             };
+            // Metatile_Button sends its release callback to the pressed button;
+            // select_metatile_cb acts only if the pointer is still over it.
+            // Keep that cell identity even though egui uses one sidebar region.
+            let mut released = None;
+            if ui.is_enabled() {
+                for event in ui.input(|i| i.events.clone()) {
+                    match event {
+                        egui::Event::PointerButton {
+                            pos,
+                            button,
+                            pressed: true,
+                            ..
+                        } if response.contains_pointer()
+                            || response.is_pointer_button_down_on() =>
+                        {
+                            self.sidebar_press = hit(pos).map(|id| (button, id));
+                        }
+                        egui::Event::PointerButton {
+                            pos,
+                            button,
+                            pressed: false,
+                            ..
+                        } => {
+                            if let Some((held, id)) = self.sidebar_press
+                                && held == button
+                            {
+                                self.sidebar_press = None;
+                                if response.contains_pointer() && hit(pos) == Some(id) {
+                                    released = Some((id, button));
+                                }
+                            }
+                        }
+                        egui::Event::PointerGone => self.sidebar_press = None,
+                        _ => {}
+                    }
+                }
+            }
+            if !ui.is_enabled() || !ui.input(|i| i.pointer.any_down()) {
+                self.sidebar_press = None;
+            }
             for (id, texture) in self.textures.iter().enumerate() {
                 let cell = Rect::from_min_size(
                     rect.min
@@ -1154,17 +1196,10 @@ impl Editor {
                     }
                 }
             }
-            if (response.clicked() || response.secondary_clicked())
-                && let Some(pos) = response.interact_pointer_pos()
-            {
-                let local = pos - rect.min;
-                let col = (local.x / block_size) as usize;
-                let id = (local.y / block_size) as usize * 4 + col;
-                if col < 4 && id < self.textures.len() {
-                    self.selected = id as u8;
-                    if response.secondary_clicked() {
-                        self.prepare_block(ui.ctx());
-                    }
+            if let Some((id, button)) = released {
+                self.selected = id;
+                if button == egui::PointerButton::Secondary {
+                    self.prepare_block(ui.ctx());
                 }
             }
             if let Some((from, to)) = drop

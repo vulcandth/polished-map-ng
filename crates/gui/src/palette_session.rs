@@ -109,6 +109,7 @@ impl Editor {
         self.selected = 0;
         self.block_clipboard = None;
         self.sidebar_drag = None;
+        self.sidebar_press = None;
         self.reset_sidebar_scroll = true;
         self.stroke.clear();
         if !self.pending_palette_warnings.is_empty() {

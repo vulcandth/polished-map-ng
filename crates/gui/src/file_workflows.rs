@@ -42,6 +42,7 @@ impl Editor {
         self.selected = 0;
         self.block_clipboard = None;
         self.sidebar_drag = None;
+        self.sidebar_press = None;
         self.paste_shortcut_handled = false;
         self.stroke.clear();
         self.reset_sidebar_scroll = true;

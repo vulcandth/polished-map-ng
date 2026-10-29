@@ -1,5 +1,39 @@
 # Compatibility evidence
 
+## Sidebar release gestures and original block-editor entry
+
+Pinned master's `Metatile_Button::handle` calls back on release, and
+`Main_Window::select_metatile_cb` requires the pointer to be over the pressed
+button. Any mouse button selects; right release also opens the block editor.
+There is no sidebar context menu or double-click editor action in this source.
+The port now tracks the pressed cell/button despite using one egui interaction
+region for the grid. Releases cannot cross into another cell, blank space or
+clipped rows; right-dragging away and back still works, because upstream does
+not require `event_is_click` for this callback. Pointer loss, disabled/modal UI
+and document replacement clear the transient press. Existing drag copy/swap
+operations still use their own validated source/target route.
+
+The temporary Edit Block menu entry and its extra divider are removed. Existing
+block editing/cancel/accept/save/conflict and collision-layout tests now enter
+through actual right-button events. Four new interaction tests cover all three
+buttons, both zoom sizes, both transfer settings, near-border release mismatch,
+blank/off-sidebar releases, return-to-source drag, pointer loss, modal guards
+and partially clipped rows after scrolling. Source-derived layout determines
+the target positions. Numeric hotkeys and native input/child-window behavior
+remain unimplemented/unverified gates, respectively.
+
+Local formatting, warnings-as-errors Clippy, workspace tests and documentation
+pass. The full visual suite passes 134 tests with one existing ignored test.
+Only the Edit-menu snapshot changed for removal of the extra entry/divider;
+it was inspected. All existing block-editor snapshots remain unchanged despite
+entering through the real pointer workflow. No computer use was performed.
+
+The preceding transparency CI run
+[`40837746785`](https://github.com/vulcandth/polished-map-ng/actions/runs/40837746785)
+passed all eight jobs. Linux explicitly passed the Xvfb opacity property test;
+macOS compiled and passed its Rust checks. Those results do not prove compositor
+appearance or macOS native opacity behavior.
+
 ## Whole-window transparency
 
 View/Transparent and F10 now follow pinned master's `Main_Window::initialize`,

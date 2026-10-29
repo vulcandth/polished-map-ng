@@ -307,10 +307,7 @@ mod tests {
     #[test]
     fn collision_labels_follow_source_layout_and_availability() {
         let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
-        h.get_by_label("Edit").click();
-        h.run();
-        h.get_by_label("Edit Block…").click();
-        h.run();
+        crate::block_workflow_tests::open_block(&mut h, 0);
         assert!(h.state().block_form.as_ref().unwrap().collision.is_none());
         // Snapshot button order is explicit, independent of the CI host.
         h.state_mut().block_form.as_mut().unwrap().windows_buttons = true;

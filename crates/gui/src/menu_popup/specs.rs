@@ -42,9 +42,7 @@ pub(super) fn group(name: &str) -> &'static [Spec<'static>] {
                     Spec::new("Redo", Blank, "C+Y", true),
                     Spec::new("Copy Block", Blank, "C+C", false),
                     Spec::new("Paste Block", Blank, "C+V", false),
-                    Spec::new("Swap Block", Blank, "C+X", true),
-                    // Existing explicit entry until original context gestures are complete.
-                    Spec::new("Edit Block…", Blank, "", false),
+                    Spec::new("Swap Block", Blank, "C+X", false),
                 ]
             }
         }

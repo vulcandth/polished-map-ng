@@ -94,12 +94,6 @@ impl Editor {
                         loaded.document.map_mut().redo();
                     }
                     self.block_menu(ui);
-                    // Temporary explicit entry while the complete source block
-                    // context-menu/gesture port is unfinished; see deviations.
-                    let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
-                    if action(ui, blocks, "Edit Block…") {
-                        self.prepare_block(&ctx);
-                    }
                 });
                 menu_popup::menu(ui, "View", |ui| {
                     // Complete native Theme submenu is a separate parity item.
@@ -269,7 +263,10 @@ mod tests {
                     "Print…",
                 ][..],
             ),
-            ("Edit", &["Undo", "Redo", "Edit Block…"][..]),
+            (
+                "Edit",
+                &["Undo", "Redo", "Copy Block", "Paste Block", "Swap Block"][..],
+            ),
             (
                 "Tools",
                 &[

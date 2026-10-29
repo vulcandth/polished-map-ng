@@ -14,7 +14,7 @@ keyboard and headless counterparts where applicable.
 |---|---|---|
 | File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Print's native fonts, clipboard delivery and chooser behavior remain verification gates. Native close delivery still needs platform verification. |
 | Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialogs and complete popup geometry remain pending. |
-| Edit | Undo, Redo, Copy/Paste/Swap Block | The extra Edit Block entry is temporary access to the existing editor; upstream opens it through block interactions. Complete context-menu/gesture equivalence is pending. |
+| Edit | Undo, Redo, Copy/Paste/Swap Block | The temporary Edit Block entry is removed. Right-release on the same sidebar block opens its editor, matching upstream; native input/child-window verification remains pending. |
 | View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Transparent, Full Screen | Theme submenu; Wayland whole-window opacity integration. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |

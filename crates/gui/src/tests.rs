@@ -42,10 +42,7 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
     harness.state_mut().status = "Synthetic blockset".into();
     harness.run();
     for accept in [false, true] {
-        harness.get_by_label("Edit").click();
-        harness.run();
-        harness.get_by_label("Edit Block…").click();
-        harness.run();
+        crate::block_workflow_tests::open_block(&mut harness, 0);
         #[cfg(feature = "visual-tests")]
         if !accept {
             let original = harness.state().block_form.as_ref().unwrap().windows_buttons;
@@ -135,10 +132,7 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
         std::fs::read_to_string(&collisions).unwrap(),
         "\ttilecoll WATER, FLOOR, WALL, WALL ; 00\n"
     );
-    harness.get_by_label("Edit").click();
-    harness.run();
-    harness.get_by_label("Edit Block…").click();
-    harness.run();
+    crate::block_workflow_tests::open_block(&mut harness, 0);
     harness.get_by_label("OK").click();
     harness.run();
     std::fs::write(&blocks, [9; 16]).unwrap();
@@ -193,10 +187,7 @@ fn binary_collision_spinners_edit_all_four_quadrants() {
     harness.state_mut().loading = Some(rx);
     harness.run();
     harness.state_mut().status = "Synthetic binary collisions".into();
-    harness.get_by_label("Edit").click();
-    harness.run();
-    harness.get_by_label("Edit Block…").click();
-    harness.run();
+    crate::block_workflow_tests::open_block(&mut harness, 0);
     #[cfg(feature = "visual-tests")]
     {
         harness

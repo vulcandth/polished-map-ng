@@ -20,6 +20,15 @@ overlays, export/clipboard, external-change handling and unsaved dialogs.
 Accept only when all matrix entries pass or have an approved exception and
 outputs reopen correctly in upstream. Include pinned compatible pokecrystal.
 
+The block editor now uses the original sidebar right-release workflow without
+the temporary Edit Block menu entry. Left/middle releases select; right releases
+select and edit only when they return to the pressed block inside the visible
+clip. Pointer loss, canceled releases, modals and document replacement clear the
+transient press. Tests exercise zoom, drag-option combinations, scrolled clips,
+real editor entry, cancellation, saving and map-history preservation. Existing
+drag copy/swap tests remain active. Numeric block hotkeys and native mouse/child-
+window verification remain separate requirements.
+
 File Close, dedicated Save Map and Exit now share source-derived dirty-domain
 guards and preserve the source distinction between document changes and palette
 session edits. Headless tests cover state clearing/retention, all dirty domains,

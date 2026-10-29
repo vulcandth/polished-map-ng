@@ -2,6 +2,191 @@ use super::*;
 use egui_kittest::{Harness, kittest::Queryable};
 use polished_map_core::{BlockCommand, CollisionRow, Tile, day_palettes};
 
+fn pointer(h: &mut Harness<'_, Editor>, pos: Pos2, button: egui::PointerButton, pressed: bool) {
+    h.hover_at(pos);
+    h.event_modifiers(
+        egui::Event::PointerButton {
+            pos,
+            button,
+            pressed,
+            modifiers: egui::Modifiers::NONE,
+        },
+        egui::Modifiers::NONE,
+    );
+    h.run();
+}
+
+pub(super) fn open_block(h: &mut Harness<'_, Editor>, id: u8) {
+    let size = if h.state().zoom { 64.0 } else { 32.0 };
+    let pos = Pos2::new(
+        (f32::from(id % 4) + 0.5) * size,
+        geometry::MENU_HEIGHT + geometry::TOOLBAR_HEIGHT + (f32::from(id / 4) + 0.5) * size
+            - h.state().sidebar_scroll,
+    );
+    pointer(h, pos, egui::PointerButton::Secondary, true);
+    pointer(h, pos, egui::PointerButton::Secondary, false);
+    assert_eq!(h.state().selected, id);
+    assert!(
+        h.state().block_form.is_some(),
+        "right-click must open the real block editor"
+    );
+}
+
+#[test]
+fn sidebar_releases_match_original_buttons_and_right_click_edits_the_released_block() {
+    for zoom in [false, true] {
+        for transfers in [false, true] {
+            let (dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+            h.state_mut().zoom = zoom;
+            h.state_mut().drag_and_drop = transfers;
+            h.run();
+            let size = if zoom { 64.0 } else { 32.0 };
+            let pos = Pos2::new(size * 1.5, 47.0 + size * 0.5);
+            for button in [
+                egui::PointerButton::Primary,
+                egui::PointerButton::Middle,
+                egui::PointerButton::Secondary,
+            ] {
+                h.state_mut().selected = 0;
+                h.run();
+                pointer(&mut h, pos, button, true);
+                assert_eq!(h.state().selected, 0, "selection waits for release");
+                assert!(h.state().block_form.is_none());
+                pointer(&mut h, pos, button, false);
+                assert_eq!(h.state().selected, 1);
+                assert_eq!(
+                    h.state().block_form.is_some(),
+                    button == egui::PointerButton::Secondary
+                );
+                if button == egui::PointerButton::Secondary {
+                    h.get_by_label("Cancel").click();
+                    h.run();
+                }
+                assert!(h.state().sidebar_press.is_none());
+            }
+            assert!(!h.state().is_modified());
+            assert_eq!(
+                std::fs::read(dir.path().join("Map.2x1.blk")).unwrap(),
+                [0, 1]
+            );
+        }
+    }
+}
+
+#[test]
+fn sidebar_release_cannot_cross_cell_boundaries_or_escape_into_blank_space() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    h.state_mut().drag_and_drop = false;
+    h.run();
+    // Two pixels across the cell border is below egui's usual click-drag
+    // threshold, but must not act as a click on a different original button.
+    for button in [egui::PointerButton::Primary, egui::PointerButton::Secondary] {
+        for (from, to) in [
+            (Pos2::new(31.0, 63.0), Pos2::new(33.0, 63.0)),
+            (Pos2::new(48.0, 63.0), Pos2::new(80.0, 63.0)),
+            (Pos2::new(48.0, 63.0), Pos2::new(48.0, 90.0)),
+            (Pos2::new(48.0, 63.0), Pos2::new(200.0, 63.0)),
+        ] {
+            pointer(&mut h, from, button, true);
+            pointer(&mut h, to, button, false);
+            assert_eq!(h.state().selected, 0);
+            assert!(h.state().block_form.is_none() && h.state().sidebar_press.is_none());
+        }
+    }
+    h.state_mut().prepare_resize();
+    h.run();
+    for pressed in [true, false] {
+        pointer(
+            &mut h,
+            Pos2::new(48.0, 63.0),
+            egui::PointerButton::Secondary,
+            pressed,
+        );
+    }
+    assert!(h.state().block_form.is_none() && h.state().sidebar_press.is_none());
+    assert_eq!(h.state().selected, 0);
+    h.get_by_label("Cancel").click();
+    h.run();
+    open_block(&mut h, 1);
+    h.get_by_label("Cancel").click();
+    h.run();
+    assert!(!h.state().is_modified());
+}
+
+#[test]
+fn sidebar_right_release_can_return_to_its_source_and_pointer_loss_cancels_the_press() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    let pos = Pos2::new(48.0, 63.0);
+    pointer(&mut h, pos, egui::PointerButton::Secondary, true);
+    h.hover_at(Pos2::new(200.0, 63.0));
+    h.run();
+    pointer(&mut h, pos, egui::PointerButton::Secondary, false);
+    assert_eq!(h.state().selected, 1);
+    assert!(
+        h.state().block_form.is_some(),
+        "source does not require event_is_click for this callback"
+    );
+    h.get_by_label("Cancel").click();
+    h.run();
+    h.state_mut().selected = 0;
+    pointer(&mut h, pos, egui::PointerButton::Secondary, true);
+    h.input_mut().events.push(egui::Event::PointerGone);
+    h.run();
+    assert!(h.state().sidebar_press.is_none());
+    pointer(&mut h, pos, egui::PointerButton::Secondary, false);
+    assert!(h.state().block_form.is_none());
+    assert_eq!(h.state().selected, 0);
+}
+
+#[test]
+fn scrolled_sidebar_releases_respect_the_visible_clip_boundary() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    let ctx = h.ctx.clone();
+    assert!(
+        h.state_mut()
+            .apply_block_commands(&ctx, &[BlockCommand::Resize { count: 64 }])
+    );
+    h.set_size(Vec2::new(335.0, 262.0));
+    h.run();
+    h.hover_at(Pos2::new(80.0, 100.0));
+    h.run();
+    h.event(egui::Event::MouseWheel {
+        unit: egui::MouseWheelUnit::Point,
+        phase: egui::TouchPhase::Move,
+        source: egui::MouseWheelSource::Unknown,
+        delta: Vec2::new(0.0, -13.0),
+        modifiers: egui::Modifiers::NONE,
+    });
+    h.run();
+    assert_eq!(h.state().sidebar_scroll, 13.0);
+    h.state_mut().selected = 1;
+    // Row zero now spans y=34..66 but only y>=47 belongs to the sidebar.
+    pointer(
+        &mut h,
+        Pos2::new(16.0, 50.0),
+        egui::PointerButton::Secondary,
+        true,
+    );
+    pointer(
+        &mut h,
+        Pos2::new(16.0, 45.0),
+        egui::PointerButton::Secondary,
+        false,
+    );
+    assert_eq!(h.state().selected, 1);
+    assert!(h.state().block_form.is_none());
+    for pressed in [true, false] {
+        pointer(
+            &mut h,
+            Pos2::new(16.0, 50.0),
+            egui::PointerButton::Secondary,
+            pressed,
+        );
+    }
+    assert_eq!(h.state().selected, 0);
+    assert!(h.state().block_form.is_some());
+}
+
 fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
     let dir = tempfile::tempdir().unwrap();
     let map = dir.path().join("Map.2x1.blk");
