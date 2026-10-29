@@ -260,6 +260,10 @@ Mac shortcut symbols have a separately licensed font; keyboard activation and
 1×/2× layout checks supplement inspected snapshots. Native fonts, exact theme
 glyphs/borders, mnemonics, screen-edge behavior and remaining commands still
 prevent a menu parity gate.
+The temporary Dark appearance toggle is replaced by View > Theme with the
+source-ordered Greybird/Dark radio choices. Pointer/keyboard selection, modal
+guards, document/color preservation and v1 preference restart are covered;
+the other ten themes remain deferred under the accepted initial scope.
 Greybird/Dark menu indicator geometry and colors now follow the original theme
 and FLTK drawing functions, including filled checkmarks, radio highlights,
 theme-dependent radio diameters and inactive text blending. A compiled source

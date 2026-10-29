@@ -177,6 +177,63 @@ mod tests {
     }
 
     #[test]
+    fn theme_radio_choices_reuse_v1_preferences_and_restore_the_selected_theme() {
+        use egui_kittest::kittest::{NodeT, Queryable};
+        let mut storage = MemoryStorage::default();
+        for (name, dark) in [("Dark", true), ("Greybird", false)] {
+            let mut h = restore(&storage);
+            h.get_by_label("View").click();
+            h.run();
+            h.get_by_label("Theme").click();
+            h.run();
+            h.get_by_role_and_label(egui::Role::RadioButton, name)
+                .click();
+            h.run();
+            let mut editor = std::mem::take(h.state_mut());
+            drop(h);
+            eframe::App::save(&mut editor, &mut storage);
+            let value: serde_json::Value = serde_json::from_str(&storage.values[KEY]).unwrap();
+            assert_eq!(value["version"], 1);
+            assert_eq!(value["dark"], dark);
+            let theme = if dark {
+                egui::Theme::Dark
+            } else {
+                egui::Theme::Light
+            };
+            // Harness applies its theme after CreationContext. Check the real
+            // startup choice inside the factory, then use the same test theme.
+            let mut h = Harness::builder()
+                .with_size(Vec2::new(800.0, 600.0))
+                .with_theme(theme)
+                .build_eframe(|cc| {
+                    cc.storage = Some(&storage);
+                    let editor = Editor::new(cc);
+                    assert_eq!(cc.egui_ctx.theme(), theme);
+                    editor
+                });
+            assert_eq!(h.state().dark, dark);
+            assert_eq!(
+                h.ctx.theme(),
+                if dark {
+                    egui::Theme::Dark
+                } else {
+                    egui::Theme::Light
+                }
+            );
+            h.get_by_label("View").click();
+            h.run();
+            h.get_by_label("Theme").click();
+            h.run();
+            assert_eq!(
+                h.get_by_role_and_label(egui::Role::RadioButton, name)
+                    .accesskit_node()
+                    .toggled(),
+                Some(egui::accesskit::Toggled::True)
+            );
+        }
+    }
+
+    #[test]
     fn shutdown_settings_restore_at_startup_without_documents_colors_or_transient_state() {
         let (dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
         h.key_press_modifiers(egui::Modifiers::CTRL, egui::Key::Num7);

@@ -9,7 +9,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 
 | Setting | Default |
 |---|---|
-| Portable dark appearance | Off (light) |
+| Theme | Greybird; Dark is the other supported initial choice |
 | Transparent | Off; requests 75% whole-window opacity |
 | Editing mode | Blocks |
 | Grid | On |
@@ -26,6 +26,10 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Overworld Map Size | 1300 bytes; accepted range 1–4096 |
 | Drag and Drop | On; internal block, tile, roof and palette transfers |
 | Print Grid, IDs, Priority, Events, Warp IDs | All off; independent of editor view flags |
+
+The Theme submenu retains the existing v1 `dark` boolean (false for Greybird,
+true for Dark), so earlier settings need no migration. Choosing either theme
+updates its radio mark and the shared UI style without changing document colors.
 
 The three auto-load toggles affect subsequent opens, not the current document.
 Special palettes and roof colors are independent; turning either off skips

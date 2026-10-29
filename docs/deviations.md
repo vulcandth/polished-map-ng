@@ -313,12 +313,14 @@ state and map history.
 The main menus now use upstream's eight top-level groups and the source locations
 for implemented commands. The temporary Edit Block entry has been removed;
 sidebar right-release opens the editor using the original pressed-block and
-release-target rules. The Dark appearance checkbox remains while the native
-Theme submenu is incomplete. Help now opens the original reference text;
+release-target rules. The original Theme submenu now exposes the two accepted
+initial choices, Greybird and Dark; the other ten source themes are deferred.
+Full native theme rendering remains incomplete. Help opens the original reference text;
 About now has its source command and modal, with attribution moved into it.
 The image/check columns, measured rows, trailing dividers and separate shortcut
-columns now follow source calculations. Theme-specific check/radio glyphs,
-beveled borders, disabled colors and native fonts remain incomplete; egui still
+columns now follow source calculations. Greybird/Dark indicator geometry and
+inactive colors now follow compiled source comparisons. Native curve coverage,
+outer beveled borders and native fonts remain incomplete; egui still
 owns popup positioning and keyboard focus. Missing commands, mnemonics and
 native behavior are listed explicitly in `docs/menus.md`.
 

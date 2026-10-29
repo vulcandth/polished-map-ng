@@ -96,14 +96,22 @@ impl Editor {
                     self.block_menu(ui);
                 });
                 menu_popup::menu(ui, "View", |ui| {
-                    // Complete native Theme submenu is a separate parity item.
-                    if menu_popup::checkbox(ui, true, &mut self.dark, "Dark appearance").changed() {
-                        ctx.set_theme(if self.dark {
-                            egui::Theme::Dark
-                        } else {
-                            egui::Theme::Light
-                        });
-                    }
+                    // Main_Window::{greybird_theme_cb,dark_theme_cb}: setonly,
+                    // redraw icons/main/help, without changing document colors.
+                    menu_popup::submenu(ui, "Theme", |ui| {
+                        for (name, dark) in [("Greybird", false), ("Dark", true)] {
+                            if menu_popup::radio(ui, self.dark == dark, name).clicked() {
+                                self.dark = dark;
+                                ctx.set_theme(if dark {
+                                    egui::Theme::Dark
+                                } else {
+                                    egui::Theme::Light
+                                });
+                                ctx.request_repaint();
+                                ui.close();
+                            }
+                        }
+                    });
                     menu_popup::checkbox(ui, true, &mut self.grid, "Grid");
                     menu_popup::checkbox(ui, true, &mut self.rulers, "Rulers");
                     menu_popup::checkbox(ui, true, &mut self.zoom, "Zoom");
@@ -231,6 +239,168 @@ mod tests {
         Harness,
         kittest::{NodeT, Queryable},
     };
+
+    fn open_theme(h: &mut Harness<'_, Editor>) {
+        h.get_by_label("View").click();
+        h.run();
+        assert!(h.query_by_label("Dark appearance").is_none());
+        assert!(
+            h.get_by_label("Theme").rect().bottom()
+                <= h.get_by_role_and_label(egui::Role::CheckBox, "Grid")
+                    .rect()
+                    .top()
+        );
+        h.get_by_label("Theme").focus();
+        h.run();
+        h.key_press(egui::Key::ArrowRight);
+        h.run();
+    }
+
+    fn check_theme(h: &Harness<'_, Editor>, dark: bool) {
+        for (name, selected) in [("Greybird", !dark), ("Dark", dark)] {
+            assert_eq!(
+                h.get_by_role_and_label(egui::Role::RadioButton, name)
+                    .accesskit_node()
+                    .toggled(),
+                Some(if selected {
+                    egui::accesskit::Toggled::True
+                } else {
+                    egui::accesskit::Toggled::False
+                })
+            );
+        }
+        assert!(h.get_by_label("Greybird").rect().bottom() <= h.get_by_label("Dark").rect().top());
+        assert_eq!(
+            h.ctx
+                .style_of(if dark {
+                    egui::Theme::Dark
+                } else {
+                    egui::Theme::Light
+                })
+                .visuals
+                .dark_mode,
+            dark
+        );
+        assert_eq!(
+            h.ctx.theme(),
+            if dark {
+                egui::Theme::Dark
+            } else {
+                egui::Theme::Light
+            }
+        );
+    }
+
+    #[test]
+    fn theme_submenu_keyboard_and_pointer_choices_preserve_document_and_palette_edits() {
+        use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
+        let (dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+        menu_popup::test_font_size(&h.ctx, 12.0);
+        h.state_mut().apply(Command::Paint {
+            points: vec![Point { x: 0, y: 0 }],
+            block: 1,
+        });
+        let before = h
+            .state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .document
+            .map()
+            .blocks()
+            .to_vec();
+        h.state_mut()
+            .loaded
+            .as_mut()
+            .unwrap()
+            .tileset
+            .as_mut()
+            .unwrap()
+            .palettes_mut()
+            .apply_batch(&[PaletteCommand::SetRgb {
+                slot: ColorSlot {
+                    set: PaletteSet::Custom,
+                    palette: 0,
+                    hue: 0,
+                },
+                rgb: [17, 34, 51],
+            }])
+            .unwrap();
+        let palettes = h.state().palette_document().content_hash();
+        let textures: Vec<_> = h
+            .state()
+            .textures
+            .iter()
+            .map(egui::TextureHandle::id)
+            .collect();
+        #[cfg(feature = "visual-tests")]
+        let mut snapshots = egui_kittest::SnapshotResults::new();
+        for (dark, _capture_snapshot) in [(false, true), (true, true), (false, false)] {
+            open_theme(&mut h);
+            check_theme(&h, h.state().dark);
+            let name = if dark { "Dark" } else { "Greybird" };
+            if dark {
+                h.get_by_label(name).focus();
+                h.run();
+                h.key_press(egui::Key::Enter);
+            } else {
+                h.get_by_label(name).click();
+            }
+            h.run();
+            assert_eq!(h.state().dark, dark);
+            assert!(
+                h.query_by_label("Theme").is_none(),
+                "selection closes the menus"
+            );
+            assert_eq!(h.state().palette_document().content_hash(), palettes);
+            assert!(h.state().palette_document().is_modified());
+            let loaded = h.state().loaded.as_ref().unwrap();
+            assert_eq!(loaded.document.map().blocks(), before);
+            assert!(loaded.document.map().is_modified() && loaded.document.map().can_undo());
+            assert_eq!(
+                h.state()
+                    .textures
+                    .iter()
+                    .map(egui::TextureHandle::id)
+                    .collect::<Vec<_>>(),
+                textures
+            );
+            open_theme(&mut h);
+            check_theme(&h, dark);
+            h.remove_cursor();
+            h.run();
+            #[cfg(feature = "visual-tests")]
+            if _capture_snapshot {
+                snapshots.add(h.try_snapshot(if dark {
+                    "theme-submenu-dark"
+                } else {
+                    "theme-submenu-greybird"
+                }));
+            }
+            h.key_press(egui::Key::Escape);
+            h.key_press(egui::Key::Escape);
+            h.run();
+        }
+        assert_eq!(
+            std::fs::read(dir.path().join("Map.2x1.blk")).unwrap(),
+            [0, 1]
+        );
+        h.state_mut().prepare_resize();
+        h.run();
+        assert!(h.get_by_label("View").accesskit_node().is_disabled());
+        h.get_by_label("Cancel").click();
+        h.run();
+        h.state_mut().close_map();
+        h.run();
+        open_theme(&mut h);
+        h.get_by_label("Dark").click();
+        h.run();
+        assert!(h.state().dark && h.state().loaded.is_none());
+        open_theme(&mut h);
+        check_theme(&h, true);
+        #[cfg(feature = "visual-tests")]
+        snapshots.unwrap();
+    }
 
     #[test]
     fn source_menu_groups_keep_commands_in_order_and_guard_unavailable_data() {

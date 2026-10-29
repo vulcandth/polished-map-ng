@@ -49,7 +49,7 @@ pub(super) fn group(name: &str) -> &'static [Spec<'static>] {
         "View" => {
             const {
                 &[
-                    Spec::new("Dark appearance", Check, "", true),
+                    Spec::new("Theme", Submenu, "", true),
                     Spec::new("Grid", Check, "C+G", false),
                     Spec::new("Rulers", Check, "CS+R", false),
                     Spec::new("Zoom", Check, "C+=", false),
@@ -62,6 +62,16 @@ pub(super) fn group(name: &str) -> &'static [Spec<'static>] {
                     Spec::new("Palettes", Submenu, "", true),
                     Spec::new("Transparent", Check, "F10", false),
                     Spec::new("Full Screen", Check, "F11", false),
+                ]
+            }
+        }
+        "Theme" => {
+            // Accepted initial theme scope: preserve source order among the
+            // supported choices; other upstream themes remain deferred.
+            const {
+                &[
+                    Spec::new("Greybird", Radio, "", false),
+                    Spec::new("Dark", Radio, "", false),
                 ]
             }
         }

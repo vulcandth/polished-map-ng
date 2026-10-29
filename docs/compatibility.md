@@ -1,5 +1,32 @@
 # Compatibility evidence
 
+## Source Theme submenu for the initial supported themes
+
+View > Theme replaces the temporary Dark appearance checkbox, following
+`Main_Window::initialize`, `greybird_theme_cb` and `dark_theme_cb`. The parent
+keeps its source position/divider and blank image column; Greybird and Dark are
+mutually exclusive radio rows in source order. The other ten upstream themes
+remain deferred under the accepted initial two-theme scope.
+
+The callbacks change the shared UI theme and redraw existing icon variants;
+they do not reload palettes or modify map data/history. Tests exercise pointer
+and keyboard activation (including selecting the current theme), checked-state
+exclusivity, close-on-selection, empty editor use, modal disabling, preservation
+of unsaved map and RGB8 palette edits and stable map textures. Preference tests
+save via `App::save`, reconstruct the editor and check the selected radio and
+startup theme, retaining the existing v1 `dark` boolean. Startup is checked
+inside the eframe creation callback before the test harness overrides theme.
+
+Reviewed snapshots cover both radio selections and the changed View row in
+Windows-style, Unix/Dark at 2× and Mac-shortcut menus. Formatting, workspace
+Clippy/tests and rustdoc pass locally; the GUI visual suite passes with 165 tests
+and four explicitly ignored host/reference integration tests. This change does not alter the
+existing reference-oracle contracts.
+
+These controls select the existing partial Greybird/Dark rendering. Complete
+native widget styling, native popup/window behavior, other themes and mnemonic
+navigation remain separate fidelity requirements.
+
 ## Map window title and Print filename
 
 `window_title.rs` follows master `Main_Window::open_map`, `save_as_cb`, `close_cb`

@@ -401,7 +401,9 @@ fn synthetic_editor_appearance() {
     harness.snapshot("synthetic-light");
     harness.get_by_label("View").click();
     harness.run();
-    harness.get_by_label("Dark appearance").click();
+    harness.get_by_label("Theme").click();
+    harness.run();
+    harness.get_by_label("Dark").click();
     harness.run();
     harness.key_press(egui::Key::Escape);
     harness.remove_cursor();
