@@ -279,6 +279,8 @@ Pinned-master SHA-256 metadata (original Git blobs, then decoded RGBA8 pixels):
 
 About preserves the original 50×50 icon slot without drawing unverified artwork.
 The `.ico` bundle and warning/error/success artwork still require separate audit.
+The shared one-button message dialogs now also reserve the source's 50×50 shield
+slot and 60-point icon-to-body offset without importing these unreviewed images.
 
 ## Fonts
 

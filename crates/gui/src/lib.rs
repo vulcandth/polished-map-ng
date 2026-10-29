@@ -22,6 +22,7 @@ mod map_labels;
 mod map_open_tests;
 mod menu_popup;
 mod menus;
+mod message_dialog;
 #[cfg(test)]
 mod open_scroll_tests;
 mod overworld;
@@ -751,23 +752,15 @@ impl Editor {
 
     fn dialogs(&mut self, ctx: &egui::Context) {
         if let Some(message) = self.error.clone() {
-            egui::Modal::new(egui::Id::unique("error")).show(ctx, |ui| {
-                ui.heading("Unable to complete operation");
-                ui.label(message);
-                if ui.button("OK").clicked() {
-                    self.error = None;
-                }
-            });
+            if message_dialog::show(ctx, "error", "Error", &message) {
+                self.error = None;
+            }
             return;
         }
         if let Some(message) = self.open_palette_warning.clone() {
-            egui::Modal::new(egui::Id::unique("open-palette-warning")).show(ctx, |ui| {
-                ui.heading("Roof color warning");
-                ui.label(message);
-                if ui.button("OK").clicked() {
-                    self.open_palette_warning = None;
-                }
-            });
+            if message_dialog::show(ctx, "open-palette-warning", "Warning", &message) {
+                self.open_palette_warning = None;
+            }
             return;
         }
         if let Some(mut about) = self.about.take() {

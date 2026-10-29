@@ -47,6 +47,8 @@ pub(super) fn fixture(
         .with_size(Vec2::new(800.0, 600.0))
         .with_theme(egui::Theme::Light)
         .build_eframe(|cc| Editor::new(cc));
+    // Fix cross-platform snapshot metrics; message_dialog tests cover both OS sizes.
+    crate::message_dialog::test_font_size(&h.ctx, 12.0);
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
         recent_path: None,

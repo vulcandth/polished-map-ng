@@ -37,8 +37,10 @@ malformed-PNG diagnostic text need not match libpng. See the PNG differential in
   than inserting upstream's implicit zero or silently shifting later bytes.
   A terminal comma remains accepted. LZ reads/back-references/output lengths are checked.
   RGB palette channels outside 0..31 and incomplete colors/palettes are rejected.
-  Incomplete roof tables return a format error instead of continuing after a GUI
-  warning; a recoverable warning flow remains pending.
+  Unavailable roof-group colors return a format error without partially changing
+  the palette bank. Automatic GUI imports warn and continue opening the map;
+  manual imports report an error and retain colors. Headless callers can keep
+  the error or explicitly skip the optional step with `MapPalettePlan`.
 - GUI oversized maps now follow the original prefix load and acknowledgment
   warning. Short inputs still fail; strict library/CLI opens reject any mismatch,
   while the explicit report API returns the trailing decoded-block count. The

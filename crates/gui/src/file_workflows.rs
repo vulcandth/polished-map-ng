@@ -7,17 +7,7 @@ impl Editor {
         let Some(message) = &self.pending_map_warning else {
             return;
         };
-        let mut done = false;
-        egui::Modal::new(egui::Id::unique("map-length-warning")).show(ctx, |ui| {
-            ui.heading("Warning");
-            ui.label(message);
-            done = ui.button("OK").clicked();
-            done |= ui.input_mut(|i| {
-                i.consume_key(egui::Modifiers::NONE, egui::Key::Enter)
-                    || i.consume_key(egui::Modifiers::NONE, egui::Key::Escape)
-            });
-        });
-        if done {
+        if message_dialog::show(ctx, "map-length-warning", "Warning", message) {
             self.pending_map_warning = None;
             self.advance_open_palettes(ctx);
         }

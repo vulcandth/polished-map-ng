@@ -1,5 +1,40 @@
 # Compatibility evidence
 
+## Error, warning and success message dialogs
+
+The six one-button message routes now share the pinned master's
+`Modal_Dialog::refresh` empty-subject/icon layout: generic errors, automatic
+roof-color warnings, oversized-map acknowledgment, overworld-buffer warnings,
+Print success and manual roof-color success. `Main_Window::initialize` sets the
+280/700 width range. Text is measured at 620 points; client width is
+`max(ceil(text_width) + 80 + OS_FONT_SIZE, 280)`, with a 50×50 icon slot at
+(10,10) and body at (70,10). Button y is `max(ceil(text_height) + 20, 70)`;
+the 80×22 OK button has ten-point right/bottom margins. Windows uses a 12-point
+body font and Linux/macOS use 13, as in `themes.h`.
+
+The generic error and automatic roof-warning routes previously dismissed only
+by mouse. They now also consume Enter and Escape: master's `Default_Button`
+binds Enter, and FLTK `Fl::handle` sends unhandled Escape to the modal window's
+cancel callback. The same shared handler preserves that behavior in the other
+four routes. Dismissing an error does not also dismiss a queued warning.
+
+Five independent geometry vectors, rendered platform-font/DPI checks and 30
+editor cases verify button placement, wrapped text, mouse/Enter/Escape dismissal,
+disabled parent actions, retained dirty map history/colors and unchanged files.
+Text-shape assertions check the painted top-left origin; a centered widget
+allocation alone is insufficient, especially for short success messages.
+Existing oversized-map tests verify acknowledgment still publishes the staged
+map exactly once. Light/dark and 1×/2× snapshots cover the rendered adapter.
+Local formatting, workspace/visual warnings-as-errors Clippy, workspace tests
+and rustdoc pass. The visual suite passes 185 tests with four existing ignored
+native/reference checks. Eight new/updated baselines were inspected; pixel
+differences in the four existing images are confined to their dialog regions.
+
+This is client-layout/input evidence, not native child-window/frame or font
+rasterization parity. Captions remain inside an egui modal. Warning/error/success
+shield artwork remains unimported pending provenance; its original space is
+reserved. Error details can retain the port's structured diagnostics.
+
 ## PNG decoding, interlacing and platform transparency
 
 `tools/png_oracle.py` extracts unchanged master `read_png_graphics`, `mono_hue`

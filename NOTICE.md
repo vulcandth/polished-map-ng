@@ -95,6 +95,10 @@ Windows/Unix conversion and preserved upstream attribution.
 About adapts `Main_Window::initialize/about_cb`, `Modal_Dialog::refresh` and
 the platform sizes in `themes.h`. Its text distinguishes NG's own identity from
 the retained Rangi/Fugue notices. Unverified application artwork is not included.
+The shared error/warning/success message layout also adapts `Modal_Dialog::refresh`
+and the 280/700 width range in `Main_Window::initialize`. Enter follows
+`Default_Button`; Escape follows FLTK's modal-window cancel dispatch. Shield
+image slots retain their geometry, but the unverified shield images are not bundled.
 Root-window titles and Print filename suggestions adapt
 `Main_Window::{open_map,save_as_cb,close_cb}` and `NEW_MAP_NAME` under LGPL-3.0-only,
 retaining a separate NG development identity and successful-save publication.

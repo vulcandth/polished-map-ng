@@ -48,17 +48,7 @@ has at least {bytes} bytes.",
 
     pub(super) fn overworld_dialog(&mut self, ctx: &egui::Context) {
         if let Some(message) = &self.overworld_warning {
-            let mut done = false;
-            egui::Modal::new(egui::Id::unique("overworld-warning")).show(ctx, |ui| {
-                ui.heading("Warning");
-                ui.label(message);
-                done = ui.button("OK").clicked();
-                done |= ui.input_mut(|i| {
-                    i.consume_key(egui::Modifiers::NONE, egui::Key::Enter)
-                        || i.consume_key(egui::Modifiers::NONE, egui::Key::Escape)
-                });
-            });
-            if done {
+            if message_dialog::show(ctx, "overworld-warning", "Warning", message) {
                 self.overworld_warning = None;
             }
             return;

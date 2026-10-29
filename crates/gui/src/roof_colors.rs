@@ -78,17 +78,7 @@ impl Editor {
 
     pub(super) fn roof_color_dialog(&mut self, ctx: &egui::Context) {
         if let Some(message) = &self.roof_color_success {
-            let mut done = false;
-            egui::Modal::new(egui::Id::unique("roof-color-success")).show(ctx, |ui| {
-                ui.heading("Success");
-                ui.label(message);
-                done = ui.button("OK").clicked();
-                done |= ui.input_mut(|i| {
-                    i.consume_key(egui::Modifiers::NONE, egui::Key::Enter)
-                        || i.consume_key(egui::Modifiers::NONE, egui::Key::Escape)
-                });
-            });
-            if done {
+            if message_dialog::show(ctx, "roof-color-success", "Success", message) {
                 self.roof_color_success = None;
             }
             return;

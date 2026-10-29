@@ -154,17 +154,7 @@ impl Editor {
 
     pub(super) fn print_dialog(&mut self, ctx: &egui::Context) {
         if let Some(message) = &self.print_success {
-            let mut done = false;
-            egui::Modal::new(egui::Id::unique("print-success")).show(ctx, |ui| {
-                ui.heading("Success");
-                ui.label(message);
-                done = ui.button("OK").clicked();
-                done |= ui.input_mut(|i| {
-                    i.consume_key(egui::Modifiers::NONE, egui::Key::Enter)
-                        || i.consume_key(egui::Modifiers::NONE, egui::Key::Escape)
-                });
-            });
-            if done {
+            if message_dialog::show(ctx, "print-success", "Success", message) {
                 self.print_success = None;
             }
             return;

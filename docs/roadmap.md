@@ -50,6 +50,12 @@ Tests cover no-write opening, short/exact input, whole-source conflict detection
 warning/modal behavior and clean/dirty Save Map. Native warning appearance and
 full-application save/reopen differentials remain separate acceptance work.
 
+Generic error, roof-warning, oversized-map, buffer-warning and Print/roof-success
+messages now share the original one-button client geometry and Enter/Escape
+handling. Source formulas, both OS font sizes, both DPI scales and parent-action
+guards have automated coverage. Native modal windows, font rasterization and
+the separately audited shield artwork remain incomplete.
+
 Desktop startup now selects installed UI, regular/bold monospace and separate
 bold sans roles using the reference's preference lists and pinned FLTK backend
 defaults. Map labels, event symbols, ruler sizes and zoomed warp IDs consume those
