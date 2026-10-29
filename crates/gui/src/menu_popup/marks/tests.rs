@@ -27,6 +27,8 @@ fn reference_menu_marks_match_original_drawing_commands() {
     let data = std::fs::read_to_string(path).unwrap();
     let mut drawings = 0;
     let mut colors = 0;
+    let mut panels = 0;
+    let mut dividers = 0;
     for line in data.lines() {
         let fields: Vec<_> = line.split('\t').collect();
         if fields[0] == "color" {
@@ -35,6 +37,29 @@ fn reference_menu_marks_match_original_drawing_commands() {
                 u32::from(actual.r()) << 16 | u32::from(actual.g()) << 8 | u32::from(actual.b());
             assert_eq!(rgb, fields[4].parse::<u32>().unwrap(), "{line}");
             colors += 1;
+        } else if fields[0] == "panel" {
+            assert_eq!(
+                recorded(panel(
+                    fields[1] == "1",
+                    fields[2].parse().unwrap(),
+                    fields[3].parse().unwrap()
+                )),
+                fields[4],
+                "{line}"
+            );
+            panels += 1;
+        } else if fields[0] == "divider" {
+            assert_eq!(
+                recorded(divider(
+                    fields[1] == "1",
+                    fields[2].parse().unwrap(),
+                    fields[3].parse().unwrap(),
+                    fields[4].parse().unwrap()
+                )),
+                fields[5],
+                "{line}"
+            );
+            dividers += 1;
         } else {
             assert_eq!(
                 recorded(drawing(
@@ -50,7 +75,7 @@ fn reference_menu_marks_match_original_drawing_commands() {
             drawings += 1;
         }
     }
-    assert_eq!((drawings, colors), (72, 8));
+    assert_eq!((drawings, colors, panels, dividers), (72, 8, 18, 32));
 }
 
 #[test]

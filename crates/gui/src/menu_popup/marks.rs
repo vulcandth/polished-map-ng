@@ -1,4 +1,5 @@
-//! Master themes.cpp and FLTK 1.4.5 Fl_Menu.cxx/fl_draw.cxx/fl_contrast.cxx.
+//! Master themes.cpp and FLTK 1.4.5 Fl_Menu.cxx/fl_draw.cxx/fl_contrast.cxx,
+//! plus the background gray ramp from Fl_get_system_colors.cxx/Enumerations.H.
 //! Based in part on the work of the FLTK project, Copyright 1998-2024 Bill
 //! Spitzak and others. See NOTICE.md and LICENSES/FLTK.txt. LGPL-3.0 adaptation.
 //! Drawing coordinates/colors are source-derived; native arc/polygon coverage
@@ -220,8 +221,63 @@ pub(super) fn paint(
     radio: bool,
     selected: bool,
 ) {
+    paint_drawing(painter, origin, drawing(dark, radio, selected, row as i32));
+}
+
+fn panel(dark: bool, width: i32, height: i32) -> Drawing {
+    // themes.cpp::{greybird,dark}_panel_thin_up_box/frame. Preserve inclusive
+    // line endpoints and draw order, including the top-right/bottom-left corners.
+    let (background, upper, lower) = if dark { (83, 106, 40) } else { (206, 218, 193) };
+    let mut d = Drawing::default();
+    d.rect(
+        Color32::from_gray(background),
+        [1, 1, width - 2, height - 2],
+    );
+    d.v(Color32::from_gray(upper), 0, height - 2, 0);
+    d.h(Color32::from_gray(upper), 0, 0, width - 2);
+    d.h(Color32::from_gray(lower), 0, height - 1, width - 1);
+    d.v(Color32::from_gray(lower), width - 1, height - 1, 0);
+    d
+}
+
+fn divider(dark: bool, width: i32, row: i32, index: i32) -> Drawing {
+    // FL_DARK3/FL_LIGHT3 after Fl::background(206) or Fl::background(83), not
+    // the theme's panel-frame colors. Verified against the unchanged gray-ramp
+    // function in FLTK 1.4.5 Fl_get_system_colors.cxx and its color indices.
+    let (upper, lower) = if dark { (3, 216) } else { (110, 247) };
+    let mut d = Drawing::default();
+    let y = (index + 1) * row - 1;
+    // drawentry extends through x=width, clipped by the native menu window.
+    d.h(Color32::from_gray(upper), 0, y, width);
+    d.h(Color32::from_gray(lower), 0, y + 1, width);
+    d
+}
+
+pub(super) fn paint_panel(painter: &egui::Painter, bounds: Rect, dark: bool) {
+    paint_drawing(
+        painter,
+        bounds.min,
+        panel(dark, bounds.width() as i32, bounds.height() as i32),
+    );
+}
+
+pub(super) fn paint_divider(
+    painter: &egui::Painter,
+    bounds: Rect,
+    dark: bool,
+    row: f32,
+    index: usize,
+) {
+    paint_drawing(
+        &painter.with_clip_rect(painter.clip_rect().intersect(bounds)),
+        bounds.min,
+        divider(dark, bounds.width() as i32, row as i32, index as i32),
+    );
+}
+
+fn paint_drawing(painter: &egui::Painter, origin: Pos2, drawing: Drawing) {
     let pos = |x: i32, y: i32| origin + Vec2::new(x as f32, y as f32);
-    for (color, primitive) in drawing(dark, radio, selected, row as i32).0 {
+    for (color, primitive) in drawing.0 {
         match primitive {
             Primitive::Rect([x, y, w, h]) => {
                 painter.rect_filled(

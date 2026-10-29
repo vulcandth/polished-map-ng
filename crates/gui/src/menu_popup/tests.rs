@@ -4,6 +4,87 @@ use egui_kittest::{
     kittest::{NodeT, Queryable},
 };
 
+#[cfg(feature = "visual-tests")]
+#[test]
+fn popup_panel_corners_and_full_width_dividers_match_source_at_both_scales() {
+    for dark in [false, true] {
+        for size in [12.0, 13.0] {
+            for dpi in [1_u32, 2] {
+                let mut h = Harness::builder()
+                    .with_size(Vec2::new(800.0, 600.0))
+                    .with_pixels_per_point(dpi as f32)
+                    .with_theme(if dark {
+                        egui::Theme::Dark
+                    } else {
+                        egui::Theme::Light
+                    })
+                    .with_context_setup(move |ctx| test_font_size(ctx, size))
+                    .build_eframe(|cc| Editor::new(cc));
+                h.state_mut().dark = dark;
+                let check = |h: &mut Harness<'_, Editor>, group: &str| {
+                    h.remove_cursor();
+                    h.run();
+                    let items = specs::group(group);
+                    let first = h.get_by_label(items.first().unwrap().name).rect();
+                    let last = h.get_by_label(items.last().unwrap().name).rect();
+                    let bounds = Rect::from_min_max(
+                        first.min - Vec2::splat(1.0),
+                        last.max + Vec2::splat(1.0),
+                    );
+                    let image = h.render().unwrap();
+                    let pixel = |x: f32, y: f32, gray: u8| {
+                        // Verify every physical pixel in the source logical pixel,
+                        // including the outer edge at 2× (no half-pixel strokes).
+                        for dx in 0..dpi {
+                            for dy in 0..dpi {
+                                assert_eq!(
+                                    image
+                                        .get_pixel(
+                                            (x * dpi as f32) as u32 + dx,
+                                            (y * dpi as f32) as u32 + dy
+                                        )
+                                        .0,
+                                    [gray, gray, gray, 255],
+                                    "{group}, dark={dark}, font={size}, dpi={dpi}, ({x},{y})"
+                                );
+                            }
+                        }
+                    };
+                    let (upper, lower) = if dark { (106, 40) } else { (218, 193) };
+                    pixel(bounds.left(), bounds.top(), upper);
+                    pixel(bounds.right() - 2.0, bounds.top(), upper);
+                    pixel(bounds.right() - 1.0, bounds.top(), lower);
+                    pixel(bounds.left(), bounds.bottom() - 2.0, upper);
+                    pixel(bounds.left(), bounds.bottom() - 1.0, lower);
+                    pixel(bounds.right() - 1.0, bounds.bottom() - 1.0, lower);
+                    for item in items.iter().filter(|item| item.divider) {
+                        let row = h
+                            .get_by_role_and_label(egui::Role::MenuItem, item.name)
+                            .rect();
+                        let (upper, lower) = if dark { (3, 216) } else { (110, 247) };
+                        for x in bounds.left() as u32..bounds.right() as u32 {
+                            // Dividers are part of the preceding row, overwrite
+                            // both panel edges, and occupy exactly two pixels.
+                            pixel(x as f32, row.bottom() - 2.0, upper);
+                            pixel(x as f32, row.bottom() - 1.0, lower);
+                        }
+                    }
+                };
+                h.get_by_label("File").click();
+                h.run();
+                check(&mut h, "File");
+                h.key_press(egui::Key::Escape);
+                h.run();
+                h.get_by_label("View").click();
+                h.run();
+                h.get_by_label("Theme").click();
+                h.run();
+                check(&mut h, "Theme");
+            }
+        }
+    }
+}
+
 #[test]
 fn original_width_height_and_indicator_vectors() {
     let metrics = Metrics::measured(

@@ -85,7 +85,10 @@ radio highlights. The radio inset depends on each theme's box metrics. Disabled
 labels/shortcuts/arrows use FLTK's 33% foreground/background blend while indicator
 boxes retain their source colors. Hover changes text contrast without recoloring
 the marks. Contrast follows FLTK 1.4.5's CIELAB algorithm at master's level 50.
-Native arc/polygon coverage, popup outer frames and fonts remain incomplete.
+Popup outer frames now preserve the source one-point upper/lower edges and
+corner ownership. Dividers use FLTK's background-derived gray ramp and overwrite
+both side edges before clipping at the popup boundary. Native arc/polygon
+coverage, shadows/placement, submenu arrow shape and fonts remain incomplete.
 Keyboard submenu opening/activation and modal guards
 are tested headlessly. Activating Enter is consumed before a command can open
 a modal, preventing accidental acceptance/dismissal in that same frame.

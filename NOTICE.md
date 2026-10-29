@@ -65,6 +65,9 @@ Root-window titles and Print filename suggestions adapt
 retaining a separate NG development identity and successful-save publication.
 The initial Theme submenu adapts `Main_Window::initialize`, `greybird_theme_cb`
 and `dark_theme_cb`, retaining the source radio behavior under LGPL-3.0-only.
+Popup panel borders adapt the Greybird/Dark panel functions in `themes.cpp`;
+divider drawing and gray-ramp colors adapt FLTK 1.4.5 `Fl_Menu.cxx`,
+`Fl_get_system_colors.cxx` and `Enumerations.H`, under the retained FLTK terms.
 Popup sizing adapts the pinned master's menu labels/flags and FLTK 1.4.5
 `Fl_Menu.cxx` measurement/drawing calculations. Polished Map NG is based in part
 on the work of the FLTK project (<https://www.fltk.org>), Copyright 1998-2024

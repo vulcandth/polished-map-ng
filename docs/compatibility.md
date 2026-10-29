@@ -1,5 +1,37 @@
 # Compatibility evidence
 
+## Popup panel frames and full-width separators
+
+Popup panels adapt `themes.cpp::{greybird,dark}_panel_thin_up_box/frame` and
+FLTK 1.4.5 `menuwindow::drawentry`. One-point filled rectangles preserve the
+original inclusive line endpoints and corner ownership. Greybird uses gray
+218/193 for its upper/lower edges; Dark uses 106/40. The egui frame still reserves
+the original one-point inset, with its generic stroke made transparent. The
+source panel is drawn before its rows, so dividers overwrite the side edges.
+
+The previous fixed separator colors were incorrect. `Fl::background` derives
+`FL_DARK3` and `FL_LIGHT3` from a power-law gray ramp: background 206 produces
+110/247, and background 83 produces 3/216. Separators now use these values and
+extend across the full popup width, including both borders. Their inclusive
+endpoint extends one point beyond the window and is clipped, matching FLTK.
+They retain the original two rows at the bottom of the preceding item.
+
+`tools/menu_marks_oracle.py` now pins `Fl_get_system_colors.cxx` and
+`FL/Enumerations.H` alongside its existing sources. It extracts the unchanged
+gray-ramp function, constants, panel functions and divider block, adding 18
+panel and 32 divider comparisons to the existing 72 indicator and eight text
+color cases. Rendered tests check every physical pixel of selected panel corners
+and every divider pixel in actual File popups at 12/13-point font sizes and
+1×/2× DPI, plus the nested Theme panel's corners. The tests include the half-point
+submenu placement possible at 2× DPI. Sixteen changed menu snapshots were reviewed.
+Local formatting, workspace and visual-feature Clippy, workspace tests and
+rustdoc pass. The complete GUI visual suite passes with 166 tests and four
+explicitly ignored host/reference integrations; the extended compiled-source
+comparison also passes when explicitly invoked.
+
+This does not establish native popup placement/shadows, arrow shape, font
+rasterization or mnemonic-navigation parity. Those remain separate work.
+
 ## Source Theme submenu for the initial supported themes
 
 View > Theme replaces the temporary Dark appearance checkbox, following
@@ -92,7 +124,7 @@ The raw FLTK menu hash now pins LF bytes (the initial local cache had CRLF).
 
 This is command/geometry equivalence, not native pixel equivalence. Egui still
 tessellates arcs and polygons; FLTK's native drivers may cover edge pixels
-differently. Native font coverage, outer popup frames, mnemonic/Alt navigation
+differently. Native font coverage, popup shadows/placement, mnemonic/Alt navigation
 and screen-edge behavior remain separate acceptance requirements. No artwork
 or font assets were added for these procedural marks.
 

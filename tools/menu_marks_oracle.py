@@ -18,6 +18,8 @@ FILES = {
     "fl_contrast.cxx": "95f8ba993735c7ee202ee4f84afdb2bd91e966c920e8b8c9b7a721edf5883b8f",
     "fl_color.cxx": "683c75655dd6a19f2335216c5f99dad2abc207f9be3119867bba38aab5655150",
     "Fl_Menu.cxx": "5c7b2863624c33959c0bc2dce014f4692f1a29692ed6f0bff802fd0823c5aa36",
+    "Fl_get_system_colors.cxx": "91618fb5ef1d64a2b8d4a5cdbe1e5d93ff028cefa7c74e5749c7d545d1a305e5",
+    "Enumerations.H": "a27dae9f64b46570b154a318f6eb63d8669de8f105a1500a6a6564c4cab4d2a3",
 }
 
 
@@ -34,7 +36,8 @@ def main():
     for name, expected in FILES.items():
         path = args.fltk_cache / name
         if not path.exists():
-            with urllib.request.urlopen(f"https://raw.githubusercontent.com/fltk/fltk/{FLTK}/src/{name}", timeout=30) as response:
+            folder = "FL" if name == "Enumerations.H" else "src"
+            with urllib.request.urlopen(f"https://raw.githubusercontent.com/fltk/fltk/{FLTK}/{folder}/{name}", timeout=30) as response:
                 path.write_bytes(response.read())
         raw = path.read_bytes()
         if hashlib.sha256(raw).hexdigest() != expected:
@@ -45,6 +48,15 @@ def main():
     sources["themes.cpp"] = original("src/themes.cpp")
     menu = sources["Fl_Menu.cxx"]
     functions, evidence = [], []
+    constants = []
+    for name in ["FL_BLACK", "FL_WHITE", "FL_BACKGROUND_COLOR", "FL_BACKGROUND2_COLOR",
+                 "FL_SELECTION_COLOR", "FL_DARK3", "FL_LIGHT3"]:
+        line = next(line for line in sources["Enumerations.H"].splitlines() if line.startswith(f"const Fl_Color {name} "))
+        constants.append(line)
+    for name in ["FL_GRAY_RAMP", "FL_NUM_GRAY", "FL_GRAY"]:
+        constants.append(next(line for line in sources["Enumerations.H"].splitlines() if line.startswith(f"#define {name} ")))
+    constants.append(next(line for line in sources["Enumerations.H"].splitlines() if line.startswith("inline Fl_Color fl_gray_ramp(")))
+    evidence.append({"file": "Enumerations.H", "block": "color constants and fl_gray_ramp", "sha256": hashlib.sha256("\n".join(constants).encode()).hexdigest(), "changes": []})
     def extract(file, signature):
         source = sources[file]
         start = source.index(signature)
@@ -53,13 +65,16 @@ def main():
         evidence.append({"file": file, "function": signature, "sha256": hashlib.sha256(function.encode()).hexdigest(), "changes": []})
     for sig in ["Fl_Color fl_color_average(", "Fl_Color fl_inactive("]:
         extract("fl_color.cxx", sig)
+    extract("Fl_get_system_colors.cxx", "void Fl::background(")
     for sig in ["double fl_luminance(", "double fl_lightness(", "static Fl_Color fl_contrast_cielab("]:
         extract("fl_contrast.cxx", sig)
     functions.append("Fl_Color fl_contrast(Fl_Color a,Fl_Color b) {return fl_contrast_cielab(a,b,0,0);}")
     for sig in ["static Fl_Color activated_color(", "static void vertical_gradient(", "static void horizontal_gradient(",
                 "static void greybird_check_down_frame(", "static void greybird_check_down_box(",
                 "static void greybird_radio_round_down_frame(", "static void greybird_radio_round_down_box(",
+                "static void greybird_panel_thin_up_frame(", "static void greybird_panel_thin_up_box(",
                 "static void dark_button_up_frame(", "static void dark_button_up_box(",
+                "static void dark_panel_thin_up_frame(", "static void dark_panel_thin_up_box(",
                 "static void dark_radio_round_down_frame(", "static void dark_radio_round_down_box("]:
         extract("themes.cpp", sig)
     for sig in ["void fl_draw_check(", "void fl_draw_radio("]:
@@ -67,6 +82,9 @@ def main():
     start = menu.index("  if (flags & (FL_MENU_TOGGLE|FL_MENU_RADIO)) {", menu.index("void Fl_Menu_Item::draw("))
     block = menu[start:menu.index("\n  if (!fl_draw_shortcut)", start)]
     evidence.append({"file": "Fl_Menu.cxx", "block": "indicator", "sha256": hashlib.sha256(block.encode()).hexdigest(), "changes": []})
+    start = menu.index("    fl_color(FL_DARK3);", menu.index("void menuwindow::drawentry("))
+    divider = menu[start:menu.index("\n  }", start)]
+    evidence.append({"file": "Fl_Menu.cxx", "block": "divider", "sha256": hashlib.sha256(divider.encode()).hexdigest(), "changes": []})
     harness = r'''
 #include <cmath>
 #include <fstream>
@@ -74,15 +92,18 @@ def main():
 #include <vector>
 #include <sstream>
 using uchar = unsigned char; using Fl_Color = unsigned;
-enum { FL_BLACK, FL_WHITE, FL_GRAY, FL_SELECTION_COLOR, FL_BACKGROUND2_COLOR };
+'''+"\n".join(constants)+r'''
 enum { FL_MENU_TOGGLE=1, FL_MENU_RADIO=2, FL_DOWN_BOX=3, FL_ROUND_DOWN_BOX=4, FL_NORMAL_SIZE=14 };
 unsigned fl_cmap[256]; bool dark; Fl_Color current; std::ostringstream calls;
 unsigned get_color(Fl_Color c) {return (c & 0xffffff00) ? c : fl_cmap[c];}
 Fl_Color fl_rgb_color(uchar r,uchar g,uchar b) {return r||g||b ? ((unsigned)r<<24)|((unsigned)g<<16)|((unsigned)b<<8) : FL_BLACK;}
 int fl_contrast_level() {return 50;}
 Fl_Color fl_color() {return current;} void fl_color(Fl_Color c) {current=c;}
+struct Fl_Screen_Driver {static int bg_set;}; int Fl_Screen_Driver::bg_set=0;
 struct Fl {static bool is_scheme(const char*) {return true;} static bool draw_box_active() {return true;}
-static int box_dw(int) {return dark?2:6;} };
+static int box_dw(int) {return dark?2:6;} static int menu_linespacing(){return 4;}
+static void background(uchar,uchar,uchar);
+static void set_color(Fl_Color i,uchar r,uchar g,uchar b){fl_cmap[i]=fl_rgb_color(r,g,b);}};
 void prefix(const char *kind) {unsigned c=get_color(current); calls << kind << ',' << (c>>24) << ',' << ((c>>16)&255) << ',' << ((c>>8)&255);}
 void fl_rectf(int x,int y,int w,int h) {prefix("rect"); calls<<','<<x<<','<<y<<','<<w<<','<<h<<';';}
 void fl_xyline(int x,int y,int e) {fl_rectf(std::min(x,e),y,std::abs(e-x)+1,1);}
@@ -107,6 +128,9 @@ struct Item {int flags;Fl_Color labelcolor_;bool on;bool value(){return on;}void
 void Item::draw(int x,int y,int w,int h) {
 '''+block+r'''
 }
+void divider(int BW,int yy,int hh,int W) {
+'''+divider+r'''
+}
 int main(int argc,char**argv) {
  if(argc!=2)return 2;std::ofstream out(argv[1]);
  for(int theme=0;theme<2;++theme){dark=theme;
@@ -114,6 +138,14 @@ int main(int argc,char**argv) {
  fl_cmap[FL_GRAY]=dark?0x53535300:0xcecece00;
  fl_cmap[FL_BACKGROUND2_COLOR]=dark?0x3a3a3a00:0xfcfcfc00;
  fl_cmap[FL_SELECTION_COLOR]=dark?0xd6d6d600:0x3d7bbb00;
+ Fl::background(dark?83:206,dark?83:206,dark?83:206);
+ for(int width:{2,17,223})for(int height:{5,41,281}){
+ calls.str("");calls.clear();
+ if(dark)dark_panel_thin_up_box(0,0,width,height,FL_GRAY);else greybird_panel_thin_up_box(0,0,width,height,FL_GRAY);
+ out<<"panel\t"<<theme<<'\t'<<width<<'\t'<<height<<'\t'<<calls.str()<<'\n';}
+ for(int width:{19,223})for(int row:{18,19,20,26})for(int index:{0,2}){
+ calls.str("");calls.clear();divider(1,2+index*row,row-4,width);
+ out<<"divider\t"<<theme<<'\t'<<width<<'\t'<<row<<'\t'<<index<<'\t'<<calls.str()<<'\n';}
  for(int row=18;row<=26;++row)for(int radio=0;radio<2;++radio)for(int on=0;on<2;++on){
  calls.str("");calls.clear();Item item{radio?FL_MENU_RADIO:FL_MENU_TOGGLE,dark?FL_WHITE:0x3c3c3c00u,(bool)on};item.draw(0,1,200,row-4);
  out<<theme<<'\t'<<row<<'\t'<<radio<<'\t'<<on<<'\t'<<calls.str()<<'\n';}
@@ -131,7 +163,7 @@ int main(int argc,char**argv) {
         "functions": evidence}, indent=2)+"\n", encoding="utf-8")
     subprocess.run([args.cxx, "-std=c++17", "-O2", str(cpp), "-o", str(args.output)], check=True)
     subprocess.run([str(args.output.resolve()), str(args.output.with_suffix(".tsv"))], check=True)
-    print("Generated 72 original drawing-command cases and 8 text-color cases")
+    print("Generated 72 indicator, 18 panel, 32 divider and 8 text-color cases")
 
 
 if __name__ == "__main__":

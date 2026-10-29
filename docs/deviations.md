@@ -319,8 +319,10 @@ Full native theme rendering remains incomplete. Help opens the original referenc
 About now has its source command and modal, with attribution moved into it.
 The image/check columns, measured rows, trailing dividers and separate shortcut
 columns now follow source calculations. Greybird/Dark indicator geometry and
-inactive colors now follow compiled source comparisons. Native curve coverage,
-outer beveled borders and native fonts remain incomplete; egui still
+inactive colors now follow compiled source comparisons. Popup panel borders and
+full-width divider colors/geometry now follow the original drawing functions,
+including FLTK's background-derived gray ramp. Native curve coverage, submenu
+arrow shape, shadows and native fonts remain incomplete; egui still
 owns popup positioning and keyboard focus. Missing commands, mnemonics and
 native behavior are listed explicitly in `docs/menus.md`.
 

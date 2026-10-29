@@ -245,6 +245,25 @@ fn prepared(ui: &egui::Ui) -> Arc<Prepared> {
         .expect("menu rows must be inside their measured popup")
 }
 
+fn popup_scope<R>(
+    ui: &mut egui::Ui,
+    title: &str,
+    specs: &[Spec<'_>],
+    contents: impl FnOnce(&mut egui::Ui) -> R,
+) -> R {
+    scope(ui, title, specs, |ui| {
+        let m = prepared(ui).metrics;
+        let bounds = Rect::from_min_size(
+            ui.next_widget_position() - Vec2::splat(1.0),
+            Vec2::new(m.width, m.height()),
+        );
+        // The enclosing egui frame reserves its one-point inset. Paint the
+        // original panel before its rows: dividers can overwrite the side edges.
+        marks::paint_panel(ui.painter(), bounds, ui.visuals().dark_mode);
+        contents(ui)
+    })
+}
+
 pub(super) fn config() -> egui::containers::menu::MenuConfig {
     egui::containers::menu::MenuConfig::new()
         .submenu_gap(0.0)
@@ -252,7 +271,7 @@ pub(super) fn config() -> egui::containers::menu::MenuConfig {
             egui::containers::menu::menu_style(style);
             style.spacing.menu_margin = egui::Margin::ZERO;
             style.visuals.menu_corner_radius = egui::CornerRadius::ZERO;
-            style.visuals.window_stroke.width = 1.0;
+            style.visuals.window_stroke = egui::Stroke::new(1.0, Color32::TRANSPARENT);
             style.visuals.window_fill = if style.visuals.dark_mode {
                 Color32::from_gray(83)
             } else {
@@ -262,7 +281,9 @@ pub(super) fn config() -> egui::containers::menu::MenuConfig {
 }
 
 pub(super) fn menu<R>(ui: &mut egui::Ui, name: &str, contents: impl FnOnce(&mut egui::Ui) -> R) {
-    ui.menu_button(name, |ui| scope(ui, name, specs::group(name), contents));
+    ui.menu_button(name, |ui| {
+        popup_scope(ui, name, specs::group(name), contents)
+    });
 }
 
 pub(super) fn submenu<R>(ui: &mut egui::Ui, name: &str, contents: impl FnOnce(&mut egui::Ui) -> R) {
@@ -276,7 +297,8 @@ pub(super) fn submenu_with<R>(
     contents: impl FnOnce(&mut egui::Ui) -> R,
 ) {
     let response = row(ui, true, name, None);
-    egui::containers::menu::SubMenu::new().show(ui, &response, |ui| scope(ui, "", specs, contents));
+    egui::containers::menu::SubMenu::new()
+        .show(ui, &response, |ui| popup_scope(ui, "", specs, contents));
 }
 
 pub(super) fn action(ui: &mut egui::Ui, enabled: bool, name: &str) -> bool {
@@ -414,17 +436,11 @@ pub(super) fn row_at(
             painter.add(egui::containers::menu::SubMenuButton::arrow_shape(r, fg));
         }
         if item.divider {
-            let y = rect.top() + h + 2.0;
-            painter.hline(
-                rect.x_range(),
-                y,
-                egui::Stroke::new(1.0, Color32::from_gray(if dark { 40 } else { 160 })),
+            let bounds = Rect::from_min_size(
+                rect.min - Vec2::new(1.0, 1.0 + index as f32 * m.row),
+                Vec2::new(m.width, m.height()),
             );
-            painter.hline(
-                rect.x_range(),
-                y + 1.0,
-                egui::Stroke::new(1.0, Color32::from_gray(if dark { 106 } else { 255 })),
-            );
+            marks::paint_divider(&painter, bounds, dark, m.row, index);
         }
         if response.clicked() && response.has_focus() {
             // A command can open a modal later in this same frame. Do not let

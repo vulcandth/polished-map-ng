@@ -257,8 +257,8 @@ commands, preferences, popup geometry and native behavior are tracked in
 Their popups and nested recent/palette choices now share the source's measured
 row/image/check/shortcut geometry, platform font sizes and trailing dividers.
 Mac shortcut symbols have a separately licensed font; keyboard activation and
-1×/2× layout checks supplement inspected snapshots. Native fonts, exact theme
-glyphs/borders, mnemonics, screen-edge behavior and remaining commands still
+1×/2× layout checks supplement inspected snapshots. Native fonts, submenu arrow
+shape, mnemonics, screen-edge behavior and remaining commands still
 prevent a menu parity gate.
 The temporary Dark appearance toggle is replaced by View > Theme with the
 source-ordered Greybird/Dark radio choices. Pointer/keyboard selection, modal
@@ -267,8 +267,11 @@ the other ten themes remain deferred under the accepted initial scope.
 Greybird/Dark menu indicator geometry and colors now follow the original theme
 and FLTK drawing functions, including filled checkmarks, radio highlights,
 theme-dependent radio diameters and inactive text blending. A compiled source
-oracle checks drawing commands separately from egui rasterization. Native curve
-coverage, outer popup frames and mnemonic navigation remain open.
+oracle checks drawing commands separately from egui rasterization. Popup panel
+frames and full-width separators now match source coordinates, corner ownership
+and background-derived gray-ramp colors, with additional compiled comparisons
+and rendered pixel checks at both DPI scales. Native curve coverage, shadows,
+popup placement and mnemonic navigation remain open.
 Help/F1 now opens the complete pinned source documentation in a resizable,
 nonmodal child viewport. A reproducible converter retains all 95 blocks and
 16 linked spans, with C++-verified Windows/Unix constant expansion and LGPL
