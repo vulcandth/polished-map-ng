@@ -231,6 +231,10 @@ impl Editor {
                     "Auto-Load Special Palettes",
                 );
                 ui.checkbox(&mut self.auto_roof_colors, "Auto-Load Roof Colors");
+                ui.separator();
+                if action(ui, true, "Overworld Map Size…") {
+                    self.prepare_overworld();
+                }
             });
             ui.menu_button("Help", |ui| {
                 ui.label("Polished Map NG — development");

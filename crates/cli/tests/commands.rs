@@ -2,6 +2,28 @@ use serde_json::Value;
 use std::{fs, process::Command};
 
 #[test]
+fn inspect_reports_padded_overworld_buffer_without_opening_a_window_or_writing() {
+    let temp = tempfile::tempdir().unwrap();
+    let path = temp.path().join("Large.255x255.blk");
+    let bytes = vec![0; 255 * 255];
+    fs::write(&path, &bytes).unwrap();
+    let output = Command::new(env!("CARGO_BIN_EXE_polished-map"))
+        .arg("inspect")
+        .arg(&path)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stdout)
+    );
+    let json: Value = serde_json::from_slice(&output.stdout).unwrap();
+    assert_eq!(json["result"]["map"]["overworld_buffer_bytes"], 68121);
+    assert_eq!(json["result"]["map"]["block_count"], 65025);
+    assert_eq!(fs::read(&path).unwrap(), bytes);
+}
+
+#[test]
 fn event_cli_previews_then_hash_checks_and_preserves_script() {
     let temp = tempfile::tempdir().unwrap();
     let path = temp.path().join("Town.asm");

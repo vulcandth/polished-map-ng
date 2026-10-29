@@ -22,6 +22,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Monochrome, 256 Tiles | Off; missing palette maps enable Monochrome |
 | Show Priority | On; control enabled only while Tile Priority is on |
 | Recent maps | Empty; at most ten paths |
+| Overworld Map Size | 1300 bytes; accepted range 1–4096 |
 
 The three auto-load toggles affect subsequent opens, not the current document.
 Special palettes and roof colors are independent; turning either off skips
@@ -29,6 +30,12 @@ that optional import entirely, including its parsing and prompts. Manual palette
 and roof-color imports remain available. The default project palette import is
 independent of these toggles. Contextual palette selection on a later map open
 continues to follow upstream; restoring a selected set does not pin it forever.
+
+Overworld Map Size controls a post-save warning when the map's padded byte count
+exceeds the configured WRAM capacity. Changing it does not resize the map, edit
+WRAM source or immediately warn. Cancel retains the previous value; Close keeps
+the accepted value. Out-of-range persisted values preserve the original settings
+record and restore defaults, like other invalid preferences.
 
 Documents, unsaved colors, palette dirty state, undo history, clipboard contents,
 selection, scroll positions and open dialogs are not serialized. The selected
@@ -71,8 +78,7 @@ or rename its `app.ron` before relaunching.
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
 or modified. Native theme variants, transparency/fullscreen controls,
-drag-and-drop, overworld threshold
-and print preferences still need their complete menu/persistence work.
+drag-and-drop and print preferences still need their complete menu/persistence work.
 
 Tests inject an in-memory eframe Storage into the real app constructor and use
 its save callback. They cover restoration of all implemented settings, 270

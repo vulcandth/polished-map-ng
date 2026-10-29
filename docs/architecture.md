@@ -50,6 +50,13 @@ Headless PNG export uses the same pixels. Use wgpu through eframe 0.37 initially
 
 ## ADR 4: Fail safely without pretending to have upstream parity
 
+`Map::overworld_buffer_bytes` reports the WRAM requirement including master's
+three-block border. `MapDocument::summary` exposes the value; CLI `inspect`
+returns it at `result.map.overworld_buffer_bytes`. It is independent of the GUI
+capacity preference and does not require a display. The GUI warns after a
+successful map write when the requirement exceeds its saved capacity; the
+warning neither rejects the save nor edits WRAM declarations.
+
 Validate before mutation. Snapshot on-disk content for conflict detection; stage
 single-file replacements before publication. Block/collision pairs and compound
 tileset PNG/palette outputs stage a manifest and before/after bytes, preflight

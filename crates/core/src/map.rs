@@ -154,6 +154,11 @@ impl Map {
     pub fn height(&self) -> u8 {
         self.height
     }
+    /// Main_Window::save_map: WRAM includes a three-block border on every side.
+    /// Widen before arithmetic: the largest valid map needs 68,121 bytes.
+    pub fn overworld_buffer_bytes(&self) -> u32 {
+        (u32::from(self.width) + 6) * (u32::from(self.height) + 6)
+    }
     pub fn blocks(&self) -> &[u8] {
         &self.blocks
     }

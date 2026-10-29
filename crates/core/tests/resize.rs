@@ -1,6 +1,23 @@
 use polished_map_core::{Command, Map, Point, ResizeAnchor};
 
 #[test]
+fn overworld_buffer_accounts_for_border_and_widens_maximum_dimensions() {
+    for (w, h, bytes) in [
+        (1, 1, 49),
+        (20, 43, 1274),
+        (20, 44, 1300),
+        (21, 44, 1350),
+        (255, 255, 68121),
+    ] {
+        let map = Map::from_bytes(w, h, vec![0; usize::from(w) * usize::from(h)]).unwrap();
+        assert_eq!(map.overworld_buffer_bytes(), bytes);
+    }
+    let mut map = Map::from_bytes(1, 1, vec![0]).unwrap();
+    map.resize(20, 44, ResizeAnchor::Center).unwrap();
+    assert_eq!(map.overworld_buffer_bytes(), 1300);
+}
+
+#[test]
 fn all_nine_anchors_place_old_pixels_and_zero_fill_the_remainder() {
     // Source-derived acceptance vectors: a 2×2 map inside a 4×4 destination.
     for (anchor, (x, y)) in ResizeAnchor::ALL.into_iter().zip([

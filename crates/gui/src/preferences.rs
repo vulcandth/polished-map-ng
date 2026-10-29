@@ -31,6 +31,7 @@ struct Preferences {
     allow_priority: bool,
     monochrome: bool,
     allow_256: bool,
+    overworld_map_size: u16,
     show_priority: bool,
     resize_anchor: ResizeAnchor,
     recent_maps: recent_maps::RecentMaps,
@@ -64,6 +65,7 @@ impl Preferences {
             allow_priority: editor.allow_priority,
             monochrome: editor.monochrome,
             allow_256: editor.allow_256,
+            overworld_map_size: editor.overworld_map_size,
             show_priority: editor.show_priority,
             resize_anchor: editor.resize_anchor,
             recent_maps: editor.recent_maps.clone(),
@@ -89,6 +91,7 @@ impl Preferences {
         editor.allow_priority = self.allow_priority;
         editor.monochrome = self.monochrome;
         editor.allow_256 = self.allow_256;
+        editor.overworld_map_size = self.overworld_map_size;
         editor.show_priority = self.show_priority;
         editor.resize_anchor = self.resize_anchor;
         editor.recent_maps = self.recent_maps;
@@ -103,7 +106,9 @@ impl Editor {
         let decoded = (raw.len() <= MAX_BYTES)
             .then(|| serde_json::from_str::<Preferences>(&raw).ok())
             .flatten()
-            .filter(|settings| settings.version == 1);
+            .filter(|settings| {
+                settings.version == 1 && (1..=4096).contains(&settings.overworld_map_size)
+            });
         if let Some(settings) = decoded {
             settings.apply(self);
         } else {
@@ -182,6 +187,7 @@ mod tests {
         editor.show_priority = false;
         editor.monochrome = true;
         editor.allow_256 = true;
+        editor.overworld_map_size = 4096;
         editor.roof_palette_layout = RoofPaletteLayout::MornDayNiteCustom;
         editor.resize_anchor = ResizeAnchor::BottomRight;
         let palettes = editor
@@ -224,6 +230,7 @@ mod tests {
                 "auto_events": false, "auto_special_palettes": false, "auto_roof_colors": false,
                 "allow_priority": true,
                 "monochrome": true, "allow_256": true,
+                "overworld_map_size": 4096,
                 "show_priority": false,
                 "resize_anchor": "bottom_right",
                 "recent_maps": [{"utf8": std::fs::canonicalize(dir.path().join("Map.2x1.blk")).unwrap()}],
@@ -271,6 +278,7 @@ mod tests {
         assert!(editor.auto_special_palettes && editor.auto_roof_colors);
         assert!(!editor.allow_priority);
         assert!(!editor.monochrome && !editor.allow_256);
+        assert_eq!(editor.overworld_map_size, 1300);
         assert!(editor.show_priority);
         assert_eq!(editor.palette_document().selected(), PaletteSet::Day);
         assert_eq!(editor.roof_palette_layout, RoofPaletteLayout::DayNite);
@@ -312,6 +320,9 @@ mod tests {
             r#"{"version":1,"roof_layout":99}"#.into(),
             r#"{"version":1,"resize_anchor":"sideways"}"#.into(),
             r#"{"version":1,"new_feature":true}"#.into(),
+            r#"{"overworld_map_size":0}"#.into(),
+            r#"{"overworld_map_size":4097}"#.into(),
+            r#"{"overworld_map_size":65536}"#.into(),
             r#"{"recent_maps":[{"utf8":""}]}"#.into(),
             r#"{"recent_maps":[{"utf8":"a"},{"utf8":"a"}]}"#.into(),
             " ".repeat(MAX_BYTES + 1),

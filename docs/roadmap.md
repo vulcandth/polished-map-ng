@@ -40,7 +40,7 @@ The compiled original overlay function matches 120 complete-bank cases; manual
 and automatic imports also agree on the pinned real project. Native dialog
 fidelity and native restart verification remain outstanding.
 
-Twenty implemented view/mode/palette/auto-load/resize settings now restore and
+Twenty-one implemented view/mode/palette/auto-load/resize/buffer settings now restore and
 save through eframe with a versioned record and stable app ID. The two palette
 auto-load menu options affect subsequent imports independently. Headless restart
 and malformed-record tests pass; legacy preference import, remaining options,
@@ -52,6 +52,13 @@ tile interpretation; map history, session colors and roof identity survive.
 Tests cover all 256 source-to-slot mappings in four modes, cancel/failure
 atomicity, missing-palette fallback and real Johto mode transitions. Canceled
 switches retain the preference but cannot reinterpret the loaded save layout.
+
+Overworld Map Size now has a measured dialog, bounded persistent setting and
+source-worded post-save warning. The core computes the padded WRAM requirement;
+headless map summaries expose it as `overworld_buffer_bytes`. Tests cover exact
+capacity boundaries, maximum dimensions, successful/failed/clean saves, Save As,
+modal guards and four named maps from the pinned real project. Native warning
+artwork/frame and actual preference storage remain unverified.
 
 Tile Priority now controls priority editing and palette output independently of
 attribute bits. The GUI retains it across maps and Close, and priority palette

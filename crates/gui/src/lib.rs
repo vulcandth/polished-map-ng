@@ -12,6 +12,7 @@ mod icons;
 mod map_buttons;
 mod map_labels;
 mod menus;
+mod overworld;
 mod palette_editor;
 #[cfg(test)]
 mod palette_editor_tests;
@@ -96,6 +97,9 @@ pub struct Editor {
     export: Option<mpsc::Receiver<Result<(), String>>>,
     open_form: Option<OpenForm>,
     resize_form: Option<ResizeForm>,
+    overworld_form: Option<overworld::OverworldForm>,
+    overworld_map_size: u16,
+    overworld_warning: Option<String>,
     block_form: Option<BlockForm>,
     tileset_form: Option<tileset_editor::TilesetForm>,
     palette_form: Option<palette_editor::PaletteForm>,
@@ -167,6 +171,9 @@ impl Default for Editor {
             export: None,
             open_form: None,
             resize_form: None,
+            overworld_form: None,
+            overworld_map_size: 1300,
+            overworld_warning: None,
             block_form: None,
             tileset_form: None,
             palette_form: None,
@@ -564,8 +571,14 @@ impl Editor {
             return;
         }
         if let Some(loaded) = &mut self.loaded {
+            let modified = loaded.document.map().is_modified();
             match loaded.document.save() {
-                Ok(()) => self.status = "Map saved".into(),
+                Ok(()) => {
+                    self.status = "Map saved".into();
+                    if modified {
+                        self.check_overworld_buffer();
+                    }
+                }
                 Err(e) => self.error = Some(e.to_string()),
             }
         }
@@ -649,6 +662,7 @@ impl Editor {
                 }
                 self.recent_maps.remember(recent_path);
                 self.status = format!("Saved {}", path.display());
+                self.check_overworld_buffer();
             }
             Err(error) => self.error = Some(error.to_string()),
         }
@@ -714,6 +728,10 @@ impl Editor {
                     self.open_palette_warning = None;
                 }
             });
+            return;
+        }
+        if self.overworld_warning.is_some() || self.overworld_form.is_some() {
+            self.overworld_dialog(ctx);
             return;
         }
         if self.confirm_discard {
@@ -1421,6 +1439,8 @@ impl Editor {
             self.request_exit(&ctx);
         }
         let blocked = self.open_form.is_some()
+            || self.overworld_form.is_some()
+            || self.overworld_warning.is_some()
             || self.event_ui.change.is_some()
             || self.event_ui.form.is_some()
             || self.resize_form.is_some()

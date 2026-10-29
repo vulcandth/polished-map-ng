@@ -2,6 +2,20 @@
 
 Status: initial implementation in progress. Neither upstream parity gate passed.
 
+Overworld Map Size follows `Overworld_Map_Size_Dialog` and
+`Main_Window::save_map`: default 1300, range 1–4096, measured 380-point form,
+platform button order and a post-write warning using the padded map area.
+Tests cover under/equal/over capacity, 255×255 arithmetic, dialog accept/cancel,
+modal shortcuts, save failures, asset-only saves, clean Save and forced Save As.
+The CLI exposes the same required-byte count without a window. Four named pinned
+pokecrystal maps provide independent metadata-derived size vectors. These checks
+do not prove native fonts, frame/icons or actual OS settings persistence.
+Local formatting, workspace Clippy/tests/docs, visual-feature Clippy and all
+seven pinned real-project tests pass. The final visual suite passes 101 tests
+with one existing ignored test. The Options and Roof Palettes submenu baselines
+and three new dialog/warning snapshots were inspected. The description's left
+alignment and 10-point inset also have a geometry assertion.
+
 Monochrome and 256 Tiles follow `monochrome_cb`, `allow_256_tiles_cb` and the
 chooser-free `change_tileset_cb(NULL)` reload path. GUI tests cover clean reloads,
 three dirty domains, both cancellation/acceptance routes, failed reads, missing
@@ -84,7 +98,7 @@ inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pas
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex and block-ID tests pass; light/dark development snapshots inspected; native fonts/themes, persisted preferences and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
-| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty implemented settings plus recent history restore/save with malformed-record protection; palette auto-load, Monochrome, 256 Tiles, Tile Priority and Show Priority tested. Legacy import, remaining preferences, native storage/placement, complete overlays and print/clipboard parity pending |
+| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-one implemented settings plus recent history restore/save with malformed-record protection; palette auto-load, Monochrome, 256 Tiles, Tile Priority, Show Priority and Overworld Map Size tested. Legacy import, remaining preferences, native storage/placement, complete overlays and print/clipboard parity pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |

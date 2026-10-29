@@ -18,10 +18,19 @@ keyboard and headless counterparts where applicable.
 | View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
-| Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | Drag and Drop, Overworld Map Size. Remaining native/persistence gaps are tracked in `preferences.md`. |
+| Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Overworld Map Size | Drag and Drop. Remaining native/persistence gaps are tracked in `preferences.md`. |
 | Help | Inline development status, project attribution and icon licensing links | Original Help and About actions/dialogs, including keyboard shortcuts. Attribution remains available throughout the port. |
 
 ## Geometry and interaction gates
+
+Overworld Map Size uses the original 380-point client width, text-derived content
+height, 22-point controls, 10-point margins, 16-point button gap and platform button
+order. It accepts 1–4096 bytes (default 1300). The save warning uses
+`(width + 6) * (height + 6) > capacity`, after a successful dirty-map write or
+forced Save As. Equality is permitted. Clean ordinary saves and failed writes
+do not warn. Dismissing the warning keeps the completed save and history intact.
+The warning's native frame/icon and font rasterization still need verification;
+the port uses its existing portable warning modal without importing unaudited art.
 
 Monochrome and 256 Tiles default off. Each change reloads the current tileset,
 blocks/collisions and roof without opening the tileset chooser. Unsaved assets

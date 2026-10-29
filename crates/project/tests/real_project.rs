@@ -540,6 +540,21 @@ fn pinned_pokecrystal_maps_discover_open_and_render() {
     let root = PathBuf::from(
         std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),
     );
+    // Named map dimensions from the pinned map_constants.asm, with the
+    // source's three-block border included in the headless requirement.
+    for (name, required) in [
+        ("NewBarkTown", 240),
+        ("GoldenrodCity", 624),
+        ("NationalPark", 858),
+        ("Route45", 816),
+    ] {
+        let path = root.join(format!("maps/{name}.blk"));
+        let bytes = fs::read(&path).unwrap();
+        let doc =
+            MapDocument::open_in_project(&path, &OpenOptions::default(), Some(&root)).unwrap();
+        assert_eq!(doc.summary().overworld_buffer_bytes, required, "{name}");
+        assert_eq!(fs::read(path).unwrap(), bytes);
+    }
     let mut graphics = BTreeMap::new();
     let mut opened = 0;
     let mut unresolved = Vec::new();
