@@ -99,8 +99,8 @@ Zoom now scales map offsets with source integer rounding, resets the sidebar,
 and preserves far-edge blank space until scrolling back. Headless controls and
 edge tests pass; initial positioning and native pan/scroll checks remain pending.
 The menu/toolbar port is in progress within master parity, before plusplus.
-Seventeen reviewed image files now provide toolbar icons and tile/roof clipboard
-icons, including dark variants, source-sized controls and integer disabled-color
+Twenty-five reviewed image files now provide toolbar icons, tile/roof clipboard
+icons and collision-quadrant labels, including dark variants, source-sized controls and integer disabled-color
 conversion. CC BY 3.0 Fugue attribution, LGPL adaptation notices, source/pixel
 hashes and reproducible asset verification are included. Continue the per-asset
 audit in `docs/assets.md`, full toolbar membership/palette selector, popup-menu

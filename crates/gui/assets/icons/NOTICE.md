@@ -42,6 +42,14 @@ Polished Map under LGPL-3.0-only. Its introducing/recolor history was reviewed;
 no external font file or separate third-party asset credit is identified there.
 These are fixed bitmap artwork, not a redistributed font.
 
+The eight `coll-top-left`, `coll-top-right`, `coll-bottom-left` and
+`coll-bottom-right` images (including their `-dark` variants) are Polished Map's
+geometric quadrant drawings, retained under LGPL-3.0-only. Rangi introduced the
+four drawings in `2086e18550ecfe88c764591eab2b56a015e7e87c`, "Use grid icons
+instead of arrows for collision quadrants"; the dark recolors appeared in
+`530c963158fceb9d4836363d6d5e39d51019b616`. Review of that history identifies no
+separate external asset or font source for these drawings.
+
 Polished Map NG preserves the original XPM sources unchanged, converts their
 declared 16×16 pixels to row-major RGBA8, and generates disabled grayscale/color
 blends at runtime. Conversion does not remove the above attribution or terms.

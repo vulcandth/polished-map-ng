@@ -469,7 +469,15 @@
       "xpm_sha256": "743d2ac6a1148c1751d348f6dffd46b0180d400c05fefd90b8bb80158124e19a",
       "rgba_sha256": "00c25bf9279b9b0d48352b23fc4edab7e88c7d51c60d786ef20d6ccd2bed9da3",
       "last_changed_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "introduced_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+        "dark_recolor_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/coll-top-left-dark.xpm",
@@ -479,7 +487,15 @@
       "xpm_sha256": "8333c5c77ebd66896e47028932a602b2721472a6d629469add98b1540489fa01",
       "rgba_sha256": "e5908d5ce2f6697ff69fe4b469171f3533304dd817c456aaf9390cb2385f67d3",
       "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "introduced_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+        "dark_recolor_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/coll-top-right.xpm",
@@ -489,7 +505,15 @@
       "xpm_sha256": "a5e7897b1dad0c32cb50229248787dbf6674ac2cbd6aa51d2e3462c687850922",
       "rgba_sha256": "54b56da8d32d296e7d9058844026b7f2020183a094cdf182369d4e741ce89bc5",
       "last_changed_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "introduced_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+        "dark_recolor_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/coll-top-right-dark.xpm",
@@ -499,7 +523,15 @@
       "xpm_sha256": "38c7ccd1a646c5f08bd6f51cbdb32ac9074e6ca9ced5789b071b3e98dead841f",
       "rgba_sha256": "2c52b7c6b671f2123df80876138ae8c3c3f88286274d08e333d56145f969d937",
       "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "introduced_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+        "dark_recolor_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/coll-bottom-left.xpm",
@@ -509,7 +541,15 @@
       "xpm_sha256": "3b2f9b0d9cbd6969ac1963ae4b7aea0c776eb6aeb8538acb1a8fcff73f96755b",
       "rgba_sha256": "835be15877909e08951ada2746951386b741a640464af3e3a7e2c88734945fd4",
       "last_changed_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "introduced_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+        "dark_recolor_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/coll-bottom-left-dark.xpm",
@@ -519,7 +559,15 @@
       "xpm_sha256": "ed23f2d5b458981a0cd21a426a29e64bd05e602625046431ddc216e195a0be8f",
       "rgba_sha256": "f8711c23f4f990946aad3bee3e69ccbdd09b2b4413993cc4d8aeeeca65e47a07",
       "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "introduced_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+        "dark_recolor_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/coll-bottom-right.xpm",
@@ -529,7 +577,15 @@
       "xpm_sha256": "5e5fcb0e9c3ac2c994756ba53aac42dd6d2484bf76948ae46d722bdf1a90cf65",
       "rgba_sha256": "fb2fa86411e478656c981afe13ea66d7106c6508928f5ab8ba3b80d738310eed",
       "last_changed_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "introduced_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+        "dark_recolor_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/coll-bottom-right-dark.xpm",
@@ -539,7 +595,15 @@
       "xpm_sha256": "fc67dfafa997b6728e4846e95a42d93029c08d7c24632acd1f509ce3b50e65c1",
       "rgba_sha256": "a19ed848d4c2ba7238a60aa61d816abe127b905b7fa8c0c2d33deb66653071dd",
       "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "introduced_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+        "dark_recolor_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     }
   ]
 }

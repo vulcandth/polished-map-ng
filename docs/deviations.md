@@ -234,8 +234,9 @@ does not reproduce Windows' default Blue theme or the remaining native themes.
 Sidebar drag feedback follows source/target/selected state, while the existing
 egui drag gesture remains in-process rather than the source's native FLTK DND.
 
-The icon port currently includes 17 reviewed image files (14 commands plus three
-dark variants). Source-colored pixels, 24-point toolbar/22-point clipboard bounds
+The icon port currently includes 25 reviewed image files (14 commands and four
+collision-quadrant labels, including seven dark variants). Source-colored pixels,
+24-point toolbar/22-point clipboard bounds
 and disabled-color arithmetic are retained. Button selection/hover/focus frames
 still use egui styling; full native toolbar themes remain pending. Disabled icon
 colors use upstream Greybird/Dark backgrounds on all platforms, consistently with

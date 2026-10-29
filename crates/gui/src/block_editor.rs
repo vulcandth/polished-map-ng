@@ -186,11 +186,12 @@ impl Editor {
                                 .x
                         })
                         .fold(0.0, f32::max)
-                        + 22.0;
+                        // utils.cpp::text_width(s, 2) adds two points per side.
+                        + 4.0 + 22.0;
                     for (i, value) in values.iter_mut().enumerate() {
                         let x = 300.0 + (i % 2) as f32 * (32.0 + width);
                         let y = 144.0 + (i / 2) as f32 * 26.0;
-                        quadrant_icon(ui, rect(x - 22.0, y + 4.0, 14.0, 14.0), i);
+                        quadrant_icon(ui, rect(x, y, width, 22.0), i, true);
                         ui.put(
                             rect(x, y, width, 22.0),
                             egui::DragValue::new(value)
@@ -212,7 +213,7 @@ impl Editor {
                     };
                     for (i, value) in fields.iter_mut().enumerate() {
                         let y = 144.0 + i as f32 * 26.0;
-                        quadrant_icon(ui, rect(278.0, y + 4.0, 14.0, 14.0), i);
+                        quadrant_icon(ui, rect(300.0, y, 156.0, 22.0), i, enabled);
                         ui.put(
                             rect(300.0, y, 156.0, 22.0),
                             egui::TextEdit::singleline(value).interactive(enabled),
@@ -265,13 +266,127 @@ pub(super) fn selection_border(ui: &egui::Ui, cell: Rect) {
     map_buttons::selection(ui.painter(), cell, false);
 }
 
-fn quadrant_icon(ui: &egui::Ui, rect: Rect, quadrant: usize) {
-    let color = ui.visuals().text_color();
-    ui.painter()
-        .rect_stroke(rect, 0.0, (1.0, color), egui::StrokeKind::Inside);
-    let cell = Rect::from_min_size(
-        rect.min + Vec2::new((quadrant % 2) as f32 * 7.0, (quadrant / 2) as f32 * 7.0),
-        Vec2::splat(7.0),
+fn quadrant_icon(ui: &egui::Ui, field: Rect, quadrant: usize, enabled: bool) {
+    use icons::Icon;
+    // OS_Input/OS_Hex_Spinner use outside FL_ALIGN_LEFT. FLTK 1.4.5
+    // Fl_Group::draw_outside_label right-aligns the image three points before
+    // the field; fl_draw centers the 16-point image in its 22-point height.
+    let bounds = Rect::from_min_size(
+        Pos2::new(field.left() - 19.0, field.center().y - 8.0),
+        Vec2::splat(16.0),
     );
-    ui.painter().rect_filled(cell.shrink(1.0), 0.0, color);
+    let icon = [
+        Icon::CollisionTopLeft,
+        Icon::CollisionTopRight,
+        Icon::CollisionBottomLeft,
+        Icon::CollisionBottomRight,
+    ][quadrant];
+    icons::paint(ui, bounds, icon, enabled && ui.is_enabled());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use egui_kittest::kittest::{NodeT, Queryable};
+
+    #[test]
+    fn collision_labels_follow_source_layout_and_availability() {
+        let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+        h.get_by_label("Edit").click();
+        h.run();
+        h.get_by_label("Edit Block…").click();
+        h.run();
+        assert!(h.state().block_form.as_ref().unwrap().collision.is_none());
+        for collision in [
+            None,
+            Some(CollisionRow::Asm(std::array::from_fn(|_| "FLOOR".into()))),
+            Some(CollisionRow::Binary([0x01, 0x23, 0x45, 0x67])),
+        ] {
+            let enabled = collision.is_some();
+            let binary = matches!(collision, Some(CollisionRow::Binary(_)));
+            h.state_mut().block_form.as_mut().unwrap().collision = collision;
+            h.remove_cursor();
+            h.run();
+            let origin = h.get_by_label("Tile $00").rect().min - Vec2::new(11.0, 37.0);
+            let first = h.get_by_label("Collision top left").rect();
+            for (i, name) in [
+                "Collision top left",
+                "Collision top right",
+                "Collision bottom left",
+                "Collision bottom right",
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                let node = h.get_by_label(name);
+                assert_eq!(node.accesskit_node().is_disabled(), !enabled, "{name}");
+                let x = 300.0
+                    + if binary {
+                        (i % 2) as f32 * (32.0 + first.width())
+                    } else {
+                        0.0
+                    };
+                let y = 144.0 + if binary { i / 2 } else { i } as f32 * 26.0;
+                assert_eq!(node.rect().min - origin, Vec2::new(x, y), "{name}");
+                assert_eq!(node.rect().height(), 22.0, "{name}");
+            }
+            #[cfg(feature = "visual-tests")]
+            {
+                // Source XPM geometry: outer box at (1..=13, 1..=13),
+                // central lines at x/y=7; pink fills one 5×5 quadrant.
+                // Check the image in the actual dialog, independently of the
+                // icon renderer or its decoded asset accessor.
+                let image = h.render().unwrap();
+                for i in 0..4 {
+                    let x = 281.0
+                        + if binary {
+                            (i % 2) as f32 * (32.0 + first.width())
+                        } else {
+                            0.0
+                        };
+                    let y = 147.0 + if binary { i / 2 } else { i } as f32 * 26.0;
+                    for py in 1..=13 {
+                        for px in 1..=13 {
+                            let rgb = if [1, 7, 13].contains(&px)
+                                && [1, 7, 13].contains(&py)
+                                && ((px != 7 && py != 7) || (px == 7 && py == 7))
+                            {
+                                Some([32_u32, 32, 72])
+                            } else if [1, 7, 13].contains(&px) || [1, 7, 13].contains(&py) {
+                                Some([0, 0, 24])
+                            } else if (px > 7) as usize == i % 2 && (py > 7) as usize == i / 2 {
+                                Some([249, 89, 89])
+                            } else {
+                                None
+                            };
+                            if let Some(rgb) = rgb {
+                                let mut expected = rgb.map(|v| v as u8);
+                                if !enabled {
+                                    let gray = (31 * rgb[0] + 61 * rgb[1] + 8 * rgb[2]) / 100;
+                                    expected = [((gray + 206) / 2) as u8; 3];
+                                }
+                                assert_eq!(
+                                    &image
+                                        .get_pixel(
+                                            (origin.x + x) as u32 + px,
+                                            (origin.y + y) as u32 + py
+                                        )
+                                        .0[..3],
+                                    &expected,
+                                    "quadrant {i}, pixel ({px}, {py}), enabled {enabled}, binary {binary}",
+                                );
+                            }
+                        }
+                    }
+                }
+                if !enabled {
+                    h.snapshot("block-dialog-disabled-collisions");
+                }
+            }
+        }
+        h.get_by_label("Cancel").click();
+        h.run();
+        assert!(!h.state().is_modified());
+        assert!(!h.state().loaded.as_ref().unwrap().document.map().can_undo());
+    }
 }

@@ -45,7 +45,7 @@ come from the Greybird and Dark inactive colors in master `themes.cpp`.
 ## Assets and fixtures
 
 No upstream game graphics, example maps or native font files are redistributed.
-Tests create synthetic data. Seventeen reviewed toolbar/editor icon images are
+Tests create synthetic data. Twenty-five reviewed toolbar/editor icon images are
 included with unchanged XPM sources, decoded RGBA pixels and provenance hashes.
 Some adapt **Fugue Icons**, copyright © 2013 Yusuke Kamiyamane, under **CC BY 3.0**:
 <https://p.yusukekamiyamane.com/> and <https://creativecommons.org/licenses/by/3.0/>.

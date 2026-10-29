@@ -24,6 +24,23 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- Eight collision-quadrant images now replace the procedural placeholders in
+  the block editor, bringing the reviewed icon inventory to 25 files. Exact XPM
+  and RGBA hashes and LGPL provenance are recorded per asset. Named and binary
+  collision fields use the source's 16×16 labels, positioned three points before
+  the field and vertically centered; missing collisions show disabled icons.
+  This placement follows `Block_Window::initialize`, `OS_Input/OS_Hex_Spinner`,
+  [FLTK 1.4.5 outside-label geometry](https://github.com/fltk/fltk/blob/release-1.4.5/src/Fl_Group.cxx)
+  and [image alignment](https://github.com/fltk/fltk/blob/release-1.4.5/src/fl_draw.cxx).
+  Binary fields now include `text_width(s, 2)`'s four points of padding before
+  the 22-point spinner allowance. Tests check field positions, enabled state,
+  unchanged history after cancellation and independently reconstructed quadrant
+  pixels in the actual dialog. The expanded atlas checks all 18 icon designs,
+  light/dark, enabled/disabled, 22/24-point bounds and 1×/2× scales (288 cases).
+  The atlas, binary dialog and new disabled-collision dialog were inspected;
+  changed existing dialog pixels stay within collision-control regions. These
+  are source-derived/headless checks, not native FLTK font/frame equivalence.
+
 - Seventeen reviewed icon images (including dark variants) now reproduce the
   pinned XPM pixels in the toolbar and tileset/roof clipboard controls. Imported
   XPM and decoded RGBA hashes are checked by `tools/icon_assets.py` in CI, with

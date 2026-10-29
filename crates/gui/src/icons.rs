@@ -22,6 +22,10 @@ pub(super) enum Icon {
     Tileset,
     Copy,
     Paste,
+    CollisionTopLeft,
+    CollisionTopRight,
+    CollisionBottomLeft,
+    CollisionBottomRight,
 }
 
 impl Icon {
@@ -44,6 +48,28 @@ impl Icon {
             (Self::Tileset, _) => include_bytes!("../assets/icons/tileset.rgba"),
             (Self::Copy, _) => include_bytes!("../assets/icons/copy.rgba"),
             (Self::Paste, _) => include_bytes!("../assets/icons/paste.rgba"),
+            (Self::CollisionTopLeft, false) => include_bytes!("../assets/icons/coll-top-left.rgba"),
+            (Self::CollisionTopLeft, true) => {
+                include_bytes!("../assets/icons/coll-top-left-dark.rgba")
+            }
+            (Self::CollisionTopRight, false) => {
+                include_bytes!("../assets/icons/coll-top-right.rgba")
+            }
+            (Self::CollisionTopRight, true) => {
+                include_bytes!("../assets/icons/coll-top-right-dark.rgba")
+            }
+            (Self::CollisionBottomLeft, false) => {
+                include_bytes!("../assets/icons/coll-bottom-left.rgba")
+            }
+            (Self::CollisionBottomLeft, true) => {
+                include_bytes!("../assets/icons/coll-bottom-left-dark.rgba")
+            }
+            (Self::CollisionBottomRight, false) => {
+                include_bytes!("../assets/icons/coll-bottom-right.rgba")
+            }
+            (Self::CollisionBottomRight, true) => {
+                include_bytes!("../assets/icons/coll-bottom-right-dark.rgba")
+            }
         }
     }
 }
@@ -54,7 +80,7 @@ fn disabled(rgb: [u8; 3], background: u8) -> Color32 {
     Color32::from_gray(((gray + u32::from(background)) / 2) as u8)
 }
 
-/// Paint 16 logical pixels centered in a 24- or 22-point button. Mesh quads
+/// Paint 16 logical pixels centered in the supplied bounds. Mesh quads
 /// avoid antialiasing/filtering individual one-point source pixels.
 pub(super) fn paint(ui: &egui::Ui, bounds: Rect, icon: Icon, enabled: bool) {
     if !ui.is_rect_visible(bounds) {
@@ -270,6 +296,10 @@ mod tests {
             Icon::Tileset,
             Icon::Copy,
             Icon::Paste,
+            Icon::CollisionTopLeft,
+            Icon::CollisionTopRight,
+            Icon::CollisionBottomLeft,
+            Icon::CollisionBottomRight,
         ];
         let mut rows = Vec::new();
         for size in [24_u32, 22] {
@@ -281,7 +311,7 @@ mod tests {
         }
         for scale in [1_u32, 2] {
             let mut h = Harness::builder()
-                .with_size(Vec2::new(464.0, 272.0))
+                .with_size(Vec2::new(592.0, 272.0))
                 .with_pixels_per_point(scale as f32)
                 .build_ui(|ui| {
                     ui.painter()
