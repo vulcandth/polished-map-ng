@@ -93,6 +93,12 @@ fn print_flags_compose_grid_and_text_and_report_font_sources() {
     assert_eq!(details["style"]["hexadecimal_ids"], true);
     assert_eq!(details["fonts"]["courier"], "Hack Regular");
     assert_eq!(details["fonts"]["helvetica"], "Ubuntu Light");
+    for role in ["courier", "helvetica"] {
+        let instance = &details["fonts"]["instances"][role];
+        assert_eq!(instance["collection_index"], 0);
+        assert_eq!(instance["variations"], serde_json::json!([]));
+        assert!(instance["substituted_for"].is_null());
+    }
     let print = image::open(root.join("print.png")).unwrap().to_rgb8();
     assert_eq!(print.dimensions(), (32, 32));
     assert_ne!(print, plain);
@@ -137,4 +143,36 @@ fn bad_font_and_explicit_event_input_do_not_create_outputs() {
     assert!(!root.join("event.png").exists());
     // No discovered event file is the same as printing with none loaded.
     assert!(run(root, "no-events.png", &["--print-events"]).0);
+}
+
+#[test]
+#[ignore = "reads host-installed fonts; run in the native OS CI matrix"]
+fn installed_print_fonts_report_the_shared_policy_and_substitution() {
+    use polished_map_core::PrintFont;
+    let temp = tempfile::tempdir().unwrap();
+    fixture(temp.path());
+    let expected = polished_map_project::PrintFonts::system().unwrap();
+    let (ok, output) = run(temp.path(), "native.png", &["--print-ids"]);
+    assert!(ok, "{output}");
+    let fonts = &output["result"]["print"]["fonts"];
+    for (name, role) in [
+        ("courier", PrintFont::CourierBold14),
+        ("helvetica", PrintFont::HelveticaBold14),
+    ] {
+        let face = expected.face(role);
+        assert_eq!(fonts[name], face.name());
+        assert_eq!(
+            fonts["instances"][name]["collection_index"],
+            face.collection_index()
+        );
+        assert_eq!(
+            fonts["instances"][name]["substituted_for"],
+            serde_json::json!(face.substituted_for())
+        );
+        assert_eq!(fonts["instances"][name]["variations"], serde_json::json!(face.variations().iter().map(|(tag, value)| serde_json::json!({"tag": String::from_utf8_lossy(tag), "value": value})).collect::<Vec<_>>()));
+    }
+    assert_eq!(
+        image::open(temp.path().join("native.png")).unwrap().width(),
+        32
+    );
 }

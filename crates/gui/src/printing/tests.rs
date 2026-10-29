@@ -3,6 +3,78 @@ use crate::event_workflows::EventChange;
 use egui_kittest::{Harness, kittest::Queryable};
 use std::fs;
 
+#[test]
+#[ignore = "reads host-installed fonts; run in the native OS CI matrix"]
+fn installed_native_fonts_are_captured_for_the_print_worker() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    let selected = fonts::install_native(&h.ctx);
+    h.state_mut().native_fonts = Some(selected.clone());
+    h.state_mut().print_options.ids = true;
+    open(&mut h);
+    let font = egui::FontId::proportional(if cfg!(windows) { 12.0 } else { 13.0 });
+    let measure = |text: &str| {
+        h.ctx.fonts_mut(|fonts| {
+            fonts
+                .layout_no_wrap(text.into(), font.clone(), Color32::BLACK)
+                .size()
+                .x
+                .ceil()
+        })
+    };
+    let expected_width = 10.0
+        + measure("Show:")
+        + 8.0
+        + 4.0
+        + ["Grid", "IDs", "Priority", "Events", "Warp IDs"]
+            .map(|label| measure(label) + 26.0 + 4.0)
+            .iter()
+            .sum::<f32>()
+        - 4.0
+        + 10.0;
+    assert_eq!(
+        h.state().print_form.as_ref().unwrap().bounds.width(),
+        expected_width.max(288.0)
+    );
+    h.state_mut().print_form = None;
+    h.state_mut().queue_print(Destination::Clipboard);
+    let job = h.state_mut().print_request.take().unwrap();
+    assert!(std::sync::Arc::ptr_eq(
+        job.fonts.as_ref().unwrap(),
+        &selected
+    ));
+    h.state_mut().native_fonts = None;
+    let expected_fonts = PrintFonts::from_native(&selected).unwrap();
+    let expected = job
+        .graphics
+        .render_print(
+            &job.map,
+            job.events.as_ref(),
+            job.options,
+            job.style,
+            |role, text| expected_fonts.rasterize(role, text),
+        )
+        .unwrap();
+    let PrintOutput::Copied(image) = std::thread::spawn(move || run(job))
+        .join()
+        .unwrap()
+        .unwrap()
+    else {
+        panic!("clipboard output expected")
+    };
+    assert_eq!(
+        image.size,
+        [expected.width as usize, expected.height as usize]
+    );
+    assert_eq!(
+        image
+            .pixels
+            .iter()
+            .flat_map(|pixel| [pixel.r(), pixel.g(), pixel.b()])
+            .collect::<Vec<_>>(),
+        expected.pixels
+    );
+}
+
 fn open(h: &mut Harness<'_, Editor>) {
     h.get_by_label("File").click();
     h.run();

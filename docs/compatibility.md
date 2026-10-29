@@ -1,5 +1,54 @@
 # Compatibility evidence
 
+## Shared editor/Print font policy and variable instances
+
+Print now consumes `NativeFonts`, removing its separate Courier/Helvetica fallback
+lists. GUI jobs retain an `Arc` of the startup selection, so a queued export uses
+the exact faces shown by that editor even after the editor releases its reference.
+The CLI uses the same policy through `PrintFonts::system`; explicit caller font
+data still bypasses discovery. Font bytes are shared without copying, and
+collection indices and variable coordinates survive the handoff. All of this
+remains in the project/GUI adapters; core rendering still has no OS/font/IO API.
+
+`PrintFontFace::from_bytes_with_variations` accepts bounded explicit instances,
+rejecting unknown/duplicate axes, nonfinite/out-of-range values and more than 32
+settings. Normalized coordinates now affect line metrics, glyph advances and
+outlines together. A test-only in-memory extension of the existing licensed Hack
+fixture supplies one fvar/gvar axis: at weight 700 the A outline moves 100 font
+units and its advance grows by 500. Independent expected size-14 advances are
+8 and 12 pixels; the changed ink and untouched B glyph are also checked. A
+separate test goes through Fontique selection and `NativeFontFace` before Print,
+catching a dropped weight coordinate in either adapter. No changed font file is
+bundled or written; the minimal variation tables follow Microsoft's OpenType
+[fvar](https://learn.microsoft.com/en-us/typography/opentype/spec/fvar) and
+[gvar](https://learn.microsoft.com/en-us/typography/opentype/spec/gvar) specifications.
+
+The Windows Helvetica Bold role has an explicit temporary Arial Bold substitution
+when the pinned FLTK default Microsoft Sans Serif has no real bold face. The GUI
+and Print now share that substitution; the exact face takes precedence if it is
+available. Startup logs and CLI JSON `fonts.instances.*.substituted_for` report
+the reference family. JSON also retains existing resolved font names and adds
+collection indices and variation settings. This is **not** synthetic-bold parity:
+FLTK's GDI font enumeration advertises synthesized bold faces and CreateFontW
+requests them, while the current portable renderer requires actual outlines.
+Native synthesis, font enumeration/name aliases, glyph metrics/hinting and
+pixel-level GDI/Xft/Quartz equivalence remain open requirements.
+
+Print Options now measures with the selected body font (12 logical points on
+native Windows, 13 elsewhere), following `Print_Options_Dialog::refresh`'s
+`OS_FONT_SIZE` and original padding/spacing formula. Its installed-font test checks
+that width and verifies that a queued worker retains and renders the captured
+faces. Existing headless fixtures keep their explicit bundled 13-point style.
+
+The preceding font-policy commit `58a4e74` passed all eight jobs in
+[CI run 40856606148](https://github.com/vulcandth/polished-map-ng/actions/runs/40856606148).
+Current local workspace tests, formatting, Clippy with warnings denied, rustdoc
+and the production native-adapter graph pass. The visual suite passes 157 tests
+with three explicit ignored tests and unchanged snapshot baselines. Source and
+variable-instance tests, Windows installed-font rendering, actual worker-thread
+capture and CLI metadata checks pass separately. The three-OS CI steps explicitly
+run project, GUI and CLI installed-font tests.
+
 ## Installed GUI font roles
 
 Desktop startup now calls `Editor::new_native`, using `NativeFonts` from the
@@ -23,8 +72,9 @@ variable-axis coordinates pass through to egui; font bytes remain local and are
 not bundled or written into project files. Empty/oversized/unusable faces are
 rejected. Native roles precede the existing bundled glyph fallbacks; the separately
 licensed Mac menu-symbol face remains installed. Actual face choices and missing
-roles are reported on stderr. Missing bold roles retain an explicit bundled
-stack rather than accidentally selecting the newly installed regular UI face.
+roles are reported on stderr. The explicit Windows bold-sans substitution is
+described above; other missing bold roles retain an explicit bundled stack rather
+than accidentally selecting the newly installed regular UI face.
 
 Map IDs and hotkey badges request the dedicated bold monospace family, and event
 symbols request the separate bold sans family. Consolas alone on Windows changes
@@ -41,9 +91,9 @@ Host-font tests run explicitly in the three-OS CI matrix; local Windows discover
 and egui layout passed with Segoe UI and regular/bold Consolas. They exercise
 installed files and shaping, not native window appearance or FLTK rasterization.
 On this host Microsoft Sans Serif has no real bold face: GDI synthetic bold is
-not implemented by the egui adapter, and that role is reported unavailable.
-Native hinting, baselines, synthesis, full font/name fallback equivalence, and
-the separate CPU Print font policy remain parity gates. No snapshot of an
+not implemented by the egui adapter, and that role now reports the shared Arial
+Bold substitution. Native hinting, baselines, synthesis and full font/name
+fallback equivalence remain parity gates. No snapshot of an
 installed proprietary font is used as a redistributed fixture.
 
 Local validation: workspace tests, formatting, Clippy with warnings denied,

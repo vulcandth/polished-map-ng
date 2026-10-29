@@ -245,7 +245,11 @@ recorded in `crates/gui/assets/fonts/NOTICE.md`. `tools/font_assets.py` verifies
 the font and license offline in CI. Headless tests verify all three required
 modifier glyphs; actual macOS font metrics remain a separate parity gate.
 
-GUI text currently uses egui's bundled fonts, whose notices are retained under
-`LICENSES/egui-fonts/`. The digit masks above are independent of native font
-discovery. Helvetica Bold/native monospace matching remains unfinished; system
-font files have not been copied or redistributed.
+Native startup selects installed faces using the reference's platform preference
+lists; deterministic tests and missing-role fallbacks use egui's bundled fonts,
+whose notices are retained under `LICENSES/egui-fonts/`. Print shares the selected
+bold faces, collection indices and variable-font coordinates. Windows currently
+uses an explicitly reported Arial Bold substitute when Microsoft Sans Serif Bold
+is unavailable. Synthetic bold and native rasterization remain unfinished; see
+`compatibility.md`. The digit masks above are independent of font discovery.
+System font files have not been copied or redistributed.

@@ -22,12 +22,13 @@ pub(super) fn install_bundled(ctx: &egui::Context) {
     ctx.data_mut(|data| data.remove::<Installed>(key()));
 }
 
-pub(super) fn install_native(ctx: &egui::Context) {
-    let faces = NativeFonts::discover(
+pub(super) fn install_native(ctx: &egui::Context) -> Arc<NativeFonts> {
+    let faces = Arc::new(NativeFonts::discover(
         FontPlatform::current(),
         polished_map_platform::message_font_family().as_deref(),
-    );
+    ));
     install(ctx, &faces);
+    faces
 }
 
 fn install(ctx: &egui::Context, faces: &NativeFonts) {
@@ -73,6 +74,11 @@ fn install(ctx: &egui::Context, faces: &NativeFonts) {
                 face.family(),
                 face.index()
             );
+            if let Some(reference) = face.substituted_for() {
+                eprintln!(
+                    "Native font {role}: substitution for {reference}; GDI synthetic bold parity remains incomplete"
+                );
+            }
         } else {
             eprintln!(
                 "Native font {role}: unavailable; retaining bundled fallback (native font parity incomplete)"

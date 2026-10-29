@@ -25,7 +25,10 @@ bold sans roles using the reference's preference lists and pinned FLTK backend
 defaults. Map labels, event symbols, ruler sizes and zoomed warp IDs consume those
 roles; test startup keeps fixed bundled faces. Installed-face/egui checks join
 the three-OS CI matrix. Native hinting/baselines, Windows synthetic bold, complete
-font-name fallback equivalence and CPU Print font-policy alignment remain open;
+font-name fallback equivalence remain open. CPU Print now shares the font policy,
+collection indices, variable instances and explicit Windows bold-sans substitute;
+GUI workers retain the exact startup faces and CLI JSON reports substitutions.
+Synthetic bold and native rasterization still require fidelity work;
 see the evidence and limitations in `docs/compatibility.md`.
 
 The block editor now uses the original sidebar right-release workflow without

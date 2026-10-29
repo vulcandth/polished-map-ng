@@ -101,11 +101,23 @@ impl PrintArgs {
             .map_err(|e| Failure::new("print_render", e))?;
         let details = if options != PrintOptions::default() || self.print_hex || self.print_dark {
             json!({"options":options, "style":style, "event_script":events.as_ref().map(|e| e.source().path()), "fonts":fonts.as_ref().map(|f| json!({
-                "courier":f.face_name(PrintFont::CourierBold14), "helvetica":f.face_name(PrintFont::HelveticaBold14), "rasterizer":"skrifa-vello-cpu"
+                "courier":f.face_name(PrintFont::CourierBold14), "helvetica":f.face_name(PrintFont::HelveticaBold14), "rasterizer":"skrifa-vello-cpu",
+                "instances": {
+                    "courier": face_details(f.face(PrintFont::CourierBold14)),
+                    "helvetica": face_details(f.face(PrintFont::HelveticaBold14))
+                }
             }))})
         } else {
             Value::Null
         };
         Ok((pixels, details))
     }
+}
+
+fn face_details(face: &PrintFontFace) -> Value {
+    json!({
+        "collection_index": face.collection_index(),
+        "variations": face.variations().iter().map(|(tag, value)| json!({"tag": String::from_utf8_lossy(tag), "value": value})).collect::<Vec<_>>(),
+        "substituted_for": face.substituted_for()
+    })
 }

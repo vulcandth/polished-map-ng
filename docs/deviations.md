@@ -266,7 +266,12 @@ Block IDs use the original 14-point logical font size, zoom-dependent offsets,
 four diagonal black outline passes and white/yellow foreground colors. The
 desktop uses the dedicated installed bold monospace role for IDs and hotkey
 badges, retaining bundled fallback when unavailable. Native baseline/hinting
-equivalence and alignment with the separate CPU Print font policy remain open.
+equivalence remain open. Print shares the desktop selection policy and preserves
+its collection indices/variable coordinates; GUI export jobs retain startup faces.
+Windows' Helvetica Bold role temporarily substitutes Arial Bold when Microsoft
+Sans Serif Bold needs GDI synthesis. That substitution is shared by GUI/Print and
+reported in startup logs and CLI font-instance metadata; it remains a tracked
+incomplete port, not an approved permanent visual change.
 Display-base changes do not alter
 event formats or saved data; the status area now shows live block coordinates
 in both modes, with event coordinates appended only in Events Mode.

@@ -100,6 +100,7 @@ struct ResizeForm {
 }
 
 pub struct Editor {
+    native_fonts: Option<std::sync::Arc<polished_map_project::NativeFonts>>,
     about: Option<about::AboutDialog>,
     help_window: help::HelpWindow,
     event_ui: event_workflows::EventUi,
@@ -185,6 +186,7 @@ pub struct Editor {
 impl Default for Editor {
     fn default() -> Self {
         Self {
+            native_fonts: None,
             about: None,
             help_window: Default::default(),
             event_ui: event_workflows::EventUi::default(),
@@ -272,8 +274,8 @@ impl Default for Editor {
 impl Editor {
     /// Native application startup: choose the reference's installed font roles.
     pub fn new_native(cc: &eframe::CreationContext<'_>) -> Self {
-        let editor = Self::new(cc);
-        fonts::install_native(&cc.egui_ctx);
+        let mut editor = Self::new(cc);
+        editor.native_fonts = Some(fonts::install_native(&cc.egui_ctx));
         editor
     }
 

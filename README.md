@@ -55,8 +55,12 @@ coordinate base. `--print-dark` selects the dark grid color. Events are discover
 from the project, or supplied with `--events-file` alongside `--print-events`.
 Labels use installed bold fonts, without a window or GPU. Supply both
 `--print-mono-font` and `--print-sans-font` with TTF/OTF files to select explicit
-faces (the CLI uses face zero; the Rust API also accepts a collection index).
-The JSON response identifies the fonts used. Linux system discovery requires
+faces (the CLI uses face zero; the Rust API also accepts collection indices and
+validated variable-font coordinates). Print shares the editor's font policy;
+GUI jobs retain the startup faces. JSON identifies the fonts, instance coordinates
+and explicit substitutions. Windows currently substitutes Arial Bold for the
+reference's synthetic Microsoft Sans Serif Bold; native synthesis is unfinished.
+Linux system discovery requires
 Fontconfig and installed fonts; explicit font data bypasses discovery. Native
 font rasterization parity is still pending. New PNG exports are staged and never
 replace an existing destination, including one created during rendering.

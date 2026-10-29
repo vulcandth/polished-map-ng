@@ -33,6 +33,7 @@ pub struct NativeFontFace {
     index: u32,
     family: String,
     variations: Vec<([u8; 4], f32)>,
+    substituted_for: Option<&'static str>,
 }
 
 impl NativeFontFace {
@@ -50,6 +51,12 @@ impl NativeFontFace {
 
     pub fn variations(&self) -> &[([u8; 4], f32)] {
         &self.variations
+    }
+
+    /// Reference family whose synthetic bold cannot yet be rendered. `None`
+    /// means no explicit substitution; it does not certify rasterizer parity.
+    pub fn substituted_for(&self) -> Option<&str> {
+        self.substituted_for
     }
 }
 
@@ -89,7 +96,16 @@ impl NativeFonts {
             mono: select(db, mono, false).or_else(|| default_face(db, platform, true, false)),
             mono_bold: select(db, mono, true).or_else(|| default_face(db, platform, true, true)),
             // Unlike Courier Bold, FL_HELVETICA_BOLD is never remapped by themes.cpp.
-            sans_bold: default_face(db, platform, false, true),
+            sans_bold: default_face(db, platform, false, true).or_else(|| {
+                if platform != FontPlatform::Windows {
+                    return None;
+                }
+                // GDI synthesizes this source face. Until the shared renderer
+                // can do that, retain a real, explicitly reported bold fallback.
+                let mut face = select(db, &["Arial"], true)?;
+                face.substituted_for = Some("Microsoft Sans Serif Bold");
+                Some(face)
+            }),
         }
     }
 
@@ -220,6 +236,7 @@ fn load_face(family: &fontique::FamilyInfo, bold: bool) -> Option<NativeFontFace
         index: face.index(),
         family: family.name().to_owned(),
         variations,
+        substituted_for: None,
     })
 }
 
@@ -305,6 +322,7 @@ mod tests {
         for platform in [FontPlatform::Windows, FontPlatform::Mac, FontPlatform::Unix] {
             let mut db = collection();
             let empty = NativeFonts::from_collection(&mut db, platform, None);
+            assert!(crate::PrintFonts::from_native(&empty).is_err());
             assert!(
                 empty.ui.is_none()
                     && empty.mono.is_none()
@@ -338,6 +356,66 @@ mod tests {
         let selected = NativeFonts::from_collection(&mut db, FontPlatform::Unix, None);
         assert_eq!(selected.mono.as_ref().unwrap().family(), "Consolas");
         assert!(!selected.is_consolas());
+    }
+
+    #[test]
+    fn synthetic_bold_substitution_is_explicit_and_shared_with_print() {
+        let mut db = collection();
+        add(&mut db, "Microsoft Sans Serif", false);
+        add(&mut db, "Arial", true);
+        add(&mut db, "Consolas", true);
+        let fonts = NativeFonts::from_collection(&mut db, FontPlatform::Windows, None);
+        let sans = fonts.sans_bold.as_ref().unwrap();
+        assert_eq!(sans.family(), "Arial");
+        assert_eq!(sans.substituted_for(), Some("Microsoft Sans Serif Bold"));
+        let print = crate::PrintFonts::from_native(&fonts).unwrap();
+        for (role, selected) in [
+            (
+                polished_map_core::PrintFont::CourierBold14,
+                fonts.mono_bold.as_ref().unwrap(),
+            ),
+            (polished_map_core::PrintFont::HelveticaBold14, sans),
+        ] {
+            assert_eq!(print.face(role).collection_index(), selected.index());
+            assert_eq!(print.face(role).variations(), selected.variations());
+            assert_eq!(
+                print.face(role).substituted_for(),
+                selected.substituted_for()
+            );
+        }
+        // If the exact reference face becomes available it always wins.
+        add(&mut db, "Microsoft Sans Serif", true);
+        let fonts = NativeFonts::from_collection(&mut db, FontPlatform::Windows, None);
+        let sans = fonts.sans_bold.as_ref().unwrap();
+        assert_eq!(sans.family(), "Microsoft Sans Serif");
+        assert!(sans.substituted_for().is_none());
+    }
+
+    #[test]
+    fn variable_native_bold_instance_survives_print_handoff() {
+        let mut db = collection();
+        let bytes = crate::print_fonts::variable_fixture::variable_hack();
+        db.register_fonts(
+            fontique::Blob::new(Arc::new(bytes)),
+            Some(fontique::FontInfoOverride {
+                family_name: Some("Consolas"),
+                ..Default::default()
+            }),
+        );
+        let selected = NativeFonts::from_collection(&mut db, FontPlatform::Windows, None);
+        let face = selected.mono_bold.as_ref().unwrap();
+        assert_eq!(face.variations(), &[(*b"wght", 700.0)]);
+        let bold = crate::PrintFontFace::from_native(face).unwrap();
+        let unused =
+            crate::PrintFontFace::from_bytes(epaint_default_fonts::HACK_REGULAR, 0).unwrap();
+        let print = crate::PrintFonts::from_faces(bold, unused);
+        assert_eq!(
+            print
+                .rasterize(polished_map_core::PrintFont::CourierBold14, "A")
+                .unwrap()
+                .layout_size()[0],
+            12
+        );
     }
 
     #[test]

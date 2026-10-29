@@ -76,16 +76,21 @@ font/text pair is requested once per render. The returned `RgbImage` has native
 map dimensions with no viewport margin. The font adapter must remain usable
 without a display server so the eventual CLI and GUI Print paths share it.
 `project::PrintFonts` supplies CPU coverage using Skrifa and Vello. Fontique
-enumerates installed bold faces through native services; callers can instead
-provide face data and a collection index with `PrintFontFace::from_bytes`.
+enumerates installed faces through native services. `NativeFonts` owns the
+source-derived role preferences for both editor and Print, including explicit
+substitution metadata. Callers can instead provide face data and a collection
+index with `PrintFontFace::from_bytes`, or validated variable-axis settings with
+`from_bytes_with_variations`. `from_native` shares the chosen face bytes and
+preserves its collection index and instance coordinates. Line metrics, advances
+and outlines all use that instance; the CLI reports instance/substitution details.
 Line layout dimensions are separate from the ink mask and its signed bearing,
 so centering does not discard overhang. Fonts are bounded to 32 MiB, labels to
 three ASCII digits/hex characters or one uppercase symbol, outline paths to
 4096 elements and ink masks to 128x64. Native text metrics/hinting and driver
 blending must be verified before claiming platform-exact Print output.
 
-GUI Print captures the current map, composed graphics, events, options and style
-in a queued job. A native adapter selects the PNG destination, then a worker
+GUI Print captures the current map, composed graphics, events, options, style
+and an `Arc` of its startup font selection in a queued job. A native adapter selects the PNG destination, then a worker
 renders/encodes or constructs the clipboard image. Completion returns through
 a channel; only the UI thread emits egui's image-copy command. Interaction
 tests inject picker/worker adapters without opening OS windows. The source's

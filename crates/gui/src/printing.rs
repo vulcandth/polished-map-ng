@@ -23,6 +23,7 @@ pub(super) enum Destination {
     Clipboard,
 }
 pub(super) struct PrintJob {
+    fonts: Option<std::sync::Arc<polished_map_project::NativeFonts>>,
     map: Map,
     graphics: Graphics,
     events: Option<Events>,
@@ -68,7 +69,10 @@ pub(super) fn run(job: PrintJob) -> Result<PrintOutput, String> {
     let needs_fonts = job.options.ids
         || (job.options.events && job.events.as_ref().is_some_and(|e| !e.entries().is_empty()));
     let fonts = needs_fonts
-        .then(PrintFonts::system)
+        .then(|| match job.fonts.as_ref() {
+            Some(fonts) => PrintFonts::from_native(fonts),
+            None => PrintFonts::system(),
+        })
         .transpose()
         .map_err(|e| e.to_string())?;
     job.run_with(|font, text| {
@@ -133,6 +137,7 @@ impl Editor {
             return;
         };
         self.print_request = Some(PrintJob {
+            fonts: self.native_fonts.clone(),
             map: loaded.document.map().clone(),
             graphics: loaded.graphics.clone(),
             events: loaded.events.as_ref().map(|d| d.script().events().clone()),
@@ -168,7 +173,7 @@ impl Editor {
         let (mut export, mut copy, mut cancel) = (false, false, false);
         egui::Modal::new(egui::Id::unique("print-options")).show(ctx, |ui| {
             ui.heading("Print Options");
-            let font = egui::FontId::proportional(13.0);
+            let font = egui::TextStyle::Body.resolve(ui.style());
             let measure = |label: &str| {
                 ui.painter()
                     .layout_no_wrap(label.into(), font.clone(), ui.visuals().text_color())

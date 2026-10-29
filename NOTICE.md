@@ -130,6 +130,9 @@ uses Skrifa and Vello CPU, under their retained MIT/Apache-2.0 terms. Installed
 OS fonts are read locally and are not included in project assets or releases.
 Explicit caller-supplied font data remains subject to its own license. Existing
 epaint_default_fonts faces are reused only as test inputs for this adapter.
+Variable-instance tests add minimal synthetic fvar/gvar tables to the already
+licensed Hack face in memory, with controlled outline/advance deltas. No modified
+font file is bundled or written; Hack's original dependency notices remain.
 
 egui's default fonts include Ubuntu Light, Hack, Noto Emoji, emoji-icon-font,
 and egui icons. They remain under their respective Ubuntu Font Licence, SIL OFL,
