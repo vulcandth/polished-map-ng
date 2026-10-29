@@ -26,6 +26,12 @@ Local formatting, workspace tests, Clippy with warnings denied and rustdoc pass.
 The full visual suite passes 159 tests (four explicitly ignored), and the compiled
 menu comparison passes separately. Thirteen changed menu snapshots and four new
 indicator snapshots were visually reviewed before accepting their baselines.
+Linux CI 40862109587 passed the original-command comparison and 158 visual tests;
+the remaining dark 1× gallery had two radio-highlight pixels at RGB 225 versus
+223 locally, with all other channel differences at most 1 and unchanged alpha.
+The inspected artifact justifies a Linux-only threshold of 3 for that single
+snapshot; all other snapshot tolerances and exact geometry/color checks remain.
+The raw FLTK menu hash now pins LF bytes (the initial local cache had CRLF).
 
 This is command/geometry equivalence, not native pixel equivalence. Egui still
 tessellates arcs and polygons; FLTK's native drivers may cover edge pixels

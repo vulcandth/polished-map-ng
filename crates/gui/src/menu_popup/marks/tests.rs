@@ -165,10 +165,21 @@ fn menu_rows_preserve_disabled_colors_marks_and_interaction_at_both_scales() {
                     let gray = if dark { 48 } else { 128 };
                     assert_eq!(image.get_pixel(x, y).0, [gray, gray, gray, 255]);
                 }
-                snapshots.add(h.try_snapshot(format!(
-                    "menu-marks-{}-{dpi}x",
-                    if dark { "dark" } else { "light" }
-                )));
+                let name = format!("menu-marks-{}-{dpi}x", if dark { "dark" } else { "light" });
+                if dark && dpi == 1.0 {
+                    // CI 40862109587: radio-highlight pixels (18,71)/(18,90)
+                    // are RGB 225 on Linux vs 223 locally; all other channel
+                    // differences are <= 1. Keep other snapshots unchanged.
+                    snapshots.add(
+                        h.try_snapshot_options(
+                            name,
+                            &egui_kittest::SnapshotOptions::default()
+                                .threshold(egui_kittest::OsThreshold::<f32>::default().linux(3.0)),
+                        ),
+                    );
+                } else {
+                    snapshots.add(h.try_snapshot(name));
+                }
             }
             // Hover changes label contrast, not the selected indicator's color.
             h.get_by_label("Check on").focus();
