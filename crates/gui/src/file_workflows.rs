@@ -37,7 +37,6 @@ impl Editor {
     pub(super) fn close_map(&mut self) {
         // Upstream colors and selected set are global, outside Tileset::clear.
         self.unloaded_palettes = self.palette_document().clone();
-        self.unloaded_monochrome = self.palette_monochrome();
         self.loaded = None;
         self.textures.clear();
         self.selected = 0;

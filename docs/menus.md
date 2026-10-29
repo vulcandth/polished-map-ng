@@ -18,10 +18,20 @@ keyboard and headless counterparts where applicable.
 | View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
-| Options | Tile Priority; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | Monochrome, 256 Tiles, Drag and Drop, Overworld Map Size. Remaining native/persistence gaps are tracked in `preferences.md`. |
+| Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | Drag and Drop, Overworld Map Size. Remaining native/persistence gaps are tracked in `preferences.md`. |
 | Help | Inline development status, project attribution and icon licensing links | Original Help and About actions/dialogs, including keyboard shortcuts. Attribution remains available throughout the port. |
 
 ## Geometry and interaction gates
+
+Monochrome and 256 Tiles default off. Each change reloads the current tileset,
+blocks/collisions and roof without opening the tileset chooser. Unsaved assets
+use the same warning as Change Tileset; map history and session palette edits
+survive. Cancel retains the changed preference, matching upstream, while the
+live document retains its original interpretation and save layout until a
+successful reload. Failed reads retain the whole document. Missing palette maps
+enable Monochrome again. Both options survive Close and exit and seed subsequent
+opens; the existing Map Options 256-tile checkbox starts from the session value.
+See `deviations.md` for the canceled-mode safety boundary.
 
 Tile Priority controls the tile editor's priority checkbox and palette-map gap/
 padding output. Toggling it preserves existing attribute bits, pixels, dirty flags

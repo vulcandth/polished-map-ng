@@ -37,6 +37,248 @@ fn current<'a>(h: &'a Harness<'_, Editor>) -> &'a MasterTilesetDocument {
     h.state().loaded.as_ref().unwrap().tileset.as_ref().unwrap()
 }
 
+fn current_hash(h: &Harness<'_, Editor>) -> String {
+    current(h).content_hash(
+        h.state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .blockset
+            .as_ref()
+            .unwrap()
+            .blockset(),
+    )
+}
+
+fn planned_outputs(h: &Harness<'_, Editor>) -> serde_json::Value {
+    serde_json::to_value(
+        current(h)
+            .preview_save(
+                h.state()
+                    .loaded
+                    .as_ref()
+                    .unwrap()
+                    .blockset
+                    .as_ref()
+                    .unwrap()
+                    .blockset(),
+            )
+            .unwrap(),
+    )
+    .unwrap()
+}
+
+fn option(h: &mut Harness<'_, Editor>, label: &str) {
+    h.get_by_label("Options").click();
+    h.run();
+    h.get_by_label(label).click();
+    h.run();
+}
+
+#[test]
+fn tile_mode_options_reload_current_assets_keep_map_and_colors_and_skip_chooser() {
+    let (dir, mut h) = fixture();
+    h.state_mut().apply(Command::Paint {
+        points: vec![Point { x: 0, y: 0 }],
+        block: 1,
+    });
+    h.state_mut()
+        .loaded
+        .as_mut()
+        .unwrap()
+        .tileset
+        .as_mut()
+        .unwrap()
+        .palettes_mut()
+        .apply_batch(&[PaletteCommand::SetRgb {
+            slot: ColorSlot {
+                set: PaletteSet::Day,
+                palette: 8,
+                hue: 0,
+            },
+            rgb: [17, 34, 51],
+        }])
+        .unwrap();
+    let colors = current(&h).palettes().content_hash();
+    let source = fs::read(dir.path().join("gfx/tilesets/demo.2bpp")).unwrap();
+    for (label, mono, all) in [
+        ("Monochrome", true, false),
+        ("256 Tiles", true, true),
+        ("Monochrome", false, true),
+        ("256 Tiles", false, false),
+    ] {
+        option(&mut h, label);
+        assert!(h.state().error.is_none());
+        assert!(!h.state().confirm_tileset_change && h.state().tileset_choice_form.is_none());
+        assert_eq!(current(&h).name(), "demo");
+        assert_eq!(current(&h).roof().unwrap().name(), "demo");
+        assert_eq!(
+            (current(&h).monochrome(), current(&h).allow_256()),
+            (mono, all)
+        );
+        assert_eq!((h.state().monochrome, h.state().allow_256), (mono, all));
+        assert_eq!(h.state().loaded.as_ref().unwrap().allow_256, all);
+        assert_eq!(current(&h).palettes().content_hash(), colors);
+        let map = h.state().loaded.as_ref().unwrap().document.map();
+        assert!(map.is_modified() && map.can_undo());
+        assert_eq!(map.blocks(), &[1, 1]);
+        assert!(!current(&h).tileset().is_modified());
+        h.key_press(egui::Key::Escape);
+        h.run();
+    }
+    assert_eq!(
+        fs::read(dir.path().join("gfx/tilesets/demo.2bpp")).unwrap(),
+        source
+    );
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::Z);
+    h.run();
+    assert_eq!(
+        h.state().loaded.as_ref().unwrap().document.map().blocks(),
+        &[0, 1]
+    );
+}
+
+#[test]
+fn tile_mode_reload_cancel_keeps_edits_and_pending_setting_then_accept_skips_chooser() {
+    for label in ["Monochrome", "256 Tiles"] {
+        for domain in 0..3 {
+            let (_dir, mut h) = fixture();
+            let loaded = h.state_mut().loaded.as_mut().unwrap();
+            let paint = TileCommand::Paint {
+                tile: 0,
+                points: vec![Point { x: 0, y: 0 }],
+                hue: 3,
+            };
+            match domain {
+                0 => loaded
+                    .blockset
+                    .as_mut()
+                    .unwrap()
+                    .blockset_mut()
+                    .apply_batch(&[BlockCommand::Set {
+                        block: 0,
+                        tiles: [1; 16],
+                    }])
+                    .unwrap(),
+                1 => loaded
+                    .tileset
+                    .as_mut()
+                    .unwrap()
+                    .apply_batch(&[paint])
+                    .unwrap(),
+                _ => loaded
+                    .tileset
+                    .as_mut()
+                    .unwrap()
+                    .roof_mut()
+                    .unwrap()
+                    .roof_mut()
+                    .apply_batch(&[paint])
+                    .unwrap(),
+            }
+            let tiles_hash = current_hash(&h);
+            let outputs = planned_outputs(&h);
+            let blocks = h
+                .state()
+                .loaded
+                .as_ref()
+                .unwrap()
+                .blockset
+                .as_ref()
+                .unwrap()
+                .blockset()
+                .blocks()
+                .to_vec();
+            option(&mut h, label);
+            assert!(h.state().confirm_tileset_change && h.state().pending_tileset_reload);
+            h.get_by_label("Cancel").click();
+            h.run();
+            assert!(!h.state().pending_tileset_reload && !h.state().confirm_tileset_change);
+            assert!(h.state().is_modified());
+            assert_eq!(current_hash(&h), tiles_hash);
+            assert_eq!(
+                planned_outputs(&h),
+                outputs,
+                "Cancel must not change save bytes or targets"
+            );
+            if domain == 1 {
+                assert_eq!(current(&h).tileset().tiles()[0].hues()[0], 3);
+            } else if domain == 2 {
+                assert_eq!(
+                    current(&h).roof().unwrap().roof().tileset().tiles()[0].hues()[0],
+                    3
+                );
+            }
+            assert_eq!(
+                h.state()
+                    .loaded
+                    .as_ref()
+                    .unwrap()
+                    .blockset
+                    .as_ref()
+                    .unwrap()
+                    .blockset()
+                    .blocks(),
+                blocks
+            );
+            assert_eq!(
+                (current(&h).monochrome(), current(&h).allow_256()),
+                (false, false)
+            );
+            assert_eq!(
+                (h.state().monochrome, h.state().allow_256),
+                (label == "Monochrome", label == "256 Tiles")
+            );
+            let ctx = h.ctx.clone();
+            h.state_mut().request_tile_mode_reload(&ctx);
+            h.run();
+            h.get_by_label("Change Tileset").click();
+            h.run();
+            assert!(h.state().tileset_choice_form.is_none());
+            assert!(!h.state().pending_tileset_reload && !h.state().confirm_tileset_change);
+            assert!(!h.state().is_modified());
+            assert_eq!(
+                (current(&h).monochrome(), current(&h).allow_256()),
+                (label == "Monochrome", label == "256 Tiles")
+            );
+        }
+    }
+}
+
+#[test]
+fn tile_mode_failure_retains_document_and_missing_palette_reenables_monochrome() {
+    let (dir, mut h) = fixture();
+    let blocks_path = dir.path().join("data/tilesets/demo_metatiles.bin");
+    let bytes = fs::read(&blocks_path).unwrap();
+    let hash = current_hash(&h);
+    fs::write(&blocks_path, [0; 15]).unwrap();
+    option(&mut h, "256 Tiles");
+    assert!(h.state().error.is_some());
+    assert_eq!(current_hash(&h), hash);
+    assert!(h.state().allow_256 && !current(&h).allow_256());
+    h.state_mut().error = None;
+    h.run();
+    fs::write(&blocks_path, bytes).unwrap();
+    fs::remove_file(dir.path().join("gfx/tilesets/demo_palette_map.asm")).unwrap();
+    option(&mut h, "Monochrome");
+    assert!(current(&h).monochrome() && current(&h).allow_256());
+    h.key_press(egui::Key::Escape);
+    h.run();
+    option(&mut h, "Monochrome");
+    assert!(h.state().monochrome && current(&h).monochrome());
+    h.state_mut().close_map();
+    assert!(h.state().monochrome && h.state().allow_256);
+    h.key_press(egui::Key::Escape);
+    h.run();
+    option(&mut h, "Monochrome");
+    assert!(!h.state().monochrome && h.state().loaded.is_none());
+    h.state_mut().prepare_open(dir.path().join("Map.2x1.blk"));
+    assert!(h.state().open_form.as_ref().unwrap().allow_256);
+    h.state_mut().open_form = None;
+    h.state_mut().prepare_new_in(dir.path().to_owned());
+    assert!(h.state().open_form.as_ref().unwrap().allow_256);
+}
+
 #[test]
 fn tileset_switch_preserves_map_history_and_palette_edits_and_clears_invalid_selection() {
     let (dir, mut h) = fixture();

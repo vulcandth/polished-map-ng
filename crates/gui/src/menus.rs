@@ -210,12 +210,18 @@ impl Editor {
                 }
             });
             ui.menu_button("Options", |ui| {
+                if ui.checkbox(&mut self.monochrome, "Monochrome").changed() {
+                    self.request_tile_mode_reload(&ctx);
+                }
                 if ui
                     .checkbox(&mut self.allow_priority, "Tile Priority")
                     .changed()
                     && let Some(tileset) = self.loaded.as_mut().and_then(|l| l.tileset.as_mut())
                 {
                     tileset.set_allow_priority(self.allow_priority);
+                }
+                if ui.checkbox(&mut self.allow_256, "256 Tiles").changed() {
+                    self.request_tile_mode_reload(&ctx);
                 }
                 self.roof_palette_menu(ui);
                 ui.separator();

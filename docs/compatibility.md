@@ -2,6 +2,23 @@
 
 Status: initial implementation in progress. Neither upstream parity gate passed.
 
+Monochrome and 256 Tiles follow `monochrome_cb`, `allow_256_tiles_cb` and the
+chooser-free `change_tileset_cb(NULL)` reload path. GUI tests cover clean reloads,
+three dirty domains, both cancellation/acceptance routes, failed reads, missing
+palette maps, map history and session colors. Preferences restore both options;
+New/Open and Close carry them forward. Cancellation retains the preference while
+the document keeps its prior interpretation and preflight save outputs, a safety
+correction recorded in `deviations.md`.
+`prepare_replacement_in_mode` exposes this operation without a GUI. Synthetic
+tests check every source tile/attribute slot for all four mode combinations;
+these are source-derived expectations, not a compiled C++ differential test.
+The pinned real-project switch test compares all four Johto transitions with
+fresh reads, including map rendering, retained colors and the New Bark roof.
+Formatting, workspace Clippy/tests/docs, visual-feature Clippy, all seven pinned
+real-project tests and the final visual comparison (98 passed, one ignored)
+pass locally. Only the Options menu and Roof Palettes submenu snapshots changed;
+both were inspected. Native restart and menu dispatch remain unverified.
+
 Show Priority now follows the original default-on state, Ctrl/Cmd+Shift+P shortcut,
 menu/toolbar synchronization, and disabled-control behavior. Tile Priority being
 off disables the controls without clearing the Show Priority value or overlays.
@@ -67,7 +84,7 @@ inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pas
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex and block-ID tests pass; light/dark development snapshots inspected; native fonts/themes, persisted preferences and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
-| Preferences, overlays, print/clipboard | master main-window.cpp | Eighteen implemented settings plus recent history restore/save with malformed-record protection; palette auto-load, Tile Priority and Show Priority tested. Legacy import, remaining preferences, native storage/placement, complete overlays and print/clipboard parity pending |
+| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty implemented settings plus recent history restore/save with malformed-record protection; palette auto-load, Monochrome, 256 Tiles, Tile Priority and Show Priority tested. Legacy import, remaining preferences, native storage/placement, complete overlays and print/clipboard parity pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |

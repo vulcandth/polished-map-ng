@@ -493,6 +493,45 @@ fn pinned_pokecrystal_tileset_switch_matches_fresh_assets_and_preserves_session_
         assert!(!new.roof().unwrap().roof().tileset().is_modified());
         current = new;
     }
+    for (monochrome, allow_256) in [(true, false), (true, true), (false, true), (false, false)] {
+        let (new, blocks) = current
+            .prepare_replacement_in_mode(
+                "johto",
+                polished_map_project::MasterTileMode {
+                    monochrome,
+                    allow_256,
+                },
+            )
+            .unwrap();
+        let mut fresh = MasterTilesetDocument::open_for_map(
+            &map,
+            "johto",
+            &MasterGraphicsOptions {
+                monochrome,
+                allow_256,
+                ..options.clone()
+            },
+        )
+        .unwrap();
+        *fresh.palettes_mut() = current.palettes().clone();
+        assert_eq!(new.tileset().tiles(), fresh.tileset().tiles());
+        assert_eq!(new.tileset().attributes(), fresh.tileset().attributes());
+        assert_eq!(
+            new.graphics(blocks.blockset())
+                .unwrap()
+                .render_map(map.map())
+                .unwrap(),
+            fresh
+                .graphics(blocks.blockset())
+                .unwrap()
+                .render_map(map.map())
+                .unwrap()
+        );
+        assert_eq!(new.palettes().content_hash(), palette_hash);
+        assert_eq!(new.roof().unwrap().name(), "new_bark");
+        assert!(!new.tileset().is_modified() && !blocks.blockset().is_modified());
+        current = new;
+    }
 }
 
 #[test]

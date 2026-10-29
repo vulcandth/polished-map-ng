@@ -35,4 +35,4 @@ pub use palettes::{
     roof_palette_path,
 };
 pub use roof::{RoofDocument, list_roofs};
-pub use tileset::{MasterTilesetDocument, TilesetOutput};
+pub use tileset::{MasterTileMode, MasterTilesetDocument, TilesetOutput};

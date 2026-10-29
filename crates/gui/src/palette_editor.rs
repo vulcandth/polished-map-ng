@@ -149,7 +149,7 @@ impl Editor {
         self.loaded
             .as_ref()
             .and_then(|l| l.tileset.as_ref())
-            .map_or(self.unloaded_monochrome, |t| t.monochrome())
+            .map_or(self.monochrome, |t| t.monochrome())
     }
     pub(super) fn prepare_palettes(&mut self) {
         let draft = self.palette_document().clone();

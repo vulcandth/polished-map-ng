@@ -40,11 +40,18 @@ The compiled original overlay function matches 120 complete-bank cases; manual
 and automatic imports also agree on the pinned real project. Native dialog
 fidelity and native restart verification remain outstanding.
 
-Eighteen implemented view/mode/palette/auto-load/resize settings now restore and
+Twenty implemented view/mode/palette/auto-load/resize settings now restore and
 save through eframe with a versioned record and stable app ID. The two palette
 auto-load menu options affect subsequent imports independently. Headless restart
 and malformed-record tests pass; legacy preference import, remaining options,
 native storage/window placement and restart behavior still require work.
+
+Monochrome and 256 Tiles now have persistent Options controls and direct current-
+tileset reloads with unsaved-asset guards. The shared backend accepts an explicit
+tile interpretation; map history, session colors and roof identity survive.
+Tests cover all 256 source-to-slot mappings in four modes, cancel/failure
+atomicity, missing-palette fallback and real Johto mode transitions. Canceled
+switches retain the preference but cannot reinterpret the loaded save layout.
 
 Tile Priority now controls priority editing and palette output independently of
 attribute bits. The GUI retains it across maps and Close, and priority palette
@@ -69,8 +76,8 @@ supports preview and hash-checked apply. Save/reopen is tested on a temporary
 copy of the pinned Johto tileset. The GUI now has a source-sized tileset draft
 dialog with pixel gestures, palette/priority controls, private/image clipboard
 operations, drag copy/swap, deletion, preview refresh and saving. Headless GUI
-tests cover the edit/accept/save flow. Native clipboard/child windows, priority
-overlays and remaining specialist editors still prevent a tileset parity gate.
+tests cover the edit/accept/save flow. Native clipboard/child windows and remaining
+specialist editors still prevent a tileset parity gate.
 The roof draft editor now shares pixel/clipboard commands, preserves the original
 226×228 client geometry and reversed tile rows, and has independent PNG saves.
 The headless roof interface previews and requires an observed hash to apply.

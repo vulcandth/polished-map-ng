@@ -63,6 +63,13 @@ pub struct MasterTilesetDocument {
     allow_priority: bool,
 }
 
+/// Interpretation used when reloading master's graphics and palette map.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct MasterTileMode {
+    pub monochrome: bool,
+    pub allow_256: bool,
+}
+
 impl MasterTilesetDocument {
     /// Begin a GUI-style open from an explicit palette session. Resolve the
     /// returned plan against `palettes_mut` before publishing the final preview.
@@ -269,9 +276,26 @@ impl MasterTilesetDocument {
         &self,
         name: &str,
     ) -> Result<(Self, BlocksetDocument), ProjectError> {
+        self.prepare_replacement_in_mode(
+            name,
+            MasterTileMode {
+                monochrome: self.monochrome,
+                allow_256: self.allow_256,
+            },
+        )
+    }
+
+    /// Prepare the same reload with explicit Monochrome / 256 Tiles options.
+    /// Missing palette maps can still enable monochrome, as in Palette_Map::read.
+    /// The original document and files remain unchanged, including on failure.
+    pub fn prepare_replacement_in_mode(
+        &self,
+        name: &str,
+        mode: MasterTileMode,
+    ) -> Result<(Self, BlocksetDocument), ProjectError> {
         let options = MasterGraphicsOptions {
-            allow_256: self.allow_256,
-            monochrome: self.monochrome,
+            allow_256: mode.allow_256,
+            monochrome: mode.monochrome,
             roof: self.roof.as_ref().map(|r| r.name().to_owned()),
             ..Default::default()
         };

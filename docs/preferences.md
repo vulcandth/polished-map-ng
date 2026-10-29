@@ -19,6 +19,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | On |
 | Resize anchor | Center |
 | Tile Priority | Off; reading PRIORITY_* palette colors enables it |
+| Monochrome, 256 Tiles | Off; missing palette maps enable Monochrome |
 | Show Priority | On; control enabled only while Tile Priority is on |
 | Recent maps | Empty; at most ten paths |
 
@@ -69,8 +70,8 @@ or rename its `app.ron` before relaunching.
 ## Remaining parity and verification
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
-or modified. Native theme variants, monochrome/256-tile
-options, transparency/fullscreen controls, drag-and-drop, overworld threshold
+or modified. Native theme variants, transparency/fullscreen controls,
+drag-and-drop, overworld threshold
 and print preferences still need their complete menu/persistence work.
 
 Tests inject an in-memory eframe Storage into the real app constructor and use

@@ -89,6 +89,8 @@ impl Editor {
         };
         self.error = loaded.event_warning.take();
         if let Some(tileset) = &mut loaded.tileset {
+            self.monochrome = tileset.monochrome();
+            self.allow_256 = tileset.allow_256();
             self.allow_priority |= tileset.allow_priority();
             tileset.set_allow_priority(self.allow_priority);
         }

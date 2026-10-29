@@ -139,6 +139,16 @@ not update map header constants. The selector refreshes file discovery and
 constrains long closed-control labels like the roof selector. Original compound
 choice ordering and the complete main menu layout remain pending.
 
+Monochrome and 256 Tiles retain the source's changed session preference after a
+canceled reload warning. Upstream also immediately changes the global used by
+subsequent editing and serialization, even though the tiles were not reloaded;
+that can reinterpret existing tile slots or output layout. The port keeps the
+loaded document's interpretation, editor restrictions and save bytes unchanged
+until a successful reload. The pending preference is still used on the next
+open/reload and saved at exit. Failed reloads preserve the document as above.
+GUI tests compare preflight output hashes/paths before and after cancellation,
+alongside retained pixel edits and all three asset dirty domains.
+
 ## Palette export labels and validation
 
 Upstream declares six palette sets but initializes the export label table with

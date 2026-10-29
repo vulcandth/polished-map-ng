@@ -103,8 +103,10 @@ pub struct Editor {
     confirm_roof_change: bool,
     tileset_choice_form: Option<tileset_workflows::TilesetChoiceForm>,
     confirm_tileset_change: bool,
+    pending_tileset_reload: bool,
     unloaded_palettes: polished_map_project::PaletteDocument,
-    unloaded_monochrome: bool,
+    monochrome: bool,
+    allow_256: bool,
     pending_palette_load: Option<PathBuf>,
     pending_roof_colors: Option<PathBuf>,
     roof_color_success: Option<String>,
@@ -172,8 +174,10 @@ impl Default for Editor {
             confirm_roof_change: false,
             tileset_choice_form: None,
             confirm_tileset_change: false,
+            pending_tileset_reload: false,
             unloaded_palettes: polished_map_project::PaletteDocument::default(),
-            unloaded_monochrome: false,
+            monochrome: false,
+            allow_256: false,
             pending_palette_load: None,
             pending_roof_colors: None,
             roof_color_success: None,
@@ -315,6 +319,7 @@ impl Editor {
                     tileset: tilesets.first().cloned().unwrap_or_default(),
                     width: 10,
                     height: 9,
+                    allow_256: self.allow_256,
                     ..Default::default()
                 })
             }
@@ -345,12 +350,14 @@ impl Editor {
             width: metadata.dimensions.map_or(0, |d| d.0),
             height: metadata.dimensions.map_or(0, |d| d.1),
             path,
+            allow_256: self.allow_256,
             ..Default::default()
         });
     }
 
     fn start_load(&mut self, form: OpenForm, ctx: &egui::Context) {
         self.pending_palette_warnings.clear();
+        self.allow_256 = form.allow_256;
         let (sender, receiver) = mpsc::channel();
         let ctx = ctx.clone();
         let dark_theme = self.dark;
@@ -360,6 +367,7 @@ impl Editor {
         let special_palettes = self.auto_special_palettes;
         let roof_colors = self.auto_roof_colors;
         let allow_priority = self.allow_priority;
+        let monochrome = self.monochrome;
         std::thread::spawn(move || {
             let result = (|| {
                 let root = PathBuf::from(&form.root);
@@ -390,6 +398,7 @@ impl Editor {
                     tileset,
                     &MasterGraphicsOptions {
                         allow_256: form.allow_256,
+                        monochrome,
                         allow_priority,
                         dark_theme,
                         roof_layout,

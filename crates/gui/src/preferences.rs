@@ -29,6 +29,8 @@ struct Preferences {
     auto_special_palettes: bool,
     auto_roof_colors: bool,
     allow_priority: bool,
+    monochrome: bool,
+    allow_256: bool,
     show_priority: bool,
     resize_anchor: ResizeAnchor,
     recent_maps: recent_maps::RecentMaps,
@@ -60,6 +62,8 @@ impl Preferences {
             auto_special_palettes: editor.auto_special_palettes,
             auto_roof_colors: editor.auto_roof_colors,
             allow_priority: editor.allow_priority,
+            monochrome: editor.monochrome,
+            allow_256: editor.allow_256,
             show_priority: editor.show_priority,
             resize_anchor: editor.resize_anchor,
             recent_maps: editor.recent_maps.clone(),
@@ -83,6 +87,8 @@ impl Preferences {
         editor.auto_special_palettes = self.auto_special_palettes;
         editor.auto_roof_colors = self.auto_roof_colors;
         editor.allow_priority = self.allow_priority;
+        editor.monochrome = self.monochrome;
+        editor.allow_256 = self.allow_256;
         editor.show_priority = self.show_priority;
         editor.resize_anchor = self.resize_anchor;
         editor.recent_maps = self.recent_maps;
@@ -174,6 +180,8 @@ mod tests {
         editor.auto_special_palettes = false;
         editor.auto_roof_colors = false;
         editor.show_priority = false;
+        editor.monochrome = true;
+        editor.allow_256 = true;
         editor.roof_palette_layout = RoofPaletteLayout::MornDayNiteCustom;
         editor.resize_anchor = ResizeAnchor::BottomRight;
         let palettes = editor
@@ -215,6 +223,7 @@ mod tests {
                 "palette_set": "custom", "roof_layout": "morn_day_nite_custom",
                 "auto_events": false, "auto_special_palettes": false, "auto_roof_colors": false,
                 "allow_priority": true,
+                "monochrome": true, "allow_256": true,
                 "show_priority": false,
                 "resize_anchor": "bottom_right",
                 "recent_maps": [{"utf8": std::fs::canonicalize(dir.path().join("Map.2x1.blk")).unwrap()}],
@@ -261,6 +270,7 @@ mod tests {
         assert!(editor.event_ui.show && editor.event_ui.warp_ids && editor.event_ui.auto_load);
         assert!(editor.auto_special_palettes && editor.auto_roof_colors);
         assert!(!editor.allow_priority);
+        assert!(!editor.monochrome && !editor.allow_256);
         assert!(editor.show_priority);
         assert_eq!(editor.palette_document().selected(), PaletteSet::Day);
         assert_eq!(editor.roof_palette_layout, RoofPaletteLayout::DayNite);

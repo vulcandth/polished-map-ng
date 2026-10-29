@@ -3,6 +3,106 @@ use polished_map_project::{MasterGraphicsOptions, MasterTilesetDocument, tileset
 use std::fs;
 
 #[test]
+fn explicit_tile_modes_reload_slots_and_palettes_without_mutating_source_or_files() {
+    use polished_map_project::MasterTileMode;
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    fs::create_dir_all(root.join("gfx/tilesets")).unwrap();
+    fs::create_dir_all(root.join("data/tilesets")).unwrap();
+    let pixels: Vec<u8> = (0..256)
+        .flat_map(|i| {
+            let hue = (i / 32) % 4;
+            [
+                if hue & 2 != 0 { 255 } else { 0 },
+                if hue & 1 != 0 { 255 } else { 0 },
+            ]
+            .repeat(8)
+        })
+        .collect();
+    let palette = "\ttilepal 0, RED\n".repeat(256);
+    let image_path = root.join("gfx/tilesets/demo.2bpp");
+    let palette_path = root.join("gfx/tilesets/demo_palette_map.asm");
+    fs::write(&image_path, &pixels).unwrap();
+    fs::write(&palette_path, &palette).unwrap();
+    fs::write(root.join("data/tilesets/demo_metatiles.bin"), [0x60; 16]).unwrap();
+    let original =
+        MasterTilesetDocument::open_in_project(root, "demo", &MasterGraphicsOptions::default())
+            .unwrap();
+    let original_blocks =
+        polished_map_project::BlocksetDocument::open_in_project(root, "demo").unwrap();
+    let hash = original.content_hash(original_blocks.blockset());
+    for monochrome in [false, true] {
+        for allow_256 in [false, true] {
+            let (new, blocks) = original
+                .prepare_replacement_in_mode(
+                    "demo",
+                    MasterTileMode {
+                        monochrome,
+                        allow_256,
+                    },
+                )
+                .unwrap();
+            assert_eq!(new.monochrome(), monochrome);
+            assert_eq!(new.allow_256(), allow_256);
+            assert_eq!(
+                new.palettes().content_hash(),
+                original.palettes().content_hash()
+            );
+            // Tileset::read_graphics: source indices 60..df shift +20;
+            // e0..ff wrap -80 when the full 256-tile option is disabled.
+            for i in 0..256 {
+                let slot = if allow_256 || i < 0x60 {
+                    i
+                } else if i < 0xe0 {
+                    i + 0x20
+                } else {
+                    i - 0x80
+                };
+                assert_eq!(
+                    new.tileset().tiles()[slot].hues(),
+                    &[(i / 32 % 4) as u8; 64]
+                );
+                let attr = if monochrome {
+                    if allow_256 || i < 96 { 8 } else { 9 }
+                } else {
+                    1
+                };
+                assert_eq!(new.tileset().attributes()[slot], attr);
+            }
+            assert!(!new.tileset().is_modified() && !blocks.blockset().is_modified());
+            assert_eq!(original.content_hash(original_blocks.blockset()), hash);
+            assert_eq!(fs::read(&image_path).unwrap(), pixels);
+            assert_eq!(fs::read_to_string(&palette_path).unwrap(), palette);
+            let (restored, _) = new
+                .prepare_replacement_in_mode("demo", MasterTileMode::default())
+                .unwrap();
+            assert_eq!(restored.content_hash(original_blocks.blockset()), hash);
+        }
+    }
+    fs::remove_file(&palette_path).unwrap();
+    let (mono, _) = original
+        .prepare_replacement_in_mode("demo", MasterTileMode::default())
+        .unwrap();
+    assert!(
+        mono.monochrome(),
+        "missing palette map enables monochrome again"
+    );
+    fs::write(root.join("data/tilesets/demo_metatiles.bin"), [0; 15]).unwrap();
+    assert!(
+        original
+            .prepare_replacement_in_mode(
+                "demo",
+                MasterTileMode {
+                    monochrome: true,
+                    allow_256: true
+                }
+            )
+            .is_err()
+    );
+    assert_eq!(original.content_hash(original_blocks.blockset()), hash);
+}
+
+#[test]
 fn replacement_reloads_assets_and_keeps_session_palettes_roof_and_modes() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();

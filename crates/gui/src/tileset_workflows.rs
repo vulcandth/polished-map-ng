@@ -13,25 +13,65 @@ pub(super) struct TilesetChoiceForm {
 
 impl Editor {
     pub(super) fn request_tileset_change(&mut self) {
-        let Some(loaded) = &self.loaded else {
+        self.pending_tileset_reload = false;
+        if !self.has_tileset_assets() {
             return;
+        }
+        if self.tileset_assets_modified() {
+            self.confirm_tileset_change = true;
+        } else {
+            self.prepare_tileset_choice();
+        }
+    }
+
+    fn has_tileset_assets(&self) -> bool {
+        self.loaded
+            .as_ref()
+            .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some())
+    }
+
+    fn tileset_assets_modified(&self) -> bool {
+        let Some(loaded) = &self.loaded else {
+            return false;
         };
         let Some(tileset) = &loaded.tileset else {
-            return;
+            return false;
         };
         let Some(blocks) = &loaded.blockset else {
-            return;
+            return false;
         };
         // Map edits and palette colors survive this operation without prompting.
-        if blocks.blockset().is_modified()
+        blocks.blockset().is_modified()
             || tileset.tileset().is_modified()
             || tileset
                 .roof()
                 .is_some_and(|r| r.roof().tileset().is_modified())
-        {
+    }
+
+    /// Source monochrome_cb / allow_256_tiles_cb call change_tileset_cb(NULL):
+    /// retain the changed preference even on Cancel, but skip the chooser.
+    pub(super) fn request_tile_mode_reload(&mut self, ctx: &egui::Context) {
+        if !self.has_tileset_assets() {
+            return;
+        }
+        if self.tileset_assets_modified() {
+            self.pending_tileset_reload = true;
             self.confirm_tileset_change = true;
         } else {
-            self.prepare_tileset_choice();
+            self.reload_tile_mode(ctx);
+        }
+    }
+
+    fn reload_tile_mode(&mut self, ctx: &egui::Context) {
+        let name = self
+            .loaded
+            .as_ref()
+            .and_then(|l| l.tileset.as_ref())
+            .map(|t| t.name().to_owned());
+        if let Some(name) = name
+            && let Err(error) = self.change_loaded_tileset(ctx, &name)
+        {
+            self.error = Some(error);
         }
     }
 
@@ -62,7 +102,13 @@ impl Editor {
         let loaded = self.loaded.as_mut().ok_or("No map is loaded")?;
         let previous = loaded.tileset.as_ref().ok_or("No tileset is loaded")?;
         let (tileset, blocks) = previous
-            .prepare_replacement(name)
+            .prepare_replacement_in_mode(
+                name,
+                polished_map_project::MasterTileMode {
+                    monochrome: self.monochrome,
+                    allow_256: self.allow_256,
+                },
+            )
             .map_err(|e| e.to_string())?;
         let graphics = tileset
             .graphics(blocks.blockset())
@@ -85,6 +131,8 @@ impl Editor {
         let count = textures.len();
         // Preserve all map IDs/history, even when some IDs no longer have definitions.
         self.allow_priority = tileset.allow_priority();
+        self.monochrome = tileset.monochrome();
+        loaded.allow_256 = tileset.allow_256();
         loaded.tileset = Some(tileset);
         loaded.blockset = Some(blocks);
         loaded.graphics = graphics;
@@ -121,7 +169,14 @@ impl Editor {
                 self.confirm_tileset_change = false;
             }
             if proceed && !cancel {
-                self.prepare_tileset_choice();
+                if self.pending_tileset_reload {
+                    self.reload_tile_mode(ctx);
+                } else {
+                    self.prepare_tileset_choice();
+                }
+            }
+            if cancel || proceed {
+                self.pending_tileset_reload = false;
             }
             return;
         }

@@ -80,6 +80,35 @@ fn tile_priority_option_preserves_attributes_controls_editing_and_carries_betwee
     assert!(h.state().allow_priority, "Close retains the session option");
 }
 
+#[test]
+fn tile_modes_carry_through_close_new_and_subsequent_opens() {
+    let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    let path = dir.path().join("gfx/tilesets/demo_palette_map.asm");
+    let palette = fs::read(&path).unwrap();
+    fs::remove_file(&path).unwrap();
+    load(&mut h, dir.path(), false);
+    assert!(h.state().monochrome);
+    fs::write(&path, palette).unwrap();
+    h.state_mut().close_map();
+    assert!(h.state().monochrome);
+    h.state_mut().allow_256 = true;
+    load(&mut h, dir.path(), true);
+    let tiles = h.state().loaded.as_ref().unwrap().tileset.as_ref().unwrap();
+    assert!(tiles.monochrome() && tiles.allow_256());
+    h.state_mut().close_map();
+    load(&mut h, dir.path(), false);
+    let tiles = h.state().loaded.as_ref().unwrap().tileset.as_ref().unwrap();
+    assert!(tiles.monochrome() && tiles.allow_256());
+    h.get_by_label("Options").click();
+    h.run();
+    h.get_by_label("Monochrome").click();
+    h.run();
+    assert!(!h.state().monochrome);
+    load(&mut h, dir.path(), false);
+    let tiles = h.state().loaded.as_ref().unwrap().tileset.as_ref().unwrap();
+    assert!(!tiles.monochrome() && tiles.allow_256());
+}
+
 fn edit(palettes: &mut polished_map_project::PaletteDocument) {
     palettes
         .apply_batch(&[PaletteCommand::SetRgb {
@@ -173,6 +202,7 @@ fn palette_auto_load_options_defer_changes_and_independently_gate_the_next_open(
 fn load(h: &mut Harness<'_, Editor>, root: &Path, new_map: bool) {
     fs::write(root.join("Next.blk"), [0, 1]).unwrap();
     let ctx = h.ctx.clone();
+    let allow_256 = h.state().allow_256;
     h.state_mut().start_load(
         OpenForm {
             new_map,
@@ -181,6 +211,7 @@ fn load(h: &mut Harness<'_, Editor>, root: &Path, new_map: bool) {
             tileset: "demo".into(),
             width: 2,
             height: 1,
+            allow_256,
             ..Default::default()
         },
         &ctx,
