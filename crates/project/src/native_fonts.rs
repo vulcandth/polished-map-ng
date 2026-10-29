@@ -174,12 +174,10 @@ fn load_face(family: &fontique::FamilyInfo, bold: bool) -> Option<NativeFontFace
     if synthesis.embolden() || synthesis.skew().is_some() || face.style() != FontStyle::Normal {
         return None;
     }
-    if !face.has_weight_axis()
-        && if bold {
-            face.weight().value() < 600.0
-        } else {
-            !(350.0..=450.0).contains(&face.weight().value())
-        }
+    // CSS-style nearest matching must not silently substitute a semibold,
+    // light or condensed static face for the named normal/bold source face.
+    if (!face.has_weight_axis() && face.weight() != weight)
+        || (!face.has_width_axis() && face.width() != FontWidth::NORMAL)
     {
         return None;
     }
@@ -340,6 +338,28 @@ mod tests {
         let selected = NativeFonts::from_collection(&mut db, FontPlatform::Unix, None);
         assert_eq!(selected.mono.as_ref().unwrap().family(), "Consolas");
         assert!(!selected.is_consolas());
+    }
+
+    #[test]
+    fn nearest_static_weight_or_width_is_not_an_exact_face_match() {
+        for (name, weight, width) in [
+            ("Semibold only", FontWeight::new(600.0), FontWidth::NORMAL),
+            ("Light only", FontWeight::new(300.0), FontWidth::NORMAL),
+            ("Condensed only", FontWeight::NORMAL, FontWidth::CONDENSED),
+        ] {
+            let mut db = collection();
+            db.register_fonts(
+                fontique::Blob::new(Arc::new(epaint_default_fonts::HACK_REGULAR)),
+                Some(fontique::FontInfoOverride {
+                    family_name: Some(name),
+                    weight: Some(weight),
+                    width: Some(width),
+                    ..Default::default()
+                }),
+            );
+            assert!(select(&mut db, &[name], false).is_none());
+            assert!(select(&mut db, &[name], true).is_none());
+        }
     }
 
     #[test]

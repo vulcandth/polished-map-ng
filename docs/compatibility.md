@@ -33,9 +33,10 @@ and `event.cpp`; other sizes do not change. Native default control text is 12
 logical points on Windows and 13 elsewhere. `Editor::new` explicitly retains
 bundled fonts for deterministic embedding/tests, with no system enumeration.
 
-Four isolated-collection tests check precedence, independent bold selection,
-exact names, backend defaults, unavailable roles and the Windows-only Consolas
-rule. A GUI test checks role/size isolation and reverting to bundled fonts.
+Five isolated-collection tests check precedence, independent bold selection,
+exact names/weights/widths, backend defaults, unavailable roles and the
+Windows-only Consolas rule. A GUI test checks role/size isolation and reverting
+to bundled fonts.
 Host-font tests run explicitly in the three-OS CI matrix; local Windows discovery
 and egui layout passed with Segoe UI and regular/bold Consolas. They exercise
 installed files and shaping, not native window appearance or FLTK rasterization.

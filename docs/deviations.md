@@ -254,18 +254,20 @@ Ruler geometry and hover pairing follow the pinned source. During egui's smooth
 scrolling, ruler cells use the actual fractional content displacement instead of
 truncating it to FLTK's integer offset, keeping ticks aligned with the map. At
 integer offsets the formulas agree. Rulers use the current egui foreground,
-panel and inactive-widget colors and bundled 9-point monospace font; original
-native FL_DARK2/theme colors and Courier/Consolas metrics remain unfinished.
-Their visibility and number-base settings are session-only until persisted
-preferences are ported. The negative hexadecimal formatter omits the source's
+panel and inactive-widget colors. Desktop startup selects the source's native
+monospace role at 9 points, or 10 for Windows Consolas; deterministic snapshots
+retain bundled Hack at 9. Native FL_DARK2/theme colors and exact font rasterization
+remain unfinished. Visibility and number-base settings are persisted. The
+negative hexadecimal formatter omits the source's
 terminal newline to match FLTK's single-line result in egui; this preserves
 visible behavior rather than the intermediate formatting bytes.
 
 Block IDs use the original 14-point logical font size, zoom-dependent offsets,
 four diagonal black outline passes and white/yellow foreground colors. The
-current bundled monospace face does not reproduce native Courier Bold's weight
-and metrics. Hotkey badges and export ID options still need their own parity
-work. Display-base changes do not alter
+desktop uses the dedicated installed bold monospace role for IDs and hotkey
+badges, retaining bundled fallback when unavailable. Native baseline/hinting
+equivalence and alignment with the separate CPU Print font policy remain open.
+Display-base changes do not alter
 event formats or saved data; the status area now shows live block coordinates
 in both modes, with event coordinates appended only in Events Mode.
 
@@ -335,7 +337,9 @@ the 50×50 image slot blank: the inspected icon history does not establish the
 underlying artwork's provenance. This is a tracked incomplete visual port,
 not a cleared asset or an approved permanent redesign. It uses a centered egui
 modal with a heading in place of native window chrome; its text follows source
-12/16-point Windows and 13/17-point Unix sizes using bundled font faces.
+12/16-point Windows and 13/17-point Unix sizes. Desktop startup supplies the
+installed UI font; deterministic test fixtures retain bundled faces. Native
+font rasterization and frame matching remain unverified.
 
 The shared dirty-document warning now restores upstream OK/Cancel semantics,
 including the first modified filename and action-specific question. It replaces
