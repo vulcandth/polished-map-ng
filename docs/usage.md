@@ -15,13 +15,17 @@ options for review. Open offers factor-pair sizes from the block count, preferri
 size for shared block files. ASM counts reflect decoded data, not source text.
 When no valid factor pair or metadata size exists, width/height controls start
 at 10×9. Headless opens still require explicit dimensions when metadata is absent.
+Tileset choices show the project's discovered graphics, including numbered labels
+and compound names. Roof choices start at `(none)`; the control is disabled when
+no roofs exist. After changing Project folder, use Reload project options before
+opening. An empty tileset inventory disables Open/Create.
 The project
 adapter supports master tilesets with PNG/2bpp/LZ/CHR graphics, binary
 metatiles, tilepal mappings, all six palette sets, project/special palettes and
 map-group roof colors, compound graphics and optional roof tile replacement.
 
-Open/New options accept an optional roof name from `gfx/tilesets/roofs`, without
-the extension. Leave it empty to use the base tileset. Compound names such as
+Open/New roof choices come from `gfx/tilesets/roofs`, without the extension.
+Choose `(none)` to use the base tileset. Compound names such as
 `main.before,after` retain the full main filename and load optional companion
 graphics, with upstream's 16-tile row padding. Tileset pixel editing and saving
 use the shared backend in both the GUI and CLI.

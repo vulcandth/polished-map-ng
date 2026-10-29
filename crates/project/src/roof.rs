@@ -12,35 +12,10 @@ use std::path::Path;
 /// duplicate stems collapse while original filename spelling is retained.
 pub fn list_roofs(root: &Path) -> Result<Vec<String>, ProjectError> {
     let dir = root.join("gfx/tilesets/roofs");
-    let entries = match std::fs::read_dir(&dir) {
-        Ok(entries) => entries,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
-        Err(e) => return Err(ProjectError::io(&dir, e)),
-    };
-    let mut names = Vec::new();
-    for entry in entries {
-        let entry = entry.map_err(|e| ProjectError::io(&dir, e))?;
-        if !entry
-            .file_type()
-            .map_err(|e| ProjectError::io(&entry.path(), e))?
-            .is_file()
-        {
-            continue;
-        }
-        let name = entry.file_name();
-        let Some(name) = name.to_str() else {
-            continue;
-        };
-        let lower = name.to_ascii_lowercase();
-        if let Some(ext) = [".2bpp.lz", ".2bpp", ".chr", ".png"]
-            .into_iter()
-            .find(|e| lower.ends_with(e))
-        {
-            names.push(name[..name.len() - ext.len()].to_owned());
-        }
-    }
-    names.sort();
-    names.dedup();
+    let mut names =
+        crate::asset_names::graphics_stems(&dir, &[".2bpp.lz", ".2bpp", ".chr", ".png"], false)?;
+    let mut seen = std::collections::HashSet::new();
+    names.retain(|name| seen.insert(name.clone()));
     Ok(names)
 }
 

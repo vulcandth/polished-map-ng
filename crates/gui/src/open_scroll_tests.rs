@@ -181,8 +181,11 @@ fn opening_repositions_once_and_failed_or_canceled_options_preserve_the_old_view
         h.run();
         assert_eq!(h.state().canvas_scroll, Vec2::splat(116.0));
     }
+    // A listed file can become unreadable or invalid after discovery; retain
+    // the load-failure check without bypassing the selector's membership guard.
+    fs::write(dir.path().join("gfx/tilesets/broken.2bpp"), [0]).unwrap();
     options(&mut h, dir.path(), 15, 12, false);
-    h.state_mut().open_form.as_mut().unwrap().tileset = "missing".into();
+    h.state_mut().open_form.as_mut().unwrap().tileset = "broken".into();
     accept(&mut h, false);
     assert!(h.state().error.is_some());
     assert_eq!(h.state().canvas_scroll, Vec2::splat(116.0));

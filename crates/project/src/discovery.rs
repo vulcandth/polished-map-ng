@@ -1,9 +1,6 @@
 //! Master discovery rules from config.cpp and option-dialogs.cpp at upstream.lock.toml.
 //! This reads recognized metadata macros; it does not evaluate arbitrary RGBDS assembly.
-use std::{
-    fs,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
@@ -88,22 +85,9 @@ pub fn discover_map(map: &Path, root: Option<&Path>) -> Result<MapMetadata, Proj
             read_headers(&path, &mut metadata, true)?;
         }
     }
-    metadata.available_tilesets = list_tilesets(&root)?;
-    let aliases = tileset_aliases(&root)?;
-    for name in &metadata.available_tilesets {
-        let base = name.split('.').next().unwrap_or(name);
-        let alias = aliases
-            .iter()
-            .find(|(id, _)| id == base)
-            .map(|(_, value)| value.as_str());
-        if metadata
-            .tileset_hint
-            .as_deref()
-            .is_some_and(|hint| hint == base || Some(hint) == alias)
-        {
-            metadata.tileset = Some(name.clone());
-        }
-    }
+    let options = tileset_options(&root, metadata.tileset_hint.as_deref())?;
+    metadata.tileset = options.matched.map(|i| options.choices[i].name.clone());
+    metadata.available_tilesets = options.choices.into_iter().map(|c| c.name).collect();
     Ok(metadata)
 }
 
@@ -281,44 +265,22 @@ fn read_headers(
     Ok(())
 }
 
-/// Graphics names in stable order, excluding generated colored previews.
+/// Graphics names in source file-list order, excluding generated colored previews.
 pub fn list_tilesets(root: &Path) -> Result<Vec<String>, ProjectError> {
+    Ok(tileset_choices(root)?.into_iter().map(|c| c.name).collect())
+}
+
+fn tileset_stems(root: &Path) -> Result<Vec<String>, ProjectError> {
     let dir = if root.join("MAPDATA").is_dir() {
         root.join("MAPDATA")
     } else {
         root.join("gfx/tilesets")
     };
-    if !dir.exists() {
-        return Ok(Vec::new());
-    }
-    let mut names = Vec::new();
-    for entry in fs::read_dir(&dir).map_err(|e| ProjectError::io(&dir, e))? {
-        let entry = entry.map_err(|e| ProjectError::io(&dir, e))?;
-        if !entry
-            .file_type()
-            .map_err(|e| ProjectError::io(&entry.path(), e))?
-            .is_file()
-        {
-            continue;
-        }
-        let name = entry.file_name();
-        let Some(name) = name.to_str() else {
-            continue;
-        };
-        let lower = name.to_ascii_lowercase();
-        if lower.ends_with(".colored.png") {
-            continue;
-        }
-        if let Some(ext) = [".2bpp.lz", ".2bpp.unique.lz", ".2bpp", ".chr", ".png"]
-            .iter()
-            .find(|ext| lower.ends_with(**ext))
-        {
-            names.push(name[..name.len() - ext.len()].to_owned());
-        }
-    }
-    names.sort();
-    names.dedup();
-    Ok(names)
+    crate::asset_names::graphics_stems(
+        &dir,
+        &[".2bpp.lz", ".2bpp.unique.lz", ".2bpp", ".chr", ".png"],
+        true,
+    )
 }
 
 /// A selector label may decorate a numbered file; always load/save using `name`.
@@ -330,24 +292,56 @@ pub struct TilesetChoice {
 
 /// master Map_Options_Dialog::guess_tileset_names/add_tileset display labels.
 pub fn tileset_choices(root: &Path) -> Result<Vec<TilesetChoice>, ProjectError> {
-    let constants = tileset_constant_names(root)?;
-    Ok(list_tilesets(root)?
-        .into_iter()
-        .map(|name| {
-            let label = constants
-                .iter()
-                .find(|(number, _)| name.len() == 2 && number == &name)
-                .map_or_else(|| name.clone(), |(_, token)| format!("{name}: {token}"));
-            TilesetChoice { name, label }
-        })
-        .collect())
+    Ok(tileset_options(root, None)?.choices)
 }
 
-fn tileset_aliases(root: &Path) -> Result<Vec<(String, String)>, ProjectError> {
-    Ok(tileset_constant_names(root)?
-        .into_iter()
-        .map(|(id, name)| (id, name.to_ascii_lowercase()))
-        .collect())
+/// Source selector state; no hint match defaults to the first GUI choice.
+/// Metadata discovery separately retains `None` for an unmatched hint.
+#[derive(Clone, Debug)]
+pub struct TilesetOptions {
+    choices: Vec<TilesetChoice>,
+    matched: Option<usize>,
+}
+
+impl TilesetOptions {
+    pub fn choices(&self) -> &[TilesetChoice] {
+        &self.choices
+    }
+    pub fn selected(&self) -> Option<usize> {
+        self.matched
+            .or_else(|| (!self.choices.is_empty()).then_some(0))
+    }
+}
+
+/// master limit_blk_options: deduplicate labels after scanning sorted filenames.
+pub fn tileset_options(root: &Path, hint: Option<&str>) -> Result<TilesetOptions, ProjectError> {
+    let constants = tileset_constant_names(root)?;
+    let mut options = TilesetOptions {
+        choices: Vec::new(),
+        matched: None,
+    };
+    for name in tileset_stems(root)? {
+        let label = constants
+            .iter()
+            .find(|(number, _)| name.len() == 2 && number == &name)
+            .map_or_else(|| name.clone(), |(_, token)| format!("{name}: {token}"));
+        if !options.choices.iter().any(|c| c.label == label) {
+            options.choices.push(TilesetChoice {
+                name: name.clone(),
+                label,
+            });
+        }
+        let base = name.split('.').next().unwrap_or(&name);
+        let alias = constants
+            .iter()
+            .find(|(number, _)| number == base)
+            .map(|(_, token)| token.to_ascii_lowercase());
+        if hint.is_some_and(|h| h == base || Some(h) == alias.as_deref()) {
+            // Source assigns size()-2, even when add_tileset found a duplicate.
+            options.matched = options.choices.len().checked_sub(1);
+        }
+    }
+    Ok(options)
 }
 
 fn tileset_constant_names(root: &Path) -> Result<Vec<(String, String)>, ProjectError> {

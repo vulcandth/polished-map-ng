@@ -512,11 +512,11 @@ fn new_map_dialog_creates_in_memory_and_cancel_preserves_it() {
     harness.run();
     harness.get_by_label("Width").set_value_accesskit(3.0);
     harness.get_by_label("Height").set_value_accesskit(2.0);
-    harness.get_by_label("Roof name (optional)").focus();
-    harness.run();
     harness
-        .get_by_label("Roof name (optional)")
-        .type_text("test");
+        .get_by_role_and_label(egui::Role::ComboBox, "Roof")
+        .click();
+    harness.run();
+    harness.get_by_label("test").click();
     harness.run();
     harness.get_by_label("Create map").click();
     // A worker can request another repaint while the harness is settling.

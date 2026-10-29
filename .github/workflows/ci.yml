@@ -68,6 +68,10 @@ jobs:
       - run: python3 tools/help_assets.py --reference-checkout .reference/master
       - run: python3 tools/block_brush_oracle.py --checkout .reference/master --output .scratch/reference-block
       - run: python3 tools/map_sizes_oracle.py --checkout .reference/master --output .scratch/reference-map-sizes
+      - run: python3 tools/asset_sort_oracle.py --checkout .reference/fltk --output .scratch/reference-asset-sort
+      - run: cargo test -p polished-map-project --locked --lib reference_asset_numeric_order -- --ignored
+        env:
+          POLISHED_MAP_ASSET_SORT_ORACLE: ${{ github.workspace }}/.scratch/reference-asset-sort
       - run: python3 tools/tile_editor_oracle.py --checkout .reference/master --output .scratch/reference-tile
       - run: python3 tools/palette_editor_oracle.py --checkout .reference/master --output .scratch/reference-palette
       - run: python3 tools/event_oracle.py --checkout .reference/master --output .scratch/reference-event

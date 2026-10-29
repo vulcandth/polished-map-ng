@@ -45,6 +45,13 @@ add_map_size,guess_map_size}` and `valid_size`, under LGPL-3.0-only. The referen
 harness compiles unchanged selection methods with inert dropdown storage;
 generated source and snippet hashes remain in ignored scratch storage.
 
+Open/New asset choice construction and selection adapt master
+`Map_Options_Dialog::{limit_blk_options,add_tileset,add_roof,guess_tileset_names}`
+under LGPL-3.0-only. Filename ordering adapts FLTK 1.4.5 `numericsort.c`,
+Copyright 1998-2018 Bill Spitzak and others, under the retained FLTK terms below.
+The reference harness extracts unchanged numeric comparison and UTF-8 decoding
+functions, recording snippet hashes; generated source stays in ignored storage.
+
 Installed GUI font preferences adapt master `themes.cpp::use_native_fonts`;
 Consolas-specific text sizes adapt `ruler.cpp` and `event.cpp`, under
 LGPL-3.0-only. Backend default names follow pinned FLTK 1.4.5's GDI, Quartz and

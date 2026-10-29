@@ -70,8 +70,7 @@ use eframe::egui::{self, Color32, Pos2, Rect, Sense, Vec2};
 use polished_map_core::{Command, Graphics, Point, ResizeAnchor};
 use polished_map_project::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
-    discover_map, list_tilesets, prepare_blockset_save_as, prepare_collision_save_as,
-    prepare_save_as,
+    discover_map, prepare_blockset_save_as, prepare_collision_save_as, prepare_save_as,
 };
 
 /// Development application identity, also used before a map is open.
@@ -103,6 +102,46 @@ struct OpenForm {
     height: u16,
     allow_256: bool,
     sizes: Option<polished_map_project::MapSizeOptions>,
+    tilesets: Vec<polished_map_project::TilesetChoice>,
+    roofs: Vec<String>,
+    choices_root: String,
+}
+
+impl OpenForm {
+    fn refresh_choices(&mut self) -> Result<(), polished_map_project::ProjectError> {
+        let root = std::path::Path::new(&self.root);
+        let metadata = if self.new_map {
+            None
+        } else {
+            Some(discover_map(&self.path, Some(root))?)
+        };
+        let choices = polished_map_project::tileset_options(
+            root,
+            metadata.as_ref().and_then(|m| m.tileset_hint.as_deref()),
+        )?;
+        let roofs = polished_map_project::list_roofs(root)?;
+        let sizes = if let Some(metadata) = metadata {
+            Some(polished_map_project::inspect_map_sizes(
+                &self.path,
+                metadata.dimensions,
+            )?)
+        } else {
+            None
+        };
+        self.tileset = choices
+            .selected()
+            .map(|i| choices.choices()[i].name.clone())
+            .unwrap_or_default();
+        self.tilesets = choices.choices().to_vec();
+        self.roof.clear();
+        self.roofs = roofs;
+        if let Some(sizes) = &sizes {
+            (self.width, self.height) = sizes.dimensions();
+        }
+        self.sizes = sizes;
+        self.choices_root = self.root.clone();
+        Ok(())
+    }
 }
 
 struct ResizeForm {
@@ -386,19 +425,17 @@ impl Editor {
     }
 
     pub fn prepare_new_in(&mut self, root: PathBuf) {
-        match list_tilesets(&root) {
-            Ok(tilesets) => {
-                self.open_form = Some(OpenForm {
-                    new_map: true,
-                    path: root.join("NewMap.blk"),
-                    root: root.to_string_lossy().into_owned(),
-                    tileset: tilesets.first().cloned().unwrap_or_default(),
-                    width: 10,
-                    height: 9,
-                    allow_256: self.allow_256,
-                    ..Default::default()
-                })
-            }
+        let mut form = OpenForm {
+            new_map: true,
+            path: root.join("NewMap.blk"),
+            root: root.to_string_lossy().into_owned(),
+            width: 10,
+            height: 9,
+            allow_256: self.allow_256,
+            ..Default::default()
+        };
+        match form.refresh_choices() {
+            Ok(()) => self.open_form = Some(form),
             Err(error) => self.error = Some(error.to_string()),
         }
     }
@@ -411,15 +448,7 @@ impl Editor {
                 return;
             }
         };
-        let sizes = match polished_map_project::inspect_map_sizes(&path, metadata.dimensions) {
-            Ok(sizes) => sizes,
-            Err(error) => {
-                self.error = Some(error.to_string());
-                return;
-            }
-        };
-        let (width, height) = sizes.dimensions();
-        self.open_form = Some(OpenForm {
+        let mut form = OpenForm {
             root: metadata
                 .root
                 .as_deref()
@@ -427,17 +456,14 @@ impl Editor {
                 .unwrap_or(&path)
                 .to_string_lossy()
                 .into_owned(),
-            tileset: metadata
-                .tileset
-                .or(metadata.tileset_hint)
-                .unwrap_or_default(),
-            width,
-            height,
-            sizes: Some(sizes),
             path,
             allow_256: self.allow_256,
             ..Default::default()
-        });
+        };
+        match form.refresh_choices() {
+            Ok(()) => self.open_form = Some(form),
+            Err(error) => self.error = Some(error.to_string()),
+        }
     }
 
     fn start_load(&mut self, form: OpenForm, ctx: &egui::Context) {
@@ -942,12 +968,44 @@ impl Editor {
                 let label = ui.label("Project folder");
                 ui.text_edit_singleline(&mut form.root)
                     .labelled_by(label.id);
-                let label = ui.label("Tileset name");
-                ui.text_edit_singleline(&mut form.tileset)
-                    .labelled_by(label.id);
-                let label = ui.label("Roof name (optional)");
-                ui.text_edit_singleline(&mut form.roof)
-                    .labelled_by(label.id);
+                if form.root != form.choices_root
+                    && ui.button("Reload project options").clicked()
+                    && let Err(error) = form.refresh_choices()
+                {
+                    self.error = Some(error.to_string());
+                }
+                let tileset_label = form
+                    .tilesets
+                    .iter()
+                    .find(|c| c.name == form.tileset)
+                    .map_or("(none)", |c| c.label.as_str());
+                ui.add_enabled_ui(!form.tilesets.is_empty(), |ui| {
+                    egui::ComboBox::from_label("Tileset")
+                        .selected_text(tileset_label)
+                        .show_ui(ui, |ui| {
+                            for choice in &form.tilesets {
+                                ui.selectable_value(
+                                    &mut form.tileset,
+                                    choice.name.clone(),
+                                    &choice.label,
+                                );
+                            }
+                        });
+                });
+                ui.add_enabled_ui(!form.roofs.is_empty(), |ui| {
+                    egui::ComboBox::from_label("Roof")
+                        .selected_text(if form.roof.is_empty() {
+                            "(none)"
+                        } else {
+                            &form.roof
+                        })
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut form.roof, String::new(), "(none)");
+                            for name in &form.roofs {
+                                ui.selectable_value(&mut form.roof, name.clone(), name);
+                            }
+                        });
+                });
                 if let Some(sizes) = form.sizes.as_ref().filter(|s| !s.choices().is_empty()) {
                     let mut dimensions = (form.width, form.height);
                     egui::ComboBox::from_label("Size")
@@ -978,11 +1036,15 @@ impl Editor {
                 ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
                 ui.horizontal(|ui| {
                     accept = ui
-                        .button(if form.new_map {
-                            "Create map"
-                        } else {
-                            "Open map"
-                        })
+                        .add_enabled(
+                            form.root == form.choices_root
+                                && form.tilesets.iter().any(|c| c.name == form.tileset),
+                            egui::Button::new(if form.new_map {
+                                "Create map"
+                            } else {
+                                "Open map"
+                            }),
+                        )
                         .clicked();
                     cancel = ui.button("Cancel").clicked();
                 });

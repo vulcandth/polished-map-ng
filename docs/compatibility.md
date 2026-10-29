@@ -35,9 +35,41 @@ tests choose an alternate factor pair and open both binary/ASM maps, verify
 fallback/New controls, and retain edits on cancellation. Existing oversized,
 short-input and palette-warning flows remain covered.
 
-This establishes size-choice behavior, not complete Open/New parity: tileset/roof
-dropdowns, project-profile attribution, original control geometry and native
+This establishes size-choice behavior, not complete Open/New parity:
+project-profile attribution, original control geometry and native
 dialog delivery remain M1/M4 work. No new native GUI validation is claimed.
+
+## Open/New asset selectors
+
+The Open/New tileset and roof controls follow master
+`Map_Options_Dialog::{limit_blk_options,add_tileset,add_roof,guess_tileset_names}`.
+Both selectors consume full filenames in FLTK numeric order before removing
+suffixes and deduplicating labels. Tilesets ignore `.colored.png` previews and
+recognize `.2bpp.unique.lz`; roofs retain their source-specific extension list.
+`MAPDATA` takes precedence over `gfx/tilesets`. Numbered constants decorate
+two-digit names (for example `01: JOHTO`) while the loader retains the filename.
+Hint matching uses the base before the first dot and numbered aliases, including
+the original last-added-choice assignment when a matching duplicate is scanned.
+The GUI defaults to the first tileset when no hint matches; headless metadata
+discovery continues to report no match rather than silently defaulting.
+
+Roof choices start at `(none)` on every Open/New and the control is disabled
+when the roof inventory is empty. The existing NG project-folder field requires
+explicit Reload project options after a change; stale or empty tileset choices
+cannot be submitted. Failed refreshes preserve the previous choices and loaded
+document. The normal load worker still validates selected graphics and files.
+
+`tools/asset_sort_oracle.py` compiles unchanged FLTK 1.4.5 `numericsort` and
+`fl_utf8decode`, including its default decoding constants/table, to compare
+38,809 ordered pairs of valid UTF-8 filenames. The corpus covers case, leading
+zeros, huge numeric runs, compound suffixes, accented/CJK text and non-ASCII
+digits. Only the case-sensitive path used by `fl_filename_list` is exercised.
+Source-equivalent comparisons get an explicit filename tie-break in the port;
+see [deviations](deviations.md). This does not assert native directory-enumeration
+order for ties. Project fixtures verify selector membership/order, labels,
+duplicate/default/compound selection and root precedence. GUI input tests select
+tilesets/roofs, clear roofs, refresh roots, guard stale/empty choices and check
+New defaults. Full source layout and native chooser/window behavior remain open.
 
 ## Error, warning and success message dialogs
 
@@ -1218,7 +1250,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; GUI resize stages map/event shifts; full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Compiled-source comparisons cover all 65,536 bitplane pairs, 12,390 LZ cases, 151 assembly/CHR cases and 90 PNG cases including Adam7 and both platform policies; empty-image composition and edit/save/reopen pass. Full-application interoperability remains pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
-| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; Open size choices match the compiled source over every representable area. Shared-map attribution, compound selection ordering, tileset/roof selectors and full option layout remain incomplete |
+| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; Open size choices match compiled source across every representable area; Open/New asset dropdowns and numeric ordering are implemented. Full profile/shared-map attribution coverage and original option layout remain incomplete |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts, normal-size digit pixels and CPU Print event overlays tested; native fonts, full gesture coverage and native workflows pending |

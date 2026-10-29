@@ -116,6 +116,67 @@ fn open_size_options_use_metadata_or_free_spinners_and_cancel_preserves_edits() 
 }
 
 #[test]
+fn open_asset_selectors_use_numbered_labels_default_roof_and_root_refresh() {
+    let (dir, mut h) = tileset_editor_tests::fixture(false, false);
+    let root = dir.path();
+    fs::create_dir_all(root.join("constants")).unwrap();
+    fs::write(
+        root.join("constants/tileset_constants.asm"),
+        "\tconst TILESET_JOHTO\n",
+    )
+    .unwrap();
+    fs::write(root.join("gfx/tilesets/01.2bpp"), [0; 16]).unwrap();
+    fs::create_dir_all(root.join("gfx/tilesets/roofs")).unwrap();
+    fs::write(root.join("gfx/tilesets/roofs/roof2.2bpp"), [0; 144]).unwrap();
+    let path = root.join("Shared.2x1.johto.blk");
+    fs::write(&path, [0, 0]).unwrap();
+    h.state_mut().prepare_open(path);
+    h.run();
+    let form = h.state().open_form.as_ref().unwrap();
+    assert_eq!(form.tileset, "01");
+    assert!(form.roof.is_empty());
+    h.get_by_role_and_label(egui::Role::ComboBox, "Tileset")
+        .click();
+    h.run();
+    assert!(h.query_by_label("01: JOHTO").is_some());
+    h.get_by_label("demo").click();
+    h.run();
+    assert_eq!(h.state().open_form.as_ref().unwrap().tileset, "demo");
+    h.get_by_role_and_label(egui::Role::ComboBox, "Roof")
+        .click();
+    h.run();
+    h.get_by_label("roof2").click();
+    h.run();
+    assert_eq!(h.state().open_form.as_ref().unwrap().roof, "roof2");
+    h.get_by_role_and_label(egui::Role::ComboBox, "Roof")
+        .click();
+    h.run();
+    h.get_by_label("(none)").click();
+    h.run();
+    assert!(h.state().open_form.as_ref().unwrap().roof.is_empty());
+    // A root change cannot submit choices from the previous project.
+    let other = tempfile::tempdir().unwrap();
+    h.state_mut().open_form.as_mut().unwrap().root = other.path().to_string_lossy().into_owned();
+    h.run();
+    assert!(h.get_by_label("Open map").accesskit_node().is_disabled());
+    h.get_by_label("Reload project options").click();
+    h.run();
+    assert!(h.get_by_label("Open map").accesskit_node().is_disabled());
+    assert!(
+        h.get_by_role_and_label(egui::Role::ComboBox, "Roof")
+            .accesskit_node()
+            .is_disabled()
+    );
+    assert!(h.state().open_form.as_ref().unwrap().tilesets.is_empty());
+    h.get_by_label("Cancel").click();
+    h.run();
+    h.state_mut().prepare_new_in(root.to_owned());
+    h.run();
+    assert_eq!(h.state().open_form.as_ref().unwrap().tileset, "01");
+    assert!(h.state().open_form.as_ref().unwrap().roof.is_empty());
+}
+
+#[test]
 fn oversized_map_warns_after_palette_choice_and_acknowledgment_publishes_only_the_prefix() {
     #[cfg(feature = "visual-tests")]
     let mut snapshots = egui_kittest::SnapshotResults::new();

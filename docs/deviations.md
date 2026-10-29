@@ -7,6 +7,14 @@ may differ. All other safe observable behavior remains a parity requirement.
 
 Implementation-specific exceptions will be recorded here with tests and rationale.
 
+Asset selectors use FLTK's case-sensitive numeric comparison, including its
+leading-zero and consumed-separator behavior. When that comparison reports equal,
+NG breaks the tie by the complete UTF-8 filename to make results independent of
+filesystem enumeration order. Upstream supplies no explicit tie-break; relative
+order of equivalent names can vary there. This does not change ordering of
+non-equivalent names. The comparator itself is checked against pinned FLTK code;
+selector fixtures cover the deterministic tie policy.
+
 PNG import now preserves the original platform-dependent transparency handling
 by default. The explicit library/CLI `png_platform` override is an automation
 extension: it makes Unix/macOS or Windows results reproducible on any host.
