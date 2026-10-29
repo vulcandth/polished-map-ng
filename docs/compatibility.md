@@ -1,5 +1,11 @@
 # Compatibility evidence
 
+The [roadmap](roadmap.md) owns current task status and execution order. Use the
+[current coverage matrix](#current-coverage-matrix) for the implementation summary.
+The feature records below retain source calculations and verification results;
+test counts and local-run observations describe those individual changes, not
+the current size or acceptance status of the whole suite.
+
 ## Error, warning and success message dialogs
 
 The six one-button message routes now share the pinned master's
@@ -1168,27 +1174,36 @@ The full local visual suite passed (91 tests, one ignored); only the existing
 File popup baseline changed, with one new ten-entry submenu baseline. Both were
 inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pass.
 
+## Current coverage matrix
+
+Implementation coverage is not completed application parity. Remaining work is
+tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
+
 | Area | Reference | State / required evidence |
 |---|---|---|
 | Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions and oversized prefix/warning flow tested; strict headless opens remain available |
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; GUI resize stages map/event shifts; full gesture matrix pending |
-| 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Compiled-source comparisons cover all 65,536 bitplane pairs, 12,390 LZ cases and 151 assembly/CHR cases; empty-image composition and edit/save/reopen pass. PNG decoding and full-application interoperability differentials remain pending |
-| Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; persistent preferences and full differential coverage pending |
+| 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Compiled-source comparisons cover all 65,536 bitplane pairs, 12,390 LZ cases, 151 assembly/CHR cases and 90 PNG cases including Adam7 and both platform policies; empty-image composition and edit/save/reopen pass. Full-application interoperability remains pending |
+| Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
-| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
-| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-seven implemented settings plus recent history restore/save with malformed-record protection; Print flags/Copy/Export and internal Drag and Drop join the tested view, import and size options. Legacy import, remaining preferences, native storage/placement, complete overlays and native print/clipboard parity pending |
+| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts, normal-size digit pixels and CPU Print event overlays tested; native fonts, full gesture coverage and native workflows pending |
+| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-seven implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export and internal Drag and Drop implemented. Legacy import, inventory reconciliation, external file drops, native storage/placement and native Print/clipboard parity pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |
-| Native packaging and runtime | all three OSes | Pending |
+| Native packaging and runtime | all three OSes | Build/test CI and selected Windows/X11 opacity and installed-font checks exist; complete native runtime acceptance and distribution packages pending |
 
 New tests must distinguish synthetic vectors, source-derived expectations, and
 actual C++ differential observations. A source-derived vector is not a run of
 the original application. Unverified assets never become redistributable fixtures.
 
-## Current evidence (2026-10-28)
+## Historical implementation evidence (2026-10-28)
+
+These entries describe the implementation at that point, including partial
+preference counts. They are retained as test/source records; consult the current
+matrix above and [preferences](preferences.md) for present coverage.
 
 - Implemented preferences now restore through the real eframe creation context
   and save callback, using a stable app ID and versioned JSON record. Tests cover

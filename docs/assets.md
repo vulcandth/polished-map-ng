@@ -7,8 +7,8 @@ this record does not authorize importing other assets.
 
 ## Menu and toolbar icon audit (in progress)
 
-The master-parity work following zoom/scroll compatibility is the main menu and
-toolbar port. `src/icons.h` at pinned master includes **42 XPM images, all 16×16**.
+The remaining icon work is tracked by M2 in the [roadmap](roadmap.md).
+`src/icons.h` at pinned master includes **42 XPM images, all 16×16**.
 [`icon-inventory.json`](icon-inventory.json) records their Git-blob SHA-256,
 decoded RGBA8 SHA-256, palette size and last-changing upstream commit. It contains
 metadata only; each reviewed import has an explicit `distribution` entry.

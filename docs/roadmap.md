@@ -1,400 +1,211 @@
 # Delivery roadmap
 
-The accepted plan has six objectives. Every objective remains required;
-foundation work is not a substitute for a complete port.
+This is the execution plan for all six accepted objectives. Follow the next
+unchecked task in the active milestone; add discovered work here with a clear
+completion condition. Detailed observations belong in [compatibility evidence](compatibility.md)
+and design decisions in [architecture](architecture.md).
 
-## Foundation (in progress)
+## Current position
 
-- Repository, provenance, LGPL/GPL texts, AGENTS.md, workspace and lockfile.
-- GUI-independent models and commands, project I/O, deterministic CPU rendering.
-- Open/render/edit/save vertical slice with headless tests and derived geometry.
-- Windows/Linux/macOS CI, MSRV, formatting, Clippy, rustdoc and license checks.
-- Early eframe child-window, dialog, clipboard and DPI feasibility checks.
+| Milestone | Status | What that means |
+|---|---|---|
+| Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
+| 1. Master parity | **In progress — active milestone** | Most editing domains are implemented; source coverage, artwork, native integration and acceptance remain unfinished. |
+| 2. Plusplus parity | Not started | Expanded-profile port and compatible Polished Crystal acceptance remain. |
+| 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
+| 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
+| 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
+| 6. Platform delivery | In progress — CI only | Three-OS build/test infrastructure exists; complete native verification and distributable packages remain. |
 
-## 1. Master parity (not complete)
+`[x]` means the stated work is implemented with linked evidence, not that its
+entire milestone has passed. `[ ]` means work or acceptance remains. A milestone
+closes only when its acceptance gate passes, including approved exceptions.
+Native feasibility was originally listed under Foundation: it is **not complete**
+and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-Inventory every menu, dialog, input gesture, preference and format. Port discovery,
-map/block/graphics/palette/collision/assembly codecs, painting/fill/swap/resize,
-history, block/tileset/roof/palette editors, event editing and warp navigation,
-overlays, export/clipboard, external-change handling and unsaved dialogs.
-Accept only when all matrix entries pass or have an approved exception and
-outputs reopen correctly in upstream. Include pinned compatible pokecrystal.
+**Next:** M1, reconcile the master coverage inventory and close project-discovery
+gaps. Then M2–M6, followed by M7 acceptance. If a task is externally blocked,
+record the blocker and advance another unchecked master task. Do not advance to
+plusplus merely because one feature or test suite is complete.
 
-Compressed graphics now have an unchanged-source loader differential covering
-12,390 cases and all command lengths, relative distances, overlap, address
-boundaries and 256-tile zero padding. Rust-only malformed-input checks retain
-the port's bounds protections without invoking unsafe original accesses.
-This strengthens codec evidence; full-application interoperability remains open.
+## Foundation — bootstrap complete
 
-Assembly/CHR import now has an unchanged-source differential covering 151 cases,
-all byte and word values in four numeric forms, source indentation/comments,
-little-endian words and loader length boundaries. Empty `.CHR`/`.2bpp` images now
-match upstream acceptance and compose blank tileset slots; edit/save/reopen tests
-preserve the input and verify the generated PNG. Missing interior operands fail
-explicitly under the malformed-number safety rule. Full-application
-interoperability still remains.
+- [x] Repository, pinned upstream references, license texts, attribution,
+  contributor instructions and Cargo workspace/lockfile established.
+  Evidence: [upstream lock](../upstream.lock.toml), [NOTICE](../NOTICE.md),
+  [AGENTS](../AGENTS.md), [dependencies](dependencies.md).
+- [x] GUI-independent validated models, editing/history, project codecs and
+  deterministic CPU rendering support the Open → edit → save slice.
+  Evidence: [architecture](architecture.md), [compatibility matrix](compatibility.md#current-coverage-matrix).
+- [x] Windows/Linux/macOS CI, MSRV, format/Clippy/test/rustdoc, dependency/license,
+  source-reference, visual and real-project jobs established.
+  Evidence: [workflow](../.github/workflows/ci.yml).
 
-PNG imports now match an unchanged master/FLTK 1.4.5 decoder differential:
-90 generated cases, 1,720,320 hues, all supported color types/bit depths,
-palette/transparency expansion, 16-bit truncation, gamma metadata, dimension
-limits and Adam7 interlacing. Both Unix/macOS and Windows transparency behavior
-run on the same host. GUI imports default to their host behavior; library/CLI
-callers can select it explicitly, with the choice bound into edit preflight
-hashes and retained through compound parts/roof loads and replacements. This
-does not establish native window fidelity or arbitrary malformed-PNG equivalence.
+## 1. Master parity — in progress
 
-Oversized binary/ASM maps now load the source dimension-sized prefix and show
-the original acknowledgment warning after palette choices. A structured project
-report exposes excess decoded blocks; strict library/CLI opening stays available.
-Tests cover no-write opening, short/exact input, whole-source conflict detection,
-warning/modal behavior and clean/dirty Save Map. Native warning appearance and
-full-application save/reopen differentials remain separate acceptance work.
+Target: the immutable master revision in [upstream.lock.toml](../upstream.lock.toml),
+with compatible pinned pokecrystal. Preserve safe valid-input behavior before
+adding improvements. Each completed group below still participates in M7.
 
-Generic error, roof-warning, oversized-map, buffer-warning and Print/roof-success
-messages now share the original one-button client geometry and Enter/Escape
-handling. Source formulas, both OS font sizes, both DPI scales and parent-action
-guards have automated coverage. Native modal windows, font rasterization and
-the separately audited shield artwork remain incomplete.
+### Implemented work
 
-Desktop startup now selects installed UI, regular/bold monospace and separate
-bold sans roles using the reference's preference lists and pinned FLTK backend
-defaults. Map labels, event symbols, ruler sizes and zoomed warp IDs consume those
-roles; test startup keeps fixed bundled faces. Installed-face/egui checks join
-the three-OS CI matrix. Native hinting/baselines, Windows synthetic bold, complete
-font-name fallback equivalence remain open. CPU Print now shares the font policy,
-collection indices, variable instances and explicit Windows bold-sans substitute;
-GUI workers retain the exact startup faces and CLI JSON reports substitutions.
-Synthetic bold and native rasterization still require fidelity work;
-see the evidence and limitations in `docs/compatibility.md`.
+- [x] Map lifecycle: New/Open/Recent/Close/Save/Save As, binary/ASM imports,
+  dimension selection, oversized-map acknowledgment, dirty guards and conflicts.
+- [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
+  anchors, zero fill and source-compatible history boundaries.
+- [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
+  six palette sets, compound graphics, roofs and ASM/binary collisions.
+  Compiled-source codec differentials are present.
+- [x] Block, tileset, roof and palette draft editing; internal copy/swap/drag,
+  separate dirty domains, asset switching and guarded persistence.
+- [x] Event parsing/editing for the master's 22 macros, preserved assembly,
+  event movement/options, warp navigation, script lifecycle and editor dispatch.
+- [x] Source-derived client layout, eight menu groups, all toolbar positions,
+  initial light/dark themes, view overlays, rulers, status bar, zoom/panning,
+  numeric block shortcuts, Help and About.
+- [x] Preference record and recent history; Print composition with all five
+  flags, Copy and Export; clipboard/browser/dialog platform adapters.
+- [x] Experimental headless inspect/render/edit workflows across the above
+  document types, with previews and conflict protection.
 
-The block editor now uses the original sidebar right-release workflow without
-the temporary Edit Block menu entry. Left releases select; right releases
-select and edit only when they return to the pressed block inside the visible
-clip. Pointer loss, canceled releases, modals and document replacement clear the
-transient press. Tests exercise zoom, drag-option combinations, scrolled clips,
-real editor entry, cancellation, saving and map-history preservation. Existing
-drag copy/swap tests remain active. Numeric block hotkeys now assign with physical
-Ctrl+digit, clear with Ctrl+Shift+digit and select with digit. Bindings reset on
-successful map replacement/Close and prune removed IDs on block-count/tileset
-changes. Source red/white labels and half-block sidebar reveal thresholds are
-implemented; right-button map picking now selects on press and reveals the block.
-Native keyboard/numpad delivery, mouse/child-window behavior and Courier Bold
-rasterization still require verification.
+Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-matrix),
+[menus](menus.md), [preferences](preferences.md), [asset audit](assets.md),
+[CLI guide](cli.md). Implemented adapters are not proof of native behavior.
 
-Middle-button presses are intercepted by the parent workspace before block or
-event controls. Map and sidebar panning now use the source integer press anchor,
-visible-scrollbar bounds, immediate movement and no inertial fling. Rulers follow
-the map offset, and panning leaves selection, edits and history unchanged. Tests
-cover both zoom sizes, rulers, DPI, minimum client size, captured movement outside
-the workspace, wheel interleaving, zoom-retained blank space and cancellation.
-The minimum-width map viewport no longer inherits egui's 64-point floor, which
-could put its scrollbar beyond the client edge. Native mouse capture and cursor
-delivery still require platform verification.
+### Remaining work, in execution order
 
-File Close, dedicated Save Map and Exit now share source-derived dirty-domain
-guards and preserve the source distinction between document changes and palette
-session edits. Headless tests cover state clearing/retention, all dirty domains,
-map-only writes/conflicts and Close/Exit/event-unload shortcut routing. Native
-warning geometry and remaining preferences remain pending.
-The root title now follows committed New/Open/Save As/Close transitions and
-retains the chosen basename independently of canonical file paths. Print uses
-the original map-derived PNG suggestion captured with each queued request.
-Canceled/failed transitions preserve the current document identity; native
-title-bar and chooser delivery remain platform checks.
+- [ ] **M1 — Close the master coverage inventory and project-discovery gaps.**
+  Reconcile every original menu, dialog, gesture, preference and format with a
+  test or explicit remaining item. Finish shared-map choices, legacy/numbered
+  project profiles, compound selection ordering and complete Open/New selectors.
+  Add any uncovered block/event gestures as tasks here. Done when the inventory
+  has no unclassified source feature and discovery fixtures cover each supported
+  original profile and ambiguous-input path. Start from [menus](menus.md) and
+  the [coverage matrix](compatibility.md#current-coverage-matrix).
+- [ ] **M2 — Finish icon and application-artwork provenance and porting.**
+  Resolve the ten toolbar placeholders, application/About image and message
+  shields. Import only cleared assets, preserve notices, and verify decoded
+  pixels, enabled/disabled states and source bounds at both DPI scales. Any
+  replacement must be explicitly recorded as a deviation. This belongs to master
+  parity, not the later redesign phase. See [assets](assets.md).
+- [ ] **M3 — Complete external file drops and whole-window transparency.**
+  Deliver real drop coordinates/path order through the window adapter; accept
+  only workspace drops and use the normal guarded Open flow. Resolve Wayland's
+  missing external-drop and opacity integration; verify Windows, macOS, X11 and
+  Wayland behavior. Done when the gates in [architecture](architecture.md) pass;
+  stale pointer coordinates or widget alpha are not substitutes.
+- [ ] **M4 — Complete source-derived GUI and native-window fidelity.**
+  Finish editor/modal child-window behavior, font fallback/Windows bold synthesis,
+  popup placement/arrows/mnemonics/screen-edge behavior, focus and dismissal.
+  Verify source geometry at 1×/2× before targeted native checks of dialogs,
+  clipboard, external editor/browser dispatch, shortcuts, scrolling and resizing.
+  Record platform-specific results and any accepted chrome/rasterization differences.
+  Client snapshots alone do not close this task.
+- [ ] **M5 — Finish preference and window lifecycle compatibility.**
+  Resolve legacy FLTK user/executable-adjacent preference import, remaining
+  inventory differences and native storage/restart/shutdown behavior. Verify
+  placement, fullscreen restoration, transparency startup and canceled exits
+  without losing edits. Done when [preferences](preferences.md) has evidence for
+  each applicable source setting and supported platform.
+- [ ] **M6 — Verify complete user workflows on native platforms.**
+  Exercise map/block/tileset/roof/palette/event edits, Print overlays/Copy/Export,
+  dialogs and clipboard with the integrated application. Cover Windows, macOS,
+  Linux X11 and Wayland; record exact environment and outstanding differences.
+  Reuse mathematical/headless evidence and reserve manual GUI work for behavior
+  it cannot establish. This supplies the master portion of P1.
+- [ ] **M7 — Pass master acceptance.**
+  Run the complete inventory against the pinned reference, including compatible
+  real projects. Save/reopen every editing domain in the original application,
+  compare bytes or decoded pixels as appropriate, and exercise failure/conflict
+  paths. M1–M6 must be closed or covered by explicitly approved exceptions in
+  [deviations](deviations.md); record final evidence in [compatibility](compatibility.md).
+  Passing codec or synthetic GUI tests alone is insufficient.
 
-Open Recent now has ten entries, Alt+1 through Alt+0 and Clear Recent. Successful
-opens and Save As promote the source path spelling; canceled/failed operations
-leave history intact. Headless checks exercise the submenu, all shortcuts,
-unsaved-warning and Map Options cancellation, eviction/duplicates, native path
-serialization and persistence across app reconstruction. Native popup navigation
-and actual shutdown/storage delivery remain separate platform checks.
+## 2. Plusplus parity — not started
 
-Manual Load Roof Colors and all five Roof Palettes choices now use a shared
-headless import API. Tests cover consent, dirty-state preservation, failure
-atomicity, live preview updates and the layout used by subsequent map opens.
-The compiled original overlay function matches 120 complete-bank cases; manual
-and automatic imports also agree on the pinned real project. Native dialog
-fidelity and native restart verification remain outstanding.
+Begins after M7. Preserve all master acceptance fixtures.
 
-Twenty-two implemented view/mode/palette/auto-load/resize/buffer/drag settings now restore and
-save through eframe with a versioned record and stable app ID. The two palette
-auto-load menu options affect subsequent imports independently. Headless restart
-and malformed-record tests pass; legacy preference import, remaining options,
-native storage/window placement and restart behavior still require work.
+- [ ] **PP1:** Inventory differences at the pinned plusplus revision and pin a
+  compatible Polished Crystal project with an independently audited fixture policy.
+- [ ] **PP2:** Implement expanded tile counts/banks, per-block attributes,
+  flips, priority, palette/discovery rules and serialization. Keep map IDs byte-sized.
+- [ ] **PP3:** Port branch-specific controls, dialogs, defaults and rendering
+  with the same geometry, asset and native verification standards as master.
+- [ ] **PP4 — Acceptance:** Differential and real-project edit/save/reopen tests
+  pass against original plusplus, with master regressions still green and every
+  remaining difference resolved or explicitly approved.
 
-Monochrome and 256 Tiles now have persistent Options controls and direct current-
-tileset reloads with unsaved-asset guards. The shared backend accepts an explicit
-tile interpretation; map history, session colors and roof identity survive.
-Tests cover all 256 source-to-slot mappings in four modes, cancel/failure
-atomicity, missing-palette fallback and real Johto mode transitions. Canceled
-switches retain the preference but cannot reinterpret the loaded save layout.
+## 3. Unified editor — not started
 
-Overworld Map Size now has a measured dialog, bounded persistent setting and
-source-worded post-save warning. The core computes the padded WRAM requirement;
-headless map summaries expose it as `overworld_buffer_bytes`. Tests cover exact
-capacity boundaries, maximum dimensions, successful/failed/clean saves, Save As,
-modal guards and four named maps from the pinned real project. Native warning
-artwork/frame and actual preference storage remain unverified.
+Begins after PP4; no silent format conversion.
 
-Drag and Drop now has a persistent, default-on Options toggle for sidebar,
-tileset, roof and palette transfers. Palette swatches swap on drag and copy exact
-RGB8 values on Ctrl-drag; keyboard Copy retains upstream's RGB5 quantization.
-Disabling transfers preserves selection, clipboard commands, map painting,
-pixel edits and event movement. Source/target borders use the original geometry.
-External map-file dropping is a separate upstream feature and remains pending,
-along with native drag delivery and cross-platform verification.
+- [ ] **U1:** Define explicit profiles/capabilities and deterministic project
+  detection, with a user override and clear ambiguity errors.
+- [ ] **U2:** Deliver one binary with capability-aware controls and profile-safe
+  loading, editing, saving and switching.
+- [ ] **U3 — Acceptance:** Both pinned project suites pass through the unified
+  workflow; ambiguous projects require a choice and wrong-profile writes fail
+  without modifying files.
 
-Full Screen now has its source View entry and F11 shortcut. The menu reflects
-reported viewport state; commands preserve documents and obey modal guards.
-Eframe's native window record owns fullscreen, maximization and normal geometry
-together. Native transitions, returning to the previous geometry and restart
-restoration still need Windows/Linux/macOS verification.
+## 4. Autonomous interface — stabilization not started
 
-Transparent now has its original View-menu position and F10 binding, persistent
-startup intent, and a narrow native window-opacity API for Windows, X11 and
-macOS. It preserves the source's exact 75% encodings without changing rendered
-map/export data. Tests cover accepted/failed requests, saved intent, modal guards,
-history preservation and the Windows API on a hidden test-owned window. X11's
-32-bit property round-trip is an explicit Xvfb CI check. Native GPU/compositor
-appearance, real shortcut delivery and macOS runtime behavior remain unverified;
-Wayland needs a protocol/windowing integration and currently reports that gap.
+The shared backend and experimental CLI already exist. Stabilize them after U3
+so both profiles are represented in the public contract; GUI work must continue
+using the same underlying operations in the meantime.
 
-External file dropping needs a window-integration change before its parity gate.
-The locked winit 0.30.13/egui-winit 0.37 interface loses drag coordinates on native
-backends and lacks Wayland file-drop delivery. Do not use stale ordinary pointer
-coordinates or widen the target to the entire window. The integration gate and
-next steps are recorded in `architecture.md`; this is not a completed feature.
+- [x] GUI-independent Rust models/project adapters and experimental JSON
+  inspect/render/edit previews/apply exist; see [CLI guide](cli.md).
+- [ ] **A1:** Define versioned Rust/JSON contracts for inspect, validate, render,
+  edit and batch, with stable error codes, schemas and deterministic responses.
+- [ ] **A2:** Make dry-run, explicit apply, input/output hash conflicts and
+  recoverable multi-file commits consistent across document types. Finish
+  interrupted-journal discovery/replay; current backup/rollback support is partial.
+- [ ] **A3:** Publish examples for autonomous callers and schema/compatibility
+  tests, including malformed requests, conflicting writers and crash recovery.
+- [ ] **A4 — Acceptance:** Both profiles support complete scripted workflows
+  without a display/GPU or GUI process, preserve unrelated source and recover
+  interrupted batches. MCP remains deferred.
 
-Tile Priority now controls priority editing and palette output independently of
-attribute bits. The GUI retains it across maps and Close, and priority palette
-imports automatically enable it. The backend exposes an explicit setter and
-includes the option in preflight fingerprints. Pixel-only saves also update
-owned palette-bank gap sizes when required by the option. Show Priority now has
-8/16/24-pixel overlays, menu/toolbar/shortcut controls and persistence. All 896
-original RGBA pixels are independently verified; native compositing comparisons
-remain outstanding. Roof thumbnails avoid an invalid upstream window cast.
+## 5. Improvement and refactoring — not started
 
-Implemented slices include New Map, Save As, block resize, map editing/saving, master metadata discovery, six
-palette sets, project/roof colors, compound graphics and roof tile replacement.
-Block editing now has shared placement/collision commands, a GUI draft editor,
-ASM/binary collision fields and paired persistence with rollback/backups.
-Clipboard copy/paste/swap, sidebar drag/copy and block-count controls are also
-implemented. Native shortcut dispatch, remaining block controls and
-automatic recovery remain.
-The shared tileset draft/command model and palette-map/grayscale export routines
-are implemented with C++ pixel-operation comparisons. Project persistence now
-stages compound two-bit PNG/palette outputs with conflict checks, and the CLI
-supports preview and hash-checked apply. Save/reopen is tested on a temporary
-copy of the pinned Johto tileset. The GUI now has a source-sized tileset draft
-dialog with pixel gestures, palette/priority controls, private/image clipboard
-operations, drag copy/swap, deletion, preview refresh and saving. Headless GUI
-tests cover the edit/accept/save flow. Native clipboard/child windows and remaining
-specialist editors still prevent a tileset parity gate.
-The roof draft editor now shares pixel/clipboard commands, preserves the original
-226×228 client geometry and reversed tile rows, and has independent PNG saves.
-The headless roof interface previews and requires an observed hash to apply.
-Compiled upstream comparisons cover safe 8×8 roof image paste; temporary real
-New Bark Town roof edits save/reopen with other pixels and source fixtures intact.
-Loaded-roof switching/removal now preserves other editing domains, warns before
-discarding roof edits and retains the previous overlay on failed reads. Its
-280×80 client layout and platform button order have headless checks and snapshots;
-all five pinned pokecrystal roof variants match fresh loads after switching.
-Native child windows/clipboard and other matrix gaps still remain.
-Changing the loaded tileset now reloads graphics, blocks, collisions and the
-current roof while retaining map history and session palettes. Numbered file
-labels, dirty guards, selection/clipboard bounds and same-name reload are tested.
-The 280×80 chooser has inspected snapshots; a pinned Johto/Kanto/house transition
-checks real assets. Complete discovery ordering, main menu/toolbars and native
-child-window behavior still prevent a parity gate.
-Palette-color commands, all-six-set contextual state, explicit RGB5 export and
-the headless palette interface are implemented. Compiled original clipboard and
-export functions verify copy quantization, live swap and export layout; export
-set names use a documented correction to upstream's incomplete label table.
-The source-sized color/monochrome forms, channel/hex controls, swatch clipboard,
-six-set selector, load/export actions and Windows native chooser are implemented.
-Headless interaction tests and four snapshots cover the forms; a focused Windows
-native check verifies shortcut dispatch and chooser cancel/accept. Native file
-dialog workflows and Linux/macOS runtime verification remain pending.
-GUI Open/New now retains the palette session, applies staged per-file import
-decisions and contextual set selection, and handles optional roof-color warnings.
-Headless loads stay independent unless a caller explicitly supplies a session.
-Synthetic interaction tests and a pinned New Bark Town → Violet City transition
-cover carry-over; persistent preferences and remaining native workflows are pending.
-Event models, legacy macro parsing, warp destination resolution, source-preserving
-script saves and hash-checked CLI preview/apply are implemented. The compiled
-original matches 34,188 coordinate/formatting/warp cases; 388 pinned pokecrystal
-scripts with 3,684 events round-trip and edited temporary copies reopen. The GUI
-now auto-loads optional scripts, displays source-derived colored markers, edits
-options/coordinates, drags events, navigates warps and protects reload/unload.
-Event saves join the original Save ordering; map resize stages both domains.
-Source-sized forms and zoomed overlays have inspected snapshots. Exact marker
-native typography, export overlays, persistent
-preferences, remaining gestures and native workflows still prevent event parity.
-External script opening, double-click line requests, Tab mode switching and the
-warp-ID shortcut now have headless dispatch/focus coverage. The Windows adapter
-retains the original known-editor line arguments; Linux/macOS use their desktop
-file openers. Actual editor/association behavior still needs native checks.
-Event-mode half-block hover, decimal coordinates and the Game Boy screen guide
-now use source-derived geometry, colors and clipping, with tests for both zooms,
-scrolling, overlapping markers and the original negative-coordinate boundary.
-Rulers now use source-derived insets, tick/label geometry, coordinate limits and
-mode-dependent highlights; headless tests cover scrolling, both zooms, menus,
-shortcuts and modal guards. Global decimal/hexadecimal display and Block IDs now
-have View, toolbar and keyboard controls, with source-format hover text and
-outlined map/sidebar labels. Event labels and dialogs retain each script's own
-number format. The status bar now has all five source fields with fixed measured
-widths, separate coordinates, two-point separators and Greybird/Dark frames.
-Live paint previews update the hovered ID before release. Operation diagnostics
-remain available on hover. Native fonts and input timing still need verification;
-current status/ruler/guide tests are headless rather than native FLTK comparisons.
-Map/sidebar grid edges, hover/selection rings and sidebar drag feedback now
-follow `map-buttons.cpp`, sharing the ring renderer with event and editor cursors.
-Rendered pixel tests cover both map zooms, event/tile/chip sizes and 1×/2× scale;
-native DPI/drag dispatch and complete native themes still need verification.
-Zoom now scales map offsets with source integer rounding, resets the sidebar,
-and preserves far-edge blank space until scrolling back. Headless controls and
-edge tests pass. Open/New now use the original per-axis opening position, including
-unconditional scrollbar allowance, integer halves and the strict three-block
-margin threshold. Failed/canceled opens and pending warnings retain the old view;
-successful publication applies the position once at the current client geometry.
-Source-vector and worker/UI tests cover both zoom/DPI sizes and rulers. Native
-initial positioning, window-resize and pan/scroll checks remain pending.
-Print's shared CPU compositor now covers its five independent flags, native
-32-pixel blocks, priority/grid/ID ordering and events with per-event warp bases.
-It accepts bounded font coverage from an adapter and runs without GUI/GPU/IO.
-The compiled-original comparison covers 256 compositions; real-project tests
-exercise 96 combinations with roof/palette/event inputs. A shared Skrifa/Vello
-CPU font adapter now supports installed bold fonts and caller-provided faces;
-the CLI exposes the five Print flags, bases, grid colors and explicit fonts.
-Print Options now has the five independent controls, source sizing formulas,
-platform button order, shortcuts, Cancel-retained preferences and success text.
-GUI Copy and Export share the CPU renderer and snapshot unsaved document data
-before worker dispatch. PNG replacement uses an observed target with conflict
-checks; image copy queues an egui clipboard command. The production eframe
-features now explicitly enable native clipboard and browser output adapters;
-a CI graph check excludes dev dependencies and verifies the downstream wiring.
-Native clipboard delivery, chooser/overwrite behavior, font metrics and
-display-driver alpha differences
-remain parity gates, along with native dialog frame/theme matching.
-The menu/toolbar port is in progress within master parity, before plusplus.
-Thirty reviewed image files now provide toolbar icons, tile/roof clipboard
-icons and collision-quadrant labels, including dark variants, source-sized controls and integer disabled-color
-conversion. CC BY 3.0 Fugue attribution, LGPL adaptation notices, source/pixel
-hashes and reproducible asset verification are included. Continue the per-asset
-audit in `docs/assets.md`, popup-menu structure, and native frame/theme matching.
-All 27 toolbar buttons now occupy their original order and 24-point extents,
-including the event, display/mode, palette, blockset, tileset and roof actions.
-Eight six-point separators and the palette label/dropdown follow source layout.
-The 10 buttons with unresolved artwork use short text placeholders; unreviewed
-or game-derived imagery remains excluded pending resolution. Source geometry,
-empty/loaded/modal states, radio behavior, keyboard activation and existing
-dialog/history routes have headless coverage. Change Roof now uses the cached
-project roof inventory in both menu and toolbar, distinct from Edit Roof's
-requirement for loaded roof pixels. Native frame/hover/focus/fonts and image
-provenance remain open; complete membership does not establish toolbar parity.
-The Resize Blockset plus-minus drawing now uses its original pixels, after
-review of the introducing commit and unchanged pinned blob. Component review
-has now resolved Open, Load Events and Load Palettes: their exact upstream
-pixels replace three placeholders, with separate Fugue attribution and reproducible
-arrow/bulb/base comparisons. Undo/Redo and the remaining artwork are still
-unverified; their candidates remain excluded.
-The toolbar palette selector now shares the View menu's six sets and palette
-operation, with source-derived text widths, padding and control heights. Tests
-cover live recoloring, menu synchronization, existing palette edits, map history,
-keyboard activation/cancellation, modal guards and use before loading a map.
-The eight source top-level menu groups are restored, including Data, Mode and
-Options. Existing commands use their source groups; Undo/Redo menu actions now
-share map history, and mode choices share shortcut transitions. The remaining
-commands, preferences, popup geometry and native behavior are tracked in
-`docs/menus.md`; restored grouping does not complete menu parity.
-Their popups and nested recent/palette choices now share the source's measured
-row/image/check/shortcut geometry, platform font sizes and trailing dividers.
-Mac shortcut symbols have a separately licensed font; keyboard activation and
-1×/2× layout checks supplement inspected snapshots. Native fonts, submenu arrow
-shape, mnemonics, screen-edge behavior and remaining commands still
-prevent a menu parity gate.
-The temporary Dark appearance toggle is replaced by View > Theme with the
-source-ordered Greybird/Dark radio choices. Pointer/keyboard selection, modal
-guards, document/color preservation and v1 preference restart are covered;
-the other ten themes remain deferred under the accepted initial scope.
-Greybird/Dark menu indicator geometry and colors now follow the original theme
-and FLTK drawing functions, including filled checkmarks, radio highlights,
-theme-dependent radio diameters and inactive text blending. A compiled source
-oracle checks drawing commands separately from egui rasterization. Popup panel
-frames and full-width separators now match source coordinates, corner ownership
-and background-derived gray-ramp colors, with additional compiled comparisons
-and rendered pixel checks at both DPI scales. Native curve coverage, shadows,
-popup placement and mnemonic navigation remain open.
-Help/F1 now opens the complete pinned source documentation in a resizable,
-nonmodal child viewport. A reproducible converter retains all 95 blocks and
-16 linked spans, with C++-verified Windows/Unix constant expansion and LGPL
-attribution. Content bounds, scrolling, link requests, close controls and
-nonmodal editing are tested headlessly. Native window behavior and HTML/font
-matching remain gates. About now has its source menu/shortcut/dismissal behavior,
-measured APP_ICON layout, platform font sizes and explicit NG/upstream/Fugue
-attribution. Its application artwork audit and native frame/fonts remain
-unfinished; the original image slot is reserved without importing the image.
-Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
-source harness verifies 8,192 decimal/hex placement and zoomed text cases, including
-the original overflow/truncation differences. Source-derived outline colors,
-diagonal offsets and zoomed label positioning are implemented; native font
-selection and rasterization remain incomplete. Asset provenance is recorded in
-`docs/assets.md` with LGPL attribution retained for the decoded row masks.
-The pinned pokecrystal integration now
-covers all 254 top-level block files (18 need explicit shared-map options).
-See the compatibility matrix for the substantial remaining work.
+Begins after A4. Keep both compatibility suites running; distinguish structural
+refactoring from deliberately changed user behavior.
 
-## 2. Plusplus parity (not started)
+- [ ] **I1:** Propose and implement evidence-based internal consolidation and
+  measured performance improvements, preserving the accepted compatibility baseline.
+- [ ] **I2:** Add a shared egui RGB/HSV graphical picker on Linux, macOS and
+  Windows, retaining exact RGB8 edits and RGB5 controls/export. Parity currently
+  targets upstream's Windows native chooser and RGB/hex controls on all OSes.
+- [ ] **I3:** Evaluate remaining themes, expanded undo, newer project conventions
+  and usability/format-preservation improvements as separately scoped proposals.
+- [ ] **I4 — Acceptance:** Each chosen change has a stated benefit, appropriate
+  regression/benchmark evidence and documented intentional differences. Unselected
+  proposals are explicitly deferred rather than silently expanding scope.
 
-Add the expanded tile profile, banks, per-block attributes, flips, priority,
-palette rules, discovery and GUI differences. Preserve byte-sized map IDs.
-Keep master tests green; validate pinned compatible Polished Crystal.
+## 6. Platform delivery — in progress (CI infrastructure)
 
-## 3. Unified editor (not started)
+Platform feasibility runs during parity work, not at the end. Final packaging
+and release acceptance follow the preceding objectives.
 
-One binary with evidence-based profile detection, explicit override, ambiguity
-handling, and capability-aware controls. Never silently convert projects.
+- [x] Windows/Linux/macOS build/test CI and selected native adapter/font checks exist.
+- [ ] **P1:** Finish native runtime acceptance on Windows, Linux X11/Wayland and
+  macOS, including both Mac architectures. Carry forward M6 and plusplus/unified
+  results; distinguish compilation, automated native checks and interactive checks.
+- [ ] **P2:** Produce Windows x86-64 MSVC ZIP, Linux x86-64 tarball and macOS
+  Intel/Apple Silicon app bundles, including the CLI and clean-machine launch checks.
+- [ ] **P3:** Automate checksums, licenses/notices, matching source, lockfile,
+  toolchain/patch records and rebuild/relink instructions; verify archive contents.
+- [ ] **P4 — Acceptance:** Install/run packages and complete release workflows
+  on all targets, with [release obligations](releases.md) satisfied. Signing and
+  notarization remain explicitly deferred until credentials are available.
 
-## 4. Autonomous interface (not complete)
+## Standing constraints
 
-Stabilize Rust APIs plus JSON CLI: inspect, validate, render, edit and batch.
-Versioned schemas, stable errors, deterministic responses, dry-run, explicit
-apply, content-hash conflict checks, recoverable multi-file commits and examples.
-No display/GPU required; MCP is deferred.
-
-## 5. Improvement and refactoring (not started)
-
-Retain the compatibility suite while consolidating duplicated logic and optimizing
-measured bottlenecks. Separate proposals for format preservation, more undo,
-remaining themes, newer project conventions and usability changes.
-
-Plan a shared egui RGB/HSV graphical color picker for Linux, macOS and Windows,
-retaining exact RGB8 edits and the existing RGB5 controls/export rules. The first
-parity version follows upstream: native ChooseColor on Windows, RGB/hex editing
-on every OS. The shared picker is an intentional usability addition after parity;
-separate GTK/macOS native picker integrations are not planned unless a concrete
-platform need justifies them.
-
-## 6. Platform delivery (not complete)
-
-CI starts in foundation; completion requires native verification and packages:
-Windows x86-64 MSVC ZIP, Linux x86-64 tarball (X11 and Wayland), macOS Intel and
-Apple Silicon app bundles. Bundle CLI, notices, checksums and matching source.
-Signing/notarization is deferred until credentials are available.
-
-## Accepted defaults
-
-- Pinned branch tips in upstream.lock.toml define behavior; use compatible real
-  project revisions instead of changing the target to current unsupported formats.
-- Default light and dark themes first; remaining themes deferred.
-- Match safe valid-input behavior, including serialization and undo limitations.
-- Fix crashes/corruption immediately and document deviations.
-- Geometry and workflow fidelity; native chrome/font rasterization may differ.
-- Rust + JSON CLI; no MCP, web/mobile, or implicit format conversion.
-
-## Evidence required
-
-Differential C++/Rust fixtures; deterministic bytes and decoded image pixels;
-malformed-input/property tests; conflict and failed-write tests; DPI geometry;
-egui_kittest interaction/snapshots; native smoke tests; reproducible benchmarks.
-No milestone is complete on compilation or a narrow synthetic test alone.
+- Pinned upstream/project revisions define parity; do not quietly retarget newer formats.
+- Initial light/dark themes first; remaining themes are I3 work.
+- Preserve safe valid-input behavior and source serialization/history limits.
+  Fix corruption/crashes immediately and record observable [deviations](deviations.md).
+- Derive GUI dimensions from source calculations; use geometry/input/pixel tests
+  first, then targeted native verification. Unverified artwork stays excluded.
+- Every release respects LGPL and separate asset/font licenses. No game assets,
+  implicit conversion, web/mobile port or MCP server is part of the accepted scope.

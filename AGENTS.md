@@ -7,6 +7,37 @@ plusplus parity, unified editing, a stable Rust/JSON interface, measured
 improvements, and distributable Windows/Linux/macOS builds. The core and CI
 exist from day one; a partial slice is not a completed parity milestone.
 
+## Documentation ownership and hygiene
+
+- Keep `README.md` a short, user-facing landing page. Follow the structure of
+  [upstream's pinned README](https://github.com/Rangi42/polished-map/blob/8b9bdc2b8aac8c865809516c2123af69c498da0b/README.md):
+  purpose, availability/install link, basic controls, further help and credits.
+  Describe only support this port actually provides. Do not copy upstream's
+  release claims, project support promises, screenshots or assets unverified.
+- Never append implementation progress, test counts, internal type names,
+  per-turn notes, detailed CLI examples or outstanding-task lists to README.
+  Change it only when its user-facing introduction or navigation needs changing.
+- `docs/roadmap.md` is the authoritative execution plan. Before feature work,
+  choose the next unchecked item in the active milestone. Update that item and
+  its evidence when work advances; do not append a chronological narrative.
+  Add newly discovered work as an actionable item with an acceptance condition.
+  Keep completed work visible and separate implementation from verification.
+  Close a milestone only when its full acceptance gate passes or an explicitly
+  approved exception is recorded. Never move unfinished work out of scope just
+  to mark a milestone complete.
+- Put build/setup instructions in `INSTALL.md`, GUI workflows in `docs/usage.md`,
+  and command/JSON examples in `docs/cli.md`. Keep menu and setting details in
+  `docs/menus.md` and `docs/preferences.md`.
+- Put source comparisons, geometry calculations, test observations and native
+  verification limits in `docs/compatibility.md`; design decisions in
+  `docs/architecture.md`; intentional behavior changes in `docs/deviations.md`;
+  provenance in `docs/assets.md`/`NOTICE.md`; distribution in `docs/releases.md`.
+  Link to the owning document instead of duplicating its details.
+- Update existing statements when behavior changes. Do not leave contradictory
+  "pending" claims next to newer evidence. Clearly label historical observations
+  as historical; they must not override the roadmap's current task status.
+  Keep temporary work logs in ignored `.scratch/`, not product documentation.
+
 ## Evidence and compatibility
 
 - Reference the immutable commits in `upstream.lock.toml`. Ignored checkouts in
@@ -38,10 +69,15 @@ exist from day one; a partial slice is not a completed parity milestone.
 
 ## Verification
 
-Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --locked
+For code or build changes, run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --locked
 -- -D warnings`, `cargo test --workspace --locked`, and `cargo doc --workspace
 --no-deps --locked`. CI also checks MSRV, `cargo deny check`, and the production
 native-adapter graph with `python tools/native_features.py` (no dev dependencies).
+
+For documentation-only changes, verify local links/anchors, examples against
+the actual CLI/menu definitions, and status against implementation evidence;
+run `git diff --check`. A full Rust rebuild is unnecessary unless the changes
+also affect code, build configuration or executable documentation examples.
 
 Test behavior, malformed inputs, independent golden vectors, reference outputs,
 and real project integration. Test geometry mathematically and input through
