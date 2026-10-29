@@ -7,6 +7,8 @@ use std::{fs, process::Command};
 mod assembly;
 #[path = "reference/lz.rs"]
 mod lz;
+#[path = "reference/png_import.rs"]
+mod png_import;
 #[path = "reference/printing.rs"]
 mod printing;
 

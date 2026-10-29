@@ -19,4 +19,4 @@ purpose = "Contemporaneous master project fixture; fetched separately, assets no
 repository = "https://github.com/fltk/fltk"
 commit = "a9b1113516ffd15fc7602a6d425a317df30f4720"
 version = "1.4.5"
-purpose = "Version specified by master INSTALL.md; popup layout and disabled-image arithmetic"
+purpose = "Version specified by master INSTALL.md; popup layout, disabled-image arithmetic and PNG import"

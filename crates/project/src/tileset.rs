@@ -48,6 +48,7 @@ struct Part {
 
 #[derive(Clone, Debug)]
 pub struct MasterTilesetDocument {
+    png_platform: crate::PngPlatform,
     root: PathBuf,
     name: String,
     model: Tileset,
@@ -151,7 +152,7 @@ impl MasterTilesetDocument {
                     return Ok((Vec::new(), None));
                 }
                 let observed = prepare_target(&path)?;
-                let tiles = read_tiles(&path)?;
+                let tiles = read_tiles(&path, options.png_platform)?;
                 if optional_hash(&path)? != observed.hash {
                     return Err(ProjectError::Conflict(path));
                 }
@@ -214,10 +215,11 @@ impl MasterTilesetDocument {
             .roof
             .as_ref()
             .map(|name| {
-                RoofDocument::open_in_project(
+                RoofDocument::open_in_project_with_png_platform(
                     root,
                     name,
                     std::array::from_fn(|i| ids.get(i + 0x0a).copied().unwrap_or(9)),
+                    options.png_platform,
                 )
             })
             .transpose()?;
@@ -245,6 +247,7 @@ impl MasterTilesetDocument {
             });
         }
         Ok(Self {
+            png_platform: options.png_platform,
             root: std::fs::canonicalize(root).map_err(|e| ProjectError::io(root, e))?,
             name: name.into(),
             initial: model.clone(),
@@ -263,6 +266,9 @@ impl MasterTilesetDocument {
 
     pub fn name(&self) -> &str {
         &self.name
+    }
+    pub fn png_platform(&self) -> crate::PngPlatform {
+        self.png_platform
     }
     pub fn root(&self) -> &Path {
         &self.root
@@ -294,6 +300,7 @@ impl MasterTilesetDocument {
         mode: MasterTileMode,
     ) -> Result<(Self, BlocksetDocument), ProjectError> {
         let options = MasterGraphicsOptions {
+            png_platform: self.png_platform,
             allow_256: mode.allow_256,
             monochrome: mode.monochrome,
             roof: self.roof.as_ref().map(|r| r.name().to_owned()),
@@ -319,10 +326,11 @@ impl MasterTilesetDocument {
             .is_some_and(|roof| roof.roof().tileset().is_modified());
         let roof = name
             .map(|name| {
-                let mut roof = RoofDocument::open_in_project(
+                let mut roof = RoofDocument::open_in_project_with_png_platform(
                     &self.root,
                     name,
                     std::array::from_fn(|i| self.model.attributes()[i + 0x0a]),
+                    self.png_platform,
                 )?;
                 if modified {
                     let value = roof.roof().tileset().snapshot(0)?;
@@ -382,6 +390,7 @@ impl MasterTilesetDocument {
     pub fn content_hash(&self, blocks: &Blockset) -> String {
         let mut hash = Sha256::new();
         hash.update([
+            self.png_platform as u8,
             u8::from(self.allow_256),
             u8::from(self.monochrome),
             u8::from(self.allow_priority),

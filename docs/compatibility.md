@@ -1,5 +1,44 @@
 # Compatibility evidence
 
+## PNG decoding, interlacing and platform transparency
+
+`tools/png_oracle.py` extracts unchanged master `read_png_graphics`, `mono_hue`
+and constants, FLTK 1.4.5 `Fl_PNG_Image` construction/loading,
+`Fl_RGB_Image::desaturate`, and the Windows RGBA postprocessor. It builds the
+pinned FLTK checkout's bundled libpng 1.6.44 and zlib 1.3.1 with portable C paths.
+Each copied file/extracted snippet has a SHA-256 provenance record. Generated
+sources, library notices and binaries stay in ignored scratch storage.
+
+The adapter provides image storage/accessors, synthetic ASCII file paths,
+suppressed warning output, a 64-MiB allocation ceiling, and no drawing/cache.
+It selects the Unix/macOS no-op or the unchanged Windows postprocessor; both
+paths run in reference CI without an OS window. This verifies decoder behavior,
+not native Unicode paths, filesystem dialogs or displayed color management.
+
+The 90-case corpus compares 1,720,320 hues through public Rust project loading:
+all 65,536 sample values in 16-bit grayscale, gray-alpha, RGB and RGBA;
+8-bit counterparts; packed 1/2/4-bit grayscale and indexed PNGs; palette alpha,
+8/16-bit gray/RGB tRNS, six 16-bit alpha boundary values, gamma metadata, 8×2048/2048×8
+extremes, invalid dimensions and excessive tile counts. Each case is also
+repacked by libpng as Adam7, with the interlace flag and unchanged decoded hues
+asserted independently of the Rust comparison. The original loader's successful
+tile counts, tile order and hues must match exactly; invalid sizes must fail.
+
+The differential exposed Rust's generic image conversion rounding 16-bit samples
+where FLTK discards the low byte. The importer now uses PNG expansion and
+`STRIP_16`, then the original integer `(31R + 61G + 8B) / 100` desaturation.
+Windows clears RGB only for fully transparent expanded RGBA pixels, after
+16-bit stripping; Unix/macOS preserve the color. Gray-alpha pixels bypass that
+Windows adjustment. Alpha otherwise does not participate in hue selection.
+
+`PngPlatform` defaults to the host and can be selected explicitly via
+`MasterGraphicsOptions`, standalone roof opening, or CLI `--png-platform`.
+Tests verify compound before/main/after parts, roof initialization/switching,
+tileset replacement, different preflight hashes and CLI render/inspect/edit
+behavior. Separate nonignored regressions cover all grayscale hue thresholds,
+alpha truncation and truncated files. File/decode allocation bounds remain.
+PNG re-encoding can still differ byte-for-byte; decoded pixels are the contract.
+
 ## Assembly/CHR graphics and empty images
 
 `tools/asm_graphics_oracle.py` extracts unchanged pinned master `Parsed_Asm`,
@@ -30,8 +69,9 @@ bounds protections remain intact.
 
 Empty initial/interior numeric operands previously disappeared in Rust, shifting
 later bytes. They now return `CodecError::Assembly`; a terminal comma remains
-accepted. The unchanged-source differential runs in reference CI. PNG decoding,
-native file adapters and full-application interoperability need separate coverage.
+accepted. The unchanged-source differential runs in reference CI. Native file
+adapters and full-application interoperability need separate coverage; the PNG
+decoder has its own differential above.
 
 Local formatting, warnings-as-errors workspace Clippy, workspace tests, rustdoc
 and the compiled assembly differential pass. All seven pinned real-project tests

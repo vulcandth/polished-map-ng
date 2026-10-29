@@ -30,6 +30,8 @@ pub fn roof_palette_path(root: &Path) -> PathBuf {
 
 #[derive(Clone, Debug)]
 pub struct MasterGraphicsOptions {
+    /// PNG alpha handling; defaults to the host's original-platform behavior.
+    pub png_platform: crate::PngPlatform,
     pub allow_256: bool,
     /// Session Tile Priority option; reading priority palette colors enables it too.
     pub allow_priority: bool,
@@ -46,6 +48,7 @@ pub struct MasterGraphicsOptions {
 impl Default for MasterGraphicsOptions {
     fn default() -> Self {
         Self {
+            png_platform: crate::PngPlatform::default(),
             allow_256: false,
             allow_priority: false,
             palette: None,

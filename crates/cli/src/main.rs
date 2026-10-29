@@ -8,9 +8,9 @@ use polished_map_core::{
 };
 use polished_map_project::{
     BlocksetDocument, EventDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument,
-    OpenOptions, PaletteDocument, ProjectError, RoofDocument, load_master_map_graphics,
-    prepare_blockset_save_as, prepare_collision_save_as, prepare_palette_export, prepare_save_as,
-    read_bounded, write_new_png,
+    OpenOptions, PaletteDocument, PngPlatform, ProjectError, RoofDocument,
+    load_master_map_graphics, prepare_blockset_save_as, prepare_collision_save_as,
+    prepare_palette_export, prepare_save_as, read_bounded, write_new_png,
 };
 use serde_json::{Value, json};
 
@@ -193,6 +193,8 @@ enum Action {
         tileset: Option<String>,
         #[arg(long)]
         allow_256: bool,
+        #[command(flatten)]
+        png: PngArgs,
         /// Override automatic map palette selection.
         #[arg(long, value_parser = parse_palette_set)]
         palette: Option<PaletteSet>,
@@ -207,10 +209,30 @@ enum Action {
 }
 
 #[derive(Args)]
+struct PngArgs {
+    /// Original PNG transparency behavior: unix (Linux/macOS) or windows; defaults to this host.
+    #[arg(long, value_parser = parse_png_platform)]
+    png_platform: Option<PngPlatform>,
+}
+
+impl PngArgs {
+    fn platform(&self) -> PngPlatform {
+        self.png_platform.unwrap_or_default()
+    }
+}
+
+fn parse_png_platform(value: &str) -> Result<PngPlatform, String> {
+    serde_json::from_value(Value::String(value.into()))
+        .map_err(|_| "expected unix (Linux/macOS) or windows".into())
+}
+
+#[derive(Args)]
 struct RoofArgs {
     roof: String,
     #[arg(long)]
     root: PathBuf,
+    #[command(flatten)]
+    png: PngArgs,
 }
 
 fn palette_summary(doc: &PaletteDocument) -> Value {
@@ -227,13 +249,16 @@ impl RoofArgs {
     fn open(&self) -> Result<RoofDocument, Failure> {
         // Standalone pixel edits need no map/tileset; palette attributes are
         // contextual in the GUI and never serialized into roof PNGs.
-        Ok(RoofDocument::open_in_project(
-            &self.root, &self.roof, [9; 9],
+        Ok(RoofDocument::open_in_project_with_png_platform(
+            &self.root,
+            &self.roof,
+            [9; 9],
+            self.png.platform(),
         )?)
     }
 }
 fn roof_summary(doc: &RoofDocument) -> Value {
-    json!({"name":doc.name(),"content_hash":doc.content_hash(),"pixels":doc.roof().tileset().tiles().iter().map(|t|t.hues().as_slice()).collect::<Vec<_>>(),"source":doc.source().path(),"output":doc.output().path()})
+    json!({"name":doc.name(),"png_platform":doc.png_platform(),"content_hash":doc.content_hash(),"pixels":doc.roof().tileset().tiles().iter().map(|t|t.hues().as_slice()).collect::<Vec<_>>(),"source":doc.source().path(),"output":doc.output().path()})
 }
 
 #[derive(Args)]
@@ -245,6 +270,8 @@ struct TilesetArgs {
     allow_256: bool,
     #[arg(long)]
     monochrome: bool,
+    #[command(flatten)]
+    png: PngArgs,
 }
 
 impl TilesetArgs {
@@ -254,6 +281,7 @@ impl TilesetArgs {
                 &self.root,
                 &self.tileset,
                 &MasterGraphicsOptions {
+                    png_platform: self.png.platform(),
                     allow_256: self.allow_256,
                     monochrome: self.monochrome,
                     ..Default::default()
@@ -265,7 +293,7 @@ impl TilesetArgs {
 }
 
 fn tileset_summary(doc: &MasterTilesetDocument, blocks: &BlocksetDocument) -> Value {
-    json!({"name":doc.name(), "content_hash":doc.content_hash(blocks.blockset()), "allow_256":doc.allow_256(), "monochrome":doc.monochrome(), "allow_priority":doc.allow_priority(),
+    json!({"name":doc.name(), "png_platform":doc.png_platform(), "content_hash":doc.content_hash(blocks.blockset()), "allow_256":doc.allow_256(), "monochrome":doc.monochrome(), "allow_priority":doc.allow_priority(),
         "pixels":doc.tileset().tiles().iter().map(|t| t.hues().as_slice()).collect::<Vec<_>>(), "attributes":doc.tileset().attributes(),
         "sources":doc.source_files().iter().map(|s| json!({"path":s.path(),"content_hash":s.content_hash()})).collect::<Vec<_>>(),
         "outputs":doc.outputs().iter().map(|s| json!({"path":s.path(),"content_hash":s.content_hash()})).collect::<Vec<_>>()})
@@ -635,6 +663,7 @@ fn run(cli: Cli) -> Result<Value, Failure> {
             input,
             tileset,
             allow_256,
+            png,
             palette,
             roof,
             print,
@@ -660,6 +689,7 @@ fn run(cli: Cli) -> Result<Value, Failure> {
                 &doc,
                 tileset,
                 &MasterGraphicsOptions {
+                    png_platform: png.platform(),
                     allow_256,
                     palette,
                     roof,
@@ -668,7 +698,7 @@ fn run(cli: Cli) -> Result<Value, Failure> {
             )?;
             let (pixels, print_details) = print.render(&graphics, &doc)?;
             write_new_png(&output, &pixels)?;
-            let mut result = json!({"output":output, "width":pixels.width, "height":pixels.height});
+            let mut result = json!({"output":output, "width":pixels.width, "height":pixels.height, "png_platform":png.platform()});
             if !print_details.is_null() {
                 result["print"] = print_details;
             }

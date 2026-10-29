@@ -25,6 +25,16 @@ source attribution; its only file adapter uses standard streams for synthetic
 ASCII paths. Empty-image acceptance follows the original 2bpp/CHR loaders; the
 Rust parser deliberately reports malformed operands instead of substituting bytes.
 
+PNG decoding adapts master `Tiled_Image::read_png_graphics`, `Color::mono_hue`,
+FLTK 1.4.5 `Fl_PNG_Image::load_png_`, `Fl_RGB_Image::desaturate` and
+`Fl_WinAPI_System_Driver::png_extra_rgba_processing`. FLTK attribution, license
+and version-selection terms are retained below and in `LICENSES/FLTK.txt`.
+The comparison harness compiles unchanged functions and the pinned checkout's
+bundled libpng 1.6.44/zlib 1.3.1 only in ignored scratch storage, preserving
+their source copyright/license notices and recording each file's hash. Those
+libraries are reference tools, not new product dependencies or bundled assets.
+The product decoder uses the existing Rust `png` dependency under its own terms.
+
 Oversized map prefix loading and its acknowledgment warning adapt master
 `Map::{read_blocks,read_asm_blocks}`, `Main_Window::{open_map,save_map}` and
 `Modal_Dialog`, under LGPL-3.0-only. Structured load reports and whole-source

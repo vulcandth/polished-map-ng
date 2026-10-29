@@ -7,6 +7,15 @@ may differ. All other safe observable behavior remains a parity requirement.
 
 Implementation-specific exceptions will be recorded here with tests and rationale.
 
+PNG import now preserves the original platform-dependent transparency handling
+by default. The explicit library/CLI `png_platform` override is an automation
+extension: it makes Unix/macOS or Windows results reproducible on any host.
+It is retained through reloads and included in preflight hashes. This changes
+existing experimental hash values; callers must obtain a fresh preview. Decoder
+allocation/file-size bounds and errors for truncated PNGs remain safety measures;
+malformed-PNG diagnostic text need not match libpng. See the PNG differential in
+`compatibility.md` for the valid-input fidelity evidence.
+
 ## Safety corrections already implemented
 
 - New PNG exports stage the full image and use an atomic no-clobber install.

@@ -48,6 +48,16 @@ cargo run -p polished-map-cli -- save-as path/to/Imported.map --width 20 --heigh
 
 Example `edits.json`: `[{"op":"paint","points":[{"x":2,"y":3}],"block":7}]`.
 
+PNG loading follows the original platform's behavior. All platforms discard the
+low byte of 16-bit samples; Windows additionally clears RGB for fully transparent
+expanded RGBA pixels, while Linux/macOS retain it. For reproducible automation,
+pass `--png-platform unix` or `--png-platform windows` to `render`,
+`inspect-tileset`, `edit-tileset`, `inspect-roof` or `edit-roof`. The default is
+the current host. JSON results report the resolved `png_platform`; tileset/roof
+preflight hashes include it, so preview and apply must use the same choice.
+Rust callers use `MasterGraphicsOptions::png_platform` or
+`RoofDocument::open_in_project_with_png_platform`.
+
 `render` defaults to plain pixels. Print overlays are independent:
 `--print-grid`, `--print-ids`, `--print-priority`, `--print-events` and
 `--print-warp-ids`. `--print-hex` controls block IDs; warp IDs retain the event's
@@ -192,8 +202,9 @@ cargo run -p polished-map-cli -- edit-roof violet --root path/to/project --comma
 cargo run -p polished-map-cli -- edit-roof violet --root path/to/project --commands roof.json --apply --expected-hash HASH_FROM_PREVIEW
 ```
 
-The roof hash binds its observed source and PNG destination. Preview does not
-write; apply requires the observed hash. Existing 2bpp/CHR/LZ sources are retained.
+The roof hash binds its observed source, PNG destination and PNG platform policy.
+Preview does not write; apply requires the observed hash. Existing 2bpp/CHR/LZ
+sources are retained.
 
 Headless palette-color editing imports the original RGB macro layouts into all
 six sets. Commands are `set_rgb`, `channel`, `hex`, `copy` and `swap`. A color

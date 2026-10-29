@@ -1,9 +1,6 @@
 //! Composition follows master Config::tileset_{before,after}_path and
 //! Tileset::{read_graphics,read_roof_graphics}; immutable source in upstream.lock.toml.
-use std::{
-    io::Cursor,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use polished_map_core::{Graphics, RgbImage, Tile};
 
@@ -102,7 +99,10 @@ fn text(path: &Path, bytes: &[u8]) -> Result<String, ProjectError> {
     })
 }
 
-pub fn read_tiles(path: &Path) -> Result<Vec<Tile>, ProjectError> {
+pub fn read_tiles(
+    path: &Path,
+    png_platform: crate::PngPlatform,
+) -> Result<Vec<Tile>, ProjectError> {
     let bytes = read_bounded(path, 8 * 1024 * 1024)?;
     let extension = path
         .extension()
@@ -116,51 +116,7 @@ pub fn read_tiles(path: &Path) -> Result<Vec<Tile>, ProjectError> {
             &codecs::parse_asm(&text(path, &bytes)?).map_err(|e| ProjectError::codec(path, e))?,
         )
         .map_err(|e| ProjectError::codec(path, e)),
-        "png" => {
-            let mut reader =
-                image::ImageReader::with_format(Cursor::new(bytes), image::ImageFormat::Png);
-            let mut limits = image::Limits::default();
-            limits.max_image_width = Some(2048);
-            limits.max_image_height = Some(2048);
-            limits.max_alloc = Some(8 * 1024 * 1024);
-            reader.limits(limits);
-            let image = reader
-                .decode()
-                .map_err(|e| ProjectError::Format {
-                    path: path.into(),
-                    message: e.to_string(),
-                })?
-                .to_rgb8();
-            let (width, height) = image.dimensions();
-            if width == 0
-                || height == 0
-                || width % 8 != 0
-                || height % 8 != 0
-                || width * height > 256 * 64
-            {
-                return Err(ProjectError::Format {
-                    path: path.into(),
-                    message: "PNG must contain 1..=256 complete 8×8 tiles".into(),
-                });
-            }
-            let mut tiles = Vec::new();
-            for ty in 0..height / 8 {
-                for tx in 0..width / 8 {
-                    let hues = std::array::from_fn(|i| {
-                        let rgb = image
-                            .get_pixel(tx * 8 + (i % 8) as u32, ty * 8 + (i / 8) as u32)
-                            .0;
-                        let gray = (u16::from(rgb[0]) * 31
-                            + u16::from(rgb[1]) * 61
-                            + u16::from(rgb[2]) * 8)
-                            / 100;
-                        [3, 1, 2, 0][usize::from(gray / 64)]
-                    });
-                    tiles.push(Tile::new(hues)?);
-                }
-            }
-            Ok(tiles)
-        }
+        "png" => crate::png_import::read_png_tiles(path, &bytes, png_platform),
         _ => Err(ProjectError::Format {
             path: path.into(),
             message: "unsupported graphics extension".into(),

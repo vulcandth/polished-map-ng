@@ -46,6 +46,7 @@ pub fn list_roofs(root: &Path) -> Result<Vec<String>, ProjectError> {
 
 #[derive(Clone, Debug)]
 pub struct RoofDocument {
+    png_platform: crate::PngPlatform,
     name: String,
     model: Roof,
     source: SaveTarget,
@@ -57,11 +58,24 @@ impl RoofDocument {
         name: &str,
         attributes: [u8; 9],
     ) -> Result<Self, ProjectError> {
+        Self::open_in_project_with_png_platform(
+            root,
+            name,
+            attributes,
+            crate::PngPlatform::default(),
+        )
+    }
+    pub fn open_in_project_with_png_platform(
+        root: &Path,
+        name: &str,
+        attributes: [u8; 9],
+        png_platform: crate::PngPlatform,
+    ) -> Result<Self, ProjectError> {
         validate_tileset(root, name)?;
         let directory = root.join("gfx/tilesets/roofs");
         let path = graphics_path(&directory, name);
         let source = prepare_target(&path)?;
-        let tiles = read_tiles(&path)?;
+        let tiles = read_tiles(&path, png_platform)?;
         let tiles = tiles.try_into().map_err(|_| ProjectError::Format {
             path: path.clone(),
             message: "roof graphics must contain exactly nine tiles".into(),
@@ -70,6 +84,7 @@ impl RoofDocument {
             return Err(ProjectError::Conflict(path));
         }
         Ok(Self {
+            png_platform,
             name: name.into(),
             model: Roof::new(tiles, attributes)?,
             source,
@@ -78,6 +93,9 @@ impl RoofDocument {
     }
     pub fn name(&self) -> &str {
         &self.name
+    }
+    pub fn png_platform(&self) -> crate::PngPlatform {
+        self.png_platform
     }
     pub fn roof(&self) -> &Roof {
         &self.model
@@ -94,6 +112,7 @@ impl RoofDocument {
     /// Observed local source/destination state, independent of the unsaved draft.
     pub fn content_hash(&self) -> String {
         let mut hash = Sha256::new();
+        hash.update([self.png_platform as u8]);
         for file in [&self.source, &self.output] {
             let path = file.path.as_os_str().as_encoded_bytes();
             hash.update((path.len() as u64).to_le_bytes());

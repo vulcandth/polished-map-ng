@@ -31,8 +31,17 @@ all byte and word values in four numeric forms, source indentation/comments,
 little-endian words and loader length boundaries. Empty `.CHR`/`.2bpp` images now
 match upstream acceptance and compose blank tileset slots; edit/save/reopen tests
 preserve the input and verify the generated PNG. Missing interior operands fail
-explicitly under the malformed-number safety rule. PNG loader differentials and
-full-application interoperability still remain.
+explicitly under the malformed-number safety rule. Full-application
+interoperability still remains.
+
+PNG imports now match an unchanged master/FLTK 1.4.5 decoder differential:
+90 generated cases, 1,720,320 hues, all supported color types/bit depths,
+palette/transparency expansion, 16-bit truncation, gamma metadata, dimension
+limits and Adam7 interlacing. Both Unix/macOS and Windows transparency behavior
+run on the same host. GUI imports default to their host behavior; library/CLI
+callers can select it explicitly, with the choice bound into edit preflight
+hashes and retained through compound parts/roof loads and replacements. This
+does not establish native window fidelity or arbitrary malformed-PNG equivalence.
 
 Oversized binary/ASM maps now load the source dimension-sized prefix and show
 the original acknowledgment warning after palette choices. A structured project

@@ -14,6 +14,7 @@ mod native_fonts;
 mod palette_document;
 mod palettes;
 mod png_export;
+mod png_import;
 mod print_fonts;
 mod roof;
 mod tile_palettes;
@@ -42,6 +43,7 @@ pub use palettes::{
     roof_palette_path,
 };
 pub use png_export::{PngExportTarget, prepare_png_export};
+pub use png_import::PngPlatform;
 pub use print_fonts::{PrintFontFace, PrintFonts};
 pub use roof::{RoofDocument, list_roofs};
 pub use tileset::{MasterTileMode, MasterTilesetDocument, TilesetOutput};
