@@ -239,9 +239,14 @@ The event cursor and Game Boy guide recompute hover from current egui geometry
 and are suppressed under dialogs and popup menus. Their coordinates, zoom sizes,
 fill and border formulas follow source; exact native enter/leave/callback timing
 has not been compared. Hover coordinates use the global decimal/hexadecimal
-display setting. The complete status-bar sections and preference persistence
-remain incomplete; transient operation messages still occupy the status area
-when the event cursor is absent.
+display setting. The status bar now retains the source's five fixed sections,
+including decimal block counts/map dimensions and separately formatted hover
+fields. NG's saved/modified and operation feedback is available in a status-bar
+tooltip instead of replacing those fields; this tooltip is an NG extension.
+Field widths use the source sample strings and padding with bundled font metrics
+(12 points on Windows, 13 on Linux/macOS), not native font metrics. The portable
+Greybird/Dark status frames match their source color/edge formulas; other native
+themes, native glyph rasterization and enter/leave timing remain unverified.
 
 Ruler geometry and hover pairing follow the pinned source. During egui's smooth
 scrolling, ruler cells use the actual fractional content displacement instead of

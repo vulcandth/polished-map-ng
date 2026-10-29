@@ -17,6 +17,11 @@ adapt master `Main_Window::{initialize,update_active_controls}` and
 `widgets.cpp::Toolbar::draw`, under LGPL-3.0-only. Text placeholders for
 unreviewed artwork contain no imported image pixels.
 
+The five status fields, fixed measurement samples and hover formatting adapt
+master `Main_Window::{initialize,update_status,update_event_cursor}`. Their
+Greybird/Dark frames and separators adapt `themes.cpp`; label insets follow
+FLTK 1.4.5 `fl_labeltype.cxx` under the retained FLTK terms described below.
+
 Sidebar press/release selection and block-editor entry adapt master
 `Metatile_Button::handle` in `map-buttons.cpp` and
 `Main_Window::select_metatile_cb` in `main-window.cpp`, under LGPL-3.0-only.
@@ -53,7 +58,7 @@ Popup sizing adapts the pinned master's menu labels/flags and FLTK 1.4.5
 on the work of the FLTK project (<https://www.fltk.org>), Copyright 1998-2024
 Bill Spitzak and others. The original FLTK license and exceptions are retained
 in `LICENSES/FLTK.txt`; the Rust adaptation follows LGPL-3.0 under its
-version-selection provision. Native frame/check/radio rasterization is not
+version-selection provision. Native popup frame/check/radio rasterization is not
 copied or claimed equivalent.
 Whole-window transparency adapts master `Main_Window::apply_transparency`,
 its F10/menu callback and startup/exit preference handling under LGPL-3.0-only.
@@ -100,7 +105,7 @@ come from the Greybird and Dark inactive colors in master `themes.cpp`.
 ## Assets and fixtures
 
 No upstream game graphics, example maps or native font files are redistributed.
-Tests create synthetic data. Twenty-six reviewed toolbar/editor icon images are
+Tests create synthetic data. Twenty-seven reviewed toolbar/editor icon images are
 included with unchanged XPM sources, decoded RGBA pixels and provenance hashes.
 Some adapt **Fugue Icons**, copyright © 2013 Yusuke Kamiyamane, under **CC BY 3.0**:
 <https://p.yusukekamiyamane.com/> and <https://creativecommons.org/licenses/by/3.0/>.

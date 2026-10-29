@@ -33,6 +33,14 @@ The menu uses the same availability rules. Thirteen buttons use short text
 placeholders with full accessible names and tooltips while icon provenance is
 resolved. Native styles and remaining artwork are still parity gates.
 
+The status bar follows the same fixed-row model: five 21-point fields in a
+23-point frame, four two-point separators, and widths measured from the original
+sample labels plus 16 points. It shows block count, map dimensions, hovered block
+ID, block coordinates and (in Events mode) event coordinates. Leaving the map
+clears hover fields; closing clears all five. Counts and dimensions stay decimal.
+The display-base toggle affects only the three hover fields. Saved/modified and
+operation feedback remains available in an NG-specific status-bar tooltip.
+
 Numeric block shortcuts use physical Ctrl on all platforms: Ctrl+digit assigns
 the selected block, Ctrl+Shift+digit clears that digit, and a bound digit selects
 and reveals its block. Each block has at most one digit. Clear/assign events keep

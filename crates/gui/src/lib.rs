@@ -35,6 +35,7 @@ mod roof_colors;
 mod roof_workflow_tests;
 mod roof_workflows;
 mod rulers;
+mod status_bar;
 mod tileset_editor;
 #[cfg(test)]
 mod tileset_workflow_tests;
@@ -1825,30 +1826,7 @@ impl Editor {
             });
             self.draw_rulers(ui, &layout, bounds.min);
             ui.scope_builder(egui::UiBuilder::new().max_rect(rect(layout.status)), |ui| {
-                ui.horizontal(|ui| {
-                    ui.label(if self.is_modified() {
-                        "Modified"
-                    } else {
-                        "Saved"
-                    });
-                    ui.separator();
-                    if let Some(cursor) = self.ruler_cursor
-                        && let Some(loaded) = &self.loaded
-                    {
-                        let map = loaded.document.map();
-                        let id = map.blocks()[usize::from(cursor.block_y)
-                            * usize::from(map.width())
-                            + usize::from(cursor.block_x)];
-                        ui.label(map_labels::hover_text(
-                            id,
-                            cursor,
-                            self.hex,
-                            self.event_ui.mode,
-                        ));
-                    } else {
-                        ui.label(&self.status);
-                    }
-                });
+                self.draw_status_bar(ui);
             });
         });
         if ctx.input(|i| i.pointer.any_released()) && !self.stroke.is_empty() {

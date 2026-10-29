@@ -1,5 +1,5 @@
-//! Display formats and ID labels adapted from pinned master map-buttons.cpp,
-//! Main_Window::update_status/update_event_cursor and utils.cpp. LGPL-3.0-only.
+//! ID labels adapted from pinned master map-buttons.cpp and utils.cpp.
+//! LGPL-3.0-only. Status fields are implemented in status_bar.rs.
 //! The global display base deliberately does not change event-script formats.
 use super::*;
 
@@ -9,28 +9,6 @@ fn id_text(id: u8, hex: bool) -> String {
     } else {
         id.to_string()
     }
-}
-
-pub(super) fn hover_text(id: u8, cursor: geometry::EventCursor, hex: bool, events: bool) -> String {
-    let mut text = if hex {
-        format!(
-            "ID: ${id:02X}    X/Y (${:X}, ${:X})",
-            cursor.block_x, cursor.block_y
-        )
-    } else {
-        format!("ID: {id}    X/Y ({}, {})", cursor.block_x, cursor.block_y)
-    };
-    if events {
-        text.push_str(&if hex {
-            format!(
-                "    Event: X/Y (${:X}, ${:X})",
-                cursor.event_x, cursor.event_y
-            )
-        } else {
-            format!("    Event: X/Y ({}, {})", cursor.event_x, cursor.event_y)
-        });
-    }
-    text
 }
 
 pub(super) fn draw_id(
@@ -96,7 +74,8 @@ mod tests {
         assert!(h.state().ids);
         h.hover_at(Pos2::new(280.0, 183.0));
         h.run();
-        h.get_by_label("ID: 0    X/Y (0, 0)");
+        h.get_by_label("ID: 0");
+        h.get_by_label("X/Y (0, 0)");
         #[cfg(feature = "visual-tests")]
         h.snapshot("display-decimal-blocks");
         h.key_press_modifiers(
@@ -105,12 +84,15 @@ mod tests {
         );
         h.run();
         assert!(h.state().hex);
-        h.get_by_label("ID: $00    X/Y ($0, $0)");
+        h.get_by_label("ID: $00");
+        h.get_by_label("X/Y ($0, $0)");
         #[cfg(feature = "visual-tests")]
         h.snapshot("display-hex-blocks");
         h.key_press(egui::Key::Tab);
         h.run();
-        h.get_by_label("ID: $00    X/Y ($0, $0)    Event: X/Y ($1, $1)");
+        h.get_by_label("ID: $00");
+        h.get_by_label("X/Y ($0, $0)");
+        h.get_by_label("Event: X/Y ($1, $1)");
         h.state_mut().zoom = true;
         h.hover_at(Pos2::new(528.0, 303.0));
         h.run();
@@ -224,23 +206,5 @@ mod tests {
             assert_eq!(id_text(id, false), decimal);
             assert_eq!(id_text(id, true), hex);
         }
-        let cursor = geometry::EventCursor {
-            block_x: 10,
-            block_y: 15,
-            event_x: 21,
-            event_y: 30,
-        };
-        assert_eq!(
-            hover_text(175, cursor, false, false),
-            "ID: 175    X/Y (10, 15)"
-        );
-        assert_eq!(
-            hover_text(175, cursor, true, false),
-            "ID: $AF    X/Y ($A, $F)"
-        );
-        assert_eq!(
-            hover_text(175, cursor, true, true),
-            "ID: $AF    X/Y ($A, $F)    Event: X/Y ($15, $1E)"
-        );
     }
 }

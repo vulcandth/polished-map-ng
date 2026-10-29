@@ -1,5 +1,46 @@
 # Compatibility evidence
 
+## Five-field status bar
+
+`status_bar.rs` ports master `Main_Window::initialize`, `update_status` and
+`update_event_cursor`, with `Toolbar::draw`/`Label` placement and the Greybird/Dark
+frame functions in `themes.cpp`. The 23-point bar has a one-point frame, five
+21-point labels and four two-point separators. Each field keeps the measured
+width of its original sample (`Blocks: 999`, `Map: 999 x 999`, `ID: $99`,
+`X/Y ($99, $99)`, `Event: X/Y ($999, $999)`) plus 16 points. FLTK 1.4.5's
+three-point left/right label inset is preserved. Narrow windows clip the row;
+they do not squeeze or wrap fields. Frame corner ownership follows the original
+`fl_yxline`/`fl_xyline` order, with the outer frame painted after its children.
+
+Map/blockset changes refresh the count and dimensions, which always use decimal.
+The other fields follow global decimal/hex display, padding only the hex ID to
+two digits. Event coordinates are shown only in Events mode, including without
+a loaded script. The current cursor already supplies the source half-block and
+marker-overlap rules. Leaving the map clears hover fields; Close clears all five.
+Live painting reports the preview block ID before the drag's history command
+commits, matching `change_block_cb`'s immediate ID/status update. Release and
+Undo preserve the existing history behavior.
+
+Six nonvisual tests cover independent layout vectors, source strings and maxima,
+Windows/Linux/macOS font sizes at 1×/2×, hover halves/base/mode changes, empty and
+closed maps, blockset/map resizing, live painting/Undo, and diagnostic tooltips.
+One rendered test checks frame and separator pixels at both scales and verifies
+that truncated fields cannot paint over the right border or outside the bar.
+The focused Windows/Unix light/dark snapshots use synthetic maximum-value labels.
+Bundled font metrics, egui modal dimming and native event timing remain separate
+from these formula/pixel checks. No native-font equivalence or computer-use
+verification is claimed. Existing NG operation feedback remains in a hover
+tooltip rather than replacing the original fields; see `deviations.md`.
+
+Formatting, warnings-as-errors Clippy, workspace tests and documentation builds
+pass. The complete GUI visual suite passes 156 tests with one existing ignored
+test. All 81 updated window snapshots were inspected and independently compared
+with the preceding Git revision: every changed pixel lies within the bottom
+23 logical points (46 physical pixels at 2×). The four new focused snapshots
+were also inspected. Forty selected tests regenerated those reviewed baselines;
+the final full suite passed in normal comparison mode. No image thresholds were
+changed for this port.
+
 ## Resize Blockset icon and Linux toolbar rendering
 
 The Resize Blockset button now draws the original `add-sub.xpm` instead of its

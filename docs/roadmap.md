@@ -180,9 +180,11 @@ mode-dependent highlights; headless tests cover scrolling, both zooms, menus,
 shortcuts and modal guards. Global decimal/hexadecimal display and Block IDs now
 have View, toolbar and keyboard controls, with source-format hover text and
 outlined map/sidebar labels. Event labels and dialogs retain each script's own
-number format. The complete status-bar layout, export overlays, native theme/font
-matching and preference persistence remain pending;
-current ruler/guide tests are headless rather than native FLTK comparisons.
+number format. The status bar now has all five source fields with fixed measured
+widths, separate coordinates, two-point separators and Greybird/Dark frames.
+Live paint previews update the hovered ID before release. Operation diagnostics
+remain available on hover. Native fonts and input timing still need verification;
+current status/ruler/guide tests are headless rather than native FLTK comparisons.
 Map/sidebar grid edges, hover/selection rings and sidebar drag feedback now
 follow `map-buttons.cpp`, sharing the ring renderer with event and editor cursors.
 Rendered pixel tests cover both map zooms, event/tile/chip sizes and 1×/2× scale;

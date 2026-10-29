@@ -19,7 +19,9 @@ fn event_cursor_and_game_boy_guide_follow_hover_zoom_and_modal_guards() {
         })
     );
     assert!(h.state().event_ui.screen.is_none());
-    h.get_by_label("ID: 0    X/Y (0, 0)    Event: X/Y (1, 1)");
+    h.get_by_label("ID: 0");
+    h.get_by_label("X/Y (0, 0)");
+    h.get_by_label("Event: X/Y (1, 1)");
     h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::M);
     h.run();
     assert!(!h.state().event_ui.game_boy);
