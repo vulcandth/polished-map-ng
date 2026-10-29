@@ -14,7 +14,8 @@ fn plane_weighting_uses_upstream_order_not_conventional_indices() {
 fn all_byte_values_round_trip() {
     let bytes: Vec<_> = (0..=255).collect();
     assert_eq!(encode_2bpp(&decode_2bpp(&bytes).unwrap()), bytes);
-    for n in [0, 1, 15, 17, 4097] {
+    assert!(decode_2bpp(&[]).unwrap().is_empty());
+    for n in [1, 15, 17, 4097] {
         assert!(decode_2bpp(&vec![0; n]).is_err());
     }
 }
@@ -101,6 +102,17 @@ fn assembly_respects_indentation_numbers_comments_and_little_endian() {
     assert_eq!(parse_asm(text).unwrap(), [18, 10, 255, 52, 18, 0, 1]);
     assert!(parse_asm("\tdb 256").is_err());
     assert!(parse_asm("\tdb unknown").is_err());
+}
+
+#[test]
+fn assembly_rejects_missing_operands_without_shifting_later_bytes() {
+    for text in ["\tdb 1,,2", "\tdw ,1", "\tdb 1, ,2", "\tdw 0,\t,1"] {
+        assert!(
+            matches!(parse_asm(text), Err(CodecError::Assembly { line: 1, value }) if value.is_empty())
+        );
+    }
+    assert_eq!(parse_asm("\tdb 1,2,").unwrap(), [1, 2]);
+    assert!(parse_asm("\tdb ; no operands\n\tdw\n").unwrap().is_empty());
 }
 
 #[test]

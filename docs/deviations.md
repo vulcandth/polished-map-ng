@@ -24,7 +24,9 @@ Implementation-specific exceptions will be recorded here with tests and rational
   The normal sticky dirty flag and no-op-click history entries are retained.
   Evidence: core `undo_after_saving_must_not_lose_unsaved_changes`.
 - Malformed assembly numbers fail explicitly instead of strtol silently turning
-  unknown text into zero. LZ reads/back-references/output lengths are checked.
+  unknown text into zero. Missing interior/initial operands also fail, rather
+  than inserting upstream's implicit zero or silently shifting later bytes.
+  A terminal comma remains accepted. LZ reads/back-references/output lengths are checked.
   RGB palette channels outside 0..31 and incomplete colors/palettes are rejected.
   Incomplete roof tables return a format error instead of continuing after a GUI
   warning; a recoverable warning flow remains pending.

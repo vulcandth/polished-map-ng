@@ -60,6 +60,7 @@ jobs:
           git -C .reference/master fetch --depth 1 origin 8b9bdc2b8aac8c865809516c2123af69c498da0b
       - run: python3 tools/reference_oracle.py --checkout .reference/master --output .scratch/reference-2bpp
       - run: python3 tools/lz_oracle.py --checkout .reference/master --output .scratch/reference-lz
+      - run: python3 tools/asm_graphics_oracle.py --checkout .reference/master --output .scratch/reference-asm
       - run: python3 tools/help_assets.py --reference-checkout .reference/master
       - run: python3 tools/block_brush_oracle.py --checkout .reference/master --output .scratch/reference-block
       - run: python3 tools/tile_editor_oracle.py --checkout .reference/master --output .scratch/reference-tile
@@ -72,6 +73,7 @@ jobs:
         env:
           POLISHED_MAP_2BPP_ORACLE: ${{ github.workspace }}/.scratch/reference-2bpp
           POLISHED_MAP_LZ_ORACLE: ${{ github.workspace }}/.scratch/reference-lz
+          POLISHED_MAP_ASM_ORACLE: ${{ github.workspace }}/.scratch/reference-asm
           POLISHED_MAP_BLOCK_ORACLE: ${{ github.workspace }}/.scratch/reference-block
           POLISHED_MAP_TILE_ORACLE: ${{ github.workspace }}/.scratch/reference-tile
           POLISHED_MAP_PALETTE_ORACLE: ${{ github.workspace }}/.scratch/reference-palette

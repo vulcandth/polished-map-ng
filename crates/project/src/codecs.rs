@@ -3,7 +3,7 @@ use thiserror::Error;
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum CodecError {
-    #[error("2bpp data must contain 1..=256 complete 16-byte tiles")]
+    #[error("2bpp data must contain 0..=256 complete 16-byte tiles")]
     TileLength,
     #[error("truncated compressed data at byte {0}")]
     Truncated(usize),
@@ -20,8 +20,9 @@ pub enum CodecError {
 }
 
 /// Preserve Polished Map's internal bit-plane weighting (first byte * 2).
+/// The source accepts an empty image; the project compositor supplies blank slots.
 pub fn decode_2bpp(bytes: &[u8]) -> Result<Vec<Tile>, CodecError> {
-    if bytes.is_empty() || bytes.len() > 4096 || !bytes.len().is_multiple_of(16) {
+    if bytes.len() > 4096 || !bytes.len().is_multiple_of(16) {
         return Err(CodecError::TileLength);
     }
     bytes
@@ -139,7 +140,9 @@ pub fn parse_asm(text: &str) -> Result<Vec<u8>, CodecError> {
         if !words && !op.eq_ignore_ascii_case("db") {
             continue;
         }
-        for value in arguments.split(',').filter(|s| !s.trim().is_empty()) {
+        // getline accepts a final comma, but interior empty operands are not
+        // numbers. Reject them instead of silently shifting subsequent bytes.
+        for value in arguments.split_terminator(',') {
             let value = value.trim();
             let (digits, base) = if let Some(s) = value.strip_prefix('$') {
                 (s, 16)

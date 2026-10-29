@@ -18,6 +18,13 @@ declarations and `utils.cpp::file_size`, under LGPL-3.0-only. Generated source
 and per-snippet hashes stay in ignored scratch storage; the checked-in driver
 and synthetic corpus document these sources without distributing game graphics.
 
+The assembly/CHR reference harness extracts unchanged `Parsed_Asm`, its numeric
+parser, `utils.cpp` macro/comment/whitespace helpers and `Tiled_Image` assembly
+loading/bitplane conversion, under LGPL-3.0-only. Generated snippet hashes retain
+source attribution; its only file adapter uses standard streams for synthetic
+ASCII paths. Empty-image acceptance follows the original 2bpp/CHR loaders; the
+Rust parser deliberately reports malformed operands instead of substituting bytes.
+
 Oversized map prefix loading and its acknowledgment warning adapt master
 `Map::{read_blocks,read_asm_blocks}`, `Main_Window::{open_map,save_map}` and
 `Modal_Dialog`, under LGPL-3.0-only. Structured load reports and whole-source

@@ -26,6 +26,14 @@ boundaries and 256-tile zero padding. Rust-only malformed-input checks retain
 the port's bounds protections without invoking unsafe original accesses.
 This strengthens codec evidence; full-application interoperability remains open.
 
+Assembly/CHR import now has an unchanged-source differential covering 151 cases,
+all byte and word values in four numeric forms, source indentation/comments,
+little-endian words and loader length boundaries. Empty `.CHR`/`.2bpp` images now
+match upstream acceptance and compose blank tileset slots; edit/save/reopen tests
+preserve the input and verify the generated PNG. Missing interior operands fail
+explicitly under the malformed-number safety rule. PNG loader differentials and
+full-application interoperability still remain.
+
 Oversized binary/ASM maps now load the source dimension-sized prefix and show
 the original acknowledgment warning after palette choices. A structured project
 report exposes excess decoded blocks; strict library/CLI opening stays available.

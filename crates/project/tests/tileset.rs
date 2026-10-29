@@ -35,6 +35,43 @@ fn edit(doc: &mut MasterTilesetDocument) {
 }
 
 #[test]
+fn empty_raw_and_chr_images_compose_blank_slots_then_edit_save_and_reopen() {
+    for (extension, bytes) in [("2bpp", ""), ("CHR", ""), ("CHR", "Label:\n; no tiles\n")] {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        let name = format!("gfx/tilesets/demo.{extension}");
+        write(root, &name, bytes);
+        let mut doc =
+            MasterTilesetDocument::open_in_project(root, "demo", &MasterGraphicsOptions::default())
+                .unwrap();
+        assert_eq!(doc.tileset().tiles().len(), 256);
+        assert!(doc.tileset().tiles().iter().all(|t| t.hues() == &[0; 64]));
+        assert!(!doc.tileset().is_modified());
+        let blocks = Blockset::from_bytes(&[0; 16]).unwrap();
+        assert!(doc.preview_save(&blocks).unwrap().is_empty());
+        doc.apply_batch(&[TileCommand::Paint {
+            tile: 0,
+            points: vec![Point { x: 0, y: 0 }],
+            hue: 3,
+        }])
+        .unwrap();
+        doc.save(&blocks).unwrap();
+        assert!(!doc.tileset().is_modified());
+        assert_eq!(fs::read(root.join(&name)).unwrap(), bytes.as_bytes());
+        let png = image::open(root.join("gfx/tilesets/demo.png"))
+            .unwrap()
+            .to_rgb8();
+        assert_eq!(png.dimensions(), (128, 8));
+        assert_eq!(png.get_pixel(0, 0).0, [0; 3]);
+        assert_eq!(png.get_pixel(1, 0).0, [255; 3]);
+        let reopened =
+            MasterTilesetDocument::open_in_project(root, "demo", &MasterGraphicsOptions::default())
+                .unwrap();
+        assert_eq!(reopened.tileset().tiles(), doc.tileset().tiles());
+    }
+}
+
+#[test]
 fn duplicate_compound_outputs_and_nonlocal_names_are_rejected_without_writes() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();

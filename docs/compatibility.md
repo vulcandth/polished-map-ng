@@ -1,5 +1,43 @@
 # Compatibility evidence
 
+## Assembly/CHR graphics and empty images
+
+`tools/asm_graphics_oracle.py` extracts unchanged pinned master `Parsed_Asm`,
+`parse_value`, macro/comment/whitespace helpers and `Tiled_Image::read_asm_graphics`
+with its original bitplane conversion. Generated C++ and per-snippet SHA-256
+provenance stay in ignored scratch storage. The only filesystem adapter uses
+`std::ifstream` for synthetic ASCII paths; it does not verify native Unicode paths.
+
+The reference test covers 151 cases: every byte and every 16-bit word in decimal,
+`$` hexadecimal, `%` binary and `h` hexadecimal suffix notation, little-endian
+words, macro case, indentation, C whitespace, comments, CRLF/LF, ignored labels
+and directives, signs, terminal commas, empty inputs, 16-byte alignment and the
+256-tile limit. It checks original parser bytes against independent generated
+values, compares Rust parsing, then compares tile counts and all 2,117,696 hues.
+Successful CHR cases also pass through the public project tileset loader. Safe
+overflow cases compare original statuses; malformed-number/empty-operand cases
+explicitly assert the port's documented strict errors instead of source zero or
+numeric-prefix substitution. This is not general RGBDS expression evaluation.
+
+The differential exposed a real mismatch: upstream accepts zero-tile CHR/2bpp
+images. The Rust decoder now accepts them too, allowing the existing project
+compositor to create the original 256 blank slots. Empty binary, empty CHR and
+comment-only CHR imports have edit/save/reopen tests: the original input is
+unchanged, the emitted two-bit PNG has the expected edited/blank pixels, and its
+reopened tiles match. Core editing models still require populated tile slots;
+roof loading still requires exactly nine tiles. Existing unsafe compound-export
+bounds protections remain intact.
+
+Empty initial/interior numeric operands previously disappeared in Rust, shifting
+later bytes. They now return `CodecError::Assembly`; a terminal comma remains
+accepted. The unchanged-source differential runs in reference CI. PNG decoding,
+native file adapters and full-application interoperability need separate coverage.
+
+Local formatting, warnings-as-errors workspace Clippy, workspace tests, rustdoc
+and the compiled assembly differential pass. All seven pinned real-project tests
+pass, including 236 automatically resolved maps across 35 tilesets and 388 event
+scripts; the fixture's 18 shared-map files still require their explicit options.
+
 ## Initial map position on Open and New
 
 Pinned master `Main_Window::open_map` computes the initial map position after
@@ -1059,7 +1097,7 @@ inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pas
 |---|---|---|
 | Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions and oversized prefix/warning flow tested; strict headless opens remain available |
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; GUI resize stages map/event shifts; full gesture matrix pending |
-| 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
+| 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Compiled-source comparisons cover all 65,536 bitplane pairs, 12,390 LZ cases and 151 assembly/CHR cases; empty-image composition and edit/save/reopen pass. PNG decoding and full-application interoperability differentials remain pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; persistent preferences and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
