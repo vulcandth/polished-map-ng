@@ -54,7 +54,7 @@ use polished_map_core::{Command, Graphics, Point, ResizeAnchor};
 use polished_map_project::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
     discover_map, list_tilesets, prepare_blockset_save_as, prepare_collision_save_as,
-    prepare_save_as, write_png,
+    prepare_save_as, write_new_png,
 };
 
 struct Loaded {
@@ -706,7 +706,7 @@ impl Editor {
             let result = graphics
                 .render_map(&map)
                 .map_err(|e| e.to_string())
-                .and_then(|image| write_png(&path, &image).map_err(|e| e.to_string()));
+                .and_then(|image| write_new_png(&path, &image).map_err(|e| e.to_string()));
             let _ = tx.send(result);
             ctx.request_repaint();
         });

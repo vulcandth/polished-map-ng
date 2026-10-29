@@ -1,4 +1,5 @@
 //! Experimental headless frontend. LGPL-3.0-only.
+mod printing;
 use std::{path::PathBuf, process::ExitCode};
 
 use clap::{Args, Parser, Subcommand};
@@ -9,7 +10,7 @@ use polished_map_project::{
     BlocksetDocument, EventDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument,
     OpenOptions, PaletteDocument, ProjectError, RoofDocument, load_master_map_graphics,
     prepare_blockset_save_as, prepare_collision_save_as, prepare_palette_export, prepare_save_as,
-    read_bounded, write_png,
+    read_bounded, write_new_png,
 };
 use serde_json::{Value, json};
 
@@ -198,6 +199,8 @@ enum Action {
         /// Optional nine-tile graphic replacement from gfx/tilesets/roofs.
         #[arg(long)]
         roof: Option<String>,
+        #[command(flatten)]
+        print: printing::PrintArgs,
         #[arg(long)]
         output: PathBuf,
     },
@@ -634,6 +637,7 @@ fn run(cli: Cli) -> Result<Value, Failure> {
             allow_256,
             palette,
             roof,
+            print,
             output,
         } => {
             if output.exists() {
@@ -662,11 +666,13 @@ fn run(cli: Cli) -> Result<Value, Failure> {
                     ..Default::default()
                 },
             )?;
-            let pixels = graphics
-                .render_map(doc.map())
-                .map_err(|e| Failure::new("invalid_graphics", e))?;
-            write_png(&output, &pixels)?;
-            Ok(json!({"output":output, "width":pixels.width, "height":pixels.height}))
+            let (pixels, print_details) = print.render(&graphics, &doc)?;
+            write_new_png(&output, &pixels)?;
+            let mut result = json!({"output":output, "width":pixels.width, "height":pixels.height});
+            if !print_details.is_null() {
+                result["print"] = print_details;
+            }
+            Ok(result)
         }
     }
 }

@@ -19,6 +19,8 @@ serde_json.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true
+epaint_default_fonts = { version = "0.37", default-features = false }
+image.workspace = true
 
 [lints]
 workspace = true

@@ -73,6 +73,11 @@ GUI snapshots. Unreviewed icons remain excluded. Reference checkouts are not shi
 
 Rust dependencies retain their own licenses. Dependency notices must accompany
 binary releases. This notice does not relicense third-party assets.
+Print font enumeration uses Fontique, and CPU outline processing/rasterization
+uses Skrifa and Vello CPU, under their retained MIT/Apache-2.0 terms. Installed
+OS fonts are read locally and are not included in project assets or releases.
+Explicit caller-supplied font data remains subject to its own license. Existing
+epaint_default_fonts faces are reused only as test inputs for this adapter.
 
 egui's default fonts include Ubuntu Light, Hack, Noto Emoji, emoji-icon-font,
 and egui icons. They remain under their respective Ubuntu Font Licence, SIL OFL,

@@ -171,7 +171,9 @@ Print's shared CPU compositor now covers its five independent flags, native
 32-pixel blocks, priority/grid/ID ordering and events with per-event warp bases.
 It accepts bounded font coverage from an adapter and runs without GUI/GPU/IO.
 The compiled-original comparison covers 256 compositions; real-project tests
-exercise 96 combinations with roof/palette/event inputs. The font adapter,
+exercise 96 combinations with roof/palette/event inputs. A shared Skrifa/Vello
+CPU font adapter now supports installed bold fonts and caller-provided faces;
+the CLI exposes the five Print flags, bases, grid colors and explicit fonts.
 Print Options dialog/persistence, clipboard image transfer and PNG overwrite
 workflow remain required before claiming the Print command complete. Native
 font metrics and display-driver alpha differences are separate parity gates.

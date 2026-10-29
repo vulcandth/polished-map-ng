@@ -1,5 +1,52 @@
 # Compatibility evidence
 
+## Print fonts and autonomous PNG output
+
+`PrintFonts` now supplies bounded CPU masks for source Print font requests.
+Fontique selects installed bold faces through DirectWrite/Core Text/Fontconfig;
+explicit TTF/OTF bytes and collection indices are also supported. Windows tries
+Courier New and Arial first; other systems try Courier and Helvetica first.
+Liberation and DejaVu bold faces are explicit fallback families. There is no
+synthetic bolding and no OS font redistribution. Missing fonts/glyphs, malformed
+data, excessive metrics and unsupported labels return errors.
+
+Skrifa reads metrics/outlines at 14 pixels per em; Vello CPU produces straight
+coverage without a window/GPU. Integer advances and a rounded ascent/descent
+line box are separate from the ink rectangle and its signed offset. This keeps
+negative bearings/overhang without shifting centered event letters. An added
+core test fixes the expected centered pixel independently of its ink width.
+Adapter tests cover all 512 decimal/hex block labels and all 22 event symbols,
+using already-licensed dependency test fonts, plus malformed inputs. Windows
+system-font checks select Courier New Bold and Arial Bold; the three-OS CI job
+now explicitly exercises installed bold fonts. Linux CI installs Liberation.
+
+CLI `render` accepts the five `--print-*` overlays, `--print-hex`, `--print-dark`,
+an optional explicit event script and paired font files. Fonts initialize only
+when labels are needed. Plain output retains the original JSON shape; Print
+output records options, style, event source and resolved font names/rasterizer.
+CLI tests verify pixel-exact dark grid edges, real glyph/outline presence,
+event overlays, no-font operation, malformed inputs, no writes on failure,
+and unchanged source documents. A 320x288 pinned New Bark Town export with roof,
+all overlays and installed Windows fonts was inspected locally. That is a
+layout/legibility check, not native FLTK pixel equivalence.
+
+New-file PNG output now stages encoding and installs with `persist_noclobber`.
+Both CLI and the current GUI export use it. Tests decode RGB pixels, preserve an
+existing output, reject malformed/oversized images and check failure cleanup.
+The original Print Options UI, persistence, Copy and overwrite confirmation are
+still pending. Native font hinting/metrics, font substitution and platform alpha
+differences remain fidelity gates; this implementation does not close them.
+
+Local checks pass: workspace formatting, warnings-as-errors Clippy, tests and
+documentation; dependency advisory/license/source audit without new exceptions;
+the compiled 256-case Print comparison; real-project composition; installed
+Windows bold-font coverage; and the visual suite (108 passed, one existing
+ignored test). No GUI snapshot baselines changed.
+
+The preceding compositor CI run
+[`40820129348`](https://github.com/vulcandth/polished-map-ng/actions/runs/40820129348)
+passed all eight jobs, including the new 256-case comparison.
+
 ## CPU Print composition
 
 `Graphics::render_print` adapts the pinned master's `Main_Window::print_map`,

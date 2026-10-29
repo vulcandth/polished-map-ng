@@ -9,6 +9,12 @@ Implementation-specific exceptions will be recorded here with tests and rational
 
 ## Safety corrections already implemented
 
+- New PNG exports stage the full image and use an atomic no-clobber install.
+  A destination created after the initial chooser/CLI check is preserved, with
+  a conflict returned. Invalid RGB dimensions/data fail without leaving a
+  partial file. The GUI's original overwrite-confirmation workflow is still
+  pending; this change preserves its interim new-file-only behavior.
+
 - Undo after saving marks changed data dirty. Upstream's undo/redo callbacks do
   not update the modified flag, potentially allowing edits to be lost on close.
   The normal sticky dirty flag and no-op-click history entries are retained.

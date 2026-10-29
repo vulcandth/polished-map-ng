@@ -51,13 +51,20 @@ Headless PNG export uses the same pixels. Use wgpu through eframe 0.37 initially
 `Graphics::render_print(map, events, options, style, rasterize)` is the shared
 Print compositor. Options are independent of current canvas visibility. The
 callback receives `PrintFont` (Courier Bold 14 or Helvetica Bold 14) and text,
-returning a validated `PrintTextMask` of straight coverage, including the line's
-ascent/descent space. It owns typeface selection and baseline placement; core
+returning a validated `PrintTextMask` of straight coverage with a separate line
+layout size (including ascent/descent) and ink offset. It owns typeface selection
+and baseline placement; core
 owns block/grid/priority/event/warp composition and clipping. Each distinct
 font/text pair is requested once per render. The returned `RgbImage` has native
 map dimensions with no viewport margin. The font adapter must remain usable
 without a display server so the eventual CLI and GUI Print paths share it.
-Current differential tests use synthetic masks; native text metrics and driver
+`project::PrintFonts` supplies CPU coverage using Skrifa and Vello. Fontique
+enumerates installed bold faces through native services; callers can instead
+provide face data and a collection index with `PrintFontFace::from_bytes`.
+Line layout dimensions are separate from the ink mask and its signed bearing,
+so centering does not discard overhang. Fonts are bounded to 32 MiB, labels to
+three ASCII digits/hex characters or one uppercase symbol, outline paths to
+4096 elements and ink masks to 128x64. Native text metrics/hinting and driver
 blending must be verified before claiming platform-exact Print output.
 
 ## ADR 4: Fail safely without pretending to have upstream parity

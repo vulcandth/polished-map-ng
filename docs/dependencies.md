@@ -1,5 +1,26 @@
 # Dependency review
 
+Print now directly uses the already-locked Skrifa 0.44 and Vello CPU 0.2
+(MIT OR Apache-2.0), plus Fontique 0.12 (MIT OR Apache-2.0, MSRV 1.88) for
+native font enumeration. Vello enables only std and its u8 raster pipeline;
+there is no GPU/display dependency in this adapter. Fontique uses DirectWrite
+on Windows, Core Text on macOS and Fontconfig on Linux. Its `fontconfig-dlopen`
+feature allows non-font operations and explicitly supplied fonts to run even
+without the Fontconfig library; missing system fonts return an error.
+New locked packages are Fontique, parlance 0.1.1, objc2-core-text 0.3.2,
+yeslogic-fontconfig-sys 6.0.1 and roxmltree 0.21.2. Existing transitive font/render
+versions stay unchanged. Retain all dependency notices in release bundles.
+
+The initial fontdue/fontdb candidate was rejected by `cargo deny` because it
+introduced the unmaintained `ttf-parser` dependency
+([RUSTSEC-2026-0192](https://rustsec.org/advisories/RUSTSEC-2026-0192)). None of
+those three packages remains in Cargo.lock; no new advisory exception was added.
+The replacement passes advisory/license/source checks. See the primary
+[Fontique documentation](https://docs.rs/fontique/0.12.0/fontique/) and
+[Skrifa outline API](https://docs.rs/skrifa/0.44.0/skrifa/outline/index.html).
+Tests use the already-locked epaint_default_fonts data; these are test faces,
+not additional bundled product fonts or purported bold substitutions.
+
 eframe 0.37's `persistence` feature now supplies platform preference storage and
 native window placement. The GUI directly uses the already-locked serde and
 serde_json for its versioned settings record. The feature adds ron 0.12.3,

@@ -15,6 +15,12 @@ image.workspace = true
 png.workspace = true
 sha2.workspace = true
 tempfile.workspace = true
+skrifa = "0.44"
+vello_cpu = { version = "0.2", default-features = false, features = ["std", "u8_pipeline"] }
+fontique = { version = "0.12", features = ["fontconfig-dlopen"] }
+
+[dev-dependencies]
+epaint_default_fonts = { version = "0.37", default-features = false }
 
 [lints]
 workspace = true

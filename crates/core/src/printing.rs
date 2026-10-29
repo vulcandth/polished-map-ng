@@ -43,22 +43,41 @@ pub enum PrintFont {
     HelveticaBold14,
 }
 
-/// Coverage of a laid-out text line, including its font's ascent/descent space.
-/// Coordinates start at the line's top left; values are straight 8-bit coverage.
-/// The font adapter owns native/bundled typeface choice and baseline placement.
+/// Straight 8-bit text coverage and its position relative to a laid-out line.
+/// Layout size includes ascent/descent space; ink may overhang that rectangle.
+/// The font adapter owns typeface choice, advance widths and baseline placement.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PrintTextMask {
     width: u16,
     height: u16,
     coverage: Vec<u8>,
+    layout: [u16; 2],
+    offset: [i16; 2],
 }
 impl PrintTextMask {
     /// Bound font-adapter output: source labels are at most three ASCII digits
     /// or one event symbol at size 14. The limits also bound cached mask memory.
     pub fn new(width: u16, height: u16, coverage: Vec<u8>) -> Result<Self, PrintError> {
+        Self::with_layout(width, height, coverage, [width, height], [0, 0])
+    }
+
+    /// Separate ink bounds from layout bounds, preserving negative bearings and
+    /// overhang without changing centered text placement. Offsets are measured
+    /// from the line's top left, not its baseline.
+    pub fn with_layout(
+        width: u16,
+        height: u16,
+        coverage: Vec<u8>,
+        layout: [u16; 2],
+        offset: [i16; 2],
+    ) -> Result<Self, PrintError> {
         if !(1..=128).contains(&width)
             || !(1..=64).contains(&height)
             || coverage.len() != usize::from(width) * usize::from(height)
+            || !(1..=128).contains(&layout[0])
+            || !(1..=64).contains(&layout[1])
+            || !(-128..=128).contains(&offset[0])
+            || !(-64..=64).contains(&offset[1])
         {
             return Err(PrintError::TextMask);
         }
@@ -66,6 +85,8 @@ impl PrintTextMask {
             width,
             height,
             coverage,
+            layout,
+            offset,
         })
     }
     pub fn width(&self) -> u16 {
@@ -77,13 +98,21 @@ impl PrintTextMask {
     pub fn coverage(&self) -> &[u8] {
         &self.coverage
     }
+    pub fn layout_size(&self) -> [u16; 2] {
+        self.layout
+    }
+    pub fn offset(&self) -> [i16; 2] {
+        self.offset
+    }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum PrintError {
     #[error(transparent)]
     Raster(#[from] RasterError),
-    #[error("print text mask must be 1..=128 by 1..=64 with one coverage byte per pixel")]
+    #[error(
+        "invalid print text mask: ink/layout must be 1..=128 by 1..=64, offsets within +/-128 by +/-64, with one coverage byte per ink pixel"
+    )]
     TextMask,
     #[error("could not rasterize print text: {0}")]
     Text(String),
@@ -211,8 +240,8 @@ impl Graphics {
                 text_mask(
                     &mut image,
                     mask,
-                    x + (16 - i32::from(mask.width)) / 2,
-                    y + (16 - i32::from(mask.height)) / 2,
+                    x + (16 - i32::from(mask.layout[0])) / 2,
+                    y + (16 - i32::from(mask.layout[1])) / 2,
                     [255; 3],
                 );
                 if options.warp_ids
@@ -249,8 +278,8 @@ fn text_mask(image: &mut RgbImage, mask: &PrintTextMask, x: i32, y: i32, rgb: [u
     for (index, &alpha) in mask.coverage.iter().enumerate() {
         pixel(
             image,
-            x + (index % usize::from(mask.width)) as i32,
-            y + (index / usize::from(mask.width)) as i32,
+            x + i32::from(mask.offset[0]) + (index % usize::from(mask.width)) as i32,
+            y + i32::from(mask.offset[1]) + (index / usize::from(mask.width)) as i32,
             rgb,
             alpha,
         );
@@ -458,5 +487,53 @@ mod tests {
         // Small priority PNG's top-left RGBA is (104,216,216,96).
         assert_eq!(rgb(0, 0), [51, 106, 118]);
         assert_eq!(rgb(32, 0), [171, 205, 239]);
+    }
+
+    #[test]
+    fn glyph_bearing_does_not_change_center_alignment() {
+        let events = Events::new(vec![EventDefinition {
+            kind: EventKind::WarpEvent,
+            x: 0,
+            y: 0,
+            hex_coordinates: false,
+            prefix: None,
+            suffix: None,
+            line: 1,
+        }])
+        .unwrap();
+        let image = graphics()
+            .render_print(
+                &Map::blank(1, 1).unwrap(),
+                Some(&events),
+                PrintOptions {
+                    events: true,
+                    ..Default::default()
+                },
+                PrintStyle::default(),
+                |_, _| PrintTextMask::with_layout(1, 1, vec![255], [8, 10], [-2, 3]),
+            )
+            .unwrap();
+        // Center the 8x10 line at (4,3), then apply the ink bearing (-2,+3).
+        let white: Vec<_> = image
+            .pixels
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .enumerate()
+            .filter(|(_, rgb)| **rgb == [255; 3])
+            .map(|(i, _)| (i % 32, i / 32))
+            .collect();
+        assert_eq!(white, [(2, 6)]);
+        for (layout, offset) in [
+            ([0, 1], [0, 0]),
+            ([1, 65], [0, 0]),
+            ([1, 1], [129, 0]),
+            ([1, 1], [0, -65]),
+        ] {
+            assert_eq!(
+                PrintTextMask::with_layout(1, 1, vec![255], layout, offset),
+                Err(PrintError::TextMask)
+            );
+        }
     }
 }

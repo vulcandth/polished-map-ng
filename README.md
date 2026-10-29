@@ -37,6 +37,7 @@ while parity validation is incomplete.
 cargo run -p polished-map-cli -- create --root path/to/project --width 20 --height 18 --output path/to/project/maps/New.20x18.blk --apply
 cargo run -p polished-map-cli -- inspect path/to/Map.blk --width 20 --height 18
 cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --output map.png
+cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --output print.png --print-grid --print-ids --print-events --print-warp-ids
 cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --palette nite --output night.png
 cargo run -p polished-map-cli -- render path/to/pokecrystal/maps/NewBarkTown.blk --roof violet --output violet-roof.png
 cargo run -p polished-map-cli -- edit path/to/Map.blk --width 20 --height 18 --commands edits.json
@@ -46,6 +47,19 @@ cargo run -p polished-map-cli -- save-as path/to/Imported.map --width 20 --heigh
 ```
 
 Example `edits.json`: `[{"op":"paint","points":[{"x":2,"y":3}],"block":7}]`.
+
+`render` defaults to plain pixels. Print overlays are independent:
+`--print-grid`, `--print-ids`, `--print-priority`, `--print-events` and
+`--print-warp-ids`. `--print-hex` controls block IDs; warp IDs retain the event's
+coordinate base. `--print-dark` selects the dark grid color. Events are discovered
+from the project, or supplied with `--events-file` alongside `--print-events`.
+Labels use installed bold fonts, without a window or GPU. Supply both
+`--print-mono-font` and `--print-sans-font` with TTF/OTF files to select explicit
+faces (the CLI uses face zero; the Rust API also accepts a collection index).
+The JSON response identifies the fonts used. Linux system discovery requires
+Fontconfig and installed fonts; explicit font data bypasses discovery. Native
+font rasterization parity is still pending. New PNG exports are staged and never
+replace an existing destination, including one created during rendering.
 Edit defaults to preview; `--apply` writes after all commands validate. `--expected-hash`
 can require the original hash from `inspect`. JSON responses are experimental until
 objective four. Map saving currently affects only the map file.
