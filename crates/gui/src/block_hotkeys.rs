@@ -111,8 +111,7 @@ fn label_position(area: Rect, id: u8, zoom: bool, ids: bool, hex: bool) -> Pos2 
 pub(super) fn draw(painter: &egui::Painter, area: Rect, digit: usize, id: u8, editor: &Editor) {
     let position = label_position(area, id, editor.zoom, editor.ids, editor.hex);
     let text = digit.to_string();
-    // Same bundled font as map IDs; native Courier Bold rasterization is pending.
-    let font = egui::FontId::monospace(14.0);
+    let font = fonts::mono_bold(painter.ctx(), 14.0);
     for delta in [
         Vec2::new(-1.0, -1.0),
         Vec2::new(-1.0, 1.0),

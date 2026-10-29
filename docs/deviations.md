@@ -217,8 +217,9 @@ canceled destination instead of continuing to save later domains.
 
 Event mode controls temporarily live in Tools while the complete main-menu port
 is unfinished. Source rectangles/colors/alpha, cell sizing, coordinate bounds and
-options geometry are implemented; event letters and zoomed ID text still use
-egui's bundled fonts rather than native bold Helvetica/monospace faces. Normal
+options geometry are implemented; desktop event letters and zoomed ID text now
+request installed Helvetica Bold/monospace roles. Unavailable faces retain
+bundled fallbacks; native glyph rendering and synthetic bold remain open. Normal
 warp ID pixels now match the original digit sheet. Event
 Options is an embedded modal, and auto-load/show preferences are session-only.
 Event export overlays and native event GUI checks remain explicit parity gaps.
@@ -243,8 +244,9 @@ display setting. The status bar now retains the source's five fixed sections,
 including decimal block counts/map dimensions and separately formatted hover
 fields. NG's saved/modified and operation feedback is available in a status-bar
 tooltip instead of replacing those fields; this tooltip is an NG extension.
-Field widths use the source sample strings and padding with bundled font metrics
-(12 points on Windows, 13 on Linux/macOS), not native font metrics. The portable
+Field widths use the source sample strings and padding with installed font metrics
+in desktop startup (12 points on Windows, 13 on Linux/macOS). Headless snapshot
+fixtures explicitly retain bundled fonts. The portable
 Greybird/Dark status frames match their source color/edge formulas; other native
 themes, native glyph rasterization and enter/leave timing remain unverified.
 

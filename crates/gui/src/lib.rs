@@ -11,6 +11,7 @@ mod event_label_tests;
 mod event_workflow_tests;
 mod event_workflows;
 mod file_workflows;
+mod fonts;
 mod fullscreen;
 pub mod geometry;
 mod help;
@@ -269,8 +270,17 @@ impl Default for Editor {
 }
 
 impl Editor {
+    /// Native application startup: choose the reference's installed font roles.
+    pub fn new_native(cc: &eframe::CreationContext<'_>) -> Self {
+        let editor = Self::new(cc);
+        fonts::install_native(&cc.egui_ctx);
+        editor
+    }
+
+    /// Bundled, deterministic fonts for embedding and reproducible headless tests.
+    /// The desktop executable uses `new_native` instead.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        help::install_fonts(&cc.egui_ctx);
+        fonts::install_bundled(&cc.egui_ctx);
         let mut editor = Self::default();
         editor.restore_preferences(cc.storage);
         cc.egui_ctx.set_theme(if editor.dark {

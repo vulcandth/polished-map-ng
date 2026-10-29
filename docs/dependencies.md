@@ -53,6 +53,14 @@ The replacement passes advisory/license/source checks. See the primary
 Tests use the already-locked epaint_default_fonts data; these are test faces,
 not additional bundled product fonts or purported bold substitutions.
 
+GUI startup also uses this existing Fontique/Skrifa graph for the reference's
+installed font preferences, without adding packages or redistributing host font
+files. Missing GUI roles explicitly retain bundled fallbacks and log the gap.
+The platform crate enables `windows-sys`'s `Win32_Graphics_Gdi` declarations for
+`NONCLIENTMETRICSW`/`LOGFONTW`; the small read-only settings query stays inside
+the audited unsafe boundary. Collection indices and variable coordinates are
+preserved when passing a selected face to egui.
+
 eframe 0.37's `persistence` feature now supplies platform preference storage and
 native window placement. The GUI directly uses the already-locked serde and
 serde_json for its versioned settings record. The feature adds ron 0.12.3,

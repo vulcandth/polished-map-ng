@@ -11,7 +11,7 @@ fn main() -> eframe::Result {
             ..Default::default()
         },
         Box::new(|cc| {
-            let mut editor = polished_map_gui::Editor::new(cc);
+            let mut editor = polished_map_gui::Editor::new_native(cc);
             if let Some(path) = std::env::args_os().nth(1) {
                 editor.prepare_open(path.into());
             }

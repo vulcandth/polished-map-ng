@@ -5,6 +5,34 @@ use windows_sys::Win32::UI::Controls::Dialogs::{
     CC_FULLOPEN, CC_RGBINIT, CHOOSECOLORW, ChooseColorW, CommDlgExtendedError,
 };
 
+pub(super) fn message_font_family() -> Option<String> {
+    use windows_sys::Win32::UI::WindowsAndMessaging::{
+        NONCLIENTMETRICSW, SPI_GETNONCLIENTMETRICS, SystemParametersInfoW,
+    };
+    // SAFETY: NONCLIENTMETRICSW is a plain Win32 output struct; zero initializes
+    // its integer/LOGFONT fields, then cbSize supplies the required ABI size.
+    let mut metrics: NONCLIENTMETRICSW = unsafe { std::mem::zeroed() };
+    metrics.cbSize = std::mem::size_of::<NONCLIENTMETRICSW>() as u32;
+    // SAFETY: writable, aligned output remains alive throughout this synchronous
+    // read-only system-settings query. No callback, owner or persistence flags.
+    let ok = unsafe {
+        SystemParametersInfoW(
+            SPI_GETNONCLIENTMETRICS,
+            metrics.cbSize,
+            (&mut metrics as *mut NONCLIENTMETRICSW).cast(),
+            0,
+        )
+    };
+    if ok == 0 {
+        return None;
+    }
+    let name = &metrics.lfMessageFont.lfFaceName;
+    let length = name.iter().position(|c| *c == 0)?;
+    (length > 0)
+        .then(|| String::from_utf16(&name[..length]).ok())
+        .flatten()
+}
+
 /// Custom colors persist for this application session, without mutable globals.
 #[derive(Default)]
 pub struct ColorPicker {

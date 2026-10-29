@@ -1,5 +1,55 @@
 # Compatibility evidence
 
+## Installed GUI font roles
+
+Desktop startup now calls `Editor::new_native`, using `NativeFonts` from the
+GUI-independent project layer. The policy follows pinned master
+`themes.cpp::use_native_fonts`: Windows' `NONCLIENTMETRICS.lfMessageFont` first,
+then Segoe UI/Tahoma/MS Sans Serif; Consolas/Lucida Console/Courier New for
+regular and bold monospace independently. Linux and macOS both try
+Ubuntu/Noto Sans/Droid Sans/DejaVu Sans and their Mono families in source order.
+Family names are compared exactly. A failed Windows settings query or invalid
+UTF-16 name falls through safely instead of reading an uninitialized structure.
+
+Unmatched lists fall through to the pinned FLTK 1.4.5 backend defaults: Microsoft
+Sans Serif/Courier New on Windows, Arial/Courier on macOS, and Fontconfig generic
+sans/mono on Linux. Helvetica Bold remains a separate role because the original
+does not remap it with the UI family. These defaults were checked in the pinned
+GDI, Quartz and Xlib/Xft `*_font*.cxx` sources. The Pango backend and platform
+font-name aliases still require differential verification.
+
+Fontique loads host faces once at startup. Collection indices and supported
+variable-axis coordinates pass through to egui; font bytes remain local and are
+not bundled or written into project files. Empty/oversized/unusable faces are
+rejected. Native roles precede the existing bundled glyph fallbacks; the separately
+licensed Mac menu-symbol face remains installed. Actual face choices and missing
+roles are reported on stderr. Missing bold roles retain an explicit bundled
+stack rather than accidentally selecting the newly installed regular UI face.
+
+Map IDs and hotkey badges request the dedicated bold monospace family, and event
+symbols request the separate bold sans family. Consolas alone on Windows changes
+ruler text from 9 to 10 and zoomed warp IDs from 11 to 12, matching `ruler.cpp`
+and `event.cpp`; other sizes do not change. Native default control text is 12
+logical points on Windows and 13 elsewhere. `Editor::new` explicitly retains
+bundled fonts for deterministic embedding/tests, with no system enumeration.
+
+Four isolated-collection tests check precedence, independent bold selection,
+exact names, backend defaults, unavailable roles and the Windows-only Consolas
+rule. A GUI test checks role/size isolation and reverting to bundled fonts.
+Host-font tests run explicitly in the three-OS CI matrix; local Windows discovery
+and egui layout passed with Segoe UI and regular/bold Consolas. They exercise
+installed files and shaping, not native window appearance or FLTK rasterization.
+On this host Microsoft Sans Serif has no real bold face: GDI synthetic bold is
+not implemented by the egui adapter, and that role is reported unavailable.
+Native hinting, baselines, synthesis, full font/name fallback equivalence, and
+the separate CPU Print font policy remain parity gates. No snapshot of an
+installed proprietary font is used as a redistributed fixture.
+
+Local validation: workspace tests, formatting, Clippy with warnings denied,
+rustdoc and the production native-adapter graph pass. The full visual suite
+passes (157 tests, two explicit ignored tests) without changing any snapshot
+baseline. The installed-font tests are executed separately from that suite.
+
 ## Five-field status bar
 
 `status_bar.rs` ports master `Main_Window::initialize`, `update_status` and

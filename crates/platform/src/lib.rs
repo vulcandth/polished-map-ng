@@ -10,3 +10,16 @@ mod script_windows;
 mod win32;
 #[cfg(windows)]
 pub use win32::ColorPicker;
+
+/// Windows' configured message-box font family, as used by upstream themes.cpp.
+/// Other platforms use the reference's ordered family lists instead.
+pub fn message_font_family() -> Option<String> {
+    #[cfg(windows)]
+    {
+        win32::message_font_family()
+    }
+    #[cfg(not(windows))]
+    {
+        None
+    }
+}

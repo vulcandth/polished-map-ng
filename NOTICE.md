@@ -12,6 +12,13 @@ contributors. Code is distributed under LGPL-3.0-only. See `LICENSE.md` and
 This port changes implementation language, ownership, validation, architecture,
 and UI toolkit. Individual modules identify upstream algorithm sources.
 
+Installed GUI font preferences adapt master `themes.cpp::use_native_fonts`;
+Consolas-specific text sizes adapt `ruler.cpp` and `event.cpp`, under
+LGPL-3.0-only. Backend default names follow pinned FLTK 1.4.5's GDI, Quartz and
+Xlib/Xft font tables under the retained FLTK terms below. Fontique discovers local
+faces; no native font files are redistributed. Bundled fallback fonts retain
+their separate licenses even when used through these font-role aliases.
+
 The complete toolbar order, control extents, grouping and availability rules
 adapt master `Main_Window::{initialize,update_active_controls}` and
 `widgets.cpp::Toolbar::draw`, under LGPL-3.0-only. Text placeholders for

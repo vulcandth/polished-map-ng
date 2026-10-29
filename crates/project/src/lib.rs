@@ -10,6 +10,7 @@ mod document;
 mod events;
 mod graphics;
 mod map_palette_plan;
+mod native_fonts;
 mod palette_document;
 mod palettes;
 mod png_export;
@@ -33,6 +34,7 @@ pub use graphics::{
     load_master_graphics, load_master_map_graphics, write_new_png, write_png, write_png_export,
 };
 pub use map_palette_plan::MapPalettePlan;
+pub use native_fonts::{FontPlatform, NativeFontFace, NativeFonts};
 pub use palette_document::{PaletteDocument, prepare_palette_export};
 pub use palettes::{
     MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,

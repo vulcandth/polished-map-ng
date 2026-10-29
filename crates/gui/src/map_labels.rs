@@ -22,9 +22,8 @@ pub(super) fn draw_id(
     let z = if zoom { 2.0 } else { 1.0 };
     let position = area.min + Vec2::new(z + 2.0, z);
     let text = id_text(id, hex);
-    // The source uses Courier Bold at 14 in both zoom modes. Bundled Hack
-    // preserves the logical size; exact native font/weight matching is pending.
-    let font = egui::FontId::monospace(14.0);
+    // The source uses Courier Bold at 14 in both zoom modes.
+    let font = fonts::mono_bold(painter.ctx(), 14.0);
     for delta in [
         Vec2::new(-1.0, -1.0),
         Vec2::new(-1.0, 1.0),

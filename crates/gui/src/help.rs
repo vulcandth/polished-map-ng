@@ -7,7 +7,7 @@ use std::sync::OnceLock;
 const TITLE: &str = "Polished Map NG Help";
 const REFERENCE_NOTE: &str = "Polished Map 4.7.1 reference — NG parity is in progress.";
 
-pub(super) fn install_fonts(ctx: &egui::Context) {
+pub(super) fn font_definitions() -> egui::FontDefinitions {
     let mut fonts = egui::FontDefinitions::default();
     // Ubuntu lacks the source's right-arrow glyph. The already-bundled Hack
     // face supplies it; keep the existing proportional faces first.
@@ -28,7 +28,7 @@ pub(super) fn install_fonts(ctx: &egui::Context) {
         egui::FontFamily::Name("Menu Symbols".into()),
         vec!["NotoSansSymbols2".into()],
     );
-    ctx.set_fonts(fonts);
+    fonts
 }
 
 #[derive(Clone, Copy, Deserialize)]

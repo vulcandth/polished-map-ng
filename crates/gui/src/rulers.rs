@@ -159,7 +159,7 @@ impl Editor {
                         text_rect.right_bottom(),
                         egui::Align2::RIGHT_BOTTOM,
                         label(cell.coordinate, self.hex),
-                        egui::FontId::monospace(9.0),
+                        egui::FontId::monospace(fonts::mono_size(ui.ctx(), 9.0)),
                         if cell.highlighted {
                             background
                         } else {

@@ -72,7 +72,7 @@ fn help_geometry_scrolling_links_and_close_without_a_native_window() {
     help.open();
     let mut h = Harness::builder()
         .with_size(Vec2::new(700.0, 500.0))
-        .with_context_setup(install_fonts)
+        .with_context_setup(fonts::install_bundled)
         .with_theme(egui::Theme::Light)
         .build_ui_state(|ui, state: &mut HelpWindow| state.content(ui), help);
     h.run();

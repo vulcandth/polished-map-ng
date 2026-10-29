@@ -214,8 +214,7 @@ pub(super) fn draw_warp_label(
     } else {
         let text = label.zoomed_text();
         // Upstream uses 11 unless the selected native face is Consolas (12).
-        // Our bundled monospace face is Hack; native font matching is pending.
-        let font = egui::FontId::monospace(11.0);
+        let font = egui::FontId::monospace(fonts::mono_size(painter.ctx(), 11.0));
         let pos = area.right_bottom() - Vec2::new(4.0, 2.0);
         for delta in [
             Vec2::new(-1.0, -1.0),
@@ -302,7 +301,7 @@ pub(super) fn canvas_events(
             area.center(),
             egui::Align2::CENTER_CENTER,
             d.kind.symbol(),
-            egui::FontId::proportional(if cell == 32.0 { 24.0 } else { 14.0 }),
+            fonts::sans_bold(painter.ctx(), if cell == 32.0 { 24.0 } else { 14.0 }),
             Color32::WHITE,
         );
         if state.warp_ids

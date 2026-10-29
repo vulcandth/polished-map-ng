@@ -20,6 +20,14 @@ overlays, export/clipboard, external-change handling and unsaved dialogs.
 Accept only when all matrix entries pass or have an approved exception and
 outputs reopen correctly in upstream. Include pinned compatible pokecrystal.
 
+Desktop startup now selects installed UI, regular/bold monospace and separate
+bold sans roles using the reference's preference lists and pinned FLTK backend
+defaults. Map labels, event symbols, ruler sizes and zoomed warp IDs consume those
+roles; test startup keeps fixed bundled faces. Installed-face/egui checks join
+the three-OS CI matrix. Native hinting/baselines, Windows synthetic bold, complete
+font-name fallback equivalence and CPU Print font-policy alignment remain open;
+see the evidence and limitations in `docs/compatibility.md`.
+
 The block editor now uses the original sidebar right-release workflow without
 the temporary Edit Block menu entry. Left/middle releases select; right releases
 select and edit only when they return to the pressed block inside the visible
