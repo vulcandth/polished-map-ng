@@ -18,6 +18,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Roof Palettes layout | Morn + Day, Night |
 | Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | On |
 | Resize anchor | Center |
+| Tile Priority | Off; reading PRIORITY_* palette colors enables it |
 | Recent maps | Empty; at most ten paths |
 
 The three auto-load toggles affect subsequent opens, not the current document.
@@ -67,7 +68,7 @@ or rename its `app.ron` before relaunching.
 ## Remaining parity and verification
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
-or modified. Native theme variants, monochrome/priority/256-tile
+or modified. Native theme variants, monochrome/256-tile
 options, transparency/fullscreen controls, drag-and-drop, overworld threshold
 and print preferences still need their complete menu/persistence work.
 

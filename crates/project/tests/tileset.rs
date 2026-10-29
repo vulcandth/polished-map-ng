@@ -289,6 +289,7 @@ fn priority_updates_preserve_unrelated_asm_and_resize_owned_bank_gap() {
     let mut doc =
         MasterTilesetDocument::open_in_project(root, "demo", &MasterGraphicsOptions::default())
             .unwrap();
+    doc.set_allow_priority(true);
     doc.apply_batch(&[TileCommand::Palette {
         tile: 0,
         palette: 0x80,
@@ -302,4 +303,89 @@ fn priority_updates_preserve_unrelated_asm_and_resize_owned_bank_gap() {
             .replacen("rept 16", "rept 32", 1)
     );
     assert!(doc.allow_priority());
+}
+
+#[test]
+fn explicit_priority_option_preserves_bits_and_changes_owned_gap_even_for_pixel_only_edits() {
+    for enabled in [false, true] {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write(root, "gfx/tilesets/demo.2bpp", [255; 192 * 16]);
+        let raw = format!(
+            "{}\nrept 32\n\tdb $ff\nendr\n\n{}Tail:\n\tdb 42\n",
+            "\ttilepal 0, PRIORITY_GRAY\n".repeat(96),
+            "\ttilepal 1, RED\n".repeat(96)
+        );
+        write(root, "gfx/tilesets/demo_palette_map.asm", &raw);
+        let mut doc =
+            MasterTilesetDocument::open_in_project(root, "demo", &MasterGraphicsOptions::default())
+                .unwrap();
+        let blocks = Blockset::from_bytes(&[0; 16]).unwrap();
+        assert!(
+            doc.allow_priority(),
+            "reading priority names enables the option"
+        );
+        let hash = doc.content_hash(&blocks);
+        doc.set_allow_priority(enabled);
+        assert_eq!(doc.allow_priority(), enabled);
+        assert_eq!(
+            doc.content_hash(&blocks) == hash,
+            enabled,
+            "output-mode changes invalidate preflight hashes"
+        );
+        assert!(!doc.tileset().is_modified());
+        assert!(doc.preview_save(&blocks).unwrap().is_empty());
+        doc.save(&blocks).unwrap();
+        assert_eq!(
+            fs::read_to_string(root.join("gfx/tilesets/demo_palette_map.asm")).unwrap(),
+            raw
+        );
+        doc.apply_batch(&[TileCommand::Paint {
+            tile: 0,
+            points: vec![Point { x: 0, y: 0 }],
+            hue: 0,
+        }])
+        .unwrap();
+        doc.save(&blocks).unwrap();
+        let saved = fs::read_to_string(root.join("gfx/tilesets/demo_palette_map.asm")).unwrap();
+        assert_eq!(
+            saved,
+            if enabled {
+                raw
+            } else {
+                raw.replacen("rept 32", "rept 16", 1)
+            }
+        );
+        assert_eq!(doc.tileset().attributes()[0], 0x80);
+        assert_eq!(
+            doc.allow_priority(),
+            enabled,
+            "saving does not silently enable the option"
+        );
+        let reopened =
+            MasterTilesetDocument::open_in_project(root, "demo", &MasterGraphicsOptions::default())
+                .unwrap();
+        assert!(
+            reopened.allow_priority(),
+            "reading priority names enables it again"
+        );
+    }
+    let dir = tempfile::tempdir().unwrap();
+    setup(dir.path());
+    for enabled in [false, true] {
+        let doc = MasterTilesetDocument::open_in_project(
+            dir.path(),
+            "demo",
+            &MasterGraphicsOptions {
+                allow_priority: enabled,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            doc.allow_priority(),
+            enabled,
+            "plain palette maps retain the session option"
+        );
+    }
 }

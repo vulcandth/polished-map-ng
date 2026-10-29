@@ -142,6 +142,26 @@ rectangles and source-derived color/alpha constants. Their pixels were decoded
 locally to verify flat interiors and borders. These adaptations remain attributed
 to the upstream source in `NOTICE.md`; source PNG payloads are not distributed.
 
+## Priority overlay research (not yet imported)
+
+Master `tile.cpp::draw_with_priority` selects three distinct translucent zigzag
+patterns, rather than enlarging the 8×8 image. Introduction on master:
+`0a627967a3ff6e68ca062aef69184065e16a4efe` (Rangi, 2019-03-24), explicitly
+ported from Polished Map++. Trace that earlier origin before the asset port.
+The pinned master buffers decode to the same four RGBA colors:
+`(32,96,96,96)`, `(50,126,126,96)`, `(86,186,186,96)`, `(104,216,216,96)`.
+
+| Buffer | Size | Original PNG SHA-256 |
+|---|---|---|
+| small | 8×8 | `19c7a689eed9e04b090fb16ff9cfc00c9c58b8123b1a11c8cd8c7bbb8a3085e6` |
+| large | 16×16 | `eaee27e74a3b6c0edb1695a4023ab9171a99043a4b238e892f01539e6cd25f92` |
+| chip | 24×24 | `6bf3dfe075b20ed46a9c714a101d4885f4617b0bce1ed1f0c0679e9c4e3534c3` |
+
+The overlay tests the tile attribute and Show Priority value independently of
+the Tile Priority editing/output option. Canvas/sidebar, block-editor sheet and
+chips, and tileset thumbnails need the appropriate pattern size. Source drawing
+order places selection borders above the overlay; clipboard tile images omit it.
+
 ## Fonts
 
 GUI text currently uses egui's bundled fonts, whose notices are retained under

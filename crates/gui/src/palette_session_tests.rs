@@ -7,6 +7,79 @@ use std::{
     time::{Duration, Instant},
 };
 
+#[test]
+fn tile_priority_option_preserves_attributes_controls_editing_and_carries_between_maps() {
+    use egui_kittest::kittest::NodeT;
+    let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    let raw = fs::read(dir.path().join("gfx/tilesets/demo_palette_map.asm")).unwrap();
+    assert!(
+        h.state().allow_priority,
+        "priority colors enable the option on open"
+    );
+    let attributes = h
+        .state()
+        .loaded
+        .as_ref()
+        .unwrap()
+        .tileset
+        .as_ref()
+        .unwrap()
+        .tileset()
+        .attributes()
+        .to_vec();
+    for enabled in [false, true] {
+        h.get_by_label("Options").click();
+        h.run();
+        h.get_by_label("Tile Priority").click();
+        h.run();
+        h.key_press(egui::Key::Escape);
+        h.run();
+        assert_eq!(h.state().allow_priority, enabled);
+        let tileset = h.state().loaded.as_ref().unwrap().tileset.as_ref().unwrap();
+        assert_eq!(tileset.allow_priority(), enabled);
+        assert_eq!(tileset.tileset().attributes(), attributes);
+        assert!(!h.state().is_modified());
+        h.get_by_label("Tools").click();
+        h.run();
+        h.get_by_label("Edit Tileset…").click();
+        h.run();
+        assert_eq!(
+            h.get_by_label("Priority (above sprites)")
+                .accesskit_node()
+                .is_disabled(),
+            !enabled
+        );
+        h.get_by_label("Cancel").click();
+        h.run();
+    }
+    assert_eq!(
+        fs::read(dir.path().join("gfx/tilesets/demo_palette_map.asm")).unwrap(),
+        raw
+    );
+    // A plain palette map does not turn an enabled session option off.
+    fs::write(
+        dir.path().join("gfx/tilesets/demo_palette_map.asm"),
+        "\ttilepal 0, GRAY, RED, GREEN, TEXT\n",
+    )
+    .unwrap();
+    load(&mut h, dir.path(), false);
+    assert!(h.state().allow_priority);
+    h.get_by_label("Options").click();
+    h.run();
+    h.get_by_label("Tile Priority").click();
+    h.run();
+    h.key_press(egui::Key::Escape);
+    h.run();
+    load(&mut h, dir.path(), false);
+    assert!(!h.state().allow_priority);
+    // Restore priority input: reading it turns the option back on.
+    fs::write(dir.path().join("gfx/tilesets/demo_palette_map.asm"), raw).unwrap();
+    load(&mut h, dir.path(), false);
+    assert!(h.state().allow_priority);
+    h.state_mut().close_map();
+    assert!(h.state().allow_priority, "Close retains the session option");
+}
+
 fn edit(palettes: &mut polished_map_project::PaletteDocument) {
     palettes
         .apply_batch(&[PaletteCommand::SetRgb {

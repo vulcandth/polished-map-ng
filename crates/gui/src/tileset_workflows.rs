@@ -84,6 +84,7 @@ impl Editor {
             .collect();
         let count = textures.len();
         // Preserve all map IDs/history, even when some IDs no longer have definitions.
+        self.allow_priority = tileset.allow_priority();
         loaded.tileset = Some(tileset);
         loaded.blockset = Some(blocks);
         loaded.graphics = graphics;

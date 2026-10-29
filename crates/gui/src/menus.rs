@@ -206,6 +206,13 @@ impl Editor {
                 }
             });
             ui.menu_button("Options", |ui| {
+                if ui
+                    .checkbox(&mut self.allow_priority, "Tile Priority")
+                    .changed()
+                    && let Some(tileset) = self.loaded.as_mut().and_then(|l| l.tileset.as_mut())
+                {
+                    tileset.set_allow_priority(self.allow_priority);
+                }
                 self.roof_palette_menu(ui);
                 ui.separator();
                 ui.checkbox(&mut self.event_ui.auto_load, "Auto-Load Events");

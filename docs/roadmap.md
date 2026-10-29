@@ -40,11 +40,18 @@ The compiled original overlay function matches 120 complete-bank cases; manual
 and automatic imports also agree on the pinned real project. Native dialog
 fidelity and native restart verification remain outstanding.
 
-Sixteen implemented view/mode/palette/auto-load/resize settings now restore and
+Seventeen implemented view/mode/palette/auto-load/resize settings now restore and
 save through eframe with a versioned record and stable app ID. The two palette
 auto-load menu options affect subsequent imports independently. Headless restart
 and malformed-record tests pass; legacy preference import, remaining options,
 native storage/window placement and restart behavior still require work.
+
+Tile Priority now controls priority editing and palette output independently of
+attribute bits. The GUI retains it across maps and Close, and priority palette
+imports automatically enable it. The backend exposes an explicit setter and
+includes the option in preflight fingerprints. Pixel-only saves also update
+owned palette-bank gap sizes when required by the option. Show Priority's
+8/16/24-pixel overlays and its toolbar/shortcut remain to be implemented.
 
 Implemented slices include New Map, Save As, block resize, map editing/saving, master metadata discovery, six
 palette sets, project/roof colors, compound graphics and roof tile replacement.

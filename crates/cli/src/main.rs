@@ -464,6 +464,11 @@ fn run(cli: Cli) -> Result<Value, Failure> {
                 serde_json::from_slice(&read_bounded(&commands, 4 * 1024 * 1024)?)
                     .map_err(|e| Failure::new("invalid_commands", e))?;
             doc.apply_batch(&commands)?;
+            // This command-oriented adapter retains its automatic priority mode.
+            // The GUI exposes an explicit option that can remain off with old bits.
+            if doc.tileset().attributes().iter().any(|&a| a & 0x80 != 0) {
+                doc.set_allow_priority(true);
+            }
             let planned = doc.preview_save(blocks.blockset())?;
             blocks.verify_unchanged()?;
             if apply {

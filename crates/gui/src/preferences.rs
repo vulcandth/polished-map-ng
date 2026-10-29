@@ -28,6 +28,7 @@ struct Preferences {
     auto_events: bool,
     auto_special_palettes: bool,
     auto_roof_colors: bool,
+    allow_priority: bool,
     resize_anchor: ResizeAnchor,
     recent_maps: recent_maps::RecentMaps,
 }
@@ -57,6 +58,7 @@ impl Preferences {
             auto_events: editor.event_ui.auto_load,
             auto_special_palettes: editor.auto_special_palettes,
             auto_roof_colors: editor.auto_roof_colors,
+            allow_priority: editor.allow_priority,
             resize_anchor: editor.resize_anchor,
             recent_maps: editor.recent_maps.clone(),
         }
@@ -78,6 +80,7 @@ impl Preferences {
         editor.event_ui.auto_load = self.auto_events;
         editor.auto_special_palettes = self.auto_special_palettes;
         editor.auto_roof_colors = self.auto_roof_colors;
+        editor.allow_priority = self.allow_priority;
         editor.resize_anchor = self.resize_anchor;
         editor.recent_maps = self.recent_maps;
     }
@@ -207,6 +210,7 @@ mod tests {
                 "game_boy": true, "show_events": false, "show_warp_ids": false,
                 "palette_set": "custom", "roof_layout": "morn_day_nite_custom",
                 "auto_events": false, "auto_special_palettes": false, "auto_roof_colors": false,
+                "allow_priority": true,
                 "resize_anchor": "bottom_right",
                 "recent_maps": [{"utf8": std::fs::canonicalize(dir.path().join("Map.2x1.blk")).unwrap()}],
             })
@@ -251,6 +255,7 @@ mod tests {
         assert!(!editor.event_ui.mode && !editor.event_ui.game_boy);
         assert!(editor.event_ui.show && editor.event_ui.warp_ids && editor.event_ui.auto_load);
         assert!(editor.auto_special_palettes && editor.auto_roof_colors);
+        assert!(!editor.allow_priority);
         assert_eq!(editor.palette_document().selected(), PaletteSet::Day);
         assert_eq!(editor.roof_palette_layout, RoofPaletteLayout::DayNite);
         assert_eq!(editor.resize_anchor, ResizeAnchor::Center);

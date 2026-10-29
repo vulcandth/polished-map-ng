@@ -180,7 +180,7 @@ impl MasterTilesetDocument {
         } else {
             (vec![8; if options.allow_256 { 256 } else { 96 }], None)
         };
-        let allow_priority = ids.iter().any(|&id| id & 0x80 != 0);
+        let allow_priority = options.allow_priority || ids.iter().any(|&id| id & 0x80 != 0);
         let blank = Tile::new([0; 64])?;
         let mut tiles = vec![blank.clone(); 256];
         let mut attributes = vec![9; 256];
@@ -338,6 +338,11 @@ impl MasterTilesetDocument {
     pub fn allow_priority(&self) -> bool {
         self.allow_priority
     }
+    /// Change master's session option without clearing attributes or dirtying pixels.
+    /// Controls editor availability and subsequent palette-map gap/padding output.
+    pub fn set_allow_priority(&mut self, enabled: bool) {
+        self.allow_priority = enabled;
+    }
     pub fn outputs(&self) -> Vec<&SaveTarget> {
         self.parts
             .iter()
@@ -352,7 +357,11 @@ impl MasterTilesetDocument {
     /// during trimming. Bound to these local paths; not a portable asset ID.
     pub fn content_hash(&self, blocks: &Blockset) -> String {
         let mut hash = Sha256::new();
-        hash.update([u8::from(self.allow_256), u8::from(self.monochrome)]);
+        hash.update([
+            u8::from(self.allow_256),
+            u8::from(self.monochrome),
+            u8::from(self.allow_priority),
+        ]);
         hash.update(blocks.bytes());
         let observations: std::collections::BTreeMap<_, _> = self
             .sources
@@ -464,8 +473,7 @@ impl MasterTilesetDocument {
                 bytes,
             });
         }
-        let allow_priority =
-            self.allow_priority || draft.attributes().iter().any(|&a| a & 0x80 != 0);
+        let allow_priority = self.allow_priority;
         let palette_bytes = if let Some((target, raw)) = &self.palette_source {
             let canonical = draft.palette_map_asm(self.allow_256, allow_priority)?;
             let bytes = tile_palettes::encode(&target.path, raw, &canonical)?;

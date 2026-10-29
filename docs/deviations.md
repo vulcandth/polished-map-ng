@@ -85,6 +85,15 @@ the priority bit into UNDEFINED and then indexes beyond its palette-color table
 palette re-enables the checkbox when the project supports priority. The existing
 core validation rejects that invalid combination; a GUI test verifies the guard.
 
+The explicit Tile Priority option now stays off through Save even when existing
+attributes contain priority bits, matching upstream. Backend callers can set the
+mode with `set_allow_priority`; palette reads still enable it automatically.
+The CLI, which has no interactive session option, retains its prior inference
+from command-result attributes. Priority mode is included in preflight hashes
+because it affects palette-map gap/padding output; old preview tokens must be
+regenerated. Palette writes no longer skip owned gap updates merely because
+attribute values themselves are unchanged.
+
 Roof image paste clips to the selected 8×8 tile and leaves uncovered pixels
 unchanged. Upstream `Roof_Window::paste_tile_graphics_cb` iterates to
 `max(width, 8)` and `max(height, 8)`, which can read or write beyond image/tile

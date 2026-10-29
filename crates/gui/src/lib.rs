@@ -110,6 +110,7 @@ pub struct Editor {
     roof_palette_layout: polished_map_project::RoofPaletteLayout,
     auto_special_palettes: bool,
     auto_roof_colors: bool,
+    allow_priority: bool,
     preferences_writable: bool,
     recent_maps: recent_maps::RecentMaps,
     pending_recent: Option<PathBuf>,
@@ -177,6 +178,7 @@ impl Default for Editor {
             roof_palette_layout: polished_map_project::RoofPaletteLayout::default(),
             auto_special_palettes: true,
             auto_roof_colors: true,
+            allow_priority: false,
             preferences_writable: true,
             recent_maps: recent_maps::RecentMaps::default(),
             pending_recent: None,
@@ -354,6 +356,7 @@ impl Editor {
         let roof_layout = self.roof_palette_layout;
         let special_palettes = self.auto_special_palettes;
         let roof_colors = self.auto_roof_colors;
+        let allow_priority = self.allow_priority;
         std::thread::spawn(move || {
             let result = (|| {
                 let root = PathBuf::from(&form.root);
@@ -384,6 +387,7 @@ impl Editor {
                     tileset,
                     &MasterGraphicsOptions {
                         allow_256: form.allow_256,
+                        allow_priority,
                         dark_theme,
                         roof_layout,
                         special_palettes,

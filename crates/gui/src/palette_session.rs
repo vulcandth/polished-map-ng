@@ -88,6 +88,10 @@ impl Editor {
             "New map (unsaved)".into()
         };
         self.error = loaded.event_warning.take();
+        if let Some(tileset) = &mut loaded.tileset {
+            self.allow_priority |= tileset.allow_priority();
+            tileset.set_allow_priority(self.allow_priority);
+        }
         if loaded.document.has_backing_file() {
             self.recent_maps.remember(
                 loaded

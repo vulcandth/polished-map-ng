@@ -31,9 +31,6 @@ pub(crate) fn encode(
 ) -> Result<Vec<u8>, ProjectError> {
     let old = codecs::parse_palette_map(original).map_err(|e| ProjectError::codec(path, e))?;
     let new = codecs::parse_palette_map(canonical).map_err(|e| ProjectError::codec(path, e))?;
-    if old == new {
-        return Ok(original.as_bytes().to_vec());
-    }
     let newline = if original.contains("\r\n") {
         "\r\n"
     } else {

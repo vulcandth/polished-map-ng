@@ -289,7 +289,13 @@ mod tests {
         {
             h.remove_cursor();
             h.run();
-            h.snapshot("open-recent-ten");
+            // CI 40808925173: three shadow-edge pixels differ by 2/255 RGB
+            // on Linux; every other differing channel differs by at most 1/255.
+            h.snapshot_options(
+                "open-recent-ten",
+                &egui_kittest::SnapshotOptions::default()
+                    .threshold(egui_kittest::OsThreshold::<f32>::default().linux(3.0)),
+            );
         }
         h.get_by_role_and_label(egui::Role::MenuItem, "Recent9.2x1.blk")
             .click();

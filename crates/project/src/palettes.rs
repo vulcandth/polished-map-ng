@@ -31,6 +31,8 @@ pub fn roof_palette_path(root: &Path) -> PathBuf {
 #[derive(Clone, Debug)]
 pub struct MasterGraphicsOptions {
     pub allow_256: bool,
+    /// Session Tile Priority option; reading priority palette colors enables it too.
+    pub allow_priority: bool,
     pub palette: Option<PaletteSet>,
     pub dark_theme: bool,
     pub monochrome: bool,
@@ -45,6 +47,7 @@ impl Default for MasterGraphicsOptions {
     fn default() -> Self {
         Self {
             allow_256: false,
+            allow_priority: false,
             palette: None,
             dark_theme: false,
             monochrome: false,

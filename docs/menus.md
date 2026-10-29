@@ -18,10 +18,17 @@ keyboard and headless counterparts where applicable.
 | View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Show Priority, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
-| Options | Five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | Monochrome, Tile Priority, 256 Tiles, Drag and Drop, Overworld Map Size. Remaining native/persistence gaps are tracked in `preferences.md`. |
+| Options | Tile Priority; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | Monochrome, 256 Tiles, Drag and Drop, Overworld Map Size. Remaining native/persistence gaps are tracked in `preferences.md`. |
 | Help | Inline development status, project attribution and icon licensing links | Original Help and About actions/dialogs, including keyboard shortcuts. Attribution remains available throughout the port. |
 
 ## Geometry and interaction gates
+
+Tile Priority controls the tile editor's priority checkbox and palette-map gap/
+padding output. Toggling it preserves existing attribute bits, pixels, dirty flags
+and map history. It survives Close and exit; successful reads of PRIORITY_* colors
+enable it again, while ordinary palettes preserve the current setting. It is
+independent of View > Show Priority, whose overlay/shortcut/toolbar work remains
+pending. Disabling the option must not silently enable it again during Save.
 
 Open Recent shows up to ten basenames with Alt+1 through Alt+0. Full paths are
 available on hover; duplicate basenames remain separate entries. Completed opens
