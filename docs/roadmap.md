@@ -50,6 +50,11 @@ guards and preserve the source distinction between document changes and palette
 session edits. Headless tests cover state clearing/retention, all dirty domains,
 map-only writes/conflicts and Close/Exit/event-unload shortcut routing. Native
 warning geometry and remaining preferences remain pending.
+The root title now follows committed New/Open/Save As/Close transitions and
+retains the chosen basename independently of canonical file paths. Print uses
+the original map-derived PNG suggestion captured with each queued request.
+Canceled/failed transitions preserve the current document identity; native
+title-bar and chooser delivery remain platform checks.
 
 Open Recent now has ten entries, Alt+1 through Alt+0 and Clear Recent. Successful
 opens and Save As promote the source path spelling; canceled/failed operations

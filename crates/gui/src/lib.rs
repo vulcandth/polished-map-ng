@@ -44,6 +44,7 @@ mod tileset_workflows;
 #[cfg(test)]
 mod toolbar_tests;
 mod transparency;
+mod window_title;
 #[cfg(test)]
 mod zoom_tests;
 use block_editor::BlockForm;
@@ -67,8 +68,11 @@ use polished_map_project::{
     prepare_save_as,
 };
 
+/// Development application identity, also used before a map is open.
+pub const WINDOW_TITLE: &str = "Polished Map NG — development";
+
 struct Loaded {
-    // Keep the chosen spelling for history independently of canonical I/O paths.
+    // Retain chosen spelling for history/title independently of canonical I/O paths.
     recent_path: Option<PathBuf>,
     events: Option<polished_map_project::EventDocument>,
     event_warning: Option<String>,
@@ -100,6 +104,7 @@ struct ResizeForm {
 }
 
 pub struct Editor {
+    last_window_title: Option<String>,
     native_fonts: Option<std::sync::Arc<polished_map_project::NativeFonts>>,
     about: Option<about::AboutDialog>,
     help_window: help::HelpWindow,
@@ -186,6 +191,7 @@ pub struct Editor {
 impl Default for Editor {
     fn default() -> Self {
         Self {
+            last_window_title: None,
             native_fonts: None,
             about: None,
             help_window: Default::default(),
@@ -695,6 +701,7 @@ impl Editor {
                 if recent_path.extension().is_none() {
                     recent_path.set_extension("blk");
                 }
+                self.loaded.as_mut().unwrap().recent_path = Some(recent_path.clone());
                 self.recent_maps.remember(recent_path);
                 self.status = format!("Saved {}", path.display());
                 self.check_overworld_buffer();
@@ -1850,6 +1857,7 @@ impl Editor {
         }
         self.help_window.show(&ctx, !blocked);
         self.dialogs(&ctx);
+        self.sync_window_title(&ctx);
     }
 }
 

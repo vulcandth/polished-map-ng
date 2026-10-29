@@ -1,5 +1,35 @@
 # Compatibility evidence
 
+## Map window title and Print filename
+
+`window_title.rs` follows master `Main_Window::open_map`, `save_as_cb`, `close_cb`
+and `option-dialogs.h::NEW_MAP_NAME`. The fixed NG development identity gains
+` - <basename>` after a completed open or Save As, uses `New Map` before the
+first save, and resets after Close. Dirty state never adds an asterisk. The
+originally chosen path spelling is retained independently of canonical I/O paths
+and recent-history eviction. Only changed titles send a command, explicitly to
+the root viewport, after the frame's document/dialog transitions.
+
+The source also sets Print's filename at these transitions. The queued Print
+request now captures that suggestion: `.blk` (case-insensitive) becomes `.png`,
+other basenames retain their suffix and append `.png`, and new maps use
+`New Map.png`. The injected native chooser receives the captured name, even if
+the editor subsequently releases the loaded document. It remains a suggestion;
+the chosen output path still goes through the existing confirmation/conflict
+checks. No file is created while computing or displaying either name.
+
+Tests exercise real asynchronous New/Open loads, failed loads, canceled Map
+Options/Close, dirty edits, successful/failed Save As, Close, and unchanged-frame
+command suppression. They also check chosen-name precedence, mixed-case/multiple
+suffixes, Unicode, preservation of non-Unicode native path bytes/code units and
+queued Print picker handoff. Native title-bar rendering and OS chooser handling
+are not proven by these headless checks. The development identity intentionally
+continues to distinguish this port from an upstream parity release.
+Local formatting, Clippy with warnings denied, workspace tests and rustdoc pass.
+The visual suite passes 163 tests (four explicit ignores), with no new snapshot
+baseline changes for titles/filenames. The installed-font and native-window
+checks remain separate from these document-state tests.
+
 ## Popup indicator themes and inactive colors
 
 `menu_popup/marks.rs` adapts pinned master `themes.cpp` and FLTK 1.4.5
@@ -526,8 +556,8 @@ check prevents Print from stealing command-Shift-P from Show Priority.
 
 Copy and Export capture current unsaved map, composed graphics, events, flags
 and style. A worker runs the shared font adapter/compositor; output ignores
-canvas zoom, scroll and view toggles. Export uses `Print Screenshot`, defaults
-to `screenshot.png`, and retains existing filename suffixes. Appending `.png`
+canvas zoom, scroll and view toggles. Export uses `Print Screenshot`, suggests
+the map-derived PNG filename, and retains existing filename suffixes. Appending `.png`
 requires another confirmation if that changed destination already exists.
 Observed file hashes are checked before and after staging a complete PNG.
 Clipboard output is handed to egui on the UI thread, then the source success

@@ -36,6 +36,10 @@ Implementation-specific exceptions will be recorded here with tests and rational
 - Single-file saves compare content rather than just modification timestamps,
   and stage output before replacement. Concurrent writers still have a narrow
   check/replace race; no filesystem-wide compare-and-swap guarantee is claimed.
+  Save As publishes the backing path, title and Print filename only after the
+  replacement succeeds. Upstream `save_as_cb` updates its path/title before
+  `save_map(true)`; retaining the old identity on failure keeps the port's live
+  document consistent with the file that actually exists.
 - ASM `.CEL` blockset imports require binary `.bin`/`.bst` Save As. Upstream
   writes binary bytes over the assembly source; the port preserves that source.
   Existing binary blockset writes preserve row-major tile bytes. Paired Save As

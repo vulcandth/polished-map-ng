@@ -193,7 +193,7 @@ fn command_shortcut_toolbar_and_default_button_share_print_workflow() {
         Destination::ChooseFile
     ));
     let ctx = h.ctx.clone();
-    h.state_mut().dispatch_print(&ctx, || Ok(None), run);
+    h.state_mut().dispatch_print(&ctx, |_| Ok(None), run);
     assert!(h.state().print_request.is_none() && h.state().print_worker.is_none());
     assert!(h.state().print_success.is_none() && h.state().error.is_none());
     // Command+Shift+P remains the separate priority shortcut.
@@ -349,7 +349,7 @@ fn worker_output_handoff_success_errors_and_modal_close_guard() {
     h.run();
     let ctx = h.ctx.clone();
     h.state_mut()
-        .dispatch_print(&ctx, || panic!("Copy must not open a picker"), run);
+        .dispatch_print(&ctx, |_| panic!("Copy must not open a picker"), run);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     let copied = loop {
         h.step();
@@ -409,7 +409,8 @@ fn picker_cancel_error_and_selected_destination_dispatch() {
         h.state_mut().queue_print(Destination::ChooseFile);
         h.state_mut().dispatch_print(
             &ctx,
-            || {
+            |filename| {
+                assert_eq!(filename, std::ffi::OsStr::new("Map.2x1.png"));
                 if cancel {
                     Ok(None)
                 } else {
@@ -426,7 +427,8 @@ fn picker_cancel_error_and_selected_destination_dispatch() {
     fs::write(&path, b"old screenshot").unwrap();
     let target = prepare_png_export(&path).unwrap();
     h.state_mut().queue_print(Destination::ChooseFile);
-    h.state_mut().dispatch_print(&ctx, || Ok(Some(target)), run);
+    h.state_mut()
+        .dispatch_print(&ctx, |_| Ok(Some(target)), run);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     while h.state().print_worker.is_some() {
         assert!(std::time::Instant::now() < deadline);
@@ -440,4 +442,24 @@ fn picker_cancel_error_and_selected_destination_dispatch() {
     );
     assert!(fs::read(path).unwrap().starts_with(b"\x89PNG"));
     assert!(!h.state().is_modified());
+}
+
+#[test]
+fn queued_print_retains_the_filename_of_the_document_it_captured() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    let ctx = h.ctx.clone();
+    h.state_mut().queue_print(Destination::ChooseFile);
+    h.state_mut().close_map();
+    let mut picker_called = false;
+    h.state_mut().dispatch_print(
+        &ctx,
+        |filename| {
+            picker_called = true;
+            assert_eq!(filename, std::ffi::OsStr::new("Map.2x1.png"));
+            Ok(None)
+        },
+        run,
+    );
+    assert!(picker_called);
+    assert!(h.state().print_worker.is_none());
 }

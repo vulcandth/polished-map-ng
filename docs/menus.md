@@ -144,7 +144,7 @@ remain different from the original native child window.
 Grid, IDs, Priority, Events and Warp IDs are independent controls, default off.
 The source copies their values into preferences even when the options dialog is
 canceled. Warp IDs only affect output when Events is on; the checkbox itself
-stays enabled. Export opens `Print Screenshot` with `screenshot.png`, PNG filter
+stays enabled. Export opens `Print Screenshot` with the map-derived PNG filename, PNG filter
 and overwrite confirmation. Copy sends an image without writing a file. Both
 use native map dimensions regardless of zoom or current canvas visibility.
 File/Print, the toolbar and command-P share this workflow. Command-Shift-P remains
@@ -154,6 +154,13 @@ thread after completion. Export retains any existing filename suffix, adding
 `.png` only when absent, and confirms a newly suffixed existing destination.
 The save target is hashed and rechecked before installation. Native font metrics, clipboard payloads,
 file chooser behavior and dialog frame/DPI remain targeted platform checks.
+
+The main-window title appends the chosen map basename to NG's development
+identity after Open/Save As, uses `New Map` for an unsaved new map, and resets
+on Close. It has no dirty-state asterisk. Canceled or failed transitions retain
+the current name. Print suggests the same basename with `.blk` replaced by
+`.png` (case-insensitive), or `.png` appended for other input suffixes; the new
+map suggestion is `New Map.png`. A queued Print retains its captured suggestion.
 
 Full Screen follows the source View entry and F11 shortcut, including use before
 opening a map. Both request native fullscreen through eframe. The checkmark reads

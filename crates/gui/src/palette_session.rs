@@ -98,7 +98,7 @@ impl Editor {
             self.recent_maps.remember(
                 loaded
                     .recent_path
-                    .take()
+                    .clone()
                     .unwrap_or_else(|| loaded.document.path().to_owned()),
             );
         }

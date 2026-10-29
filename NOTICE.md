@@ -60,6 +60,9 @@ Windows/Unix conversion and preserved upstream attribution.
 About adapts `Main_Window::initialize/about_cb`, `Modal_Dialog::refresh` and
 the platform sizes in `themes.h`. Its text distinguishes NG's own identity from
 the retained Rangi/Fugue notices. Unverified application artwork is not included.
+Root-window titles and Print filename suggestions adapt
+`Main_Window::{open_map,save_as_cb,close_cb}` and `NEW_MAP_NAME` under LGPL-3.0-only,
+retaining a separate NG development identity and successful-save publication.
 Popup sizing adapts the pinned master's menu labels/flags and FLTK 1.4.5
 `Fl_Menu.cxx` measurement/drawing calculations. Polished Map NG is based in part
 on the work of the FLTK project (<https://www.fltk.org>), Copyright 1998-2024

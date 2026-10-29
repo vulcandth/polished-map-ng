@@ -1,6 +1,6 @@
 fn main() -> eframe::Result {
     eframe::run_native(
-        "Polished Map NG — development",
+        polished_map_gui::WINDOW_TITLE,
         eframe::NativeOptions {
             viewport: eframe::egui::ViewportBuilder::default()
                 .with_app_id("polished-map-ng")

@@ -23,6 +23,7 @@ pub(super) enum Destination {
     Clipboard,
 }
 pub(super) struct PrintJob {
+    filename: std::ffi::OsString,
     fonts: Option<std::sync::Arc<polished_map_project::NativeFonts>>,
     map: Map,
     graphics: Graphics,
@@ -86,11 +87,11 @@ pub(super) fn run(job: PrintJob) -> Result<PrintOutput, String> {
 /// Native save choosers provide their normal overwrite confirmation. If adding
 /// the source's default suffix changes the destination, confirm that file too.
 #[cfg(not(test))]
-pub(super) fn choose_export() -> Result<Option<PngExportTarget>, String> {
+pub(super) fn choose_export(filename: &std::ffi::OsStr) -> Result<Option<PngExportTarget>, String> {
     let Some(path) = rfd::FileDialog::new()
         .set_title("Print Screenshot")
         .add_filter("PNG image", &["png"])
-        .set_file_name("screenshot.png")
+        .set_file_name(filename.to_string_lossy())
         .save_file()
     else {
         return Ok(None);
@@ -137,6 +138,7 @@ impl Editor {
             return;
         };
         self.print_request = Some(PrintJob {
+            filename: loaded.print_filename(),
             fonts: self.native_fonts.clone(),
             map: loaded.document.map().clone(),
             graphics: loaded.graphics.clone(),
@@ -266,14 +268,14 @@ impl Editor {
     pub(super) fn dispatch_print(
         &mut self,
         ctx: &egui::Context,
-        choose: impl FnOnce() -> Result<Option<PngExportTarget>, String>,
+        choose: impl FnOnce(&std::ffi::OsStr) -> Result<Option<PngExportTarget>, String>,
         work: fn(PrintJob) -> Result<PrintOutput, String>,
     ) {
         let Some(mut job) = self.print_request.take() else {
             return;
         };
         if matches!(job.destination, Destination::ChooseFile) {
-            match choose() {
+            match choose(&job.filename) {
                 Ok(Some(target)) => job.destination = Destination::File(target),
                 Ok(None) => return,
                 Err(e) => {
