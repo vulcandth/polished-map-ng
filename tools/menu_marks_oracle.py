@@ -17,7 +17,7 @@ FILES = {
     "fl_draw.cxx": "acd8d21aab871c8484ba10a2010fad86186200d882bc1e031dcafcdfcceafd40",
     "fl_contrast.cxx": "95f8ba993735c7ee202ee4f84afdb2bd91e966c920e8b8c9b7a721edf5883b8f",
     "fl_color.cxx": "683c75655dd6a19f2335216c5f99dad2abc207f9be3119867bba38aab5655150",
-    "Fl_Menu.cxx": "8b45639af0f18bb9467a029678d1687bf1d05b0ed5fced4cae160512625daa94",
+    "Fl_Menu.cxx": "5c7b2863624c33959c0bc2dce014f4692f1a29692ed6f0bff802fd0823c5aa36",
 }
 
 
