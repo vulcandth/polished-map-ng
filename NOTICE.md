@@ -41,6 +41,12 @@ serialization and validation are Rust implementations.
 Block-ID overlays and decimal/hexadecimal hover formats adapt master
 `map-buttons.cpp`, `Main_Window::update_status/update_event_cursor` and
 `utils.cpp::draw_outlined_text`. Native font selection/weight remains unfinished.
+Priority zigzag artwork by Rangi originates in Polished Map++ commit
+`d090450b5649b5cfcc7645884d44f6414c3f0a96`, ported to master with the toolbar
+icon in `0a627967a3ff6e68ca062aef69184065e16a4efe`. The three source PNG patterns
+are represented as periodic RGBA masks under LGPL-3.0-only; source PNG payloads
+are not distributed. Drawing adapts `Tile::draw_with_priority` and
+`Metatileset::draw_metatile`. See `docs/assets.md` for source hashes and pixel checks.
 Map/sidebar grids and shared map/event/editor selection rings adapt
 `map-buttons.cpp::draw_map_button/draw_selection_border`. The portable grid colors
 come from the Greybird and Dark inactive colors in master `themes.cpp`.
@@ -48,7 +54,7 @@ come from the Greybird and Dark inactive colors in master `themes.cpp`.
 ## Assets and fixtures
 
 No upstream game graphics, example maps or native font files are redistributed.
-Tests create synthetic data. Twenty-five reviewed toolbar/editor icon images are
+Tests create synthetic data. Twenty-six reviewed toolbar/editor icon images are
 included with unchanged XPM sources, decoded RGBA pixels and provenance hashes.
 Some adapt **Fugue Icons**, copyright © 2013 Yusuke Kamiyamane, under **CC BY 3.0**:
 <https://p.yusukekamiyamane.com/> and <https://creativecommons.org/licenses/by/3.0/>.

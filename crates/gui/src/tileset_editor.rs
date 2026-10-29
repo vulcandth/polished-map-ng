@@ -21,6 +21,7 @@ pub(super) struct TilesetForm {
     pub(super) draft: MasterTilesetDocument,
     pub(super) selected: u8,
     roof: bool,
+    show_priority: bool,
     hue: u8,
     clipboard: Option<(u8, TileSnapshot)>,
     sheet: Option<egui::TextureHandle>,
@@ -297,6 +298,9 @@ impl Editor {
                 draft: doc.clone(),
                 selected: if roof { 6 } else { 0 },
                 roof,
+                // Roof_Window::show has no priority argument. Avoid the original
+                // Deep_Tile_Button's invalid Roof_Window -> Tileset_Window cast.
+                show_priority: self.show_priority && !roof,
                 hue: 0,
                 clipboard: None,
                 sheet: None,
@@ -394,6 +398,7 @@ impl Editor {
     }
 
     pub(super) fn tileset_dialog(&mut self, ctx: &egui::Context) {
+        let priority = priority::Textures::get(ctx);
         let Some(mut form) = self.tileset_form.take() else {
             return;
         };
@@ -537,6 +542,13 @@ impl Editor {
                         Vec2::splat(1.0 / 16.0),
                     );
                     ui.painter().image(sheet.id(), cell, uv, Color32::WHITE);
+                }
+                if form.show_priority && form.model().attributes()[index] & 0x80 != 0 {
+                    priority.tile(
+                        ui.painter(),
+                        cell,
+                        polished_map_core::PriorityPattern::Large,
+                    );
                 }
                 if form.selected == id {
                     super::block_editor::selection_border(ui, cell);

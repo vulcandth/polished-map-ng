@@ -15,7 +15,7 @@ keyboard and headless counterparts where applicable.
 | File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Print's complete options/overlays remain pending. Native close delivery still needs platform verification. |
 | Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialogs and complete popup geometry remain pending. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The extra Edit Block entry is temporary access to the existing editor; upstream opens it through block interactions. Complete context-menu/gesture equivalence is pending. |
-| View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Show Priority, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
+| View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
 | Options | Tile Priority; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | Monochrome, 256 Tiles, Drag and Drop, Overworld Map Size. Remaining native/persistence gaps are tracked in `preferences.md`. |
@@ -27,8 +27,14 @@ Tile Priority controls the tile editor's priority checkbox and palette-map gap/
 padding output. Toggling it preserves existing attribute bits, pixels, dirty flags
 and map history. It survives Close and exit; successful reads of PRIORITY_* colors
 enable it again, while ordinary palettes preserve the current setting. It is
-independent of View > Show Priority, whose overlay/shortcut/toolbar work remains
-pending. Disabling the option must not silently enable it again during Save.
+independent of View > Show Priority. Disabling the option must not silently enable
+it again during Save. Show Priority defaults on and has a synchronized toolbar
+toggle and Ctrl/Cmd+Shift+P shortcut. Its controls are disabled while Tile Priority
+is off, but the stored display value and existing overlays are retained. It draws
+before grids, IDs, selection borders and event markers. Main/sidebar tiles use
+8/16-pixel patterns; block sheets and tileset thumbnails use 16, block chips 24.
+Pixel-editing grids, tile-image clipboard and plain RGB export omit the overlay.
+The original roof-dialog invalid cast is handled as documented in `deviations.md`.
 
 Open Recent shows up to ten basenames with Alt+1 through Alt+0. Full paths are
 available on hover; duplicate basenames remain separate entries. Completed opens

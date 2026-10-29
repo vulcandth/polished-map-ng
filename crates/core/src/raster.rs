@@ -38,6 +38,8 @@ pub enum RasterError {
     MetatileCount,
     #[error("metatile references missing tile {0}")]
     MissingTile(u8),
+    #[error("expected one priority flag per tile")]
+    PriorityCount,
 }
 
 #[derive(Clone, Debug)]
@@ -45,6 +47,7 @@ pub struct Graphics {
     tiles: Vec<Tile>,
     palettes: Vec<Palette>,
     metatiles: Vec<[u8; 16]>,
+    priorities: Vec<bool>,
 }
 
 impl Graphics {
@@ -65,6 +68,7 @@ impl Graphics {
             }
         }
         Ok(Self {
+            priorities: vec![false; tiles.len()],
             tiles,
             palettes,
             metatiles,
@@ -73,6 +77,28 @@ impl Graphics {
 
     pub fn block_count(&self) -> usize {
         self.metatiles.len()
+    }
+
+    pub fn with_tile_priorities(mut self, priorities: Vec<bool>) -> Result<Self, RasterError> {
+        if priorities.len() != self.tiles.len() {
+            return Err(RasterError::PriorityCount);
+        }
+        self.priorities = priorities;
+        Ok(self)
+    }
+
+    pub fn tile_priority(&self, id: u8) -> bool {
+        self.priorities
+            .get(usize::from(id))
+            .copied()
+            .unwrap_or(false)
+    }
+
+    /// Undefined block IDs have no overlay, matching the source's EMPTY_RGB path.
+    pub fn block_priorities(&self, id: u8) -> Option<[bool; 16]> {
+        self.metatiles
+            .get(usize::from(id))
+            .map(|tiles| tiles.map(|tile| self.tile_priority(tile)))
     }
 
     pub fn replace_blocks(&mut self, blocks: &crate::Blockset) -> Result<(), RasterError> {

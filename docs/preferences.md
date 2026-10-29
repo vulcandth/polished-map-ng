@@ -19,6 +19,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | On |
 | Resize anchor | Center |
 | Tile Priority | Off; reading PRIORITY_* palette colors enables it |
+| Show Priority | On; control enabled only while Tile Priority is on |
 | Recent maps | Empty; at most ten paths |
 
 The three auto-load toggles affect subsequent opens, not the current document.

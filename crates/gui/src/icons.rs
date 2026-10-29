@@ -17,6 +17,7 @@ pub(super) enum Icon {
     Zoom,
     Ids,
     Hex,
+    Priority,
     Palettes,
     Resize,
     Tileset,
@@ -43,6 +44,7 @@ impl Icon {
             (Self::Ids, true) => include_bytes!("../assets/icons/ids-dark.rgba"),
             (Self::Hex, false) => include_bytes!("../assets/icons/hex.rgba"),
             (Self::Hex, true) => include_bytes!("../assets/icons/hex-dark.rgba"),
+            (Self::Priority, _) => include_bytes!("../assets/icons/priority.rgba"),
             (Self::Palettes, _) => include_bytes!("../assets/icons/palettes.rgba"),
             (Self::Resize, _) => include_bytes!("../assets/icons/resize.rgba"),
             (Self::Tileset, _) => include_bytes!("../assets/icons/tileset.rgba"),
@@ -217,6 +219,7 @@ mod tests {
             "Zoom",
             "IDs",
             "Hex",
+            "Show Priority",
             "Edit current palettes",
             "Resize map",
             "Tileset",
@@ -291,6 +294,7 @@ mod tests {
             Icon::Zoom,
             Icon::Ids,
             Icon::Hex,
+            Icon::Priority,
             Icon::Palettes,
             Icon::Resize,
             Icon::Tileset,
@@ -311,7 +315,7 @@ mod tests {
         }
         for scale in [1_u32, 2] {
             let mut h = Harness::builder()
-                .with_size(Vec2::new(592.0, 272.0))
+                .with_size(Vec2::new(624.0, 272.0))
                 .with_pixels_per_point(scale as f32)
                 .build_ui(|ui| {
                     ui.painter()

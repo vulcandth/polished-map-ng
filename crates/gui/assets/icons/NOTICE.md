@@ -50,6 +50,13 @@ instead of arrows for collision quadrants"; the dark recolors appeared in
 `530c963158fceb9d4836363d6d5e39d51019b616`. Review of that history identifies no
 separate external asset or font source for these drawings.
 
+The `priority` icon is Rangi's geometric zigzag, introduced on master in
+`0a627967a3ff6e68ca062aef69184065e16a4efe`. Its 252 opaque RGB pixels exactly
+match the 16×16 overlay originating in Polished Map++ commit
+`d090450b5649b5cfcc7645884d44f6414c3f0a96`; only the four icon corners are
+transparent. It is retained under LGPL-3.0-only with the original attribution.
+It does not use Fugue artwork.
+
 Polished Map NG preserves the original XPM sources unchanged, converts their
 declared 16×16 pixels to row-major RGBA8, and generates disabled grayscale/color
 blends at runtime. Conversion does not remove the above attribution or terms.

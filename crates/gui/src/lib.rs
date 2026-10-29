@@ -19,6 +19,7 @@ mod palette_session;
 #[cfg(test)]
 mod palette_session_tests;
 mod preferences;
+mod priority;
 mod recent_maps;
 mod roof_colors;
 #[cfg(test)]
@@ -111,6 +112,7 @@ pub struct Editor {
     auto_special_palettes: bool,
     auto_roof_colors: bool,
     allow_priority: bool,
+    show_priority: bool,
     preferences_writable: bool,
     recent_maps: recent_maps::RecentMaps,
     pending_recent: Option<PathBuf>,
@@ -179,6 +181,7 @@ impl Default for Editor {
             auto_special_palettes: true,
             auto_roof_colors: true,
             allow_priority: false,
+            show_priority: true,
             preferences_writable: true,
             recent_maps: recent_maps::RecentMaps::default(),
             pending_recent: None,
@@ -995,6 +998,16 @@ impl Editor {
                 *value = !*value;
             }
         }
+        if ui
+            .add_enabled(
+                self.allow_priority,
+                Button::new(Icon::Priority, "Show Priority").selected(self.show_priority),
+            )
+            .on_hover_text("Show Priority (Ctrl/Cmd+Shift+P)")
+            .clicked()
+        {
+            self.show_priority = !self.show_priority;
+        }
         icons::separator(ui);
         self.palette_set_toolbar(ui);
         if ui
@@ -1029,6 +1042,9 @@ impl Editor {
     }
 
     fn sidebar(&mut self, ui: &mut egui::Ui, block_size: f32) {
+        let priority = self
+            .show_priority
+            .then(|| priority::Textures::get(ui.ctx()));
         let mut scroll = egui::ScrollArea::vertical()
             .id_salt("blocks")
             .auto_shrink([false, false])
@@ -1081,6 +1097,14 @@ impl Editor {
                         Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
                         Color32::WHITE,
                     );
+                    if let (Some(priority), Some(loaded)) = (&priority, &self.loaded) {
+                        priority.block(
+                            ui.painter(),
+                            cell,
+                            loaded.graphics.block_priorities(id as u8),
+                            self.zoom,
+                        );
+                    }
                     let outlined = id == usize::from(self.selected)
                         || ui.is_enabled()
                             && self.sidebar_drag.is_some_and(|from| {
@@ -1141,6 +1165,9 @@ impl Editor {
     }
 
     fn canvas(&mut self, ui: &mut egui::Ui, layout: &geometry::Layout) {
+        let priority = self
+            .show_priority
+            .then(|| priority::Textures::get(ui.ctx()));
         self.ruler_cursor = None;
         self.ruler_scroll = Vec2::ZERO;
         self.event_ui.cursor = None;
@@ -1235,6 +1262,14 @@ impl Editor {
                     } else {
                         ui.painter()
                             .rect_filled(cell, 0.0, Color32::from_rgb(0xab, 0xcd, 0xef));
+                    }
+                    if let Some(priority) = &priority {
+                        priority.block(
+                            ui.painter(),
+                            cell,
+                            loaded.graphics.block_priorities(id),
+                            self.zoom,
+                        );
                     }
                     let hovered = !self.event_ui.mode
                         && ui.is_enabled()
@@ -1423,6 +1458,16 @@ impl Editor {
                 )
             }) {
                 self.hex = !self.hex;
+            }
+            if self.allow_priority
+                && ctx.input_mut(|i| {
+                    i.consume_key(
+                        egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+                        egui::Key::P,
+                    )
+                })
+            {
+                self.show_priority = !self.show_priority;
             }
             self.event_shortcuts(&ctx);
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::W)) {

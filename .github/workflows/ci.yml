@@ -53,6 +53,7 @@ jobs:
       - run: python3 tools/palette_editor_oracle.py --checkout .reference/master --output .scratch/reference-palette
       - run: python3 tools/event_oracle.py --checkout .reference/master --output .scratch/reference-event
       - run: python3 tools/warp_id_oracle.py --checkout .reference/master --output .scratch/reference-warp-id
+      - run: python3 tools/priority_oracle.py --checkout .reference/master --output .scratch/reference-priority
       - run: cargo test -p polished-map-project --locked --test reference -- --ignored
         env:
           POLISHED_MAP_2BPP_ORACLE: ${{ github.workspace }}/.scratch/reference-2bpp
@@ -61,6 +62,7 @@ jobs:
           POLISHED_MAP_PALETTE_ORACLE: ${{ github.workspace }}/.scratch/reference-palette
           POLISHED_MAP_EVENT_ORACLE: ${{ github.workspace }}/.scratch/reference-event
           POLISHED_MAP_WARP_ID_ORACLE: ${{ github.workspace }}/.scratch/reference-warp-id
+          POLISHED_MAP_PRIORITY_ORACLE: ${{ github.workspace }}/.scratch/reference-priority
   visuals:
     runs-on: ubuntu-24.04
     steps:

@@ -1,7 +1,7 @@
 # Asset provenance
 
 Game graphics and maps are not distributed. Reference checkouts and extracted
-oracle inputs stay ignored. Only the 25 reviewed icon images marked with a
+oracle inputs stay ignored. Only the 26 reviewed icon images marked with a
 `distribution` entry in the inventory are imported. Other icons remain excluded;
 this record does not authorize importing other assets.
 
@@ -80,7 +80,8 @@ bundled XPMs. The dependency CI job runs verification without network access.
 | ids/ids-dark, hex/hex-dark | Imported as fixed Polished Map bitmap lettering under LGPL-3.0-only. History reviewed at `bf08f47`, `3e057b0` and the `530c963` recolor; no external font file or separate asset source is identified there. |
 | Eight collision-quadrant variants | Imported under LGPL-3.0-only with introducing commit `2086e18`, dark recolor `530c963`, individual source/pixel hashes and attribution. These geometric drawings now label the block editor's collision fields. |
 | blank | Still excluded. Source geometry/history inspected; menu integration and individual import record remain. |
-| open, load, undo, redo, show, warp, priority, gameboy, add-sub, change, load-palettes | Still excluded. Trace composite artwork and other source families; nearest-image candidates remain unverified. |
+| priority | Imported under LGPL-3.0-only; Rangi's geometric zigzag matches all 252 opaque pixels in the 16×16 priority overlay, with four transparent corners. See the provenance below. |
+| open, load, undo, redo, show, warp, gameboy, add-sub, change, load-palettes | Still excluded. Trace composite artwork and other source families; nearest-image candidates remain unverified. |
 | blocks/blocks-dark, events, roof, change-roof | Still excluded. These visually resemble game sprites/tiles. Trace the underlying artwork; repository attribution alone is insufficient to clear it. Appearance is not proof of ownership. Resolve rights or use separately licensed/original artwork and record the visual deviation. |
 
 Application logos and warning/error/success imagery are outside the 42-image
@@ -142,12 +143,15 @@ rectangles and source-derived color/alpha constants. Their pixels were decoded
 locally to verify flat interiors and borders. These adaptations remain attributed
 to the upstream source in `NOTICE.md`; source PNG payloads are not distributed.
 
-## Priority overlay research (not yet imported)
+## Priority zigzag overlays and toolbar icon
 
 Master `tile.cpp::draw_with_priority` selects three distinct translucent zigzag
 patterns, rather than enlarging the 8×8 image. Introduction on master:
 `0a627967a3ff6e68ca062aef69184065e16a4efe` (Rangi, 2019-03-24), explicitly
-ported from Polished Map++. Trace that earlier origin before the asset port.
+ported from Polished Map++. The original introduction is Rangi's commit
+`d090450b5649b5cfcc7645884d44f6414c3f0a96` (2019-01-15), "Use a translucent
+zigzag overlay to show tile priority". These geometric patterns and the derived
+toolbar image are retained with the original attribution under LGPL-3.0-only.
 The pinned master buffers decode to the same four RGBA colors:
 `(32,96,96,96)`, `(50,126,126,96)`, `(86,186,186,96)`, `(104,216,216,96)`.
 
@@ -159,8 +163,14 @@ The pinned master buffers decode to the same four RGBA colors:
 
 The overlay tests the tile attribute and Show Priority value independently of
 the Tile Priority editing/output option. Canvas/sidebar, block-editor sheet and
-chips, and tileset thumbnails need the appropriate pattern size. Source drawing
+chips, and tileset thumbnails use the appropriate pattern size. Source drawing
 order places selection borders above the overlay; clipboard tile images omit it.
+The core stores periodic color-index masks instead of PNG payloads. The reference
+CI job independently decodes all 896 original pixels and compares every RGBA
+channel using `tools/priority_oracle.py` and the `priority_patterns` test.
+GUI tests check texture pixels at 1×/2× DPI over light/dark backgrounds. The
+26-icon atlas now covers 19 designs and 304 size/theme/disabled/DPI combinations.
+Native FLTK/egui compositing equivalence still needs platform verification.
 
 ## Fonts
 

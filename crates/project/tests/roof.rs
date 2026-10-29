@@ -61,6 +61,33 @@ fn options() -> MasterGraphicsOptions {
         ..Default::default()
     }
 }
+
+#[test]
+fn graphics_priority_flags_follow_roof_attributes_without_altering_plain_exports() {
+    let dir = tempfile::tempdir().unwrap();
+    fixture(dir.path());
+    let mut doc = MasterTilesetDocument::open_in_project(dir.path(), "demo", &options()).unwrap();
+    let blocks = Blockset::from_bytes(&[0x0a; 16]).unwrap();
+    let plain = doc.graphics(&blocks).unwrap();
+    doc.roof_mut()
+        .unwrap()
+        .roof_mut()
+        .synchronize_attributes(std::array::from_fn(|i| if i == 0 { 0x80 } else { 0 }))
+        .unwrap();
+    let priority = doc.graphics(&blocks).unwrap();
+    assert_eq!(priority.block_priorities(0), Some([true; 16]));
+    assert_eq!(priority.render_block(0), plain.render_block(0));
+    doc.set_allow_priority(false);
+    assert_eq!(
+        doc.graphics(&blocks).unwrap().block_priorities(0),
+        Some([true; 16])
+    );
+    doc.change_roof(None).unwrap();
+    assert_eq!(
+        doc.graphics(&blocks).unwrap().block_priorities(0),
+        Some([false; 16])
+    );
+}
 fn paint(tile: u8, hue: u8) -> TileCommand {
     TileCommand::Paint {
         tile,

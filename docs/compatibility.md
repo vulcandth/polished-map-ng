@@ -2,6 +2,30 @@
 
 Status: initial implementation in progress. Neither upstream parity gate passed.
 
+Show Priority now follows the original default-on state, Ctrl/Cmd+Shift+P shortcut,
+menu/toolbar synchronization, and disabled-control behavior. Tile Priority being
+off disables the controls without clearing the Show Priority value or overlays.
+Canvas/sidebar, block sheet/chips and tileset thumbnails use separate source
+patterns before selection/grid/ID/event drawing. The headless graphics metadata
+includes roof-aware priority flags; plain RGB rendering and tile clipboard omit
+the display overlay. Roof thumbnails avoid the source's invalid window cast as
+recorded in `deviations.md`.
+
+The pinned original PNGs independently verify all 896 RGBA pixels via
+`tools/priority_oracle.py` and `priority_patterns_match_all_original_rgba_pixels`.
+GUI tests verify all three textures at 1×/2× DPI over light/dark backgrounds,
+control routing, disabled/modal shortcuts, attribute/dirty-state retention and
+unadorned clipboard output. The new priority icon has reviewed LGPL provenance;
+26 imported image files now cover 19 designs and 304 atlas combinations.
+Native FLTK/egui alpha-compositing equivalence remains unverified.
+
+Local formatting, workspace Clippy/tests/docs, visual-feature Clippy, all seven
+pinned real-project tests and the full visual suite (94 passed, one ignored)
+pass. The independent priority PNG comparison and all 26 icon hash checks pass.
+All 60 changed existing snapshots were inspected: 53 changes are confined to
+the toolbar; the others cover the View menu, editor thumbnails, shifted palette
+popup and expanded icon atlas. Four new priority snapshots were also inspected.
+
 Tile Priority follows `Main_Window::allow_priority_cb`, `Palette_Map::read` and
 `write_palette_map`: changes preserve attributes/dirty state, control editor
 availability and serialization, and survive Close/persistence. GUI tests cover
@@ -10,7 +34,7 @@ editor control. Project tests check automatic enablement, mode-sensitive hashes,
 no writes for a clean document and exact gap changes after pixel-only edits.
 CLI preview/apply/reopen tests cover both ordinary and priority palette commands;
 the CLI retains its existing automatic inference of priority mode for batches.
-The Show Priority overlay remains pending.
+Show Priority is covered by the subsequent display work above.
 Local fmt, workspace Clippy/tests/docs, visual-feature Clippy, all seven pinned
 real-project tests and the full visual suite (92 passed, one ignored) pass.
 Only the Options and Roof Palettes submenu baselines changed; both were inspected.
@@ -41,9 +65,9 @@ inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pas
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; persistent preferences and full differential coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex and block-ID tests pass; light/dark development snapshots inspected; native fonts/themes, persisted preferences and initial scroll positioning pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
-| Preferences, overlays, print/clipboard | master main-window.cpp | Seventeen implemented settings plus recent history restore/save with malformed-record protection; palette auto-load and Tile Priority options tested. Legacy import, remaining preferences, native storage/placement, complete overlays and print/clipboard parity pending |
+| Preferences, overlays, print/clipboard | master main-window.cpp | Eighteen implemented settings plus recent history restore/save with malformed-record protection; palette auto-load, Tile Priority and Show Priority tested. Legacy import, remaining preferences, native storage/placement, complete overlays and print/clipboard parity pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |

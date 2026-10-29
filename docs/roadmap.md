@@ -40,7 +40,7 @@ The compiled original overlay function matches 120 complete-bank cases; manual
 and automatic imports also agree on the pinned real project. Native dialog
 fidelity and native restart verification remain outstanding.
 
-Seventeen implemented view/mode/palette/auto-load/resize settings now restore and
+Eighteen implemented view/mode/palette/auto-load/resize settings now restore and
 save through eframe with a versioned record and stable app ID. The two palette
 auto-load menu options affect subsequent imports independently. Headless restart
 and malformed-record tests pass; legacy preference import, remaining options,
@@ -50,8 +50,10 @@ Tile Priority now controls priority editing and palette output independently of
 attribute bits. The GUI retains it across maps and Close, and priority palette
 imports automatically enable it. The backend exposes an explicit setter and
 includes the option in preflight fingerprints. Pixel-only saves also update
-owned palette-bank gap sizes when required by the option. Show Priority's
-8/16/24-pixel overlays and its toolbar/shortcut remain to be implemented.
+owned palette-bank gap sizes when required by the option. Show Priority now has
+8/16/24-pixel overlays, menu/toolbar/shortcut controls and persistence. All 896
+original RGBA pixels are independently verified; native compositing comparisons
+remain outstanding. Roof thumbnails avoid an invalid upstream window cast.
 
 Implemented slices include New Map, Save As, block resize, map editing/saving, master metadata discovery, six
 palette sets, project/roof colors, compound graphics and roof tile replacement.
@@ -132,7 +134,7 @@ Zoom now scales map offsets with source integer rounding, resets the sidebar,
 and preserves far-edge blank space until scrolling back. Headless controls and
 edge tests pass; initial positioning and native pan/scroll checks remain pending.
 The menu/toolbar port is in progress within master parity, before plusplus.
-Twenty-five reviewed image files now provide toolbar icons, tile/roof clipboard
+Twenty-six reviewed image files now provide toolbar icons, tile/roof clipboard
 icons and collision-quadrant labels, including dark variants, source-sized controls and integer disabled-color
 conversion. CC BY 3.0 Fugue attribution, LGPL adaptation notices, source/pixel
 hashes and reproducible asset verification are included. Continue the per-asset

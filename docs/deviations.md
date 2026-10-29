@@ -94,6 +94,14 @@ because it affects palette-map gap/padding output; old preview tokens must be
 regenerated. Palette writes no longer skip owned gap updates merely because
 attribute values themselves are unchanged.
 
+Master's roof thumbnails reuse `Deep_Tile_Button::draw`, which casts their
+`Roof_Window*` callback data to `Tileset_Window*` and reads `_show_priority` at a
+location where Roof_Window has no such field. This is an invalid cast and reads
+unrelated padding rather than a defined preference. The Rust roof dialog omits
+the overlay deterministically, consistent with `Roof_Window::show` taking no
+Show Priority argument. Roof tiles on the main map and in the block editor use
+their actual priority attributes and the normal Show Priority setting.
+
 Roof image paste clips to the selected 8×8 tile and leaves uncovered pixels
 unchanged. Upstream `Roof_Window::paste_tile_graphics_cb` iterates to
 `max(width, 8)` and `max(height, 8)`, which can read or write beyond image/tile
@@ -243,7 +251,7 @@ does not reproduce Windows' default Blue theme or the remaining native themes.
 Sidebar drag feedback follows source/target/selected state, while the existing
 egui drag gesture remains in-process rather than the source's native FLTK DND.
 
-The icon port currently includes 25 reviewed image files (14 commands and four
+The icon port currently includes 26 reviewed image files (15 commands and four
 collision-quadrant labels, including seven dark variants). Source-colored pixels,
 24-point toolbar/22-point clipboard bounds
 and disabled-color arithmetic are retained. Button selection/hover/focus frames

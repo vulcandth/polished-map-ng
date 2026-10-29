@@ -126,6 +126,10 @@ impl Editor {
                 ui.checkbox(&mut self.zoom, "Zoom");
                 ui.checkbox(&mut self.ids, "Block IDs");
                 ui.checkbox(&mut self.hex, "Hexadecimal");
+                ui.add_enabled(
+                    self.allow_priority,
+                    egui::Checkbox::new(&mut self.show_priority, "Show Priority"),
+                );
                 ui.checkbox(&mut self.event_ui.game_boy, "Game Boy Screen");
                 ui.checkbox(&mut self.event_ui.show, "Show Events");
                 ui.checkbox(&mut self.event_ui.warp_ids, "Show Warp IDs");

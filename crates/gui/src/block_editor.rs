@@ -9,6 +9,8 @@ pub(super) struct BlockForm {
     selected: u8,
     textures: Vec<egui::TextureHandle>,
     allow_256: bool,
+    priority: [bool; 256],
+    show_priority: bool,
     pub(super) windows_buttons: bool,
 }
 
@@ -46,6 +48,8 @@ impl Editor {
                     selected: 0,
                     textures,
                     allow_256: loaded.allow_256,
+                    priority: std::array::from_fn(|id| loaded.graphics.tile_priority(id as u8)),
+                    show_priority: self.show_priority,
                     windows_buttons: cfg!(target_os = "windows"),
                 })
             }
@@ -59,6 +63,7 @@ impl Editor {
         };
         let mut accept = false;
         let mut cancel = false;
+        let priority = priority::Textures::get(ctx);
         egui::Modal::new(egui::Id::unique("edit-block")).show(ctx, |ui| {
             ui.heading("Edit Block");
             let (area, _) = ui.allocate_exact_size(Vec2::new(466.0, 304.0), Sense::hover());
@@ -113,6 +118,13 @@ impl Editor {
                     Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
                     Color32::WHITE,
                 );
+                if form.show_priority && form.priority[id] {
+                    priority.tile(
+                        ui.painter(),
+                        cell,
+                        polished_map_core::PriorityPattern::Large,
+                    );
+                }
                 if usize::from(form.selected) == id {
                     selection_border(ui, cell);
                 }
@@ -145,6 +157,9 @@ impl Editor {
                     Rect::from_min_max(Pos2::ZERO, Pos2::new(1.0, 1.0)),
                     Color32::WHITE,
                 );
+                if form.show_priority && form.priority[usize::from(form.tiles[i])] {
+                    priority.tile(ui.painter(), cell, polished_map_core::PriorityPattern::Chip);
+                }
                 if response.hovered() {
                     selection_border(ui, cell);
                 }

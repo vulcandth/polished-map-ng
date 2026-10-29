@@ -1,6 +1,7 @@
 /target/
 /.reference/
 /.scratch/
+__pycache__/
 *.tmp
 *.bak
 **/tests/snapshots/**/*.diff.png

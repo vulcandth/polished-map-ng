@@ -4,6 +4,32 @@ use polished_map_project::codecs::decode_2bpp;
 use std::{fs, process::Command};
 
 #[test]
+#[ignore = "requires POLISHED_MAP_PRIORITY_ORACLE; run in the reference CI job"]
+fn priority_patterns_match_all_original_rgba_pixels() {
+    use polished_map_core::PriorityPattern;
+    let root = std::path::PathBuf::from(
+        std::env::var_os("POLISHED_MAP_PRIORITY_ORACLE").expect("set POLISHED_MAP_PRIORITY_ORACLE"),
+    );
+    for (name, pattern) in ["small", "large", "chip"]
+        .into_iter()
+        .zip(PriorityPattern::ALL)
+    {
+        let png = image::load_from_memory(&fs::read(root.join(format!("{name}.png"))).unwrap())
+            .unwrap()
+            .to_rgba8();
+        assert_eq!(
+            png.dimensions(),
+            (pattern.size() as u32, pattern.size() as u32)
+        );
+        assert_eq!(
+            png.as_raw(),
+            &pattern.rgba(),
+            "{name}: every RGBA channel must match"
+        );
+    }
+}
+
+#[test]
 #[ignore = "requires POLISHED_MAP_WARP_ID_ORACLE; run in the reference CI job"]
 fn warp_digit_pixels_and_label_layout_match_original() {
     use polished_map_core::WarpIdLabel;

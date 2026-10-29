@@ -280,7 +280,13 @@
       "xpm_sha256": "abe70c9bad7ec62eddcd1bb165a273e38212a99bfaec10745b8e7827e6977c73",
       "rgba_sha256": "cca2d8810b14d2c60527b6d5184613d54774d386ad3f07eaadeead624c33d62f",
       "last_changed_commit": "0a627967a3ff6e68ca062aef69184065e16a4efe",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Rangi/Polished Map geometric priority zigzag; plusplus d090450b5649b5cfcc7645884d44f6414c3f0a96, master 0a627967a3ff6e68ca062aef69184065e16a4efe",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance; all 252 opaque RGB pixels match the 16x16 priority overlay"
+      }
     },
     {
       "file": "res/gameboy.xpm",

@@ -408,6 +408,12 @@ impl MasterTilesetDocument {
 
     pub fn graphics(&self, blocks: &Blockset) -> Result<Graphics, ProjectError> {
         let mut tiles = self.model.tiles().to_vec();
+        let mut priorities: Vec<_> = self
+            .model
+            .attributes()
+            .iter()
+            .map(|a| a & 0x80 != 0)
+            .collect();
         let mut palettes = Vec::with_capacity(256);
         for i in 0..256 {
             let attr = self.model.attributes()[i];
@@ -430,6 +436,7 @@ impl MasterTilesetDocument {
                 let slot = i + 0x0a;
                 tiles[slot] = tile.clone();
                 let attr = roof.roof().tileset().attributes()[i];
+                priorities[slot] = attr & 0x80 != 0;
                 palettes[slot] = if attr == 9 {
                     UNDEFINED_COLORS
                 } else {
@@ -441,7 +448,8 @@ impl MasterTilesetDocument {
                 };
             }
         }
-        Ok(Graphics::new(tiles, palettes, blocks.blocks().to_vec())?)
+        Ok(Graphics::new(tiles, palettes, blocks.blocks().to_vec())?
+            .with_tile_priorities(priorities)?)
     }
 
     /// Save uses master's PNG destinations even for 2bpp/CHR/LZ imports. The
