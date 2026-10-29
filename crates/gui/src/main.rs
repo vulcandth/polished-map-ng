@@ -3,6 +3,7 @@ fn main() -> eframe::Result {
         "Polished Map NG — development",
         eframe::NativeOptions {
             viewport: eframe::egui::ViewportBuilder::default()
+                .with_app_id("polished-map-ng")
                 .with_inner_size([800.0, 600.0])
                 .with_min_inner_size([335.0, 262.0]),
             ..Default::default()

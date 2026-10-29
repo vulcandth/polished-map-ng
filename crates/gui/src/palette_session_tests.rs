@@ -20,6 +20,83 @@ fn edit(palettes: &mut polished_map_project::PaletteDocument) {
         .unwrap();
     palettes.select(PaletteSet::Custom);
 }
+
+#[test]
+fn palette_auto_load_options_defer_changes_and_independently_gate_the_next_open() {
+    for special in [false, true] {
+        for roofs in [false, true] {
+            let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+            let root = dir.path();
+            fs::create_dir_all(root.join("constants")).unwrap();
+            fs::create_dir_all(root.join("data/maps")).unwrap();
+            fs::write(
+                root.join("constants/map_constants.asm"),
+                "\tnewgroup\n\tmap_const NEXT, 2, 1\n",
+            )
+            .unwrap();
+            fs::write(
+                root.join("data/maps/maps.asm"),
+                "map Next, TILESET_DEMO, TOWN, LANDMARK_NEXT, MUSIC, FALSE, PALETTE_AUTO\n",
+            )
+            .unwrap();
+            fs::write(
+                root.join("gfx/tilesets/bg_tiles.pal"),
+                "\tRGB 1,1,1, 1,1,1, 1,1,1, 1,1,1\n".repeat(16),
+            )
+            .unwrap();
+            fs::write(
+                root.join("Next.pal"),
+                "\tRGB 2,2,2, 2,2,2, 2,2,2, 2,2,2\n".repeat(16),
+            )
+            .unwrap();
+            let roof_table = "\tRGB 3,3,3, 3,3,3, 3,3,3, 3,3,3\n".repeat(2);
+            fs::write(root.join("gfx/tilesets/roofs.pal"), &roof_table).unwrap();
+            let before = h.state().palette_document().content_hash();
+            for (enabled, label) in [
+                (special, "Auto-Load Special Palettes"),
+                (roofs, "Auto-Load Roof Colors"),
+            ] {
+                if !enabled {
+                    h.get_by_label("Options").click();
+                    h.run();
+                    h.get_by_label(label).click();
+                    h.run();
+                }
+            }
+            h.key_press(egui::Key::Escape);
+            h.run();
+            assert_eq!(h.state().auto_special_palettes, special);
+            assert_eq!(h.state().auto_roof_colors, roofs);
+            assert_eq!(h.state().palette_document().content_hash(), before);
+            assert!(!h.state().is_modified());
+            load(&mut h, root, false);
+            assert!(h.state().error.is_none() && h.state().open_palette_warning.is_none());
+            assert!(h.state().pending_open.is_none());
+            let base = if special { 16 } else { 8 };
+            let colors = h.state().palette_document().bank().colors(PaletteSet::Day);
+            assert_eq!(colors[0][0], [base; 3]);
+            assert_eq!(colors[6][2], [if roofs { 24 } else { base }; 3]);
+            assert!(!h.state().palette_document().is_modified());
+            if !special && !roofs {
+                // Disabled optional imports must not even parse malformed files.
+                fs::write(root.join("Next.pal"), "\tRGB broken\n").unwrap();
+                fs::write(root.join("gfx/tilesets/roofs.pal"), "\tRGB broken\n").unwrap();
+                load(&mut h, root, false);
+                assert!(h.state().error.is_none() && h.state().open_palette_warning.is_none());
+                // Manual loading still works while automatic loading is disabled.
+                fs::write(root.join("gfx/tilesets/roofs.pal"), &roof_table).unwrap();
+                let ctx = h.ctx.clone();
+                h.state_mut().request_roof_colors(&ctx);
+                h.run();
+                assert!(h.state().roof_color_success.is_some());
+                assert_eq!(
+                    h.state().palette_document().bank().colors(PaletteSet::Day)[6][2],
+                    [24; 3]
+                );
+            }
+        }
+    }
+}
 fn load(h: &mut Harness<'_, Editor>, root: &Path, new_map: bool) {
     fs::write(root.join("Next.blk"), [0, 1]).unwrap();
     let ctx = h.ctx.clone();

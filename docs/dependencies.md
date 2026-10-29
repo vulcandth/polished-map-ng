@@ -1,5 +1,15 @@
 # Dependency review
 
+eframe 0.37's `persistence` feature now supplies platform preference storage and
+native window placement. The GUI directly uses the already-locked serde and
+serde_json for its versioned settings record. The feature adds ron 0.12.3,
+enumn 0.1.14 and typeid 1.0.3, each MIT OR Apache-2.0, with declared Rust minima
+below this workspace's MSRV. Existing package versions are unchanged; resolution
+also selects already-locked windows-sys 0.59 for clipboard-win's allowed range.
+Retain these crates' licenses/source notices in release dependency bundles.
+Widget-memory persistence and periodic settings autosave are disabled; storage
+locations and the limited saved state are documented in `preferences.md`.
+
 The isolated Windows platform adapter directly uses already-locked
 `raw-window-handle` 0.6.2 and `windows-sys` 0.61.2 (MIT/Apache-2.0), enabling only
 the common-dialog, Shell, window-message definitions and COM API features.

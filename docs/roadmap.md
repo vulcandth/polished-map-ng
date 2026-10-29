@@ -24,14 +24,20 @@ File Close, dedicated Save Map and Exit now share source-derived dirty-domain
 guards and preserve the source distinction between document changes and palette
 session edits. Headless tests cover state clearing/retention, all dirty domains,
 map-only writes/conflicts and Close/Exit/event-unload shortcut routing. Native
-warning geometry, preference persistence and recent-file history remain pending.
+warning geometry, remaining preferences and recent-file history remain pending.
 
 Manual Load Roof Colors and all five Roof Palettes choices now use a shared
 headless import API. Tests cover consent, dirty-state preservation, failure
 atomicity, live preview updates and the layout used by subsequent map opens.
 The compiled original overlay function matches 120 complete-bank cases; manual
 and automatic imports also agree on the pinned real project. Native dialog
-fidelity and persistence across restarts remain outstanding.
+fidelity and native restart verification remain outstanding.
+
+Sixteen implemented view/mode/palette/auto-load/resize settings now restore and
+save through eframe with a versioned record and stable app ID. The two palette
+auto-load menu options affect subsequent imports independently. Headless restart
+and malformed-record tests pass; legacy preference import, remaining options,
+native storage/window placement and restart behavior still require work.
 
 Implemented slices include New Map, Save As, block resize, map editing/saving, master metadata discovery, six
 palette sets, project/roof colors, compound graphics and roof tile replacement.

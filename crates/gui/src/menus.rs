@@ -208,6 +208,11 @@ impl Editor {
                 self.roof_palette_menu(ui);
                 ui.separator();
                 ui.checkbox(&mut self.event_ui.auto_load, "Auto-Load Events");
+                ui.checkbox(
+                    &mut self.auto_special_palettes,
+                    "Auto-Load Special Palettes",
+                );
+                ui.checkbox(&mut self.auto_roof_colors, "Auto-Load Roof Colors");
             });
             ui.menu_button("Help", |ui| {
                 ui.label("Polished Map NG — development");

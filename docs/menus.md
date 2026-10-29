@@ -18,7 +18,7 @@ keyboard and headless counterparts where applicable.
 | View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Show Priority, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
-| Options | Five Roof Palettes choices; Auto-Load Events | Monochrome, Tile Priority, 256 Tiles, Auto-Load Special Palettes, Auto-Load Roof Colors, Drag and Drop, Overworld Map Size. Some underlying options exist in project/open APIs; that does not establish menu or persistent-preference parity. |
+| Options | Five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | Monochrome, Tile Priority, 256 Tiles, Drag and Drop, Overworld Map Size. Remaining native/persistence gaps are tracked in `preferences.md`. |
 | Help | Inline development status, project attribution and icon licensing links | Original Help and About actions/dialogs, including keyboard shortcuts. Attribution remains available throughout the port. |
 
 ## Geometry and interaction gates
@@ -30,7 +30,10 @@ preserves the edited flag and selected set, updates previews after success and
 shows the original success wording. Failed reads retain the whole session.
 Roof Palettes changes only the interpretation of subsequent manual/automatic
 imports; it does not immediately reload colors. All five choices survive Close
-within the session. Persisting this preference across restarts remains pending.
+within the session and are captured on exit for the next launch. See
+`preferences.md` for the implemented settings, defaults and native checks still
+required. Auto-Load Special Palettes and Auto-Load Roof Colors affect subsequent
+opens without immediately replacing colors or disabling manual imports.
 
 Close clears loaded map/events/assets, textures, map history, block clipboard,
 selection, gestures and scroll state. It retains palette colors, the selected

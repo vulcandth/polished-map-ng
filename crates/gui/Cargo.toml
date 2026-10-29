@@ -13,6 +13,8 @@ visual-tests = ["egui_kittest/wgpu", "egui_kittest/snapshot"]
 polished-map-core.workspace = true
 polished-map-project.workspace = true
 eframe.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 rfd.workspace = true
 arboard.workspace = true
 polished-map-platform = { version = "0.1.0", path = "../platform" }

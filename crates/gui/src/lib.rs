@@ -18,6 +18,7 @@ mod palette_editor_tests;
 mod palette_session;
 #[cfg(test)]
 mod palette_session_tests;
+mod preferences;
 mod roof_colors;
 #[cfg(test)]
 mod roof_workflow_tests;
@@ -104,6 +105,9 @@ pub struct Editor {
     pending_roof_colors: Option<PathBuf>,
     roof_color_success: Option<String>,
     roof_palette_layout: polished_map_project::RoofPaletteLayout,
+    auto_special_palettes: bool,
+    auto_roof_colors: bool,
+    preferences_writable: bool,
     #[cfg(windows)]
     native_color_request: Option<polished_map_core::ColorSlot>,
     #[cfg(windows)]
@@ -166,6 +170,9 @@ impl Default for Editor {
             pending_roof_colors: None,
             roof_color_success: None,
             roof_palette_layout: polished_map_project::RoofPaletteLayout::default(),
+            auto_special_palettes: true,
+            auto_roof_colors: true,
+            preferences_writable: true,
             #[cfg(windows)]
             native_color_request: None,
             #[cfg(windows)]
@@ -206,8 +213,13 @@ impl Default for Editor {
 
 impl Editor {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let editor = Self::default();
-        cc.egui_ctx.set_theme(egui::Theme::Light);
+        let mut editor = Self::default();
+        editor.restore_preferences(cc.storage);
+        cc.egui_ctx.set_theme(if editor.dark {
+            egui::Theme::Dark
+        } else {
+            egui::Theme::Light
+        });
         cc.egui_ctx.all_styles_mut(|s| {
             s.spacing.item_spacing = Vec2::new(4.0, 2.0);
             s.spacing.button_padding = Vec2::new(4.0, 2.0);
@@ -331,6 +343,8 @@ impl Editor {
         let palette_session = self.palette_document().clone();
         let auto_events = self.event_ui.auto_load;
         let roof_layout = self.roof_palette_layout;
+        let special_palettes = self.auto_special_palettes;
+        let roof_colors = self.auto_roof_colors;
         std::thread::spawn(move || {
             let result = (|| {
                 let root = PathBuf::from(&form.root);
@@ -363,6 +377,8 @@ impl Editor {
                         allow_256: form.allow_256,
                         dark_theme,
                         roof_layout,
+                        special_palettes,
+                        roof_colors,
                         roof: (!form.roof.is_empty()).then_some(form.roof),
                         ..Default::default()
                     },
@@ -1542,6 +1558,20 @@ fn append_line(points: &mut Vec<Point>, from: Point, to: Point) {
 }
 
 impl eframe::App for Editor {
+    fn save(&mut self, storage: &mut dyn eframe::Storage) {
+        self.store_preferences(storage);
+    }
+
+    fn auto_save_interval(&self) -> std::time::Duration {
+        // Main_Window::exit_cb persists preferences only on exit.
+        std::time::Duration::MAX
+    }
+
+    fn persist_egui_memory(&self) -> bool {
+        // Document scroll, widget focus and transient modal state are not settings.
+        false
+    }
+
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.show(ui);
         #[cfg(not(test))]

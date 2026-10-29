@@ -266,11 +266,21 @@ layout and frame remain temporary; upstream's native warning title, 50×50 shiel
 and text-measured client geometry still require porting and asset review.
 Close retains palette-only edits exactly as the original session does; Exit
 does not warn for palette-only changes, matching the commented-out upstream
-palette warning. Persistent preferences are still pending.
+palette warning. Remaining preference/native checks are listed in `preferences.md`.
 
 Manual roof-color loading now uses the source table lookup, layout choices,
 consent and success wording. It stages parsing and preview creation so failure
 cannot partially replace the live palette bank. Errors expose the actual path
 and parse/I/O reason instead of upstream's generic "Could not read" message.
-Warning/success shields, native modal geometry and restart-persisted layout
-preferences remain pending; the five choices currently persist for the session.
+Warning/success shields, native modal geometry and native restart verification
+remain pending. The five layout choices are included in the settings record below.
+
+Implemented settings now use eframe's platform data store under the separate
+`polished-map-ng` app ID. This does not import or modify upstream FLTK or portable
+`.prefs` files. The versioned record stores the source's implemented view/mode/
+palette/resize choices, including the roof layout across restarts; remaining
+options and native restart/placement verification are tracked in `preferences.md`.
+Malformed or unsupported records fall back to defaults while preserving the
+original app-settings key. Native geometry uses eframe's monitor-aware storage;
+exact FLTK window placement is not yet established. The two portable appearance
+choices remain a subset of the original native themes.

@@ -12,7 +12,7 @@ Status: initial implementation in progress. Neither upstream parity gate passed.
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex and block-ID tests pass; light/dark development snapshots inspected; native fonts/themes, persisted preferences and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows, native clipboard verification and priority overlays pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
-| Preferences, overlays, print/clipboard | master main-window.cpp | Pending |
+| Preferences, overlays, print/clipboard | master main-window.cpp | Sixteen implemented settings restore/save with malformed-record protection; palette auto-load options tested. Legacy import, remaining preferences, native storage/placement, complete overlays and print/clipboard parity pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |
@@ -24,6 +24,22 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- Implemented preferences now restore through the real eframe creation context
+  and save callback, using a stable app ID and versioned JSON record. Tests cover
+  all sixteen settings, defaults, 270 combinations of saved enums, invalid/newer
+  records retained without overwriting, restored dark theme and exclusion of
+  documents, edited colors and transient GUI state. Periodic settings autosave
+  and generic widget-memory persistence are disabled to match source lifecycle.
+  Native window persistence is enabled through eframe, but actual disk/shutdown/
+  placement behavior still requires native testing. See `preferences.md`.
+  Auto-Load Special Palettes and Auto-Load Roof Colors now join Auto-Load Events
+  in Options. Four combination tests verify no immediate recoloring, independent
+  imports on the next open, skipped malformed optional files, clean palette
+  state and manual roof loading while automatic loading is disabled.
+  Only the Options and Roof Palettes submenu baselines changed; both were
+  inspected. The remaining existing snapshots are unchanged with persistence
+  enabled.
+
 - Data → Load Roof Colors and Options → Roof Palettes now follow the pinned
   callbacks, including all five table layouts, known-group enablement, manual
   indoor/monochrome loading, edited-palette consent, retained selected set/dirty
@@ -31,8 +47,8 @@ the original application. Unverified assets never become redistributable fixture
   affects future manual and automatic imports, survives Close and does not
   recolor immediately. Three headless workflow tests cover these transitions,
   cancellation, invalid files, live graphics, modal shortcut guards, unchanged
-  map/tileset history and untouched source files. Native dialogs and preference
-  persistence remain pending.
+  map/tileset history and untouched source files. Native dialogs and native
+  preference persistence verification remain pending.
   `PaletteDocument::load_roof_colors` and `roof_palette_path` expose the same
   import and precedence without a GUI. Source-derived tests check every palette
   cell for all five layouts, both dirty states, selected-set retention, missing
