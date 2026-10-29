@@ -38,6 +38,7 @@ mod tileset_editor;
 #[cfg(test)]
 mod tileset_workflow_tests;
 mod tileset_workflows;
+mod transparency;
 #[cfg(test)]
 mod zoom_tests;
 use block_editor::BlockForm;
@@ -163,6 +164,7 @@ pub struct Editor {
     ruler_cursor: Option<geometry::EventCursor>,
     grid: bool,
     dark: bool,
+    transparency: transparency::Transparency,
     confirm_discard: bool,
     pending_exit: bool,
     pending_close: bool,
@@ -244,6 +246,7 @@ impl Default for Editor {
             ruler_cursor: None,
             grid: true,
             dark: false,
+            transparency: Default::default(),
             confirm_discard: false,
             pending_exit: false,
             pending_close: false,
@@ -1481,6 +1484,12 @@ impl Editor {
                 fullscreen::toggle(&ctx);
             }
             if ctx.input_mut(|i| {
+                i.modifiers.matches_exact(egui::Modifiers::NONE)
+                    && i.consume_key(egui::Modifiers::NONE, egui::Key::F10)
+            }) {
+                self.transparency.toggle();
+            }
+            if ctx.input_mut(|i| {
                 // egui's logical match ignores extra Shift/Alt modifiers.
                 // Command+Shift+P belongs to Show Priority, even when disabled.
                 i.modifiers.matches_exact(egui::Modifiers::COMMAND)
@@ -1711,6 +1720,9 @@ impl eframe::App for Editor {
         {
             self.dispatch_event_script(ui.ctx(), polished_map_platform::ScriptOpenRequest::open);
             self.dispatch_print(ui.ctx(), printing::choose_export, printing::run);
+            self.dispatch_transparency(|opacity| {
+                polished_map_platform::set_window_opacity(_frame, opacity)
+            });
         }
         #[cfg(windows)]
         self.choose_palette_color(_frame);

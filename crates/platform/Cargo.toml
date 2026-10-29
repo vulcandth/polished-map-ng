@@ -6,15 +6,25 @@ rust-version.workspace = true
 license.workspace = true
 repository.workspace = true
 
+[dependencies]
+raw-window-handle = { version = "0.6", features = ["std"] }
+thiserror.workspace = true
+
 [target.'cfg(windows)'.dependencies]
-raw-window-handle = "0.6"
 windows-sys = { version = "0.61", features = ["Win32_UI_Controls_Dialogs", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_System_Com"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+x11-dl = "2.21"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSView", "NSWindow", "objc2-core-foundation"] }
 
 [dev-dependencies]
 tempfile.workspace = true
 
 # This small FFI boundary is intentionally separate from workspace crates that
-# forbid unsafe. Only the audited Win32 modules opt in; all other code denies it.
+# forbid unsafe. Only the narrow native FFI modules opt in; other code denies it.
 [lints.rust]
 unsafe_code = "deny"
 

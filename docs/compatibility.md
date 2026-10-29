@@ -1,5 +1,43 @@
 # Compatibility evidence
 
+## Whole-window transparency
+
+View/Transparent and F10 now follow pinned master's `Main_Window::initialize`,
+`transparent_cb`, `apply_transparency`, `exit_cb` and `main.cpp` startup rule.
+The native boundary requests 75% opacity on the root window: Win32 alpha 191,
+X11 `0xBFFFFFFF`, and AppKit alpha 0.75; opaque values restore 255/`UINT32_MAX`/1.0.
+This does not change client paint colors, palette data, map rendering or exports.
+Native handles are borrowed only for the call; unsafe operations are confined
+to the platform crate. Core/project remain independent of window APIs.
+
+Independent numeric tests check truncation; a real hidden, test-owned Windows
+window verifies both alpha values and preservation of other extended-style bits.
+Missing handles return errors before native calls. GUI tests cover F10/menu
+ordering, accessible shortcut/check state, one-shot dispatch, error rollback,
+modal/modifier guards, dirty history, Close retention and saved startup intent.
+An unmapped X11 window test reads back type/format/count/value; CI runs that test
+explicitly under Xvfb. It has not been run locally on this Windows host.
+
+Four existing View-menu snapshots were updated for the new row; one checked
+Transparent snapshot was added. All five images were inspected, including the
+Mac caption and Unix dark 2× views. No icons or external artwork were imported.
+No computer-use session was resumed. The hidden Win32 API test is not evidence
+of wgpu/DWM visual correctness, frame appearance or actual F10 delivery. X11
+still needs compositor verification; macOS needs native runtime verification.
+Wayland currently returns an explicit unsupported-integration error and remains
+an open parity gate. Saved intent survives a failed startup application.
+
+Local formatting, warnings-as-errors Clippy, workspace tests, documentation,
+dependency audit and the production adapter graph check pass. The full visual
+suite passes 130 tests with one existing ignored test, without snapshot updates.
+The native Linux test and macOS compilation/runtime still require their own
+platform results; Windows-only local success is not evidence for them.
+
+The preceding adapter CI run
+[`40835449345`](https://github.com/vulcandth/polished-map-ng/actions/runs/40835449345)
+passed all eight jobs, including platform builds/tests, production feature
+checks, MSRV, dependency/license checks, reference/real-project tests and visuals.
+
 ## Native clipboard/browser adapter wiring
 
 Inspection of the resolved production dependency graph and egui-winit 0.37's

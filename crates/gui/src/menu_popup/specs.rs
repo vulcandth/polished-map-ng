@@ -62,6 +62,7 @@ pub(super) fn group(name: &str) -> &'static [Spec<'static>] {
                     Spec::new("Show Events", Check, "CS+V", false),
                     Spec::new("Show Warp IDs", Check, "CS+3", true),
                     Spec::new("Palettes", Submenu, "", true),
+                    Spec::new("Transparent", Check, "F10", false),
                     Spec::new("Full Screen", Check, "F11", false),
                 ]
             }

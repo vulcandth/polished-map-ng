@@ -351,3 +351,13 @@ Malformed or unsupported records fall back to defaults while preserving the
 original app-settings key. Native geometry uses eframe's monitor-aware storage;
 exact FLTK window placement is not yet established. The two portable appearance
 choices remain a subset of the original native themes.
+
+Transparent retains upstream's 75% window-opacity effect and integer truncation.
+The X11 bridge supplies a native `unsigned long` to format-32 XChangeProperty,
+avoiding the original pointer-to-u32 over-read on LP64. Win32 checks failed calls
+and attempts to undo a newly added layered style if setting alpha fails. The
+menu changes only after an accepted request; startup intent survives an error.
+macOS uses NSWindow alphaValue as the native equivalent of upstream's X11 path.
+The current Wayland integration reports that whole-window opacity is unsupported;
+this is an incomplete parity item, not an approved permanent omission. Pixel
+alpha or a faded egui panel is not substituted for whole-window opacity.

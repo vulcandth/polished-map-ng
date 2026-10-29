@@ -125,6 +125,7 @@ impl Editor {
                     menu_popup::checkbox(ui, true, &mut self.event_ui.show, "Show Events");
                     menu_popup::checkbox(ui, true, &mut self.event_ui.warp_ids, "Show Warp IDs");
                     menu_popup::submenu(ui, "Palettes", |ui| self.palette_set_menu(ui, true));
+                    self.transparency.menu(ui);
                     super::fullscreen::menu(ui);
                 });
                 menu_popup::menu(ui, "Mode", |ui| {

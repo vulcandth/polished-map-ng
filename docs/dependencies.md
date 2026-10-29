@@ -1,5 +1,17 @@
 # Dependency review
 
+The native opacity adapter adds direct, target-specific uses of already-locked
+`x11-dl` 2.21.0 (MIT), `objc2` 0.6.5 (MIT) and `objc2-app-kit` 0.3.2
+(Zlib OR Apache-2.0 OR MIT), plus the
+already-locked `thiserror` for typed failures. `raw-window-handle` now explicitly
+enables its `std` error implementation and is shared across desktop targets.
+AppKit enables only std, NSView, NSWindow and the Core Foundation scalar types;
+Windows reuses the existing windows-sys UI API features. No package versions
+were added or changed. `cargo deny` still passes without new exceptions.
+All unsafe opacity code remains isolated in the platform crate, using borrowed
+handles on the UI thread. CI adds Xvfb/xauth only to run the Linux property test;
+they are not application/runtime dependencies.
+
 eframe 0.37 now explicitly enables `clipboard` and `links` alongside the existing
 selected features. Disabling defaults without these features left egui's image
 copy and URL output commands without native adapters; a direct GUI dependency on

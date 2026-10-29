@@ -15,13 +15,23 @@ keyboard and headless counterparts where applicable.
 | File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Print's native fonts, clipboard delivery and chooser behavior remain verification gates. Native close delivery still needs platform verification. |
 | Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialogs and complete popup geometry remain pending. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The extra Edit Block entry is temporary access to the existing editor; upstream opens it through block interactions. Complete context-menu/gesture equivalence is pending. |
-| View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Full Screen | Theme submenu, Transparent. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
+| View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Transparent, Full Screen | Theme submenu; Wayland whole-window opacity integration. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
 | Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Drag and Drop; Overworld Map Size | Remaining native/persistence gaps are tracked in `preferences.md`. |
 | Help | Help/F1 with bundled source documentation; About/command-/ with project and icon attribution | About's application icon remains excluded pending provenance review. Native window/frame/font appearance still needs verification. |
 
 ## Geometry and interaction gates
+
+Transparent precedes Full Screen and shares the source F10 shortcut. It requests
+75% whole-window opacity (Win32 byte 191, X11 CARDINAL `0xBFFFFFFF`, AppKit 0.75).
+The platform adapter changes the root window, including its content; no image,
+palette, export or widget alpha is modified. Native errors preserve the previous
+accepted menu state and are reported. Wayland currently returns an explicit
+unsupported-integration error. The Windows API has a hidden-window round-trip
+test; X11 has an unmapped-window property test under Xvfb. These do not prove
+GPU/compositor appearance or actual F10 delivery. See `preferences.md` for
+startup intent and `architecture.md` for the remaining native acceptance gates.
 
 All eight current groups and their recent/palette/roof submenus now use one
 measured popup renderer. `menu_popup/specs.rs` records each implemented row's
@@ -48,7 +58,8 @@ fonts remain incomplete. Keyboard submenu opening/activation and modal guards
 are tested headlessly. Activating Enter is consumed before a command can open
 a modal, preventing accidental acceptance/dismissal in that same frame.
 Mnemonic underlines/Alt navigation, screen-edge/native-popup behavior and the
-complete Theme/Transparent controls remain separate parity gates.
+complete Theme controls remain separate parity gates. Transparent's remaining
+native verification and Wayland work are described above.
 
 Mac Shift/Option/Command captions use an unchanged, separately licensed Noto
 Sans Symbols 2 font because the existing bundled faces lack some glyphs. Its

@@ -74,6 +74,15 @@ Eframe's native window record owns fullscreen, maximization and normal geometry
 together. Native transitions, returning to the previous geometry and restart
 restoration still need Windows/Linux/macOS verification.
 
+Transparent now has its original View-menu position and F10 binding, persistent
+startup intent, and a narrow native window-opacity API for Windows, X11 and
+macOS. It preserves the source's exact 75% encodings without changing rendered
+map/export data. Tests cover accepted/failed requests, saved intent, modal guards,
+history preservation and the Windows API on a hidden test-owned window. X11's
+32-bit property round-trip is an explicit Xvfb CI check. Native GPU/compositor
+appearance, real shortcut delivery and macOS runtime behavior remain unverified;
+Wayland needs a protocol/windowing integration and currently reports that gap.
+
 External file dropping needs a window-integration change before its parity gate.
 The locked winit 0.30.13/egui-winit 0.37 interface loses drag coordinates on native
 backends and lacks Wayland file-drop delivery. Do not use stale ordinary pointer

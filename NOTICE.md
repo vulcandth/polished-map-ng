@@ -42,6 +42,11 @@ Bill Spitzak and others. The original FLTK license and exceptions are retained
 in `LICENSES/FLTK.txt`; the Rust adaptation follows LGPL-3.0 under its
 version-selection provision. Native frame/check/radio rasterization is not
 copied or claimed equivalent.
+Whole-window transparency adapts master `Main_Window::apply_transparency`,
+its F10/menu callback and startup/exit preference handling under LGPL-3.0-only.
+The native Rust boundary preserves the Win32/X11 alpha encodings and uses
+NSWindow's equivalent on macOS; checked errors and LP64-safe Xlib storage are
+port corrections. Wayland integration remains incomplete.
 The unchanged Noto Sans Symbols 2 font is Copyright 2022 The Noto Project
 Authors and remains OFL-1.1. Its separate family supplies Mac menu modifiers;
 see `crates/gui/assets/fonts/NOTICE.md` and the full copyright/license in

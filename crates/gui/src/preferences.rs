@@ -14,6 +14,7 @@ const MAX_BYTES: usize = 4 * 1024 * 1024;
 struct Preferences {
     version: u32,
     dark: bool,
+    transparent: bool,
     event_mode: bool,
     grid: bool,
     rulers: bool,
@@ -50,6 +51,7 @@ impl Preferences {
         Self {
             version: 1,
             dark: editor.dark,
+            transparent: editor.transparency.preferred(),
             event_mode: editor.event_ui.mode,
             grid: editor.grid,
             rulers: editor.rulers,
@@ -78,6 +80,7 @@ impl Preferences {
 
     fn apply(self, editor: &mut Editor) {
         editor.dark = self.dark;
+        editor.transparency.restore(self.transparent);
         editor.event_ui.mode = self.event_mode;
         editor.grid = self.grid;
         editor.rulers = self.rulers;
@@ -237,7 +240,7 @@ mod tests {
         assert_eq!(
             value,
             serde_json::json!({
-                "version": 1, "dark": true, "event_mode": true, "grid": false,
+                "version": 1, "dark": true, "transparent": false, "event_mode": true, "grid": false,
                 "rulers": true, "zoom": true, "ids": true, "hex": true,
                 "game_boy": true, "show_events": false, "show_warp_ids": false,
                 "palette_set": "custom", "roof_layout": "morn_day_nite_custom",
@@ -369,6 +372,44 @@ mod tests {
             assert_eq!(storage.values[KEY], raw);
             assert_eq!(storage.values["unrelated"], "keep");
         }
+    }
+
+    #[test]
+    fn opacity_preference_survives_failed_startup_application_and_tracks_accepted_changes() {
+        let mut storage = MemoryStorage::default();
+        storage
+            .values
+            .insert(KEY.into(), r#"{"version":1,"transparent":true}"#.into());
+        let mut h = restore(&storage);
+        h.state_mut().dispatch_transparency(|opacity| {
+            assert_eq!(opacity, polished_map_platform::WindowOpacity::Transparent);
+            Err(polished_map_platform::OpacityError::Unsupported(
+                "unsupported desktop",
+            ))
+        });
+        let mut editor = std::mem::take(h.state_mut());
+        drop(h);
+        eframe::App::save(&mut editor, &mut storage);
+        let saved: serde_json::Value = serde_json::from_str(&storage.values[KEY]).unwrap();
+        assert_eq!(
+            saved["transparent"], true,
+            "keep intent when changing desktop backends"
+        );
+        let mut h = restore(&storage);
+        h.state_mut().dispatch_transparency(|_| Ok(()));
+        h.state_mut().transparency.toggle();
+        h.state_mut().dispatch_transparency(|opacity| {
+            assert_eq!(opacity, polished_map_platform::WindowOpacity::Opaque);
+            Ok(())
+        });
+        let mut editor = std::mem::take(h.state_mut());
+        drop(h);
+        eframe::App::save(&mut editor, &mut storage);
+        let saved: serde_json::Value = serde_json::from_str(&storage.values[KEY]).unwrap();
+        assert_eq!(saved["transparent"], false);
+        let mut h = restore(&storage);
+        h.state_mut()
+            .dispatch_transparency(|_| panic!("opaque startup should not touch native styles"));
     }
 
     #[test]

@@ -10,6 +10,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Setting | Default |
 |---|---|
 | Portable dark appearance | Off (light) |
+| Transparent | Off; requests 75% whole-window opacity |
 | Editing mode | Blocks |
 | Grid | On |
 | Rulers, zoom, block IDs, hexadecimal, Game Boy screen | Off |
@@ -56,6 +57,15 @@ source inspection; actual exit/restart behavior remains a native acceptance gate
 
 ## Format and location
 
+Transparent uses the application JSON boolean `transparent`. An enabled startup
+preference queues one native request after the window exists; an opaque startup
+does not change its styles. The menu reflects accepted requests. Failed changes
+leave that state unchanged; a failed startup application preserves the saved
+intent so moving between desktop backends does not erase it. Errors are reported
+once per request, without an automatic retry loop. Native acceptance does not
+prove that an X11 compositor honors its opacity property. The old JSON record
+without this field restores the default off value.
+
 The stable app ID is `polished-map-ng`, independent of the development window
 title. eframe 0.37 stores `app.ron` in its platform data directory:
 
@@ -88,8 +98,9 @@ or rename its `app.ron` before relaunching.
 ## Remaining parity and verification
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
-or modified. Native theme variants and transparency controls still need their
-complete menu/persistence work.
+or modified. Native theme variants still need their complete menu/persistence
+work. Transparency's Wayland integration and native compositor/GPU appearance
+remain open; its menu and saved-intent workflow are implemented.
 
 Tests inject an in-memory eframe Storage into the real app constructor and use
 its save callback. They cover restoration of all implemented settings, 270

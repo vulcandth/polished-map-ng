@@ -213,3 +213,32 @@ Before implementing the native route:
 
 External file dropping remains unimplemented until this integration is in place;
 the existing File/Open and headless path APIs remain available.
+
+## Native window-opacity boundary
+
+`polished-map-platform::set_window_opacity` accepts a borrowed owner implementing
+both raw-window-handle traits and the two-value `WindowOpacity` enum. The GUI
+queues F10/menu/startup intent and dispatches after its root UI pass. It stores
+the last accepted state separately from saved intent and never retries failed
+requests on every frame. The core and project renderer know nothing about it.
+
+Windows follows the source's layered-window style and
+[SetLayeredWindowAttributes](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setlayeredwindowattributes).
+X11 uses the owner's live Xlib display, its display lock, a native-long property
+buffer, `_NET_WM_WINDOW_OPACITY` and XFlush; see
+[XChangeProperty's format-32 storage contract](https://xorg.freedesktop.org/archive/X11R7.5/doc/man/man3/XChangeProperty.3.html).
+Sending the property is not confirmation that a compositor honors it. macOS
+checks the main thread, borrows the NSView, obtains its retained NSWindow and
+sets [alphaValue](https://developer.apple.com/documentation/appkit/nswindow/alphavalue).
+No native pointer is cached by these production adapters.
+
+Remaining acceptance: real root-window pixels/frame at both settings with wgpu,
+F10/menu delivery, fullscreen transitions, normal child-window behavior, restart
+and error recovery on Windows, macOS and composited X11. Hidden-window API and
+Xvfb property tests cover dispatch/encoding, not those visual requirements.
+Wayland needs a supported alpha-modifier protocol bound to the same window
+connection/surface and event queue, with compositor capability detection and
+surface lifecycle handling. Winit 0.30.13's boolean `set_transparent` controls
+buffer transparency and is not this whole-surface multiplier. Integrate at the
+windowing layer; do not manufacture an unrelated connection or paint only egui
+widgets with reduced alpha. Wayland remains explicitly incomplete meanwhile.
