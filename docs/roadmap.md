@@ -68,6 +68,18 @@ pixel edits and event movement. Source/target borders use the original geometry.
 External map-file dropping is a separate upstream feature and remains pending,
 along with native drag delivery and cross-platform verification.
 
+Full Screen now has its source View entry and F11 shortcut. The menu reflects
+reported viewport state; commands preserve documents and obey modal guards.
+Eframe's native window record owns fullscreen, maximization and normal geometry
+together. Native transitions, returning to the previous geometry and restart
+restoration still need Windows/Linux/macOS verification.
+
+External file dropping needs a window-integration change before its parity gate.
+The locked winit 0.30.13/egui-winit 0.37 interface loses drag coordinates on native
+backends and lacks Wayland file-drop delivery. Do not use stale ordinary pointer
+coordinates or widen the target to the entire window. The integration gate and
+next steps are recorded in `architecture.md`; this is not a completed feature.
+
 Tile Priority now controls priority editing and palette output independently of
 attribute bits. The GUI retains it across maps and Close, and priority palette
 imports automatically enable it. The backend exposes an explicit setter and

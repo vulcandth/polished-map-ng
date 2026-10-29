@@ -41,6 +41,23 @@ Existing editor geometry tests continue to cover both platform button orders.
 
 ## Other master parity evidence
 
+Full Screen follows the source View entry, F11 binding and startup/exit window
+state handling. The adapter sends `ViewportCommand::Fullscreen` and reads the
+reported viewport flag for the checkmark, including restored or OS-driven
+changes. Headless tests cover both directions, unknown/initial state, use without
+a map, one-shot requests, Escape, modal guards and retention of map bytes,
+dirty state and undo history. The checked-menu snapshot and existing View menu
+baseline cover placement after Palettes. Eframe 0.37's `WindowSettings` and
+`epi_integration` source show that normal geometry, fullscreen and maximization
+are stored/restored together; the native executable explicitly enables that
+existing persistence. Native mode transitions, geometry restoration and actual
+exit/relaunch remain unverified on Windows, Linux and macOS.
+
+Local formatting, workspace Clippy/tests/docs and visual-feature Clippy pass.
+The visual suite passes 108 tests with one oracle test ignored by default. The
+new checked-menu image and updated View baseline were inspected; the latter's
+changes are confined to x=94..236/y=284..325, covering the added row and shadow.
+
 Overworld Map Size follows `Overworld_Map_Size_Dialog` and
 `Main_Window::save_map`: default 1300, range 1–4096, measured 380-point form,
 platform button order and a post-write warning using the padded map area.

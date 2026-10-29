@@ -9,6 +9,7 @@ mod event_label_tests;
 mod event_workflow_tests;
 mod event_workflows;
 mod file_workflows;
+mod fullscreen;
 pub mod geometry;
 mod icons;
 mod map_buttons;
@@ -1468,6 +1469,9 @@ impl Editor {
             || self.pending_open.is_some()
             || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F11)) {
+                fullscreen::toggle(&ctx);
+            }
             self.recent_shortcuts(&ctx);
             if ctx.input_mut(|i| {
                 i.consume_key(

@@ -104,7 +104,8 @@ snapshot and exact live swap. As upstream, edited palettes have their own
 load-replacement warning and explicit export, not map history or map Save/close
 dirty state. `MapPalettePlan` and the GUI's pending load preserve session colors
 while resolving per-file import decisions; required-load failures retain the
-previous live map. Persistent preference handling remains pending.
+previous live map. The selected-set preference is persisted; colors and transient
+warnings are not.
 
 `Events` owns typed macro metadata, validated coordinates, field-edit commands,
 warp resolution and sticky edited state. `EventScript` binds immutable source
@@ -116,3 +117,47 @@ failures reported after committing the map. Manual replacement prepares the new
 document before replacing the old one. GUI resize clones the map/event drafts,
 validates both, then commits them together in memory. A standalone CLI `translate`
 command affects events only and does not imply a multi-document transaction.
+
+## Native external-file-drop integration gate
+
+Research on 2026-10-28 found a concrete adapter gap. Pinned master attaches
+`DnD_Receiver` only to `_map_scroll`. `Workspace::handle` forwards the drop;
+`Main_Window::drag_and_drop_cb` rejects another modal, asks the usual unsaved
+warning and opens the first path. The internal Drag and Drop option is unrelated.
+
+The locked winit 0.30.13 Windows `drop_handler.rs` ignores the OLE position
+argument; its macOS `window_delegate.rs` forwards filenames without positions;
+X11 `event_processor.rs` notes that position updates are not exposed. Its Wayland
+backend does not implement the file-drop events. Egui-winit 0.37 forwards these
+path-only events into `RawInput.dropped_files`; ordinary pointer state is not
+evidence of the drop location. The observed problem also appears in
+[egui issue 7913](https://github.com/emilk/egui/issues/7913).
+
+Winit's [0.31 prerelease series](https://github.com/rust-windowing/winit/releases)
+redesigns native data transfer and drag coordinates. As of this research,
+0.31.0-beta.4 is a prerelease, not a compatible update to our locked 0.30 adapter.
+Its evolving API must be inspected at a pinned revision, not inferred from old
+beta migration notes or the moving master documentation.
+
+Before implementing the native route:
+
+1. Evaluate an eframe/egui-winit integration with that data-transfer API, including
+   Wayland clipboard ownership. If no compatible release is available, evaluate
+   a reproducible adapter patch with its own license/source notices and CI.
+2. Preserve a transfer identity, ordered native paths, viewport identity and
+   the final position for that transfer. Convert physical pixels to logical
+   coordinates once, and clear state on leave/cancel. Never infer the location
+   from an unrelated mouse event or accept anywhere in the window as a fallback.
+3. Route a valid drop inside the source map workspace (including its blank
+   margins) through the shared guarded Open flow. Ignore sidebar, rulers,
+   toolbar and modal targets. Open only the first path and retain the current
+   document on cancellation or failed loading. Do not decode paths lossily or
+   treat pasted text/remote URLs as native file drops.
+4. Verify target boundaries, multiple files, modal/dirty guards, cancellation,
+   transfer ordering and DPI mathematically and with input tests. Then verify
+   real file-manager drops on Windows, macOS, X11 and Wayland, including
+   off-window cancellation and clipboard coexistence. Synthetic drops alone
+   cannot satisfy this gate.
+
+External file dropping remains unimplemented until this integration is in place;
+the existing File/Open and headless path APIs remain available.

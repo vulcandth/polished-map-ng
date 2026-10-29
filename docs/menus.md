@@ -15,13 +15,22 @@ keyboard and headless counterparts where applicable.
 | File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Print's complete options/overlays remain pending. Native close delivery still needs platform verification. |
 | Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialogs and complete popup geometry remain pending. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The extra Edit Block entry is temporary access to the existing editor; upstream opens it through block interactions. Complete context-menu/gesture equivalence is pending. |
-| View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
+| View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Full Screen | Theme submenu, Transparent. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
 | Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Drag and Drop; Overworld Map Size | Remaining native/persistence gaps are tracked in `preferences.md`. |
 | Help | Inline development status, project attribution and icon licensing links | Original Help and About actions/dialogs, including keyboard shortcuts. Attribution remains available throughout the port. |
 
 ## Geometry and interaction gates
+
+Full Screen follows the source View entry and F11 shortcut, including use before
+opening a map. Both request native fullscreen through eframe. The checkmark reads
+the native viewport state, so restored or OS-initiated changes are reflected.
+It does not change map bytes, history, palettes or dirty flags. Existing modal
+and text-input guards apply; Escape does not exit fullscreen or close the main
+window. Normal geometry, maximized state and fullscreen persist together in
+eframe's native window record. Actual OS transitions and restoration still need
+platform verification; headless tests cover the requests and state feedback.
 
 Drag and Drop defaults on and gates left-button internal transfers in the block
 sidebar, tileset/roof editors and palette editor. Drag swaps; Ctrl-drag copies.

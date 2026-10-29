@@ -135,6 +135,7 @@ impl Editor {
                 ui.checkbox(&mut self.event_ui.warp_ids, "Show Warp IDs");
                 ui.separator();
                 ui.menu_button("Palettes", |ui| self.palette_set_menu(ui));
+                super::fullscreen::menu(ui);
             });
             ui.menu_button("Mode", |ui| {
                 if ui.radio(!self.event_ui.mode, "Blocks").clicked() {

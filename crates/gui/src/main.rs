@@ -6,6 +6,8 @@ fn main() -> eframe::Result {
                 .with_app_id("polished-map-ng")
                 .with_inner_size([800.0, 600.0])
                 .with_min_inner_size([335.0, 262.0]),
+            // Retain normal geometry, maximized state and fullscreen together.
+            persist_window: true,
             ..Default::default()
         },
         Box::new(|cc| {

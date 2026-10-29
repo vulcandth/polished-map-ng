@@ -41,8 +41,14 @@ record and restore defaults, like other invalid preferences.
 Documents, unsaved colors, palette dirty state, undo history, clipboard contents,
 selection, scroll positions and open dialogs are not serialized. The selected
 palette set is saved, but the color bank starts from defaults at the next launch.
-egui's general widget-memory persistence is disabled. Native window placement
-uses eframe's separate built-in persistence, including its monitor-bound checks.
+egui's general widget-memory persistence is disabled. Native window placement,
+maximized state and fullscreen use eframe's separate built-in persistence,
+including its monitor-bound checks. Full Screen defaults off on a fresh launch.
+The View menu and F11 send viewport requests; the menu reads the reported native
+state. No duplicate fullscreen value is stored in the application JSON record.
+Eframe retains normal geometry while fullscreen/maximized, then restores that
+geometry before applying the stored native state. This is verified by dependency
+source inspection; actual exit/restart behavior remains a native acceptance gate.
 
 ## Format and location
 
@@ -78,7 +84,7 @@ or rename its `app.ron` before relaunching.
 ## Remaining parity and verification
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
-or modified. Native theme variants, transparency/fullscreen controls,
+or modified. Native theme variants, transparency controls,
 and print preferences still need their complete menu/persistence work.
 
 Tests inject an in-memory eframe Storage into the real app constructor and use
