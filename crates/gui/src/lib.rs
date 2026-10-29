@@ -11,6 +11,7 @@ mod event_workflows;
 mod file_workflows;
 mod fullscreen;
 pub mod geometry;
+mod help;
 mod icons;
 mod map_buttons;
 mod map_labels;
@@ -91,6 +92,7 @@ struct ResizeForm {
 }
 
 pub struct Editor {
+    help_window: help::HelpWindow,
     event_ui: event_workflows::EventUi,
     loaded: Option<Loaded>,
     pending_open: Option<Loaded>,
@@ -170,6 +172,7 @@ pub struct Editor {
 impl Default for Editor {
     fn default() -> Self {
         Self {
+            help_window: Default::default(),
             event_ui: event_workflows::EventUi::default(),
             loaded: None,
             pending_open: None,
@@ -250,6 +253,7 @@ impl Default for Editor {
 
 impl Editor {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        help::install_fonts(&cc.egui_ctx);
         let mut editor = Self::default();
         editor.restore_preferences(cc.storage);
         cc.egui_ctx.set_theme(if editor.dark {
@@ -1452,6 +1456,9 @@ impl Editor {
             || self.pending_open.is_some()
             || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F1)) {
+                self.help_window.open();
+            }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F11)) {
                 fullscreen::toggle(&ctx);
             }
@@ -1645,6 +1652,7 @@ impl Editor {
                 block: self.selected,
             });
         }
+        self.help_window.show(&ctx, !blocked);
         self.dialogs(&ctx);
     }
 }

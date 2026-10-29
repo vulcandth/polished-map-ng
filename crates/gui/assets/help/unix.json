@@ -1,0 +1,1751 @@
+[
+  {
+    "kind": "heading",
+    "spans": [
+      {
+        "text": "Polished Map",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Copyright © 2021 Rangi",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "A map and tileset editor for ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "pokecrystal",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokecrystal"
+      },
+      {
+        "text": ", ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "pokegold",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokegold"
+      },
+      {
+        "text": ", ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "pokeyellow",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokeyellow"
+      },
+      {
+        "text": ", ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "pokered",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokered"
+      },
+      {
+        "text": ", and custom projects based on them.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Inspired by ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "crowdmap",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/yenatch/crowdmap"
+      },
+      {
+        "text": " (now defunct), but implemented with C++ and ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "FLTK",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "http://www.fltk.org/"
+      },
+      {
+        "text": ", and with more functions for graphics editing.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Source code is available at ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "https://github.com/Rangi42/polished-map",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/Rangi42/polished-map"
+      },
+      {
+        "text": " under the ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "LGPL v3.0",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/Rangi42/polished-map/blob/master/LICENSE.md"
+      },
+      {
+        "text": " license.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "rule",
+    "spans": []
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Polished Map displays and edits .blk map files. It supports all the standard ways to open a file:",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Initial:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Double-click a .blk file in File Explorer. (Run install.bat to associate .blk files with Polished Map.)",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Menu bar:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Run polishedmap and select the File → Open… menu item.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Toolbar:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Run polishedmap and click the Open toolbar button.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Keyboard:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Run polishedmap and press Ctrl+O.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "File Explorer:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Drag a .blk file onto polishedmap.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "GUI:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Drag a .blk file onto an open Polished Map window.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Command Prompt:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Pass the .blk filename as an argument to polishedmap:\n",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "polishedmap pokecrystal/maps/SomeMap.blk",
+        "bold": false,
+        "italic": false,
+        "mono": true,
+        "small": true,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "You can include a map's size and tileset in its filename as ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "MapName",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": ".",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "WIDTH",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "x",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "HEIGHT",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": ".",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "TILESET",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": ".blk; for instance, NewBarkTown.10x9.blk, UnionCave1F.cave.blk, or House1.4x4.house.blk.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Otherwise Polished Map will try to guess a map's size and tileset from the assembly code. This can fail if the map and tileset filenames do not exactly correspond to their constants in the code. Then you'll just have to enter the size and tileset yourself.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Be sure to set the right options (via the Options menu) before creating or opening a map. The available options are:",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Monochrome:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Tileset palettes will not be read or written. This option is necessary for ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "pokered",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokered"
+      },
+      {
+        "text": "-based projects.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Tile Priority:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Allow tiles to have priority over sprites. ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "pokecrystal",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokecrystal"
+      },
+      {
+        "text": "'s *_palette_map.asm files only assign a color to each tile. ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "This tutorial",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokecrystal/wiki/Allow-map-tiles-to-appear-above-sprites-(so-NPCs-can-walk-behind-tiles)-with-PRIORITY-colors"
+      },
+      {
+        "text": " explains how to make them assign priority attributes as well. This option is necessary to correctly save the *_palette_map.asm files.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "256 Tiles:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Allow all 256 tile IDs from $00 to $FF. ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "pokecrystal",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokecrystal"
+      },
+      {
+        "text": "'s tileset graphics have tiles for IDs $00 to $5F, then skip $60 to $7F and continue from $80 to $DF, with $E0 to $FF unused. ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "This tutorial",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokecrystal/wiki/Expand-tilesets-from-192-to-255-tiles"
+      },
+      {
+        "text": " explains how to use all the IDs for map tiles except $7F, which is used for spaces in text. This option is necessary for projects that support larger tilesets, such as Polished Crystal and Orange.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Roof Palettes:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " pokecrystal loads two pairs of ROOF colors per map group by default: one for Morn + Day, one for Night. If your project is modified to use different ROOF colors (such as by ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "making evening the fourth time of day",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokecrystal/wiki/Make-evening-the-fourth-time-of-day"
+      },
+      {
+        "text": ", with its own third pair of Custom colors), this option will let you choose which palettes they load into.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Auto-Load Events:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Automatically loads the .asm file corresponding to the map if one exists. For example, if you open maps/PalletTown.blk, then this option will automatically try to load maps/PalletTown.asm (for pokecrystal-based projects) or data/maps/objects/PalletTown.asm (for pokered).",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Auto-Load Special Palettes:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Automatically loads a .pal file associated with the map if one exists. Association is based on the map, landmark, or tileset. For example, if you open maps/IcePath1F.blk with the tileset gfx/tilesets/ice_path.png and the landmark in data/maps/maps.asm for IcePath is ICE_PATH, then this option will automatically load maps/IcePath1F.pal (corresponding to the map), or else gfx/tilesets/ice_path.pal (the landmark), or else gfx/tilesets/ice_path.pal (the tileset). You can also use Data → Load Palettes… to manually load any such .pal file.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Auto-Load Roof Colors:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Automatically loads colors for the ROOF palette of the map's group, if the group was detected from constants/map_constants.asm and the roof palettes are defined in gfx/tilesets/roofs.pal (or tilesets/roof.pal for backwards compatibility with older pokecrystal versions). You can also use Data → Load Roof Colors to do this manually.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Drag and Drop:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " Enables drag-and-drop for blocks in the sidebar, tiles in the tileset editor or roof editor, and colors in the palette editor. Left-click and drag one item onto another to swap them; hold Ctrl and do the same to copy.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Overworld Map Size:",
+        "bold": true,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " The overworld map block buffer in WRAM stores the entire current map, padded by 3 blocks on each side. Polished Map warns you if you save a map that would overflow this buffer. If your project modifies the buffer size, this option will let you configure the warning.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "rule",
+    "spans": []
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Most functions are available via the menu bar, the toolbar, or shortcut keys.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The sidebar array uses the mouse:",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click to select a block.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click and drag one block onto another to swap them.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Ctrl, left-click and drag one block onto another to copy it.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Right-click to edit a block.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Middle-click and drag to scroll.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The map area also uses the mouse, but it depends on the Mode. In Block mode (Ctrl+Shift+B or the toolbar's Headbutt tree button):",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click or drag to place the selected block in the sidebar array.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Right-click to select a block from the map.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Middle-click and drag to scroll.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Shift and left-click a group of blocks to flood-fill it with the selected block.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Ctrl and left-click a block to replace every block of that type with the selected type.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Alt and left-click a block to swap every block of that type and every block of the selected type.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "And in Event mode (Ctrl+Shift+T or the toolbar's Kris button):",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hover over an event to see a tooltip with its full definition.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click and drag an event to move it. You can drag into the three-block margin around a map.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Right-click to edit an event.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Double-click an event to open the .asm file in the system text editor. If you use Notepad++, Notepad2, Notepad3, Sublime Text, or VS Code on Windows, then it will also open to the specific event's line number. If you edit and save the .asm file, you can reload it in Polished Map with Data → Reload Event Script or Ctrl+R.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Middle-click and drag to scroll.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Shift and left-click a warp event to open the map it warps to. The map's filename is guessed from the warp event's constant. For example, a warp to UNION_CAVE_B1F will try to open UnionCaveB1F.ablk.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The arrow keys, or the mouse's scrolling function if it has one, will scroll the sidebar array or the map area (whichever one the cursor is over).",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The number keys 0-9 are hotkeys for the sidebar array.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Press Ctrl+0-9 to assign that key to the selected block.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Press 0-9 to select the block assigned to that key.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Press Ctrl+Shift+0-9 to unassign that key.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "In Block mode, you can view and edit the map's blocks. In Event mode, you can view and edit the map's events (NPCs, warps, signs, etc). Events are also visible in Block mode if View → Show Events is checked.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "rule",
+    "spans": []
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The block editor window has some simple mouse controls:",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click the tileset array to select a tile.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click or drag inside the block area to place the selected tile in the block.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Right-click inside the block area to select a tile from the block.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "And some more complex ones for placing multiple tiles at once, with the selected tile as the top-left:",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Ctrl and left-click to place a contiguous 2x2 square.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Ctrl+Shift and left-click to place a contiguous 4x4 square.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Alt and left-click to place a sequential 2+2 line in a square.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Alt+Shift and left-click to place a sequential 4+4+4+4 line in a square.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Ctrl+Alt and left-click to place a sequential 2-2 line in a square, with the rows going backwards.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Ctrl+Alt+Shift and left-click to place a sequential 4-4-4-4 line in a square, with the rows going backwards.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Shift and left-click to place two sequential tiles in a checkerboard 2/2 square.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "For pokecrystal-based projects, you can also edit the collision values of the block's four quadrants. Old-style collision.bin files and up-to-date collision.asm files are both supported.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "rule",
+    "spans": []
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The tileset editor window (Ctrl+T or the toolbar's green puzzle piece button) has more mouse controls, similar to the map editor:",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click the tileset array to select a tile.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click and drag one tile onto another to swap them.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Ctrl, left-click and drag one tile onto another to copy it.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click a swatch, or press the 1/2/3/4 keys, to choose a hue.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click or drag inside the pixel area to draw with the chosen hue in the selected tile.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Right-click inside the pixel area to choose a hue from the tile.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Shift and left-click a group of pixels to flood-fill it with the selected hue.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Ctrl and left-click a pixel to replace every pixel of that hue with the selected hue.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Alt and left-click a pixel to swap every pixel of that hue and every pixel of the selected hue.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Ctrl+C, Ctrl+V, and Ctrl+X will copy, paste, and swap tiles respectively, just like they do for blocks in the map editor's sidebar array. Delete will clear a tile's graphics and set its color to UNDEFINED.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The Copy and Paste buttons, or Ctrl+Shift+C and Ctrl+Shift+V, will copy and paste the tile graphics using the system clipboard. Tile graphics are always copied in monochrome grayscale, just like the tileset PNGs. Graphics can be pasted as any color; they get converted to four-hue monochrome when pasted. (So you can easily rip tiles from full-color game screenshots.)",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Every tile has a single color. The TEXT color is meant for menus and text boxes, and should not be used for map tiles. Alt+1 through Alt+8 will set the current tile to use the ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "N",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "th palette. The \"Priority (above sprites)\" checkbox sets the PRIORITY attribute bit for a tile so it will appear above sprites, including NPCs and the player; this is ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "a feature",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokecrystal/wiki/Allow-map-tiles-to-appear-above-sprites-(so-NPCs-can-walk-behind-tiles)-with-PRIORITY-colors"
+      },
+      {
+        "text": " of Polished Crystal and similar hacks.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "rule",
+    "spans": []
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Tilesets can be augmented by roofs. A roof is assumed to take up the nine tiles from $0A to $12. When a roof is loaded, it visibly affects the map and the block editor, but not the tileset editor. Thus you can edit the tileset without the loaded roof overwriting those nine tiles.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "When you open a map the roof selection always defaults to none, even if the map uses a roof. This is because pokecrystal only loads roofs for certain tilesets, which are ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "hard-coded",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": "https://github.com/pret/pokecrystal/wiki/Hard-coded-logic#tilesets-that-have-per-mapgroup-roofs"
+      },
+      {
+        "text": " instead of being defined in a data table. This makes it impractical to automatically detect a map's roof type, so you'll have to manually specify it.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The roof editor window (Ctrl+F or the toolbar's green roof button) is similar to the tileset editor. However, it does not support Delete.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "rule",
+    "spans": []
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The colors' exact appearance depends on the current palettes: MORN, DAY, NITE, INDOOR, or CUSTOM. The default set of palettes' colors is based on pokecrystal, but custom ones will be read from gfx/tilesets/bg_tiles.pal (or tilesets/bg.pal for backwards compatibility with older pokecrystal versions) if it exists.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "When a map ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "MapName",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": ".blk is opened with the tileset ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "tileset",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": ".png, Polished Map will automatically load ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "tileset",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": ".pal if it exists, and ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "MapName",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": ".pal if it exists. If the map is part of the ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "LANDMARK",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": " landmark, it will automatically load ",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": "landmark",
+        "bold": false,
+        "italic": true,
+        "mono": false,
+        "small": false,
+        "link": null
+      },
+      {
+        "text": ".pal if it exists. This is convenient for maps like Ice Path with custom palettes. This can be disabled via Options → Auto-Load Special Palettes.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "The palette editor window (Ctrl+Shift+L or the toolbar's lightbulb button) has some mouse controls:",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click the palette array to select a color.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Left-click and drag one color onto another to swap them.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "bullet",
+    "spans": [
+      {
+        "text": "Hold Ctrl, left-click and drag one color onto another to copy it.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "Ctrl+C, Ctrl+V, and Ctrl+X will copy, paste, and swap colors respectively, just like they do for blocks and tiles in their own editor dialogs.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  },
+  {
+    "kind": "paragraph",
+    "spans": [
+      {
+        "text": "You can export the edited colors of all the palettes at once to a single .pal file. Do not overwrite an existing file with this; instead, copy+paste only the palettes you need. For example, bg_tiles.pal defines MORN, DAY, NITE, and INDOOR palettes (as well as separate WATER colors for MORN/DAY and NITE), and ice_path.pal defines a CUSTOM palette.",
+        "bold": false,
+        "italic": false,
+        "mono": false,
+        "small": false,
+        "link": null
+      }
+    ]
+  }
+]

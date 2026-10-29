@@ -10,3 +10,5 @@
 *.png binary
 *.rgba binary
 *.xpm text eol=lf
+# Preserve the immutable upstream help blob, including its original CRLF bytes.
+crates/gui/assets/help/master-help.html.inc -text

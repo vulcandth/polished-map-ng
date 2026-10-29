@@ -28,6 +28,10 @@ history, verification and the distinction from unaudited toolbar icons.
 External script dispatch and known Windows editor line arguments adapt
 `Main_Window::view_event_script` in master `main-window.cpp`; native calls,
 worker lifetime, validation and error reporting are Rust implementations.
+The Help window adapts `help-window.cpp` and `widgets.cpp::HTML_View`. Its
+bundled original documentation is Copyright © 2021 Rangi under LGPL-3.0-only;
+see `crates/gui/assets/help/NOTICE.md` for the immutable source, reproducible
+Windows/Unix conversion and preserved upstream attribution.
 Event cursor and Game Boy guide placement/borders adapt `map-buttons.cpp`,
 `map.cpp`, `main-window.cpp` and `gameboy-screen.cpp`. The guide's uniformly
 colored source image is represented by a rectangle and its RGBA constant;

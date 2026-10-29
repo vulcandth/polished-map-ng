@@ -34,6 +34,23 @@ remain independent of display servers and external editors.
 
 ## ADR 2: Geometry derived from FLTK
 
+Help is a nonmodal immediate child viewport, retaining the source's initial
+700×500 client size, parent offset, body margins and anchored OK button. Its
+state is transient; it retains resized client dimensions within a session but
+is not part of persisted application preferences. Backends with embedded
+viewports use an egui Window fallback with an explicit close button. Other
+application modals disable Help contents, while opening Help alone does not
+disable document controls.
+
+`tools/help_assets.py` expands the pinned C++ help literal and converts its
+known HTML subset into static typed blocks. Both platform variants are bundled
+with the exact original source/hash/license notice. Unknown syntax fails the
+generator; the runtime parses only those compiled assets, never arbitrary HTML.
+CI verifies regeneration without network access and independently compares
+constant expansion with a compiled copy of the original in the reference job.
+The viewer preserves source text/styles/URLs and adds an NG reference notice.
+External URLs are emitted only through activated egui hyperlinks.
+
 Reference main.cpp/main-window.cpp and block-window.cpp at pinned master.
 Baseline client size 800×600; menu 21; toolbar 26; status 23; buttons 24×24;
 block editor 466×304. Map block size is 32 (or 64 zoomed). Sidebar width is

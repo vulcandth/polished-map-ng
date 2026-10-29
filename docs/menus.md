@@ -19,9 +19,26 @@ keyboard and headless counterparts where applicable.
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
 | Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Drag and Drop; Overworld Map Size | Remaining native/persistence gaps are tracked in `preferences.md`. |
-| Help | Inline development status, project attribution and icon licensing links | Original Help and About actions/dialogs, including keyboard shortcuts. Attribution remains available throughout the port. |
+| Help | Help/F1 with bundled source documentation; inline development status, project attribution and icon licensing links | About action/dialog and command-/ shortcut remain pending. Native Help window behavior and HTML/font appearance still need verification. |
 
 ## Geometry and interaction gates
+
+Help opens a nonmodal, resizable child viewport with an initial 700×500 client
+size and a 48-point offset from the parent. Its body uses `(10,10,w-20,h-52)`;
+the 80×22 OK button remains ten points from the bottom/right. Reopening resets
+document scrolling and position while retaining the resized native client size.
+Menu Help and F1 share the same action, including before a map is loaded.
+OK, Enter, Escape and the window close button dismiss Help without closing or
+editing the map. Main-window controls remain available while Help is open;
+existing application modals block opening/using it.
+
+The complete pinned master text is retained as reference documentation, with
+95 display blocks and 16 linked spans. Its source product/version, copyright,
+platform paths and URLs are preserved. A separate NG notice avoids presenting
+upstream instructions as a completed parity claim. The original HTML subset is
+converted reproducibly to static blocks; links open only on explicit activation.
+Native child-window placement/focus/resize/close and FLTK HTML/font equivalence
+remain acceptance gates. Headless tests use an embedded nonmodal fallback.
 
 Print now connects its CPU compositor to the options, clipboard and PNG export
 workflow. `Print_Options_Dialog::refresh` uses 10-point outer

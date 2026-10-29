@@ -198,6 +198,12 @@ Options. Existing commands use their source groups; Undo/Redo menu actions now
 share map history, and mode choices share shortcut transitions. The remaining
 commands, preferences, popup geometry and native behavior are tracked in
 `docs/menus.md`; restored grouping does not complete menu parity.
+Help/F1 now opens the complete pinned source documentation in a resizable,
+nonmodal child viewport. A reproducible converter retains all 95 blocks and
+16 linked spans, with C++-verified Windows/Unix constant expansion and LGPL
+attribution. Content bounds, scrolling, link requests, close controls and
+nonmodal editing are tested headlessly. Native window behavior and HTML/font
+matching remain gates; About and its artwork audit remain unfinished.
 Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
 source harness verifies 8,192 decimal/hex placement and zoomed text cases, including
 the original overflow/truncation differences. Source-derived outline colors,

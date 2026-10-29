@@ -1,5 +1,42 @@
 # Compatibility evidence
 
+## Help window and complete upstream documentation
+
+Help/F1 now uses a nonmodal, resizable child viewport based on `Help_Window`
+and `HTML_View`. The initial native client size is 700×500, at parent position
+plus (48,48). Document and button rectangles follow the source formulas; reopening
+resets scroll/position and retains resized client dimensions. Native closure,
+OK, Enter and Escape dismiss Help. The embedded fallback exposes the same
+document and an explicit close button. It leaves main controls available and
+does not save/edit documents or persist its transient state.
+
+The complete source `res/help.html` is bundled with immutable commit/SHA-256 and
+LGPL attribution. The offline generator retains 95 blocks and 16 linked spans
+for both platform variants. Its independent compiled-original comparison passes
+for all 14,210 Unix and 14,234 Windows expanded UTF-8 bytes, normalizing C++ source
+and stdout line endings. Both generation verification and the original comparison
+are now CI steps. No help images, remote content or additional fonts are imported.
+
+Four tests cover complete content/URLs/platform paths, native builder geometry,
+resize retention, body/button geometry, scroll-to-bottom/reset, emitted link
+requests, menu/F1/close controls, modal guards and nonmodal map interaction.
+The top/bottom document and updated Help-menu snapshots were inspected. Snapshot
+text uses an explicit Windows variant on every host; both native variants are
+tested separately. The original arrow glyph uses the already-bundled Hack
+fallback after the normal proportional faces. Native viewport placement/focus/
+resize/close, external browser dispatch and FLTK HTML/font appearance remain
+unverified; no computer use was performed. About remains a separate parity item.
+
+Formatting, warnings-as-errors Clippy, workspace tests and documentation pass
+locally. The full visual suite passes 117 tests with one existing ignored test.
+Only the Help menu baseline changed, with two new document snapshots; other
+existing baselines are unchanged. Both offline asset verification and the
+compiled-original Help comparison pass.
+
+The preceding Print workflow CI run
+[`40824755056`](https://github.com/vulcandth/polished-map-ng/actions/runs/40824755056)
+passed all eight jobs, including Windows/Linux/macOS and the visual suite.
+
 ## GUI Print options, image copy and PNG replacement
 
 The Print command now follows pinned master's `Print_Options_Dialog` and

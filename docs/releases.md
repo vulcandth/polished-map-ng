@@ -9,6 +9,10 @@ Development artifacts are not parity releases. Before publishing binaries:
   `crates/gui/assets/icons/NOTICE.md`, source XPMs and the icon inventory. Preserve
   the in-app attribution and run `python3 tools/icon_assets.py` on the source
   archive. Rendered screenshots containing icons carry the same asset notices.
+- Bundle the complete `crates/gui/assets/help` directory, including its original
+  source, provenance, generated platform variants and LGPL notice. Run
+  `python3 tools/help_assets.py` on the source archive; the converter uses only
+  Python's standard library and requires no network for regeneration checks.
 - Publish matching complete source, Cargo.lock, toolchain configuration, patches,
   packaging inputs and instructions to rebuild/relink with a modified core.
 - Verify rebuilding from the source archive; include required dependency source

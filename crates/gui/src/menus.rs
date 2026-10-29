@@ -249,6 +249,10 @@ impl Editor {
                 }
             });
             ui.menu_button("Help", |ui| {
+                if action(ui, true, "Help") {
+                    self.help_window.open();
+                }
+                ui.separator();
                 ui.label("Polished Map NG — development");
                 ui.label("Derived from Polished Map by Rangi42.");
                 ui.label("LGPL v3. See repository notices.");

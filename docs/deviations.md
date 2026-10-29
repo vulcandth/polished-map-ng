@@ -292,9 +292,20 @@ state and map history.
 The main menus now use upstream's eight top-level groups and the source locations
 for implemented commands. The temporary Edit Block entry and Dark appearance
 checkbox remain; their corresponding context interactions and native Theme
-submenu are not yet fully ported. Help still presents inline attribution.
+submenu are not yet fully ported. Help now opens the original reference text;
+About is still represented by inline attribution pending its dialog/artwork port.
 Missing source commands, popup image-column/row geometry, shortcut captions,
 mnemonics and persistent preferences are listed explicitly in `docs/menus.md`.
+
+Help retains the original product names and upstream documentation, including
+instructions for features still under development in NG. It adds a reference
+notice instead of silently rewriting that text or claiming completed parity.
+Its HTML paragraphs/lists/styles/links render through egui, so font metrics,
+line breaks and HTML-view frame details can differ from FLTK. Hack, already
+bundled with egui, is appended as a proportional-font fallback for the original
+right-arrow glyph that Ubuntu Light lacks. No additional font is distributed.
+Desktop Help uses an immediate child viewport; the embedded fallback preserves
+nonmodal interaction but is not evidence of native window behavior.
 
 The shared dirty-document warning now restores upstream OK/Cancel semantics,
 including the first modified filename and action-specific question. It replaces
