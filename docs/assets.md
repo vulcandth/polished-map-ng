@@ -1,7 +1,7 @@
 # Asset provenance
 
 Game graphics and maps are not distributed. Reference checkouts and extracted
-oracle inputs stay ignored. Only the 27 reviewed icon images marked with a
+oracle inputs stay ignored. Only the 30 reviewed icon images marked with a
 `distribution` entry in the inventory are imported. Other icons remain excluded;
 this record does not authorize importing other assets.
 
@@ -17,7 +17,7 @@ RGB in the decoded hash. Decode exactly the declared width: `tileset.xpm` and
 `palettes.xpm` each have a 17-character final row for a 16-pixel image. All 42
 decoded hashes were independently checked against Pillow's XPM decoder.
 
-The complete toolbar now reserves all 27 source button positions. Its thirteen
+The complete toolbar now reserves all 27 source button positions. Its ten
 unreviewed designs use short text placeholders inside 24×24 controls with full
 accessible names/tooltips. They import no additional artwork and do not change
 the inventory's clearance decisions. Replacing these placeholders remains part
@@ -88,7 +88,8 @@ bundled XPMs. The dependency CI job runs verification without network access.
 | blank | Its transparent 16×16 extent is represented by measured menu geometry. No bitmap is imported or required. |
 | priority | Imported under LGPL-3.0-only; Rangi's geometric zigzag matches all 252 opaque pixels in the 16×16 priority overlay, with four transparent corners. See the provenance below. |
 | add-sub | Imported under LGPL-3.0-only after reviewing its geometric drawing and introducing commit `e894ac8`; see the component audit below. |
-| open, load, undo, redo, show, warp, gameboy, change, load-palettes | Still excluded. Trace composite artwork and other source families; nearest-image candidates remain unverified. |
+| open, load, load-palettes | Imported with Fugue CC BY 3.0 and LGPL adaptation notices after the component review below. |
+| undo, redo, show, warp, gameboy, change | Still excluded. Trace composite artwork and other source families; nearest-image candidates remain unverified. |
 | blocks/blocks-dark, events, roof, change-roof | Still excluded. These visually resemble game sprites/tiles. Trace the underlying artwork; repository attribution alone is insufficient to clear it. Appearance is not proof of ownership. Resolve rights or use separately licensed/original artwork and record the visual deviation. |
 
 Application logos and warning/error/success imagery are outside the 42-image
@@ -110,24 +111,68 @@ introducing blob (SHA-256
 `a4d926150b91f3883ad27fcc020a263535da522e3842212cb8f7a912cc5c3066`).
 Retain it as Polished Map's LGPL-3.0-only drawing, with author attribution and
 an explicit distribution record. It uses the existing runtime disabled-color
-conversion. The 27 imported files now provide 20 designs and 320 atlas
-size/theme/disabled/DPI combinations.
+conversion. That import brought the inventory to 27 files and 20 designs;
+the later composite import below brings it to 30 files and 23 designs, with
+368 atlas size/theme/disabled/DPI combinations.
 
-Additional comparisons did **not** clear Open, Undo or Redo. An eight-orientation
+The initial additional comparisons did **not** clear Open, Undo or Redo. An eight-orientation
 (quarter turns and reflection), three-alpha-threshold, ±1-pixel-translation
 search against the Fugue archive found no reliable Undo/Redo match. Redo's pixels
 are Undo rotated 180 degrees; that relates the two upstream images but does not
 establish their underlying artwork source. Their introducing commit `3e057b0`
 and later change `e0a2d6c` do not identify another collection.
 
-Open's folder/document component visually resembles Fugue's
-`folder-open-document` family; the blue foreground arrow still needs a complete
-component trace. Comparisons with `document-export`, `blue-document-export` and
-the already reviewed `image-export` are leads, not clearance. Load Palettes
-likewise combines a folder/document with a bulb and remains excluded. The
-comparison sheets and downloaded source archives stay in ignored scratch
-storage. Do not promote these candidates to distribution records solely because
-of a silhouette score or the repository's general Yusuke credit.
+The initial whole-image comparisons left Open's arrow and Load Palettes' bulb
+unresolved. The following component review supersedes that conclusion for those
+composites; it does not clear Undo/Redo or any other excluded artwork.
+
+### Open, Load and Load Palettes composite review
+
+Review identifies Open's folder/document as a simplified/recolored adaptation
+of Fugue `folder-open-document`, with `arrow-000-small` overlaid at offset
+(4, 3). After thresholding the source alpha at >127, **all 28 arrow silhouette
+pixels match exactly**. This resolves the previously missing arrow component;
+the document-export family considered earlier was not the matching arrow.
+The folder/document assessment is visual provenance evidence, not a claim of
+pixel-identical source artwork. Polished Map removes shading/shadows, simplifies
+the outline and retains the characteristic open-folder diagonal and folded page.
+
+Load retains all **222 base pixels** outside the two arrows' combined footprint,
+with exactly three folder-color substitutions. Its blue folder matches the Fugue
+`blue-folder-open-document` family. The arrow shaft becomes a second chevron in
+the same three-color scheme; it is an upstream adaptation of the composition,
+not an unchanged `control-double` image. Open was present in the initial commit
+`5b6e80603c3478b794fb6db89ed9967f48422093`; Rangi added Load in
+`4fc39b25b79ec755af45f7b9f7a0942b996ebc4c`, alongside other reviewed icons.
+
+Load Palettes retains the same **112-pixel folder strip** (columns 0–6), removes
+the page fold and overlays Fugue `light-bulb-small` at (3, 1). Thresholding source
+alpha at >74 reproduces **all 32 bulb silhouette pixels**, including its two
+white highlights. Colors are simplified/recolored; shadows are removed. It was
+introduced as `load-lighting.xpm` in
+`04e802b33c149d560fa0dcfa88743dc61e2cb0a6` and renamed in
+`5cc35fe734203a25123bdd3c8e55e4cc00807195`.
+
+The review combines those component correspondences, inspection of the complete
+compositions and introducing changes, upstream's explicit creator credit, and
+the verified creator archive's license. The numerical checks alone do not prove
+authorship. All three imports retain CC BY 3.0 creator/collection attribution and
+LGPL-3.0-only upstream adaptation notices. No game imagery is involved. The
+unchanged XPMs and decoded RGBA hashes remain tied to pinned master in the inventory.
+
+The four original PNG SHA-256 values are recorded in each import's
+`fugue_components` entries in `icon-inventory.json`. Reproduce the component
+checks with Pillow installed and the previously verified creator archive:
+
+```text
+python tools/icon_components.py --archive .scratch/fugue-icons-3.5.6.zip
+python tools/icon_assets.py
+```
+
+The first command checks the archive and component hashes, the two exact masks,
+the three-color base recolor and the shared folder strip. It neither downloads
+nor imports assets. The normal offline CI verifier checks all 30 bundled XPMs
+and 7,680 decoded pixels. Comparison sheets/archive stay in ignored scratch storage.
 
 ### Port and validation sequence
 

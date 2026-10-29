@@ -28,12 +28,18 @@ pub(super) enum Icon {
     CollisionBottomLeft,
     CollisionBottomRight,
     ResizeBlockset,
+    Open,
+    LoadEvents,
+    LoadPalettes,
 }
 
 impl Icon {
     pub(super) fn pixels(self, dark: bool) -> &'static [u8; 1024] {
         match (self, dark) {
             (Self::New, _) => include_bytes!("../assets/icons/new.rgba"),
+            (Self::Open, _) => include_bytes!("../assets/icons/open.rgba"),
+            (Self::LoadEvents, _) => include_bytes!("../assets/icons/load.rgba"),
+            (Self::LoadPalettes, _) => include_bytes!("../assets/icons/load-palettes.rgba"),
             (Self::Reload, _) => include_bytes!("../assets/icons/reload.rgba"),
             (Self::Save, _) => include_bytes!("../assets/icons/save.rgba"),
             (Self::Print, _) => include_bytes!("../assets/icons/print.rgba"),
@@ -241,6 +247,9 @@ mod tests {
         let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
         for name in [
             "New",
+            "Open…",
+            "Load events",
+            "Load palettes",
             "Reload events",
             "Save",
             "Print…",
@@ -336,6 +345,9 @@ mod tests {
             Icon::CollisionBottomLeft,
             Icon::CollisionBottomRight,
             Icon::ResizeBlockset,
+            Icon::Open,
+            Icon::LoadEvents,
+            Icon::LoadPalettes,
         ];
         let mut rows = Vec::new();
         for size in [24_u32, 22] {

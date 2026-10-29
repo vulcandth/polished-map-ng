@@ -996,7 +996,7 @@ impl Editor {
             self.choose_new();
         }
         if ui
-            .add(Button::placeholder("O", "Open…"))
+            .add(Button::new(Icon::Open, "Open…"))
             .on_hover_text("Open… (Ctrl/Cmd+O)")
             .clicked()
         {
@@ -1005,7 +1005,7 @@ impl Editor {
         if ui
             .add_enabled(
                 self.loaded.is_some(),
-                Button::placeholder("LE", "Load events"),
+                Button::new(Icon::LoadEvents, "Load events"),
             )
             .on_hover_text("Load Event Script… (Ctrl/Cmd+A)")
             .clicked()
@@ -1149,7 +1149,7 @@ impl Editor {
         icons::separator(ui);
         self.palette_set_toolbar(ui);
         if ui
-            .add(Button::placeholder("LP", "Load palettes"))
+            .add(Button::new(Icon::LoadPalettes, "Load palettes"))
             .on_hover_text("Load Palettes… (Ctrl/Cmd+L)")
             .clicked()
         {

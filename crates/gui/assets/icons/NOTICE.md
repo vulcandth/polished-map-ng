@@ -12,6 +12,9 @@ licensed under **Creative Commons Attribution 3.0 Unported**:
 | Included stems | Original Fugue PNG stem |
 |---|---|
 | new | document |
+| open | folder-open-document + arrow-000-small |
+| load | blue-folder-open-document + modified arrow-000-small |
+| load-palettes | folder-open-document + light-bulb-small |
 | copy | document-copy |
 | paste | clipboard-paste |
 | save | disk-black |
@@ -33,6 +36,11 @@ credited logo/project icons.
 
 The original Fugue artwork was modified by Polished Map: simplified/recolored
 palettes, changed outlines/details, removed shadows and hard transparency.
+Open/Load combine folder/document and arrow components. Load recolors the folder
+and changes the arrow shaft into a second chevron. Load Palettes combines the
+folder with a small bulb and removes the document's folded corner. The component
+review and reproducible mask/base comparisons are recorded in `docs/assets.md`;
+these are adapted compositions, not unchanged Fugue PNGs.
 The dark grid recolor was added in upstream commit `530c963158fceb9d4836363d6d5e39d51019b616`.
 The zoom icon passed through Rangi's Tilemap Studio, as recorded by upstream
 commit `5adf7d2bf85375c9b6a0207572804455e331427e`.

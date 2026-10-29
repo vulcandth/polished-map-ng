@@ -1,5 +1,35 @@
 # Compatibility evidence
 
+## Open, Load Events and Load Palettes icons
+
+The three toolbar controls now use the unchanged pinned `open.xpm`, `load.xpm`
+and `load-palettes.xpm` pixels assigned by `Main_Window::initialize`. The
+underlying controls, callbacks, accessible names, tooltips, source ordering and
+24×24 extents are unchanged. Icons remain centered at 16×16 and use the existing
+source-derived two-stage integer disabled-color conversion in both themes.
+
+The asset review resolves the missing small-arrow and small-bulb components in
+the previously documented composites. `tools/icon_components.py` checks the
+verified Fugue archive/component hashes, 28 exact arrow-mask pixels, 32 exact
+bulb-mask pixels, 222 Open/Load base pixels with three palette substitutions, and
+the shared 112-pixel folder strip. The complete provenance assessment and its
+limits are in `docs/assets.md`; masks are supporting evidence, not an automatic
+copyright decision. CC BY 3.0 creator/collection attribution and LGPL adaptation
+notices cover all three imports. The offline asset verifier now checks 30 XPMs
+and 7,680 decoded pixels, while the rendered atlas covers 23 designs across 368
+size/theme/enabled/DPI combinations.
+
+All 168 active GUI visual tests pass, with four explicit host/reference tests
+ignored in that run. The 85 updated snapshots were inspected; a comparison to
+the previous Git blobs confines every changed pixel to the three existing icon
+slots or the three appended atlas columns. The former atlas columns are
+unchanged. Toolbar geometry/action/disabled-guard coverage remains active.
+Formatting, workspace and visual-feature Clippy, workspace tests and rustdoc
+also pass locally. No computer use or native chooser interaction was needed.
+
+Ten toolbar controls still have unresolved artwork and retain placeholders.
+This import does not establish complete toolbar or native-window parity.
+
 ## Compressed graphics loader differential
 
 `tools/lz_oracle.py` extracts the pinned master LZ command constants, bit-reversal

@@ -37,7 +37,24 @@
       "xpm_sha256": "5a3f59f7275f5f1698b3193c615f9d9495bbf61d531ca734aa99dfccb1f5983f",
       "rgba_sha256": "ce1d617e47864cbfde1f1d51e4389088af62f0b8f3a13c9c4ab78da4122e02d9",
       "last_changed_commit": "5b6e80603c3478b794fb6db89ed9967f48422093",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "CC-BY-3.0 AND LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance",
+        "fugue_components": [
+          {
+            "file": "icons/folder-open-document.png",
+            "sha256": "18bac51cc0415bc63337c2dcd019d952d05ed512c28f4eb589f7e180ea78c4a7"
+          },
+          {
+            "file": "icons/arrow-000-small.png",
+            "sha256": "a9e8bcf8447b1ce306b92253954ba90bae81c6822a80304b46b2813caf475aa5"
+          }
+        ],
+        "review": "docs/assets.md#open-load-and-load-palettes-composite-review"
+      }
     },
     {
       "file": "res/load.xpm",
@@ -47,7 +64,24 @@
       "xpm_sha256": "c4219a51b0d746e66fb0a8bff605a8b308db9ee85f874f157a74f48835568e07",
       "rgba_sha256": "9fccdded52c838381a10fabdc521e11b83e6e334e6f201627cfbfbfaae4b619e",
       "last_changed_commit": "4fc39b25b79ec755af45f7b9f7a0942b996ebc4c",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "CC-BY-3.0 AND LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance",
+        "fugue_components": [
+          {
+            "file": "icons/blue-folder-open-document.png",
+            "sha256": "a5c2520300c78b4ec26ed994185a4a3f4462fcdaad130c6d330a0dc89b922b2a"
+          },
+          {
+            "file": "icons/arrow-000-small.png",
+            "sha256": "a9e8bcf8447b1ce306b92253954ba90bae81c6822a80304b46b2813caf475aa5"
+          }
+        ],
+        "review": "docs/assets.md#open-load-and-load-palettes-composite-review"
+      }
     },
     {
       "file": "res/reload.xpm",
@@ -420,7 +454,24 @@
       "xpm_sha256": "f9c04f0de303027840d05bd49199690bcb2301613d610f0dbfc970d41b5d19bd",
       "rgba_sha256": "20dcc1030026230da1c5886e6f8470ffb9f051ba80c647fcd11dadbb83a880d7",
       "last_changed_commit": "5cc35fe734203a25123bdd3c8e55e4cc00807195",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "CC-BY-3.0 AND LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance",
+        "fugue_components": [
+          {
+            "file": "icons/folder-open-document.png",
+            "sha256": "18bac51cc0415bc63337c2dcd019d952d05ed512c28f4eb589f7e180ea78c4a7"
+          },
+          {
+            "file": "icons/light-bulb-small.png",
+            "sha256": "c05a21c8e6c8926e0c669031f79e27c1a960592bbb5bd2755517a2ccc53adcc9"
+          }
+        ],
+        "review": "docs/assets.md#open-load-and-load-palettes-composite-review"
+      }
     },
     {
       "file": "res/palettes.xpm",
