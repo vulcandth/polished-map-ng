@@ -20,6 +20,13 @@ overlays, export/clipboard, external-change handling and unsaved dialogs.
 Accept only when all matrix entries pass or have an approved exception and
 outputs reopen correctly in upstream. Include pinned compatible pokecrystal.
 
+Oversized binary/ASM maps now load the source dimension-sized prefix and show
+the original acknowledgment warning after palette choices. A structured project
+report exposes excess decoded blocks; strict library/CLI opening stays available.
+Tests cover no-write opening, short/exact input, whole-source conflict detection,
+warning/modal behavior and clean/dirty Save Map. Native warning appearance and
+full-application save/reopen differentials remain separate acceptance work.
+
 Desktop startup now selects installed UI, regular/bold monospace and separate
 bold sans roles using the reference's preference lists and pinned FLTK backend
 defaults. Map labels, event symbols, ruler sizes and zoomed warp IDs consume those

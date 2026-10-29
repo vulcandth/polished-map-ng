@@ -27,7 +27,8 @@ pub use discovery::{
     tileset_choices,
 };
 pub use document::{
-    MapDocument, OpenOptions, ProjectError, SaveTarget, prepare_save_as, read_bounded,
+    MapDocument, MapOpenReport, OpenOptions, ProjectError, SaveTarget, prepare_save_as,
+    read_bounded,
 };
 pub use events::{EventDocument, EventScript, EventScriptError, event_script_path};
 pub use graphics::{

@@ -12,6 +12,11 @@ contributors. Code is distributed under LGPL-3.0-only. See `LICENSE.md` and
 This port changes implementation language, ownership, validation, architecture,
 and UI toolkit. Individual modules identify upstream algorithm sources.
 
+Oversized map prefix loading and its acknowledgment warning adapt master
+`Map::{read_blocks,read_asm_blocks}`, `Main_Window::{open_map,save_map}` and
+`Modal_Dialog`, under LGPL-3.0-only. Structured load reports and whole-source
+conflict hashes are additions; strict library opening remains available.
+
 Installed GUI font preferences adapt master `themes.cpp::use_native_fonts`;
 Consolas-specific text sizes adapt `ruler.cpp` and `event.cpp`, under
 LGPL-3.0-only. Backend default names follow pinned FLTK 1.4.5's GDI, Quartz and

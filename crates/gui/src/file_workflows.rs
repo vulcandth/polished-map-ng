@@ -1,8 +1,28 @@
-//! master Main_Window::{close_cb,exit_cb,modified_filename} and Modal_Dialog.
+//! master Main_Window::{open_map,close_cb,exit_cb,modified_filename} and Modal_Dialog.
 //! LGPL-3.0-only. Closing a document retains session palettes/view preferences.
 use super::*;
 
 impl Editor {
+    pub(super) fn map_length_dialog(&mut self, ctx: &egui::Context) {
+        let Some(message) = &self.pending_map_warning else {
+            return;
+        };
+        let mut done = false;
+        egui::Modal::new(egui::Id::unique("map-length-warning")).show(ctx, |ui| {
+            ui.heading("Warning");
+            ui.label(message);
+            done = ui.button("OK").clicked();
+            done |= ui.input_mut(|i| {
+                i.consume_key(egui::Modifiers::NONE, egui::Key::Enter)
+                    || i.consume_key(egui::Modifiers::NONE, egui::Key::Escape)
+            });
+        });
+        if done {
+            self.pending_map_warning = None;
+            self.advance_open_palettes(ctx);
+        }
+    }
+
     pub(super) fn request_close_map(&mut self) {
         self.pending_recent = None;
         if self.loaded.is_none() {

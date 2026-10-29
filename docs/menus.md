@@ -23,6 +23,13 @@ keyboard and headless counterparts where applicable.
 
 ## Geometry and interaction gates
 
+Open accepts extra map IDs after the selected dimensions with the original
+one-button size warning, after palette choices. Acknowledgment completes the
+staged open; short input still fails without replacing the current document.
+Opening leaves files untouched. Save Map skips clean binary maps, while an edited
+save writes the acknowledged prefix with a conflict check against the complete
+source file. ASM imports retain their separate binary Save As requirement.
+
 All 27 source toolbar buttons are present, with eight six-point separators.
 Each button occupies 24×24 points, including currently unreviewed artwork slots.
 The palette label/dropdown precedes Load Palettes and Edit Current Palettes;

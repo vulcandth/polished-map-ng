@@ -1,5 +1,42 @@
 # Compatibility evidence
 
+## Oversized map loading and acknowledgment
+
+The GUI follows pinned master `Map::read_blocks`, `Map::read_asm_blocks` and
+`Main_Window::open_map`: excess decoded map IDs are ignored after the chosen
+width × height, and the original basename-specific warning is acknowledged
+before opening completes. This is a one-button warning, not a cancelable consent
+dialog. Short inputs still fail. The new prefix is initially clean with empty
+history, and opening never writes the source.
+
+`MapDocument::open_in_project_with_report` returns the document and an explicit
+`trailing_blocks` count. Existing `open`/`open_in_project` and CLI callers remain
+strict. Both paths retain dimension checks, the four-MiB read bound and malformed
+ASM rejection. The SHA-256 covers the complete original file, including unused
+trailing bytes; edits outside the loaded prefix therefore still cause a save
+conflict. ASM imports continue to require binary Save As and preserve their source.
+
+The GUI resolves palette choices first, then displays the map warning. The prior
+document and recent history remain intact until acknowledgment and successful
+publication, preserving the port's existing staged-open safety boundary. Pointer,
+Enter and Escape acknowledgment proceed with opening; map commands remain blocked
+while the warning is shown. Ordinary Save Map now follows `save_map(false)` by
+skipping a clean binary map. An actual edit followed by Save Map writes the prefix;
+Save As remains an explicit write. Merely dismissing the warning cannot truncate
+the source file.
+
+Three project tests cover binary/uppercase ASM input, decoded counts, whole-file
+hashes, unchanged input during open, prefix Save As/reopen, tail-only conflicts,
+short/exact input, invalid dimensions, maximum 255×255 dimensions, bounded reads
+and malformed ASM. Two GUI tests use the real loading worker and Open options,
+checking palette Skip ordering, retained old map/undo/history, modal guards,
+all three acknowledgment routes, exact/short inputs and clean/dirty Save Map.
+The warning snapshot was reviewed. Formatting, workspace and visual-feature
+Clippy, workspace tests and rustdoc pass locally; all 168 active GUI visual tests
+pass, with four host/reference integrations explicitly ignored in that run.
+These are source-derived and integration checks, not a compiled full-application
+differential. The warning's native window, artwork and exact geometry remain open.
+
 ## Popup panel frames and full-width separators
 
 Popup panels adapt `themes.cpp::{greybird,dark}_panel_thin_up_box/frame` and
@@ -884,7 +921,7 @@ inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pas
 
 | Area | Reference | State / required evidence |
 |---|---|---|
-| Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions tested; oversized-file consent pending |
+| Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions and oversized prefix/warning flow tested; strict headless opens remain available |
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; GUI resize stages map/event shifts; full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Initial codecs; all 65,536 bitplane pairs match compiled upstream function; full-codec differential tests pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; persistent preferences and full differential coverage pending |

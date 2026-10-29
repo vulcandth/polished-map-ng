@@ -91,6 +91,16 @@ pub struct MapDocument {
     metadata: MapMetadata,
 }
 
+/// Result of the original editor's prefix-loading behavior. No bytes are written.
+/// `trailing_blocks` counts decoded map IDs beyond the chosen dimensions, even
+/// for ASM input. The document's conflict hash covers the entire source file.
+#[must_use]
+#[derive(Debug)]
+pub struct MapOpenReport {
+    pub document: MapDocument,
+    pub trailing_blocks: usize,
+}
+
 /// A destination observed before an overwrite decision. Saving rechecks its content.
 /// Construct with `prepare_save_as`; fields are private so callers cannot skip observation.
 #[derive(Clone, Debug)]
@@ -204,6 +214,27 @@ impl MapDocument {
         options: &OpenOptions,
         root: Option<&Path>,
     ) -> Result<Self, ProjectError> {
+        Ok(Self::read_in_project(path, options, root, false)?.document)
+    }
+
+    /// Load the dimension-sized prefix and report extra decoded blocks, matching
+    /// master Map::read_blocks/read_asm_blocks. Callers must surface the report
+    /// before publishing the document. Short input and invalid dimensions fail.
+    /// Use `open`/`open_in_project` when an exact-length input is required.
+    pub fn open_in_project_with_report(
+        path: &Path,
+        options: &OpenOptions,
+        root: Option<&Path>,
+    ) -> Result<MapOpenReport, ProjectError> {
+        Self::read_in_project(path, options, root, true)
+    }
+
+    fn read_in_project(
+        path: &Path,
+        options: &OpenOptions,
+        root: Option<&Path>,
+        allow_trailing: bool,
+    ) -> Result<MapOpenReport, ProjectError> {
         let path = fs::canonicalize(path).map_err(|e| ProjectError::io(path, e))?;
         let bytes = read_bounded(&path, 4 * 1024 * 1024)?;
         let metadata = discover_map(&path, root)?;
@@ -216,7 +247,7 @@ impl MapDocument {
             .height
             .or(dimensions.map(|d| d.1))
             .ok_or(ProjectError::DimensionsRequired)?;
-        let blocks = if path
+        let mut blocks = if path
             .extension()
             .is_some_and(|e| e.eq_ignore_ascii_case("map"))
         {
@@ -228,11 +259,21 @@ impl MapDocument {
         } else {
             bytes.clone()
         };
-        Ok(Self {
+        let mut trailing_blocks = 0;
+        if allow_trailing && (1..=255).contains(&width) && (1..=255).contains(&height) {
+            let expected = usize::from(width) * usize::from(height);
+            trailing_blocks = blocks.len().saturating_sub(expected);
+            blocks.truncate(expected);
+        }
+        let document = Self {
             hash: Some(Sha256::digest(&bytes).into()),
             map: Map::from_bytes(width, height, blocks)?,
             path,
             metadata,
+        };
+        Ok(MapOpenReport {
+            document,
+            trailing_blocks,
         })
     }
     /// Backing path, or a suggested NewMap.blk path if `has_backing_file` is false.

@@ -28,9 +28,13 @@ Implementation-specific exceptions will be recorded here with tests and rational
   RGB palette channels outside 0..31 and incomplete colors/palettes are rejected.
   Incomplete roof tables return a format error instead of continuing after a GUI
   warning; a recoverable warning flow remains pending.
-- Binary map length mismatch is currently rejected rather than allowing an
-  oversized file to be truncated on save; a faithful warning/consent flow remains
-  pending. ASM `.map` imports use Save As to produce binary `.blk` output;
+- GUI oversized maps now follow the original prefix load and acknowledgment
+  warning. Short inputs still fail; strict library/CLI opens reject any mismatch,
+  while the explicit report API returns the trailing decoded-block count. The
+  previous map survives until successful publication. Clean binary Save Map
+  skips writing, matching upstream; edited saves can replace the source with its
+  acknowledged dimension-sized prefix, guarded by a whole-source conflict hash.
+  ASM `.map` imports use Save As to produce binary `.blk` output;
   the original source is preserved. Save As currently requires a `.blk` extension
   (or adds it when omitted), rather than accepting arbitrary binary-file suffixes.
 - Single-file saves compare content rather than just modification timestamps,

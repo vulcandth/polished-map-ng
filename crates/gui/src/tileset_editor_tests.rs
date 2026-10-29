@@ -50,6 +50,7 @@ pub(super) fn fixture(
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
         recent_path: None,
+        trailing_blocks: 0,
         palette_plan: None,
         events: None,
         event_warning: None,

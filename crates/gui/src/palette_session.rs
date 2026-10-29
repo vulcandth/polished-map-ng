@@ -46,6 +46,15 @@ impl Editor {
                 }
             }
         }
+        if loaded.trailing_blocks != 0 {
+            self.pending_map_warning = Some(format!(
+                "Warning: {}:\n\nThe .blk file is larger than the specified size.",
+                loaded.display_name().to_string_lossy(),
+            ));
+            loaded.trailing_blocks = 0;
+            self.pending_open = Some(loaded);
+            return;
+        }
         if let Err(e) = self.finish_open(loaded, ctx) {
             self.error = Some(e);
             self.status = "Open failed".into();

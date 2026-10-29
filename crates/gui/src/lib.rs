@@ -18,6 +18,8 @@ mod help;
 mod icons;
 mod map_buttons;
 mod map_labels;
+#[cfg(test)]
+mod map_open_tests;
 mod menu_popup;
 mod menus;
 mod overworld;
@@ -74,6 +76,7 @@ pub const WINDOW_TITLE: &str = "Polished Map NG — development";
 struct Loaded {
     // Retain chosen spelling for history/title independently of canonical I/O paths.
     recent_path: Option<PathBuf>,
+    trailing_blocks: usize,
     events: Option<polished_map_project::EventDocument>,
     event_warning: Option<String>,
     palette_plan: Option<polished_map_project::MapPalettePlan>,
@@ -111,6 +114,7 @@ pub struct Editor {
     event_ui: event_workflows::EventUi,
     loaded: Option<Loaded>,
     pending_open: Option<Loaded>,
+    pending_map_warning: Option<String>,
     pending_palette_warnings: Vec<String>,
     open_palette_warning: Option<String>,
     textures: Vec<egui::TextureHandle>,
@@ -198,6 +202,7 @@ impl Default for Editor {
             event_ui: event_workflows::EventUi::default(),
             loaded: None,
             pending_open: None,
+            pending_map_warning: None,
             pending_palette_warnings: Vec::new(),
             open_palette_warning: None,
             textures: Vec::new(),
@@ -416,6 +421,7 @@ impl Editor {
     }
 
     fn start_load(&mut self, form: OpenForm, ctx: &egui::Context) {
+        self.pending_map_warning = None;
         self.pending_palette_warnings.clear();
         self.allow_256 = form.allow_256;
         let (sender, receiver) = mpsc::channel();
@@ -431,10 +437,15 @@ impl Editor {
         std::thread::spawn(move || {
             let result = (|| {
                 let root = PathBuf::from(&form.root);
-                let document = if form.new_map {
-                    MapDocument::new_map(&root, form.width, form.height)
+                let report = if form.new_map {
+                    MapDocument::new_map(&root, form.width, form.height).map(|document| {
+                        polished_map_project::MapOpenReport {
+                            document,
+                            trailing_blocks: 0,
+                        }
+                    })
                 } else {
-                    MapDocument::open_in_project(
+                    MapDocument::open_in_project_with_report(
                         &form.path,
                         &OpenOptions {
                             width: (form.width != 0).then_some(form.width),
@@ -444,6 +455,7 @@ impl Editor {
                     )
                 }
                 .map_err(|e| e.to_string())?;
+                let document = report.document;
                 let tileset = if form.tileset.is_empty() {
                     document
                         .metadata()
@@ -479,6 +491,7 @@ impl Editor {
                     event_workflows::auto_load_events(&document, auto_events);
                 Ok(Loaded {
                     recent_path: (!form.new_map).then_some(form.path),
+                    trailing_blocks: report.trailing_blocks,
                     events,
                     event_warning,
                     palette_plan: Some(palette_plan),
@@ -613,12 +626,16 @@ impl Editor {
         }
         if let Some(loaded) = &mut self.loaded {
             let modified = loaded.document.map().is_modified();
+            // master save_map(false): acknowledging an oversized input does
+            // not dirty the map. A clean Save Map must not truncate its source.
+            if !modified {
+                self.status = "Map saved".into();
+                return;
+            }
             match loaded.document.save() {
                 Ok(()) => {
                     self.status = "Map saved".into();
-                    if modified {
-                        self.check_overworld_buffer();
-                    }
+                    self.check_overworld_buffer();
                 }
                 Err(e) => self.error = Some(e.to_string()),
             }
@@ -792,7 +809,11 @@ impl Editor {
             return;
         }
         if self.pending_open.is_some() {
-            self.open_palette_dialog(ctx);
+            if self.pending_map_warning.is_some() {
+                self.map_length_dialog(ctx);
+            } else {
+                self.open_palette_dialog(ctx);
+            }
             return;
         }
         if self.block_count_form.is_some() {
