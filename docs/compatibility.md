@@ -1,5 +1,35 @@
 # Compatibility evidence
 
+## Compressed graphics loader differential
+
+`tools/lz_oracle.py` extracts the pinned master LZ command constants, bit-reversal
+table, `read_lz_graphics`, `parse_2bpp_data`, bitplane conversion and file-size
+helper without editing their bodies. Generated C++ and SHA-256 provenance stay
+in ignored scratch storage. The harness supplies a minimal image declaration and
+an ASCII-path `fl_fopen` adapter; it does not reimplement decompression.
+
+The reference test compares 12,390 cases and 202,964,992 decoded tile hues.
+It covers all seven commands, every short length (1–32) and long length
+(1–1,024), absolute/relative copies, every relative distance (1–128), overlapping
+repeat/flip expansion, reverse copies, absolute address boundaries, 256 mixed
+sequences, exact 4,096-byte output, empty output and ignored bytes after the
+terminator. Each successful original load yields 256 tiles because its complete
+4,096-byte buffer is zero-padded. Rust's raw decompressor returns just the decoded
+prefix; `decode_lz_tiles` reproduces the original padding.
+
+Only two malformed streams are passed to upstream: a reserved command and a
+command after a full buffer, both of which return before unsafe access. Rust-only
+tests cover every incomplete prefix of a mixed sequence, invalid references,
+reverse underflow, a command crossing the output bound and a zero output limit.
+The original's unchecked reads/writes are not exercised with those inputs.
+
+The differential and safety tests pass locally. The Linux reference CI job now
+builds and runs the same comparison. This validates extracted codec functions,
+not native file dialogs or the complete original application. No codec behavior
+changed in this work. A separately observed Linux CI race in the warp-navigation
+test was corrected by dispatching its confirmation with one frame before its
+existing bounded worker wait, instead of demanding immediate UI settling.
+
 ## Oversized map loading and acknowledgment
 
 The GUI follows pinned master `Map::read_blocks`, `Map::read_asm_blocks` and

@@ -3,6 +3,8 @@ use polished_map_core::{PaletteBank, PaletteSet};
 use polished_map_project::codecs::decode_2bpp;
 use std::{fs, process::Command};
 
+#[path = "reference/lz.rs"]
+mod lz;
 #[path = "reference/printing.rs"]
 mod printing;
 

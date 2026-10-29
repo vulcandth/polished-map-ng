@@ -64,6 +64,38 @@ fn lz_malformed_data_is_bounded_and_never_panics() {
 }
 
 #[test]
+fn lz_truncated_sequences_and_invalid_output_ranges_return_errors() {
+    // All seven commands plus a long header. None of the incomplete prefixes
+    // contains an end marker at a command boundary.
+    let valid = [
+        2, 0x12, 0x34, 0x56, 0x22, 0xab, 0x44, 1, 2, 0x62, 0x83, 0x80, 0xa2, 0x82, 0xc2, 0x82,
+        0xec, 39, 0xff,
+    ];
+    assert_eq!(decompress_lz(&valid, 4096).unwrap().len(), 64);
+    for end in 0..valid.len() {
+        assert!(decompress_lz(&valid[..end], 4096).is_err(), "prefix {end}");
+    }
+
+    // Original code can read/write outside initialized data on these inputs;
+    // never send them to the C++ differential harness.
+    for input in [
+        &[0x80, 0x80, 0xff][..],   // Relative address before the start.
+        &[0, 7, 0x80, 0, 1, 0xff], // Absolute address in the unwritten tail.
+        &[0, 7, 0xc1, 0, 0, 0xff], // Reverse copy crosses the start.
+    ] {
+        assert!(matches!(
+            decompress_lz(input, 4096),
+            Err(CodecError::BackReference(_))
+        ));
+    }
+    let mut full = vec![0xef, 0xff, 0xef, 0xff, 0xef, 0xff, 0xef, 0xfe];
+    full.extend([0x61, 0xff]); // 4095 initialized bytes plus a two-byte command.
+    assert_eq!(decompress_lz(&full, 4096), Err(CodecError::Limit(4096)));
+    assert!(decompress_lz(&[0xff], 0).unwrap().is_empty());
+    assert_eq!(decompress_lz(&[0x60, 0xff], 0), Err(CodecError::Limit(0)));
+}
+
+#[test]
 fn assembly_respects_indentation_numbers_comments_and_little_endian() {
     let text = "label:\n\tdb $12, %1010, 0FFh ; comment\r\n DW $1234, 256\ndb 99\n";
     assert_eq!(parse_asm(text).unwrap(), [18, 10, 255, 52, 18, 0, 1]);

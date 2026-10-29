@@ -12,6 +12,12 @@ contributors. Code is distributed under LGPL-3.0-only. See `LICENSE.md` and
 This port changes implementation language, ownership, validation, architecture,
 and UI toolkit. Individual modules identify upstream algorithm sources.
 
+The compressed-graphics reference harness extracts unchanged master
+`tiled-image.cpp` LZ/2bpp loader functions and constants, relevant header
+declarations and `utils.cpp::file_size`, under LGPL-3.0-only. Generated source
+and per-snippet hashes stay in ignored scratch storage; the checked-in driver
+and synthetic corpus document these sources without distributing game graphics.
+
 Oversized map prefix loading and its acknowledgment warning adapt master
 `Map::{read_blocks,read_asm_blocks}`, `Main_Window::{open_map,save_map}` and
 `Modal_Dialog`, under LGPL-3.0-only. Structured load reports and whole-source

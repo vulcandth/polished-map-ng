@@ -778,7 +778,9 @@ fn shift_click_warp_honors_unsaved_cancel_and_loads_destination_events() {
     h.state_mut().event_action(EventAction::Warp(0), &ctx);
     h.run();
     h.get_by_label("OK").click();
-    h.run();
+    // Dispatch the click without requiring a background worker to settle within
+    // Harness::run's frame budget. The bounded loop below waits for completion.
+    h.step();
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
     while h.state().loading.is_some() && std::time::Instant::now() < deadline {
         std::thread::sleep(std::time::Duration::from_millis(5));

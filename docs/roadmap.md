@@ -20,6 +20,12 @@ overlays, export/clipboard, external-change handling and unsaved dialogs.
 Accept only when all matrix entries pass or have an approved exception and
 outputs reopen correctly in upstream. Include pinned compatible pokecrystal.
 
+Compressed graphics now have an unchanged-source loader differential covering
+12,390 cases and all command lengths, relative distances, overlap, address
+boundaries and 256-tile zero padding. Rust-only malformed-input checks retain
+the port's bounds protections without invoking unsafe original accesses.
+This strengthens codec evidence; full-application interoperability remains open.
+
 Oversized binary/ASM maps now load the source dimension-sized prefix and show
 the original acknowledgment warning after palette choices. A structured project
 report exposes excess decoded blocks; strict library/CLI opening stays available.
