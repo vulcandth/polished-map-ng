@@ -1125,7 +1125,7 @@ impl Editor {
         if ui
             .add_enabled(
                 self.loaded.as_ref().is_some_and(|l| l.blockset.is_some()),
-                Button::placeholder("+/-", "Resize blockset"),
+                Button::new(Icon::ResizeBlockset, "Resize blockset"),
             )
             .on_hover_text("Resize Blockset… (Ctrl/Cmd+B)")
             .clicked()

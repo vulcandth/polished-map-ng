@@ -405,8 +405,13 @@ mod tests {
             // <=2/255 RGB at glyph/rounded-control edges (six pixels >1/255
             // in total). CI 40833843444 adds File/Options: max 2/255,
             // three pixels >1/255 at underlying toolbar text edges.
+            // CI 40845621982 adds Tools: one pixel at (417, 32), on the
+            // underlying Warp IDs toolbar label, differs by 2/255 green.
             // Keep the default threshold for every other menu.
-            let options = if matches!(menu, "File" | "Data" | "View" | "Mode" | "Options") {
+            let options = if matches!(
+                menu,
+                "File" | "Data" | "View" | "Mode" | "Tools" | "Options"
+            ) {
                 egui_kittest::SnapshotOptions::default()
                     .threshold(egui_kittest::OsThreshold::<f32>::default().linux(3.0))
             } else {

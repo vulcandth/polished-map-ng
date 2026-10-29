@@ -336,7 +336,15 @@
       "xpm_sha256": "a4d926150b91f3883ad27fcc020a263535da522e3842212cb8f7a912cc5c3066",
       "rgba_sha256": "21bd8f455eb039120ba3d7116f007612056edc1a4856b35ccc25cbdecd96876b",
       "last_changed_commit": "e894ac84fa4dd3fe021ea63d0fd9483fbac37c02",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license": "LGPL-3.0-only",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance",
+        "provenance_commit": "e894ac84fa4dd3fe021ea63d0fd9483fbac37c02",
+        "provenance_note": "Geometric plus-minus drawing introduced with the blockset resize interface; pinned source is byte-identical to that introduction. History identifies no separate external asset or font source. See the component audit in docs/assets.md."
+      }
     },
     {
       "file": "res/resize.xpm",

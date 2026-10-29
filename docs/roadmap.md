@@ -208,7 +208,7 @@ Native clipboard delivery, chooser/overwrite behavior, font metrics and
 display-driver alpha differences
 remain parity gates, along with native dialog frame/theme matching.
 The menu/toolbar port is in progress within master parity, before plusplus.
-Twenty-six reviewed image files now provide toolbar icons, tile/roof clipboard
+Twenty-seven reviewed image files now provide toolbar icons, tile/roof clipboard
 icons and collision-quadrant labels, including dark variants, source-sized controls and integer disabled-color
 conversion. CC BY 3.0 Fugue attribution, LGPL adaptation notices, source/pixel
 hashes and reproducible asset verification are included. Continue the per-asset
@@ -216,13 +216,17 @@ audit in `docs/assets.md`, popup-menu structure, and native frame/theme matching
 All 27 toolbar buttons now occupy their original order and 24-point extents,
 including the event, display/mode, palette, blockset, tileset and roof actions.
 Eight six-point separators and the palette label/dropdown follow source layout.
-The 14 buttons with unresolved artwork use short text placeholders; unreviewed
+The 13 buttons with unresolved artwork use short text placeholders; unreviewed
 or game-derived imagery remains excluded pending resolution. Source geometry,
 empty/loaded/modal states, radio behavior, keyboard activation and existing
 dialog/history routes have headless coverage. Change Roof now uses the cached
 project roof inventory in both menu and toolbar, distinct from Edit Roof's
 requirement for loaded roof pixels. Native frame/hover/focus/fonts and image
 provenance remain open; complete membership does not establish toolbar parity.
+The Resize Blockset plus-minus drawing now uses its original pixels, after
+review of the introducing commit and unchanged pinned blob. Open's composite
+and the Undo/Redo source remain unverified; expanded comparisons are recorded
+in the asset audit without importing them.
 The toolbar palette selector now shares the View menu's six sets and palette
 operation, with source-derived text widths, padding and control heights. Tests
 cover live recoloring, menu synchronization, existing palette edits, map history,

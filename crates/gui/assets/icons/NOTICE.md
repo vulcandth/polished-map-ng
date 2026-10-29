@@ -57,6 +57,13 @@ match the 16×16 overlay originating in Polished Map++ commit
 transparent. It is retained under LGPL-3.0-only with the original attribution.
 It does not use Fugue artwork.
 
+The `add-sub` image is Polished Map's geometric plus-minus drawing, introduced
+with the blockset resize interface in
+`e894ac84fa4dd3fe021ea63d0fd9483fbac37c02`. The pinned source is byte-identical to
+that introduction. Review of the introducing change identifies no external
+asset or font source for this drawing. It is retained under LGPL-3.0-only with
+the original attribution; the component review is recorded in `docs/assets.md`.
+
 Polished Map NG preserves the original XPM sources unchanged, converts their
 declared 16×16 pixels to row-major RGBA8, and generates disabled grayscale/color
 blends at runtime. Conversion does not remove the above attribution or terms.

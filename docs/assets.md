@@ -1,7 +1,7 @@
 # Asset provenance
 
 Game graphics and maps are not distributed. Reference checkouts and extracted
-oracle inputs stay ignored. Only the 26 reviewed icon images marked with a
+oracle inputs stay ignored. Only the 27 reviewed icon images marked with a
 `distribution` entry in the inventory are imported. Other icons remain excluded;
 this record does not authorize importing other assets.
 
@@ -17,7 +17,7 @@ RGB in the decoded hash. Decode exactly the declared width: `tileset.xpm` and
 `palettes.xpm` each have a 17-character final row for a 16-pixel image. All 42
 decoded hashes were independently checked against Pillow's XPM decoder.
 
-The complete toolbar now reserves all 27 source button positions. Its fourteen
+The complete toolbar now reserves all 27 source button positions. Its thirteen
 unreviewed designs use short text placeholders inside 24×24 controls with full
 accessible names/tooltips. They import no additional artwork and do not change
 the inventory's clearance decisions. Replacing these placeholders remains part
@@ -87,13 +87,47 @@ bundled XPMs. The dependency CI job runs verification without network access.
 | Eight collision-quadrant variants | Imported under LGPL-3.0-only with introducing commit `2086e18`, dark recolor `530c963`, individual source/pixel hashes and attribution. These geometric drawings now label the block editor's collision fields. |
 | blank | Its transparent 16×16 extent is represented by measured menu geometry. No bitmap is imported or required. |
 | priority | Imported under LGPL-3.0-only; Rangi's geometric zigzag matches all 252 opaque pixels in the 16×16 priority overlay, with four transparent corners. See the provenance below. |
-| open, load, undo, redo, show, warp, gameboy, add-sub, change, load-palettes | Still excluded. Trace composite artwork and other source families; nearest-image candidates remain unverified. |
+| add-sub | Imported under LGPL-3.0-only after reviewing its geometric drawing and introducing commit `e894ac8`; see the component audit below. |
+| open, load, undo, redo, show, warp, gameboy, change, load-palettes | Still excluded. Trace composite artwork and other source families; nearest-image candidates remain unverified. |
 | blocks/blocks-dark, events, roof, change-roof | Still excluded. These visually resemble game sprites/tiles. Trace the underlying artwork; repository attribution alone is insufficient to clear it. Appearance is not proof of ownership. Resolve rights or use separately licensed/original artwork and record the visual deviation. |
 
 Application logos and warning/error/success imagery are outside the 42-image
 `icons.h` inventory and require their own audit before import. The imported icons
 and their disabled/dark variants appear in the Rust GUI and rendered snapshots;
 those snapshots carry the same asset notices and terms.
+
+### Resize Blockset and remaining component audit
+
+`add-sub.xpm` is the outlined geometric plus-minus symbol introduced by Rangi in
+[`e894ac8`](https://github.com/Rangi42/polished-map/commit/e894ac84fa4dd3fe021ea63d0fd9483fbac37c02),
+"Start on add/remove block interface". The full introducing change adds this XPM,
+its include, toolbar use and the resize dialog. It identifies no external image
+or font source. Its drawing is a centered four-pixel-wide vertical bar crossed
+by two fourteen-pixel-wide horizontal bars, with a one-pixel outline and lighter
+corner pixels. There are three blue colors and transparency, with no lettering,
+game tile or sprite component. The pinned Git blob is byte-identical to the
+introducing blob (SHA-256
+`a4d926150b91f3883ad27fcc020a263535da522e3842212cb8f7a912cc5c3066`).
+Retain it as Polished Map's LGPL-3.0-only drawing, with author attribution and
+an explicit distribution record. It uses the existing runtime disabled-color
+conversion. The 27 imported files now provide 20 designs and 320 atlas
+size/theme/disabled/DPI combinations.
+
+Additional comparisons did **not** clear Open, Undo or Redo. An eight-orientation
+(quarter turns and reflection), three-alpha-threshold, ±1-pixel-translation
+search against the Fugue archive found no reliable Undo/Redo match. Redo's pixels
+are Undo rotated 180 degrees; that relates the two upstream images but does not
+establish their underlying artwork source. Their introducing commit `3e057b0`
+and later change `e0a2d6c` do not identify another collection.
+
+Open's folder/document component visually resembles Fugue's
+`folder-open-document` family; the blue foreground arrow still needs a complete
+component trace. Comparisons with `document-export`, `blue-document-export` and
+the already reviewed `image-export` are leads, not clearance. Load Palettes
+likewise combines a folder/document with a bulb and remains excluded. The
+comparison sheets and downloaded source archives stay in ignored scratch
+storage. Do not promote these candidates to distribution records solely because
+of a silhouette score or the repository's general Yusuke credit.
 
 ### Port and validation sequence
 
@@ -175,7 +209,7 @@ The core stores periodic color-index masks instead of PNG payloads. The referenc
 CI job independently decodes all 896 original pixels and compares every RGBA
 channel using `tools/priority_oracle.py` and the `priority_patterns` test.
 GUI tests check texture pixels at 1×/2× DPI over light/dark backgrounds. The
-26-icon atlas now covers 19 designs and 304 size/theme/disabled/DPI combinations.
+atlas also includes the later Resize Blockset import described above.
 Native FLTK/egui compositing equivalence still needs platform verification.
 
 ## Application icon audit (unresolved)

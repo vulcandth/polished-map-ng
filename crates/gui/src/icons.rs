@@ -27,6 +27,7 @@ pub(super) enum Icon {
     CollisionTopRight,
     CollisionBottomLeft,
     CollisionBottomRight,
+    ResizeBlockset,
 }
 
 impl Icon {
@@ -47,6 +48,7 @@ impl Icon {
             (Self::Priority, _) => include_bytes!("../assets/icons/priority.rgba"),
             (Self::Palettes, _) => include_bytes!("../assets/icons/palettes.rgba"),
             (Self::Resize, _) => include_bytes!("../assets/icons/resize.rgba"),
+            (Self::ResizeBlockset, _) => include_bytes!("../assets/icons/add-sub.rgba"),
             (Self::Tileset, _) => include_bytes!("../assets/icons/tileset.rgba"),
             (Self::Copy, _) => include_bytes!("../assets/icons/copy.rgba"),
             (Self::Paste, _) => include_bytes!("../assets/icons/paste.rgba"),
@@ -250,6 +252,7 @@ mod tests {
             "Show Priority",
             "Edit current palettes",
             "Resize map",
+            "Resize blockset",
             "Tileset",
         ] {
             let rect = h.get_by_label(name).rect();
@@ -332,6 +335,7 @@ mod tests {
             Icon::CollisionTopRight,
             Icon::CollisionBottomLeft,
             Icon::CollisionBottomRight,
+            Icon::ResizeBlockset,
         ];
         let mut rows = Vec::new();
         for size in [24_u32, 22] {
@@ -343,7 +347,7 @@ mod tests {
         }
         for scale in [1_u32, 2] {
             let mut h = Harness::builder()
-                .with_size(Vec2::new(624.0, 272.0))
+                .with_size(Vec2::new(16.0 + icons.len() as f32 * 32.0, 272.0))
                 .with_pixels_per_point(scale as f32)
                 .build_ui(|ui| {
                     ui.painter()

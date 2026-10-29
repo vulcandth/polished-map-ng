@@ -1,5 +1,39 @@
 # Compatibility evidence
 
+## Resize Blockset icon and Linux toolbar rendering
+
+The Resize Blockset button now draws the original `add-sub.xpm` instead of its
+temporary `+/-` label. Review of upstream `e894ac8` identifies the geometric
+plus-minus drawing with the original blockset resize interface; its pinned blob
+is byte-identical to that introduction. Attribution, LGPL-3.0-only terms and
+source/pixel hashes are recorded in the asset notice and inventory. Open and
+Undo/Redo remain excluded after the component comparisons in `docs/assets.md`.
+
+The asset verifier checks 27 source files and 6,912 decoded pixels. The rendered
+atlas checks 20 designs across 320 size/theme/disabled/DPI combinations, including
+every rendered pixel and transparent background. Existing toolbar tests retain
+24-point bounds, enabled/modal guards and the resize-dialog action. Comparing
+the 81 affected window snapshots with the preceding commit confines every
+changed pixel to this control's existing icon slot. The separate atlas adds a
+column; all previous icon columns are unchanged. All changes were visually
+inspected before accepting the new baselines. No computer use was performed.
+
+Toolbar CI run
+[`40845621982`](https://github.com/vulcandth/polished-map-ng/actions/runs/40845621982)
+passed Windows/Linux/macOS Rust checks, MSRV, dependencies, the original-source
+oracles and real-project integration. The visual job had one failure in
+`main-menu-tools`. Inspection of its downloaded Linux image found no layout
+difference: maximum RGBA channel differences were `[1, 2, 1, 0]`, with exactly
+one pixel exceeding 1/255. That pixel, at (417, 32), belongs to the underlying
+Warp IDs toolbar label. Tools now uses the existing Linux-only 3.0 perceptual
+threshold used for the other affected menus. Other platform thresholds and
+geometry assertions are unchanged.
+
+Formatting, warnings-as-errors Clippy, workspace tests, documentation builds and
+the full visual suite pass locally (149 visual tests passed, one existing ignored
+test). The 40 selected tests passed when regenerating only their reviewed
+snapshots; the final full run used normal comparison mode.
+
 ## Complete toolbar membership and source grouping
 
 The toolbar now has all 27 buttons from pinned `Main_Window::initialize` in
@@ -21,8 +55,9 @@ cached at successful map open, as in `Map_Options_Dialog::num_roofs`. Listing a
 roof does not enable Edit Roof, which still requires loaded roof pixels. A new
 inventory test checks missing roofs, deferred refresh, reopening and closing.
 
-No artwork was imported. Thirteen buttons use already reviewed icon designs;
-fourteen use explicit short text placeholders pending per-asset clearance.
+At the toolbar-membership commit, no artwork was imported: thirteen buttons used
+already reviewed designs and fourteen used short text placeholders. The later
+Resize Blockset import above reduces the placeholder count to thirteen.
 Source-size controls and complete actions are not a claim of native theme,
 font, hover/focus, file-chooser or artwork equivalence. No computer use occurred.
 
