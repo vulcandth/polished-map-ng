@@ -8,6 +8,7 @@ mod blockset;
 mod events;
 mod map;
 mod palettes;
+mod printing;
 mod priority;
 mod raster;
 mod roof;
@@ -19,6 +20,7 @@ pub use blockset::{BlockBrush, BlockCommand, Blockset, BlocksetError, CollisionR
 pub use events::{Event, EventCommand, EventDefinition, EventError, EventKind, Events};
 pub use map::{Command, Map, MapError, Point, ResizeAnchor};
 pub use palettes::{ColorSlot, PaletteBank, PaletteCommand, PaletteError, PaletteSet};
+pub use printing::{PrintError, PrintFont, PrintOptions, PrintStyle, PrintTextMask};
 pub use priority::PriorityPattern;
 pub use raster::{Graphics, Palette, RasterError, RgbImage, Tile, day_palettes};
 pub use roof::Roof;

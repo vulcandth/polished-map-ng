@@ -54,6 +54,7 @@ jobs:
       - run: python3 tools/event_oracle.py --checkout .reference/master --output .scratch/reference-event
       - run: python3 tools/warp_id_oracle.py --checkout .reference/master --output .scratch/reference-warp-id
       - run: python3 tools/priority_oracle.py --checkout .reference/master --output .scratch/reference-priority
+      - run: python3 tools/print_oracle.py --checkout .reference/master --output .scratch/reference-print
       - run: cargo test -p polished-map-project --locked --test reference -- --ignored
         env:
           POLISHED_MAP_2BPP_ORACLE: ${{ github.workspace }}/.scratch/reference-2bpp
@@ -63,6 +64,7 @@ jobs:
           POLISHED_MAP_EVENT_ORACLE: ${{ github.workspace }}/.scratch/reference-event
           POLISHED_MAP_WARP_ID_ORACLE: ${{ github.workspace }}/.scratch/reference-warp-id
           POLISHED_MAP_PRIORITY_ORACLE: ${{ github.workspace }}/.scratch/reference-priority
+          POLISHED_MAP_PRINT_ORACLE: ${{ github.workspace }}/.scratch/reference-print
   visuals:
     runs-on: ubuntu-24.04
     steps:
@@ -86,6 +88,6 @@ jobs:
           git -C .reference/pokecrystal remote add origin https://github.com/pret/pokecrystal.git
           git -C .reference/pokecrystal fetch --depth 1 origin bd983395006298e976ae1871ef092e87f3385506
           git -C .reference/pokecrystal checkout --detach FETCH_HEAD
-      - run: cargo test -p polished-map-project --locked --test real_project -- --ignored --nocapture
+      - run: cargo test -p polished-map-project --locked --test real_project --test real_print -- --ignored --nocapture
         env:
           POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal

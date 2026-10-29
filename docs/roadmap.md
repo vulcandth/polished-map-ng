@@ -167,6 +167,14 @@ native DPI/drag dispatch and complete native themes still need verification.
 Zoom now scales map offsets with source integer rounding, resets the sidebar,
 and preserves far-edge blank space until scrolling back. Headless controls and
 edge tests pass; initial positioning and native pan/scroll checks remain pending.
+Print's shared CPU compositor now covers its five independent flags, native
+32-pixel blocks, priority/grid/ID ordering and events with per-event warp bases.
+It accepts bounded font coverage from an adapter and runs without GUI/GPU/IO.
+The compiled-original comparison covers 256 compositions; real-project tests
+exercise 96 combinations with roof/palette/event inputs. The font adapter,
+Print Options dialog/persistence, clipboard image transfer and PNG overwrite
+workflow remain required before claiming the Print command complete. Native
+font metrics and display-driver alpha differences are separate parity gates.
 The menu/toolbar port is in progress within master parity, before plusplus.
 Twenty-six reviewed image files now provide toolbar icons, tile/roof clipboard
 icons and collision-quadrant labels, including dark variants, source-sized controls and integer disabled-color

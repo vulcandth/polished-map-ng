@@ -33,6 +33,19 @@ pub enum EventKind {
 }
 
 impl EventKind {
+    /// Interior and one-pixel-border RGB in master's event textures (alpha 128).
+    pub fn marker_rgb(self) -> ([u8; 3], [u8; 3]) {
+        use EventKind::*;
+        match self {
+            Warp | WarpEvent | WarpDef | DummyWarp => ([160, 0, 160], [110, 0, 110]),
+            Sign | BgEvent | Signpost => ([255, 0, 0], [205, 0, 0]),
+            Object | ObjectEvent | PersonEvent => ([48, 48, 255], [0, 0, 205]),
+            CoordEvent | XyTrigger => ([0, 160, 0], [0, 110, 0]),
+            WarpTo => ([255, 128, 0], [205, 78, 0]),
+            _ => ([0, 128, 255], [0, 78, 205]),
+        }
+    }
+
     pub const ALL: [Self; 22] = [
         Self::Warp,
         Self::Sign,

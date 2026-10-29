@@ -1,5 +1,49 @@
 # Compatibility evidence
 
+## CPU Print composition
+
+`Graphics::render_print` adapts the pinned master's `Main_Window::print_map`,
+`Block::print`, `Event::print` and `draw_outlined_text`. It prints at 32 pixels
+per block and 16 per event, with all five options initially off. Grid color and
+block-ID number base are explicit inputs. Warp labels retain each event's
+coordinate base. It completes each block before the next, then draws events in
+source order. Unknown block IDs keep the existing EMPTY_RGB fill. Clipping acts
+on actual pixels, including text overhanging an off-map event. Font coverage is
+cached per font/text and bounded to 128x64; adapter errors return no image.
+
+`tools/print_oracle.py` extracts five unchanged source functions, the event
+metadata table, six marker PNGs, warp digits and the small priority PNG, recording
+hashes and provenance. Its C++ driver substitutes synthetic fonts and a software
+image surface. The Rust reference test decodes the original PNGs independently
+and compares all 3,145,728 output bytes across 256 cases: every flag combination,
+both block-ID bases, both grid colors and two text masks including overhang and
+partial coverage. Cases include all 22 event kinds, overlapping/off-map events,
+warp IDs above 15 with mixed per-event bases, missing blocks and priority slots.
+This comparison passes locally and is wired into the reference CI job.
+
+Four core tests check mask bounds, straight alpha, clipping, font-cache requests,
+error propagation/input preservation, default/plain export identity, independent
+warp-ID flags, grid edges and known priority pixels. `real_print` passes 96
+compositions of pinned New Bark Town with three roof choices, actual palettes
+and parsed events; it also verifies plain-export identity and unchanged input
+files. Its one-pixel test font does not verify appearance of real glyphs.
+
+Local validation passes: workspace formatting, Clippy with warnings denied,
+workspace tests and documentation, the new original-function comparison and
+real-project Print test, and the full visual suite (108 passed, one existing
+ignored test). No snapshot baselines changed. The GUI's event-color lookup now
+uses the same core mapping checked against all six source marker PNGs.
+
+Alpha follows the inspected [FLTK 1.4.5 Xlib software fallback](https://github.com/fltk/fltk/blob/release-1.4.5/src/drivers/Xlib/Fl_Xlib_Graphics_Driver_image.cxx):
+normalize alpha to 0..256, then integer interpolation. Native XRender/GDI/Quartz
+paths and real Courier/Helvetica layout/rasterization remain unverified. No font
+adapter, Print Options UI, image clipboard or overwrite integration is claimed
+by this core change. Those remain on the master-parity roadmap.
+
+The preceding fullscreen/drag correction CI run
+[`40817994986`](https://github.com/vulcandth/polished-map-ng/actions/runs/40817994986)
+passed all eight jobs, including three OS builds/tests and the visual suite.
+
 Status: initial implementation in progress. Neither upstream parity gate passed.
 
 ## Internal drag-and-drop option and palette transfers

@@ -140,17 +140,9 @@ pub(super) fn drag_coordinate(position: f32, cell: f32, dimension: u8) -> i16 {
 }
 
 fn marker_colors(kind: EventKind) -> (Color32, Color32) {
-    use EventKind::*;
     // Original embedded PNGs contain a one-pixel border and flat interior,
     // both at alpha 128. Reconstruct geometry; do not ship bitmap assets.
-    let (a, b) = match kind {
-        Warp | WarpEvent | WarpDef | DummyWarp => ([160, 0, 160], [110, 0, 110]),
-        Sign | BgEvent | Signpost => ([255, 0, 0], [205, 0, 0]),
-        Object | ObjectEvent | PersonEvent => ([48, 48, 255], [0, 0, 205]),
-        CoordEvent | XyTrigger => ([0, 160, 0], [0, 110, 0]),
-        WarpTo => ([255, 128, 0], [205, 78, 0]),
-        _ => ([0, 128, 255], [0, 78, 205]),
-    };
+    let (a, b) = kind.marker_rgb();
     (
         Color32::from_rgba_unmultiplied(a[0], a[1], a[2], 128),
         Color32::from_rgba_unmultiplied(b[0], b[1], b[2], 128),

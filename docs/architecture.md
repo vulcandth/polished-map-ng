@@ -48,6 +48,18 @@ Rasterize domain content on CPU; nearest-neighbor GPU textures display it.
 Visible-region rendering and dirty texture caches prevent full-map work per frame.
 Headless PNG export uses the same pixels. Use wgpu through eframe 0.37 initially.
 
+`Graphics::render_print(map, events, options, style, rasterize)` is the shared
+Print compositor. Options are independent of current canvas visibility. The
+callback receives `PrintFont` (Courier Bold 14 or Helvetica Bold 14) and text,
+returning a validated `PrintTextMask` of straight coverage, including the line's
+ascent/descent space. It owns typeface selection and baseline placement; core
+owns block/grid/priority/event/warp composition and clipping. Each distinct
+font/text pair is requested once per render. The returned `RgbImage` has native
+map dimensions with no viewport margin. The font adapter must remain usable
+without a display server so the eventual CLI and GUI Print paths share it.
+Current differential tests use synthetic masks; native text metrics and driver
+blending must be verified before claiming platform-exact Print output.
+
 ## ADR 4: Fail safely without pretending to have upstream parity
 
 `Map::overworld_buffer_bytes` reports the WRAM requirement including master's

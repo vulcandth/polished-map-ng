@@ -3,6 +3,9 @@ use polished_map_core::{PaletteBank, PaletteSet};
 use polished_map_project::codecs::decode_2bpp;
 use std::{fs, process::Command};
 
+#[path = "reference/printing.rs"]
+mod printing;
+
 #[test]
 #[ignore = "requires POLISHED_MAP_PRIORITY_ORACLE; run in the reference CI job"]
 fn priority_patterns_match_all_original_rgba_pixels() {

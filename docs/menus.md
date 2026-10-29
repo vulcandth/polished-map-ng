@@ -23,6 +23,26 @@ keyboard and headless counterparts where applicable.
 
 ## Geometry and interaction gates
 
+Print has a tested CPU composition API, but its command still needs the source
+options and output workflow. `Print_Options_Dialog::refresh` uses 10-point outer
+margins, 22-point controls, 4-point checkbox gaps and 80-point buttons. The Show
+label width is `text_width("Show:", 4)`; each checkbox gets
+`text_width(label, 2) + 22`. Derive the client width from the final checkbox plus
+the trailing margin, with a minimum of 288. The button row starts at y=48 and
+the client height is 80. Button order is Export/Copy/Cancel on Windows and
+Cancel/Copy/Export on Unix. Preserve Enter, command-C, Escape and initial Export
+focus, and center the fixed-size dialog in its parent.
+
+Grid, IDs, Priority, Events and Warp IDs are independent controls, default off.
+The source copies their values into preferences even when the options dialog is
+canceled. Warp IDs only affect output when Events is on; the checkbox itself
+stays enabled. Export opens `Print Screenshot` with `screenshot.png`, PNG filter
+and overwrite confirmation. Copy sends an image without writing a file. Both
+use native map dimensions regardless of zoom or current canvas visibility.
+Integrate the CPU font adapter, safe PNG save target and platform image clipboard
+before claiming this command complete. Native font metrics, clipboard payloads,
+file chooser behavior and dialog frame/DPI remain targeted platform checks.
+
 Full Screen follows the source View entry and F11 shortcut, including use before
 opening a map. Both request native fullscreen through eframe. The checkmark reads
 the native viewport state, so restored or OS-initiated changes are reflected.

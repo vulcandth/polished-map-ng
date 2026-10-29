@@ -41,6 +41,12 @@ serialization and validation are Rust implementations.
 Block-ID overlays and decimal/hexadecimal hover formats adapt master
 `map-buttons.cpp`, `Main_Window::update_status/update_event_cursor` and
 `utils.cpp::draw_outlined_text`. Native font selection/weight remains unfinished.
+CPU Print composition adapts `Main_Window::print_map`, `Block::print`,
+`Event::print` and `draw_outlined_text`, with font coverage supplied separately.
+Its differential harness compiles those functions unchanged, plus the original
+warp-label placement and event metadata, in ignored scratch storage. The harness
+uses extracted event/priority/warp images solely as test inputs; it does not
+distribute additional assets or native fonts.
 Priority zigzag artwork by Rangi originates in Polished Map++ commit
 `d090450b5649b5cfcc7645884d44f6414c3f0a96`, ported to master with the toolbar
 icon in `0a627967a3ff6e68ca062aef69184065e16a4efe`. The three source PNG patterns
