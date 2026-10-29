@@ -1,0 +1,430 @@
+{
+  "upstream_commit": "8b9bdc2b8aac8c865809516c2123af69c498da0b",
+  "scope": "XPM includes in src/icons.h; metadata only, no artwork; hashes use Git blob bytes and row-major RGBA8 with zero RGB for transparent pixels. Decode the declared width of each row. This inventory is not redistribution clearance.",
+  "icons": [
+    {
+      "file": "res/blank.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 1,
+      "xpm_sha256": "80fca6aa16bdadbc625b105a9ef7faca02ce1d551003a80eb14d100b6989b4e8",
+      "rgba_sha256": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+      "last_changed_commit": "bbf85435f5bada2bcd80acbcf59a8bc486852456",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/new.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "0c8b8bdff41716b962ed75fa9911f9e1689633f1fc41d94dff13938bf0a27915",
+      "rgba_sha256": "4e2be4722ba4682d4cf06e74d915c4e2dd9285bad8076c3c2e4d0b406777408a",
+      "last_changed_commit": "3e057b0e412c5cb3d6a624976077a63a64a5d937",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/open.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 9,
+      "xpm_sha256": "5a3f59f7275f5f1698b3193c615f9d9495bbf61d531ca734aa99dfccb1f5983f",
+      "rgba_sha256": "ce1d617e47864cbfde1f1d51e4389088af62f0b8f3a13c9c4ab78da4122e02d9",
+      "last_changed_commit": "5b6e80603c3478b794fb6db89ed9967f48422093",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/load.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 9,
+      "xpm_sha256": "c4219a51b0d746e66fb0a8bff605a8b308db9ee85f874f157a74f48835568e07",
+      "rgba_sha256": "9fccdded52c838381a10fabdc521e11b83e6e334e6f201627cfbfbfaae4b619e",
+      "last_changed_commit": "4fc39b25b79ec755af45f7b9f7a0942b996ebc4c",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/reload.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "af67eb91667668648c2cc2102790e05e9011f63f12ad6c46af22a291b6b07281",
+      "rgba_sha256": "d60e8071e39bc885459c81fac36315a557eb23249899099ed19c50624f92fcd1",
+      "last_changed_commit": "255bd2b0fee75ee502095b34c08611c9c895e337",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/save.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 5,
+      "xpm_sha256": "8a6baf9bc740918022be82cd7278528a5598e72562e5e216d08bafca8cfe5f98",
+      "rgba_sha256": "a0e6d074e354a53a258bc5aea3a31020d6764354d85f5529aa003e5e35d0c792",
+      "last_changed_commit": "3e057b0e412c5cb3d6a624976077a63a64a5d937",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/print.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 7,
+      "xpm_sha256": "81e39388b31db3c86a6de5793cf2f8fea48979740327e0da87b3c7fdb3fd0d6a",
+      "rgba_sha256": "be683794c39ab828ed5d66cd8de31b760ca26e83e9c1c3c3b608407e3a75f4ce",
+      "last_changed_commit": "3e057b0e412c5cb3d6a624976077a63a64a5d937",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/undo.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "be5c14703d7ed43eb3b1121cef705591ac3c661b4e21483bc5e3708e8c9d1937",
+      "rgba_sha256": "9a84597e5c2f4f4e255a5f1c95efa11a570fbaffae93ad47af81426962a2c0c3",
+      "last_changed_commit": "e0a2d6c8ce21c82e2282328f0a9dd64d74f9b3b6",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/redo.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "41cfad1f2f7bec98422cea7877a94b9af2a8d1def033124238bbb15f0e706813",
+      "rgba_sha256": "f884464d7e8ad97863ec15171d56075cb17a62d5e784b3617f770d6ae342bde1",
+      "last_changed_commit": "e0a2d6c8ce21c82e2282328f0a9dd64d74f9b3b6",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/grid.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 3,
+      "xpm_sha256": "ed3846440764474aa99dcd115f59b9cab6febab2ba33b826586bd47cca252ea8",
+      "rgba_sha256": "7386cfbb3cc420f0b848e5e556ef99951455e7f7744320026dc843956a88708d",
+      "last_changed_commit": "3e057b0e412c5cb3d6a624976077a63a64a5d937",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/grid-dark.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 3,
+      "xpm_sha256": "b872fc0d2a0d33c53e4c409a3a00b283e881666eb87073ac1148f5817518ab89",
+      "rgba_sha256": "5133d07fafd64de6ae709481371edbfd5fc9416d648ce6d6d1b54ce98efe974a",
+      "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/rulers.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 7,
+      "xpm_sha256": "505faf4a49ed3f0bfdeeb391071979b812e09b8e328b6cf1d7312b7d25cc1a8d",
+      "rgba_sha256": "448f6b8f3e410b5cd97b5fa40aaa106a3982d3abcb20415d48f00a807128ac98",
+      "last_changed_commit": "827cfd46c9052977a5aca63bca55f88b1baa3340",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/zoom.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 6,
+      "xpm_sha256": "d067a25380614b518837109986c996085592a776c9fc6fab38504159b1750255",
+      "rgba_sha256": "4b9e83e84bd1c485f083af16dd3577b34091176be6d0e62fadaf491515dc22ef",
+      "last_changed_commit": "5adf7d2bf85375c9b6a0207572804455e331427e",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/ids.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 3,
+      "xpm_sha256": "13012c31d5d1e2472a2c7ad0f3f023ff5c570ebba599f6abef18449728edcf24",
+      "rgba_sha256": "078901c718e3bd632a02994775d1dcdd33699e42a24f1d9f38189000465189f3",
+      "last_changed_commit": "3e057b0e412c5cb3d6a624976077a63a64a5d937",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/ids-dark.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 3,
+      "xpm_sha256": "1362f4d2b230b8aab45e9ced91448c0bab6684456c3ffadd51b46213738670bc",
+      "rgba_sha256": "a9f8c9eccb19d3f452d33b31a512f09e7df7d82098ba84447b38b3b3d844e530",
+      "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/hex.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 3,
+      "xpm_sha256": "d0d70184baa1b6f7d3d666cb8c22a77ab45325de1e01db5a1037c828d3fc062a",
+      "rgba_sha256": "82bd9716b36f4863b3cd4b1a03a351e336aeb8704c15981e5b7da4f81acabd8c",
+      "last_changed_commit": "3e057b0e412c5cb3d6a624976077a63a64a5d937",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/hex-dark.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 3,
+      "xpm_sha256": "9184c6fc8d56204569a2c7b6b8e2477cf22f76ea36a2ec7e8f75a8cfbdae9003",
+      "rgba_sha256": "8220843b815bcf6e3cdc7f62d8cb3c9390202dd59899baa94e5510b94d6ac6ec",
+      "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/show.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 32,
+      "xpm_sha256": "765fd4880bc6ee073e8e12827ec5c8bdcca3b2854f726d943fde9cc7da426095",
+      "rgba_sha256": "07e105a6268ebbcf76f91a8e6413201590e2b0bab17afa865b3c7a3d5205f2d0",
+      "last_changed_commit": "316336ed877cb1c6c4d4f6d549cf960629d9fce1",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/warp.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 25,
+      "xpm_sha256": "f114d02790e4b9b9ad475605e719dd719da728294e4f6a735144705a4253b881",
+      "rgba_sha256": "d30f4bec05c1e79f9f25d5be712742caf7792767a1d58973a22e583c5c2d3bfd",
+      "last_changed_commit": "19eb0d0aaeabb7ce1730a82d595ed23c67b61347",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/priority.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 5,
+      "xpm_sha256": "abe70c9bad7ec62eddcd1bb165a273e38212a99bfaec10745b8e7827e6977c73",
+      "rgba_sha256": "cca2d8810b14d2c60527b6d5184613d54774d386ad3f07eaadeead624c33d62f",
+      "last_changed_commit": "0a627967a3ff6e68ca062aef69184065e16a4efe",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/gameboy.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 14,
+      "xpm_sha256": "134e3279c6212b9dc9e3f0d3aad3cb5edd931dabea1b5f7a0d5d758f3105350e",
+      "rgba_sha256": "06da90f6de771d453480265ab8af7ae08d581d5e0ab147c18a0b8e95b9fcf5ab",
+      "last_changed_commit": "2899e94ae83d7e23f025185e7acc61b28095880b",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/blocks.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "eb660b1e58db11acf4302f09a7ff9d6f28e61faa76d6963537971aa90f68f5f6",
+      "rgba_sha256": "a29c4a04bebbe9a5419940b2f200b9e4b3fb6ed2a2e87b4492487ad5e82f8a9d",
+      "last_changed_commit": "4fc39b25b79ec755af45f7b9f7a0942b996ebc4c",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/blocks-dark.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "9d5b95ff030519c8e781a1cd5aa3cd6a12a0f434b552ae6ae2c6323d70f12976",
+      "rgba_sha256": "c7f6ae20ec1c0adf6b46fd9c3f34e41081e98d865bf1e067cf5db0eabdc3dcbd",
+      "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/events.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "e0b412fd732ed6d788afab2c45ee26b3f5b191d96f6bf2f5d9cc8bb7c2788c60",
+      "rgba_sha256": "4ff90d03f7c424a116ecd06e4035aa09a0f64464996db8e3d5b4b1fafb0b79d5",
+      "last_changed_commit": "4fc39b25b79ec755af45f7b9f7a0942b996ebc4c",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/add-sub.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "a4d926150b91f3883ad27fcc020a263535da522e3842212cb8f7a912cc5c3066",
+      "rgba_sha256": "21bd8f455eb039120ba3d7116f007612056edc1a4856b35ccc25cbdecd96876b",
+      "last_changed_commit": "e894ac84fa4dd3fe021ea63d0fd9483fbac37c02",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/resize.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "1c19e81fe8109799f8b73eff3a573bef78cc395c8c5d64b77b6dbec8f02d55c9",
+      "rgba_sha256": "08f4e9cc7f62723fbe640779ce40baa170b5e2cbcea5d2a80a7540dd232df059",
+      "last_changed_commit": "fa5483ba74526a530e874864a9cc9f9ac7ded0e7",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/change.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 9,
+      "xpm_sha256": "939a79528b128d03dcc919dd8aa068137d996b72018eeef5e3dae132b7c9dbb1",
+      "rgba_sha256": "f3e47cb907bc03c4af504d34c5505db5ab8ff19686da3462d11c19962b8d44ea",
+      "last_changed_commit": "99ecbf76493ccc4251302ca6cf39e827cc6a56a2",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/change-roof.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 10,
+      "xpm_sha256": "8908e35d5c142e08c439c018184cbde608dccea6fa24746544f0576787d5c672",
+      "rgba_sha256": "fd151e090de2bec618ff3057cfcd0da8c28ea595b5c495d706c6722ccdb115b7",
+      "last_changed_commit": "923d3384287e1302baf67bd9eb08702e39505ba2",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/tileset.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "9bc299da63385870c54d1e0e80664585f0347bedbfd732aef3ef3de665678996",
+      "rgba_sha256": "373107d4971b431348599f2985bff1e945c2d44ce077e4aa49cdcdf4a7fb53f0",
+      "last_changed_commit": "99ecbf76493ccc4251302ca6cf39e827cc6a56a2",
+      "overlong_rows_zero_based": [
+        15
+      ]
+    },
+    {
+      "file": "res/roof.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 5,
+      "xpm_sha256": "65deb11dfd1b7ea59207b5216a8016cecc2fd041666152d1fcf688bbc3b7980d",
+      "rgba_sha256": "b8cf27b5759c3b87d31492cd8e9651f03ad8e6372a7d81d48c7061eb61a68d3f",
+      "last_changed_commit": "923d3384287e1302baf67bd9eb08702e39505ba2",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/load-palettes.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 13,
+      "xpm_sha256": "f9c04f0de303027840d05bd49199690bcb2301613d610f0dbfc970d41b5d19bd",
+      "rgba_sha256": "20dcc1030026230da1c5886e6f8470ffb9f051ba80c647fcd11dadbb83a880d7",
+      "last_changed_commit": "5cc35fe734203a25123bdd3c8e55e4cc00807195",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/palettes.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 10,
+      "xpm_sha256": "038383bcb20635d591326ec36bbae5d642204eb283e913bd5f56849f5aab694b",
+      "rgba_sha256": "8ff21fac5b57ccf0c4c1bcea0b1f6cc78541ed8f8cd17d5421fce8e0ddc8ca48",
+      "last_changed_commit": "5cc35fe734203a25123bdd3c8e55e4cc00807195",
+      "overlong_rows_zero_based": [
+        15
+      ]
+    },
+    {
+      "file": "res/copy.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 3,
+      "xpm_sha256": "6866701d5bdb30e85cb483b12a55902ee3e1ebe7cb73be5a28ff13b1c4514849",
+      "rgba_sha256": "3a220b65763983ced9cfd884c150b7452b3d118478b0a43acbe840eb013b7a77",
+      "last_changed_commit": "5be5f46527628eeb5f0b7d951b16af85fe73c60d",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/paste.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 6,
+      "xpm_sha256": "0b29286693d9d5ebc7bd08845af4b51a2050e32569c13cd7955d975a89fe7f3d",
+      "rgba_sha256": "15606e14f98c3a6087d9211c0c9c482378f5e9ee6362dbbb7d567b8ff50afcf1",
+      "last_changed_commit": "5be5f46527628eeb5f0b7d951b16af85fe73c60d",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/coll-top-left.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "743d2ac6a1148c1751d348f6dffd46b0180d400c05fefd90b8bb80158124e19a",
+      "rgba_sha256": "00c25bf9279b9b0d48352b23fc4edab7e88c7d51c60d786ef20d6ccd2bed9da3",
+      "last_changed_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/coll-top-left-dark.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "8333c5c77ebd66896e47028932a602b2721472a6d629469add98b1540489fa01",
+      "rgba_sha256": "e5908d5ce2f6697ff69fe4b469171f3533304dd817c456aaf9390cb2385f67d3",
+      "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/coll-top-right.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "a5e7897b1dad0c32cb50229248787dbf6674ac2cbd6aa51d2e3462c687850922",
+      "rgba_sha256": "54b56da8d32d296e7d9058844026b7f2020183a094cdf182369d4e741ce89bc5",
+      "last_changed_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/coll-top-right-dark.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "38c7ccd1a646c5f08bd6f51cbdb32ac9074e6ca9ced5789b071b3e98dead841f",
+      "rgba_sha256": "2c52b7c6b671f2123df80876138ae8c3c3f88286274d08e333d56145f969d937",
+      "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/coll-bottom-left.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "3b2f9b0d9cbd6969ac1963ae4b7aea0c776eb6aeb8538acb1a8fcff73f96755b",
+      "rgba_sha256": "835be15877909e08951ada2746951386b741a640464af3e3a7e2c88734945fd4",
+      "last_changed_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/coll-bottom-left-dark.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "ed23f2d5b458981a0cd21a426a29e64bd05e602625046431ddc216e195a0be8f",
+      "rgba_sha256": "f8711c23f4f990946aad3bee3e69ccbdd09b2b4413993cc4d8aeeeca65e47a07",
+      "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/coll-bottom-right.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "5e5fcb0e9c3ac2c994756ba53aac42dd6d2484bf76948ae46d722bdf1a90cf65",
+      "rgba_sha256": "fb2fa86411e478656c981afe13ea66d7106c6508928f5ab8ba3b80d738310eed",
+      "last_changed_commit": "2086e18550ecfe88c764591eab2b56a015e7e87c",
+      "overlong_rows_zero_based": []
+    },
+    {
+      "file": "res/coll-bottom-right-dark.xpm",
+      "width": 16,
+      "height": 16,
+      "colors": 4,
+      "xpm_sha256": "fc67dfafa997b6728e4846e95a42d93029c08d7c24632acd1f509ce3b50e65c1",
+      "rgba_sha256": "a19ed848d4c2ba7238a60aa61d816abe127b905b7fa8c0c2d33deb66653071dd",
+      "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
+      "overlong_rows_zero_based": []
+    }
+  ]
+}
