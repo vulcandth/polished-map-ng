@@ -258,3 +258,12 @@ checkbox remain; their corresponding context interactions and native Theme
 submenu are not yet fully ported. Help still presents inline attribution.
 Missing source commands, popup image-column/row geometry, shortcut captions,
 mnemonics and persistent preferences are listed explicitly in `docs/menus.md`.
+
+The shared dirty-document warning now restores upstream OK/Cancel semantics,
+including the first modified filename and action-specific question. It replaces
+the earlier development-only Save/Discard/Cancel prompt. Its egui heading,
+layout and frame remain temporary; upstream's native warning title, 50×50 shield
+and text-measured client geometry still require porting and asset review.
+Close retains palette-only edits exactly as the original session does; Exit
+does not warn for palette-only changes, matching the commented-out upstream
+palette warning. Persistent preferences are still pending.

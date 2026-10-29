@@ -24,6 +24,27 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- File Close, Save Map and Exit now follow `Main_Window::close_cb`,
+  `save_map_cb`, `exit_cb`, `unsaved` and `modified_filename`. Five headless tests
+  cover all five dirty domains, warning filenames, Cancel preservation, discard
+  without source writes, retained palette/monochrome/view state, cleared
+  document/graphics/clipboard/scroll state, dedicated map saving with other
+  domains still dirty, undo retention, external-map conflicts, keyboard/modal
+  guards and event-unload shortcut precedence. Exit tests inspect the actual
+  one-shot viewport Close command and verify Escape/Enter plus both platform
+  button orders. Palette-only edits remain outside the source unsaved guard.
+  The shared warning now has the original OK/Cancel actions and wording rather
+  than the earlier Save/Discard/Cancel prototype. Warning geometry/shield,
+  preference persistence and native window dispatch remain unverified.
+  The updated File popup and both fixed-platform warning snapshots were
+  inspected; other existing snapshot baselines remain unchanged.
+
+- Menu snapshot CI run 40801569788 found only rasterization differences in
+  Data/View/Mode: six glyph/rounded-control edge pixels differ by 2/255 RGB;
+  all remaining pixels differ by at most 1/255. Downloaded artifacts were
+  inspected and compared per channel. Only those three Linux snapshots use
+  a perceptual threshold of 3.0; all other snapshots retain their defaults.
+
 - Main-menu grouping now follows the pinned source's File/Data/Edit/View/Mode/
   Tools/Options/Help order. Event/palette data operations moved to Data; resize
   and editor dialogs moved to Tools; modes and auto-load moved to Mode/Options.

@@ -20,6 +20,12 @@ overlays, export/clipboard, external-change handling and unsaved dialogs.
 Accept only when all matrix entries pass or have an approved exception and
 outputs reopen correctly in upstream. Include pinned compatible pokecrystal.
 
+File Close, dedicated Save Map and Exit now share source-derived dirty-domain
+guards and preserve the source distinction between document changes and palette
+session edits. Headless tests cover state clearing/retention, all dirty domains,
+map-only writes/conflicts and Close/Exit/event-unload shortcut routing. Native
+warning geometry, preference persistence and recent-file history remain pending.
+
 Implemented slices include New Map, Save As, block resize, map editing/saving, master metadata discovery, six
 palette sets, project/roof colors, compound graphics and roof tile replacement.
 Block editing now has shared placement/collision commands, a GUI draft editor,

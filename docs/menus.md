@@ -12,7 +12,7 @@ keyboard and headless counterparts where applicable.
 
 | Group | Present in this port | Remaining source items or differences |
 |---|---|---|
-| File | New, Open, Save, Save As, Save Blockset, Save Tileset, Save Roof, Print | Open Recent (ten entries and Clear Recent), Close, separate Save Map, Exit menu item. Native window close already has a dirty guard. Print's complete options/overlays remain pending. |
+| File | New, Open, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Open Recent (ten entries and Clear Recent). Print's complete options/overlays remain pending. Native close delivery still needs platform verification. |
 | Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes | Manual Load Roof Colors. Event and palette actions moved here from File. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The extra Edit Block entry is temporary access to the existing editor; upstream opens it through block interactions. Complete context-menu/gesture equivalence is pending. |
 | View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Show Priority, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
@@ -22,6 +22,19 @@ keyboard and headless counterparts where applicable.
 | Help | Inline development status, project attribution and icon licensing links | Original Help and About actions/dialogs, including keyboard shortcuts. Attribution remains available throughout the port. |
 
 ## Geometry and interaction gates
+
+Close clears loaded map/events/assets, textures, map history, block clipboard,
+selection, gestures and scroll state. It retains palette colors, the selected
+palette set, palette-only dirty state, monochrome and view/mode settings.
+Save Map writes only the map; Save retains the original independent-domain
+ordering. Map conflicts preserve the loaded document and external bytes.
+Close (Ctrl/Cmd+W) and Exit (Alt+F4) share upstream's unsaved warning semantics:
+OK discards/continues, Cancel or Escape keeps the document, Enter accepts.
+Warnings name the first dirty domain in map/events/tiles/roof/blockset order;
+palette-only edits do not trigger this source guard. Shift+Ctrl/Cmd+W continues
+to unload only the event script. Native window close uses the same exit guard.
+The warning's native window, shield icon and measured client geometry remain
+pending; the current egui modal reproduces wording, button order and actions.
 
 - Preserve the 21-point menu-bar band and source top-level/command order. Tests
   verify bounds, command placement and disabled state when data is unavailable.

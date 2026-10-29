@@ -41,6 +41,18 @@ impl Default for EventUi {
         }
     }
 }
+impl EventUi {
+    pub(super) fn clear_document_state(&mut self) {
+        self.drag = None;
+        self.form = None;
+        self.change = None;
+        self.warp_path = None;
+        self.script_request = None;
+        self.hovered_event = None;
+        self.cursor = None;
+        self.screen = None;
+    }
+}
 pub(super) enum EventChange {
     Load(PathBuf),
     Reload,

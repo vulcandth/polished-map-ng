@@ -6,6 +6,7 @@ mod event_label_tests;
 #[cfg(test)]
 mod event_workflow_tests;
 mod event_workflows;
+mod file_workflows;
 pub mod geometry;
 mod icons;
 mod map_buttons;
@@ -97,6 +98,7 @@ pub struct Editor {
     tileset_choice_form: Option<tileset_workflows::TilesetChoiceForm>,
     confirm_tileset_change: bool,
     unloaded_palettes: polished_map_project::PaletteDocument,
+    unloaded_monochrome: bool,
     pending_palette_load: Option<PathBuf>,
     #[cfg(windows)]
     native_color_request: Option<polished_map_core::ColorSlot>,
@@ -127,7 +129,9 @@ pub struct Editor {
     dark: bool,
     confirm_discard: bool,
     pending_exit: bool,
+    pending_close: bool,
     pending_new: bool,
+    discard_windows_buttons: bool,
     exit_approved: bool,
     status: String,
 }
@@ -153,6 +157,7 @@ impl Default for Editor {
             tileset_choice_form: None,
             confirm_tileset_change: false,
             unloaded_palettes: polished_map_project::PaletteDocument::default(),
+            unloaded_monochrome: false,
             pending_palette_load: None,
             #[cfg(windows)]
             native_color_request: None,
@@ -183,7 +188,9 @@ impl Default for Editor {
             dark: false,
             confirm_discard: false,
             pending_exit: false,
+            pending_close: false,
             pending_new: false,
+            discard_windows_buttons: cfg!(target_os = "windows"),
             exit_approved: false,
             status: "Open a map to begin. Development build: master parity is incomplete.".into(),
         }
@@ -229,6 +236,7 @@ impl Editor {
     }
 
     fn choose_open(&mut self) {
+        self.pending_close = false;
         self.pending_new = false;
         if self.is_modified() {
             self.confirm_discard = true;
@@ -243,6 +251,7 @@ impl Editor {
     }
 
     fn choose_new(&mut self) {
+        self.pending_close = false;
         self.pending_new = true;
         if self.is_modified() {
             self.confirm_discard = true;
@@ -486,6 +495,13 @@ impl Editor {
         if (tiles || roof || blocks || events) && !loaded.document.map().is_modified() {
             return;
         }
+        self.save_map();
+    }
+
+    fn save_map(&mut self) {
+        let Some(loaded) = &self.loaded else {
+            return;
+        };
         if !loaded.document.has_backing_file()
             || loaded
                 .document
@@ -636,29 +652,7 @@ impl Editor {
             return;
         }
         if self.confirm_discard {
-            egui::Modal::new(egui::Id::unique("unsaved")).show(ctx, |ui| {
-                ui.heading("Unsaved changes");
-                ui.label("Save changes before continuing?");
-                ui.horizontal(|ui| {
-                    if ui.button("Save").clicked() {
-                        self.save();
-                        if !self.is_modified() {
-                            self.confirm_discard = false;
-                            self.continue_after_discard(ctx);
-                        }
-                    }
-                    if ui.button("Discard").clicked() {
-                        self.confirm_discard = false;
-                        self.continue_after_discard(ctx);
-                    }
-                    if ui.button("Cancel").clicked() {
-                        self.confirm_discard = false;
-                        self.pending_exit = false;
-                        self.pending_new = false;
-                        self.event_ui.warp_path = None;
-                    }
-                });
-            });
+            self.discard_dialog(ctx);
             return;
         }
         if self.event_ui.change.is_some() || self.event_ui.form.is_some() {
@@ -843,8 +837,11 @@ impl Editor {
 
     fn continue_after_discard(&mut self, ctx: &egui::Context) {
         if self.pending_exit {
+            self.pending_exit = false;
             self.exit_approved = true;
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+        } else if self.pending_close {
+            self.close_map();
         } else if self.pending_new {
             self.start_new_options();
         } else if let Some(path) = self.event_ui.warp_path.take() {
@@ -1318,8 +1315,7 @@ impl Editor {
             && !self.exit_approved
         {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
-            self.pending_exit = true;
-            self.confirm_discard = true;
+            self.request_exit(&ctx);
         }
         let blocked = self.open_form.is_some()
             || self.event_ui.change.is_some()
@@ -1367,6 +1363,12 @@ impl Editor {
                 self.hex = !self.hex;
             }
             self.event_shortcuts(&ctx);
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::W)) {
+                self.request_close_map();
+            }
+            if ctx.input_mut(|i| i.consume_key(egui::Modifiers::ALT, egui::Key::F4)) {
+                self.request_exit(&ctx);
+            }
             if ctx.input_mut(|i| {
                 i.consume_key(
                     egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,

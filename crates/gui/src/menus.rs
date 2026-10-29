@@ -28,11 +28,19 @@ impl Editor {
                 }
                 ui.separator();
                 let loaded = self.loaded.is_some();
+                if action(ui, loaded, "Close") {
+                    self.request_close_map();
+                }
+                ui.separator();
+                let loaded = self.loaded.is_some();
                 if action(ui, loaded, "Save") {
                     self.save();
                 }
                 if action(ui, loaded, "Save As…") {
                     self.save_as();
+                }
+                if action(ui, loaded, "Save Map") {
+                    self.save_map();
                 }
                 let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
                 if action(ui, blocks, "Save Blockset") {
@@ -54,6 +62,10 @@ impl Editor {
                 ui.separator();
                 if action(ui, loaded && self.export.is_none(), "Print…") {
                     self.export_png(&ctx);
+                }
+                ui.separator();
+                if action(ui, true, "Exit") {
+                    self.request_exit(&ctx);
                 }
             });
             ui.menu_button("Data", |ui| {
@@ -237,8 +249,10 @@ mod tests {
             (
                 "File",
                 &[
+                    "Close",
                     "Save",
                     "Save As…",
+                    "Save Map",
                     "Save Blockset",
                     "Save Tileset",
                     "Save Roof",
@@ -267,6 +281,11 @@ mod tests {
             }
             if menu == "File" {
                 assert!(h.query_by_label("Load Event Script…").is_none());
+                assert!(
+                    !h.get_by_role_and_label(egui::Role::MenuItem, "Exit")
+                        .accesskit_node()
+                        .is_disabled()
+                );
             }
             if menu == "Edit" {
                 assert!(h.query_by_label("Resize Blockset…").is_none());
@@ -363,7 +382,16 @@ mod tests {
             h.get_by_label(menu).click();
             h.remove_cursor();
             h.run();
-            h.snapshot(format!("main-menu-{}", menu.to_lowercase()));
+            // Inspected CI 40801569788: these three popups differ only by
+            // <=2/255 RGB at glyph/rounded-control edges (six pixels >1/255
+            // in total). Keep the default threshold for every other menu.
+            let options = if matches!(menu, "Data" | "View" | "Mode") {
+                egui_kittest::SnapshotOptions::default()
+                    .threshold(egui_kittest::OsThreshold::<f32>::default().linux(3.0))
+            } else {
+                egui_kittest::SnapshotOptions::default()
+            };
+            h.snapshot_options(format!("main-menu-{}", menu.to_lowercase()), &options);
             h.key_press(egui::Key::Escape);
             h.run();
         }

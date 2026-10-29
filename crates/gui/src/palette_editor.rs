@@ -145,11 +145,11 @@ impl Editor {
             .map(|t| t.palettes())
             .unwrap_or(&self.unloaded_palettes)
     }
-    fn palette_monochrome(&self) -> bool {
+    pub(super) fn palette_monochrome(&self) -> bool {
         self.loaded
             .as_ref()
             .and_then(|l| l.tileset.as_ref())
-            .is_some_and(|t| t.monochrome())
+            .map_or(self.unloaded_monochrome, |t| t.monochrome())
     }
     pub(super) fn prepare_palettes(&mut self) {
         let draft = self.palette_document().clone();
