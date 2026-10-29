@@ -79,9 +79,14 @@ is `row_height * row_count + 1`. Dividers occupy the bottom of their preceding
 row, not a separate item. The menu bar remains in its original 21-point band.
 
 The source-derived backgrounds, square frame, row bounds, check/radio positions,
-image space and shortcut alignment are implemented; theme-specific beveled
-frames/checkmarks/radio rasterization, inactive-color arithmetic and native
-fonts remain incomplete. Keyboard submenu opening/activation and modal guards
+image space and shortcut alignment are implemented. Indicator drawing now uses
+the Greybird/Dark box colors, borders, gradients, six-vertex checkmarks and GTK
+radio highlights. The radio inset depends on each theme's box metrics. Disabled
+labels/shortcuts/arrows use FLTK's 33% foreground/background blend while indicator
+boxes retain their source colors. Hover changes text contrast without recoloring
+the marks. Contrast follows FLTK 1.4.5's CIELAB algorithm at master's level 50.
+Native arc/polygon coverage, popup outer frames and fonts remain incomplete.
+Keyboard submenu opening/activation and modal guards
 are tested headlessly. Activating Enter is consumed before a command can open
 a modal, preventing accidental acceptance/dismissal in that same frame.
 Mnemonic underlines/Alt navigation, screen-edge/native-popup behavior and the

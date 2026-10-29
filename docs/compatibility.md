@@ -1,5 +1,38 @@
 # Compatibility evidence
 
+## Popup indicator themes and inactive colors
+
+`menu_popup/marks.rs` adapts pinned master `themes.cpp` and FLTK 1.4.5
+`Fl_Menu.cxx`, `fl_draw.cxx`, `fl_color.cxx` and `fl_contrast.cxx`. Greybird check
+boxes use the original inset fill and distinct top/side/bottom/corner colors;
+Dark uses the original button gradient and inner top highlight. Checkmarks are
+filled six-vertex polygons. Radio marks retain the GTK inner fill/highlight and
+the theme's own `box_dw` (Greybird 6, Dark 2), replacing the previous generic
+quarter-radius dot. Disabled rows dim text/shortcuts/arrows with
+`foreground * .33f + background * (1-.33f)`, truncating channels as in FLTK.
+Their indicator boxes retain source colors, bypassing egui's additional disabled
+tint. Selected text uses CIELAB contrast at level 50, as set by master `main.cpp`.
+
+`tools/menu_marks_oracle.py` extracts unchanged original functions, verifies
+downloaded FLTK source hashes, and compiles a drawing-command recorder. It checks
+72 combinations of two themes, check/radio, on/off and row heights 18–26, plus
+eight enabled/hover text colors. Rectangle endpoints, gradient channels, polygon
+vertices, arc/pie bounds and angles are compared in order against Rust output.
+The generated source, provenance and outputs stay ignored. Visual CI explicitly
+runs this differential test; normal tests leave it ignored when the fixture is
+absent. Headless integration checks disabled accessibility, untinted text/mark
+colors and focus contrast at 1×/2×; snapshots cover both themes and scales.
+Local formatting, workspace tests, Clippy with warnings denied and rustdoc pass.
+The full visual suite passes 159 tests (four explicitly ignored), and the compiled
+menu comparison passes separately. Thirteen changed menu snapshots and four new
+indicator snapshots were visually reviewed before accepting their baselines.
+
+This is command/geometry equivalence, not native pixel equivalence. Egui still
+tessellates arcs and polygons; FLTK's native drivers may cover edge pixels
+differently. Native font coverage, outer popup frames, mnemonic/Alt navigation
+and screen-edge behavior remain separate acceptance requirements. No artwork
+or font assets were added for these procedural marks.
+
 ## Shared editor/Print font policy and variable instances
 
 Print now consumes `NativeFonts`, removing its separate Courier/Helvetica fallback
@@ -40,9 +73,10 @@ native Windows, 13 elsewhere), following `Print_Options_Dialog::refresh`'s
 that width and verifies that a queued worker retains and renders the captured
 faces. Existing headless fixtures keep their explicit bundled 13-point style.
 
-The preceding font-policy commit `58a4e74` passed all eight jobs in
-[CI run 40856606148](https://github.com/vulcandth/polished-map-ng/actions/runs/40856606148).
-Current local workspace tests, formatting, Clippy with warnings denied, rustdoc
+The shared font-instance commit `53879c9` passed all eight jobs in
+[CI run 40860235999](https://github.com/vulcandth/polished-map-ng/actions/runs/40860235999),
+including installed-font/worker/CLI checks on Windows, Linux and macOS.
+Its local workspace tests, formatting, Clippy with warnings denied, rustdoc
 and the production native-adapter graph pass. The visual suite passes 157 tests
 with three explicit ignored tests and unchanged snapshot baselines. Source and
 variable-instance tests, Windows installed-font rendering, actual worker-thread

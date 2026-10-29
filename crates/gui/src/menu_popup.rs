@@ -5,6 +5,7 @@
 use super::*;
 use std::sync::Arc;
 
+mod marks;
 mod specs;
 #[cfg(test)]
 mod tests;
@@ -353,13 +354,10 @@ pub(super) fn row_at(
         }
         let dark = ui.visuals().dark_mode;
         let hovered = ui.is_enabled() && (response.hovered() || response.has_focus());
-        let fg = if hovered {
-            if dark { Color32::BLACK } else { Color32::WHITE }
-        } else if dark {
-            Color32::WHITE
-        } else {
-            Color32::from_gray(60)
-        };
+        let fg = marks::foreground(dark, ui.is_enabled(), hovered);
+        // FLTK dims label/shortcut/arrow colors, but not the indicator boxes.
+        // Paint through a fresh painter so egui does not apply a second tint.
+        let painter = egui::Painter::new(ui.ctx().clone(), ui.layer_id(), ui.clip_rect());
         if hovered {
             ui.painter().rect_filled(
                 Rect::from_min_size(
@@ -380,14 +378,14 @@ pub(super) fn row_at(
             _ => m.indicator() + 6.0,
         };
         let text_y = rect.top() + 1.0 + (h - item.label.size().y) / 2.0;
-        ui.painter().galley_with_override_text_color(
+        painter.galley_with_override_text_color(
             Pos2::new(rect.left() + text_x, text_y),
             item.label.clone(),
             fg,
         );
         let split = rect.right() - 1.0 - m.key_width;
         if !item.key.text().is_empty() {
-            ui.painter().galley_with_override_text_color(
+            painter.galley_with_override_text_color(
                 Pos2::new(
                     split - item.modifiers.size().x,
                     rect.top() + 1.0 + (h - item.modifiers.size().y) / 2.0,
@@ -395,43 +393,17 @@ pub(super) fn row_at(
                 item.modifiers.clone(),
                 fg,
             );
-            ui.painter().galley_with_override_text_color(
-                Pos2::new(split, text_y),
-                item.key.clone(),
-                fg,
-            );
+            painter.galley_with_override_text_color(Pos2::new(split, text_y), item.key.clone(), fg);
         }
         if let Some(selected) = selected {
-            let w = m.indicator();
-            let r = Rect::from_min_size(
-                rect.min + Vec2::new(2.0, 1.0 + (h - w) / 2.0),
-                Vec2::splat(w),
+            marks::paint(
+                &painter,
+                rect.min,
+                m.row,
+                dark,
+                item.mark == Mark::Radio,
+                selected,
             );
-            let fill = if dark {
-                Color32::from_gray(58)
-            } else {
-                Color32::from_gray(252)
-            };
-            let stroke = egui::Stroke::new(1.0, fg);
-            if item.mark == Mark::Radio {
-                ui.painter().circle(r.center(), w / 2.0, fill, stroke);
-                if selected {
-                    ui.painter().circle_filled(r.center(), w / 4.0, fg);
-                }
-            } else {
-                ui.painter()
-                    .rect(r, 0.0, fill, stroke, egui::StrokeKind::Inside);
-                if selected {
-                    ui.painter().add(egui::Shape::line(
-                        vec![
-                            r.min + Vec2::new(3.0, w / 2.0),
-                            r.min + Vec2::new(w / 2.0, w - 3.0),
-                            r.min + Vec2::new(w - 2.0, 3.0),
-                        ],
-                        egui::Stroke::new(1.5, fg),
-                    ));
-                }
-            }
         }
         if item.mark == Mark::Submenu {
             let sz = (((h as i32 - 2) & -2) + 1).min(13) as f32;
@@ -439,17 +411,16 @@ pub(super) fn row_at(
                 Pos2::new(rect.right() - sz - 3.0, rect.top() + 2.0 + (h - sz) / 2.0),
                 Vec2::splat(sz),
             );
-            ui.painter()
-                .add(egui::containers::menu::SubMenuButton::arrow_shape(r, fg));
+            painter.add(egui::containers::menu::SubMenuButton::arrow_shape(r, fg));
         }
         if item.divider {
             let y = rect.top() + h + 2.0;
-            ui.painter().hline(
+            painter.hline(
                 rect.x_range(),
                 y,
                 egui::Stroke::new(1.0, Color32::from_gray(if dark { 40 } else { 160 })),
             );
-            ui.painter().hline(
+            painter.hline(
                 rect.x_range(),
                 y + 1.0,
                 egui::Stroke::new(1.0, Color32::from_gray(if dark { 106 } else { 255 })),

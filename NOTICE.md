@@ -65,8 +65,10 @@ Popup sizing adapts the pinned master's menu labels/flags and FLTK 1.4.5
 on the work of the FLTK project (<https://www.fltk.org>), Copyright 1998-2024
 Bill Spitzak and others. The original FLTK license and exceptions are retained
 in `LICENSES/FLTK.txt`; the Rust adaptation follows LGPL-3.0 under its
-version-selection provision. Native popup frame/check/radio rasterization is not
-copied or claimed equivalent.
+version-selection provision. Menu indicators also adapt master's Greybird/Dark
+theme drawing functions and FLTK's `fl_draw_check`, `fl_draw_radio`, color average
+and CIELAB contrast rules. The compiled comparison records unchanged source
+functions and hashes; native arc/polygon rasterization is not claimed equivalent.
 Whole-window transparency adapts master `Main_Window::apply_transparency`,
 its F10/menu callback and startup/exit preference handling under LGPL-3.0-only.
 The native Rust boundary preserves the Win32/X11 alpha encodings and uses
