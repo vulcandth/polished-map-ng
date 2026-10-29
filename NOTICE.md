@@ -40,6 +40,11 @@ Oversized map prefix loading and its acknowledgment warning adapt master
 `Modal_Dialog`, under LGPL-3.0-only. Structured load reports and whole-source
 conflict hashes are additions; strict library opening remains available.
 
+Map-size selection adapts master `Map_Options_Dialog::{add_valid_sizes,
+add_map_size,guess_map_size}` and `valid_size`, under LGPL-3.0-only. The reference
+harness compiles unchanged selection methods with inert dropdown storage;
+generated source and snippet hashes remain in ignored scratch storage.
+
 Installed GUI font preferences adapt master `themes.cpp::use_native_fonts`;
 Consolas-specific text sizes adapt `ruler.cpp` and `event.cpp`, under
 LGPL-3.0-only. Backend default names follow pinned FLTK 1.4.5's GDI, Quartz and

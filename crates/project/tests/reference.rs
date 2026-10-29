@@ -13,6 +13,45 @@ mod png_import;
 mod printing;
 
 #[test]
+#[ignore = "requires POLISHED_MAP_SIZES_ORACLE; run in the reference CI job"]
+fn map_size_choices_match_original_for_every_representable_area() {
+    use polished_map_project::MapSizeOptions;
+    let oracle =
+        std::env::var_os("POLISHED_MAP_SIZES_ORACLE").expect("set POLISHED_MAP_SIZES_ORACLE");
+    let directory = tempfile::tempdir().unwrap();
+    let output = directory.path().join("sizes.bin");
+    assert!(
+        Command::new(oracle)
+            .arg(&output)
+            .status()
+            .unwrap()
+            .success()
+    );
+    let bytes = fs::read(output).unwrap();
+    let mut words = bytes
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|b| u16::from_le_bytes([b[0], b[1]]));
+    for count in 0..=65026 {
+        let selected = words.next().unwrap();
+        let length = words.next().unwrap();
+        let pairs: Vec<_> = (0..length)
+            .map(|_| (words.next().unwrap(), words.next().unwrap()))
+            .collect();
+        let options = MapSizeOptions::from_block_count(count);
+        assert_eq!(options.choices(), pairs, "count {count}");
+        assert_eq!(
+            options.selected(),
+            (selected != u16::MAX).then_some(usize::from(selected)),
+            "count {count}"
+        );
+    }
+    assert!(words.next().is_none());
+    assert!(bytes.len().is_multiple_of(2));
+}
+
+#[test]
 #[ignore = "requires POLISHED_MAP_PRIORITY_ORACLE; run in the reference CI job"]
 fn priority_patterns_match_all_original_rgba_pixels() {
     use polished_map_core::PriorityPattern;

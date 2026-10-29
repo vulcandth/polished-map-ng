@@ -10,7 +10,12 @@ remaining work and [compatibility evidence](compatibility.md) for verification.
 The editor opens binary maps using project metadata, explicit dimensions,
 or names such as `Map.20x18.johto.blk`. It finds the nearest Makefile and recognizes
 master map constants/headers and numbered tileset aliases. The GUI prefills these
-options for review. Shared block files still require explicit choices. The project
+options for review. Open offers factor-pair sizes from the block count, preferring
+10×9 multiples; filename or metadata dimensions take precedence. Choose the right
+size for shared block files. ASM counts reflect decoded data, not source text.
+When no valid factor pair or metadata size exists, width/height controls start
+at 10×9. Headless opens still require explicit dimensions when metadata is absent.
+The project
 adapter supports master tilesets with PNG/2bpp/LZ/CHR graphics, binary
 metatiles, tilepal mappings, all six palette sets, project/special palettes and
 map-group roof colors, compound graphics and optional roof tile replacement.

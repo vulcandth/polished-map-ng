@@ -102,6 +102,7 @@ struct OpenForm {
     width: u16,
     height: u16,
     allow_256: bool,
+    sizes: Option<polished_map_project::MapSizeOptions>,
 }
 
 struct ResizeForm {
@@ -410,6 +411,14 @@ impl Editor {
                 return;
             }
         };
+        let sizes = match polished_map_project::inspect_map_sizes(&path, metadata.dimensions) {
+            Ok(sizes) => sizes,
+            Err(error) => {
+                self.error = Some(error.to_string());
+                return;
+            }
+        };
+        let (width, height) = sizes.dimensions();
         self.open_form = Some(OpenForm {
             root: metadata
                 .root
@@ -422,8 +431,9 @@ impl Editor {
                 .tileset
                 .or(metadata.tileset_hint)
                 .unwrap_or_default(),
-            width: metadata.dimensions.map_or(0, |d| d.0),
-            height: metadata.dimensions.map_or(0, |d| d.1),
+            width,
+            height,
+            sizes: Some(sizes),
             path,
             allow_256: self.allow_256,
             ..Default::default()
@@ -938,16 +948,32 @@ impl Editor {
                 let label = ui.label("Roof name (optional)");
                 ui.text_edit_singleline(&mut form.roof)
                     .labelled_by(label.id);
-                ui.horizontal(|ui| {
-                    let label = ui.label("Width");
-                    ui.add(egui::DragValue::new(&mut form.width).range(0..=255))
-                        .labelled_by(label.id);
-                    let label = ui.label("Height");
-                    ui.add(egui::DragValue::new(&mut form.height).range(0..=255))
-                        .labelled_by(label.id);
-                });
-                if !form.new_map {
-                    ui.label("0 uses dimensions from the filename or project metadata");
+                if let Some(sizes) = form.sizes.as_ref().filter(|s| !s.choices().is_empty()) {
+                    let mut dimensions = (form.width, form.height);
+                    egui::ComboBox::from_label("Size")
+                        .selected_text(format!("{} x {}", form.width, form.height))
+                        .show_ui(ui, |ui| {
+                            for &(width, height) in sizes.choices() {
+                                ui.selectable_value(
+                                    &mut dimensions,
+                                    (width, height),
+                                    format!("{width} x {height}"),
+                                );
+                            }
+                        });
+                    (form.width, form.height) = dimensions;
+                } else {
+                    ui.horizontal(|ui| {
+                        let label = ui.label("Width");
+                        ui.add(egui::DragValue::new(&mut form.width).range(1..=255))
+                            .labelled_by(label.id);
+                        let label = ui.label("Height");
+                        ui.add(egui::DragValue::new(&mut form.height).range(1..=255))
+                            .labelled_by(label.id);
+                    });
+                }
+                if let Some(sizes) = &form.sizes {
+                    ui.label(format!("({} B)", sizes.block_count()));
                 }
                 ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
                 ui.horizontal(|ui| {

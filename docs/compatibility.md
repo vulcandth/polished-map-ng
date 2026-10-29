@@ -6,6 +6,39 @@ The feature records below retain source calculations and verification results;
 test counts and local-run observations describe those individual changes, not
 the current size or acceptance status of the whole suite.
 
+## Open map-size selection
+
+`MapSizeOptions` and the GUI Open form adapt pinned master
+`Map_Options_Dialog::{add_valid_sizes,add_map_size,guess_map_size}` in
+`src/option-dialogs.cpp`. Candidate dimensions are factor pairs of the decoded
+block count, descending by width, restricted to 1–255 on each axis. The initial
+selection starts at `(count - 1) / 2` and searches toward wider candidates for
+width/height multiples of 10/9. Filename or metadata dimensions select an
+existing pair or append a new one, even when the area differs from the file.
+That mismatch remains the loader's warning/error decision. Empty or unfactorable
+inputs use 10×9 and free spinners; New retains the same default and spinners.
+
+The dialog shows decoded bytes for `.map` input, sharing the loader's bounded
+binary/ASM decoding. A read/parse error preserves the current map. Dimensions
+outside 1–255 are rejected under the existing malformed-input safety policy.
+Only explicit GUI choices resolve ambiguous dimensions; the headless map-open
+contract still requires metadata or supplied dimensions.
+
+`tools/map_sizes_oracle.py` extracts unchanged `add_valid_sizes`, `add_map_size`
+and `valid_size` from the pinned source, retaining LGPL attribution and snippet
+hashes. A minimal dropdown stub observes the original list and selected index.
+The reference test compares every byte count 0–65,026 (65,027 cases), covering
+all representable map areas, primes, empty input and the first oversized area.
+Project tests cover metadata/filename precedence, appended and duplicate choices,
+decoded ASM data, invalid dimensions and no-write inspection. GUI interaction
+tests choose an alternate factor pair and open both binary/ASM maps, verify
+fallback/New controls, and retain edits on cancellation. Existing oversized,
+short-input and palette-warning flows remain covered.
+
+This establishes size-choice behavior, not complete Open/New parity: tileset/roof
+dropdowns, project-profile attribution, original control geometry and native
+dialog delivery remain M1/M4 work. No new native GUI validation is claimed.
+
 ## Error, warning and success message dialogs
 
 The six one-button message routes now share the pinned master's
@@ -1185,7 +1218,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; GUI resize stages map/event shifts; full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Compiled-source comparisons cover all 65,536 bitplane pairs, 12,390 LZ cases, 151 assembly/CHR cases and 90 PNG cases including Adam7 and both platform policies; empty-image composition and edit/save/reopen pass. Full-application interoperability remains pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
-| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; shared-map options, compound selection ordering and complete option selectors need further coverage |
+| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; Open size choices match the compiled source over every representable area. Shared-map attribution, compound selection ordering, tileset/roof selectors and full option layout remain incomplete |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts, normal-size digit pixels and CPU Print event overlays tested; native fonts, full gesture coverage and native workflows pending |

@@ -167,6 +167,21 @@ pub(crate) fn optional_hash(path: &Path) -> Result<Option<[u8; 32]>, ProjectErro
     }
 }
 
+pub(crate) fn decode_map_blocks(path: &Path, bytes: &[u8]) -> Result<Vec<u8>, ProjectError> {
+    if path
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("map"))
+    {
+        let text = std::str::from_utf8(bytes).map_err(|e| ProjectError::Format {
+            path: path.into(),
+            message: e.to_string(),
+        })?;
+        parse_asm(text).map_err(|e| ProjectError::codec(path, e))
+    } else {
+        Ok(bytes.to_vec())
+    }
+}
+
 fn hex_hash(hash: [u8; 32]) -> String {
     hash.iter().map(|b| format!("{b:02x}")).collect()
 }
@@ -247,18 +262,7 @@ impl MapDocument {
             .height
             .or(dimensions.map(|d| d.1))
             .ok_or(ProjectError::DimensionsRequired)?;
-        let mut blocks = if path
-            .extension()
-            .is_some_and(|e| e.eq_ignore_ascii_case("map"))
-        {
-            let text = std::str::from_utf8(&bytes).map_err(|e| ProjectError::Format {
-                path: path.clone(),
-                message: e.to_string(),
-            })?;
-            parse_asm(text).map_err(|e| ProjectError::codec(&path, e))?
-        } else {
-            bytes.clone()
-        };
+        let mut blocks = decode_map_blocks(&path, &bytes)?;
         let mut trailing_blocks = 0;
         if allow_trailing && (1..=255).contains(&width) && (1..=255).contains(&height) {
             let expected = usize::from(width) * usize::from(height);

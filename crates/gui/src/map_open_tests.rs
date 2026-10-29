@@ -32,6 +32,90 @@ fn open(h: &mut Harness<'_, Editor>, path: &Path) {
 }
 
 #[test]
+fn open_size_selector_changes_ambiguous_dimensions_and_loads_without_metadata() {
+    for extension in ["blk", "MAP"] {
+        let (dir, mut h) = tileset_editor_tests::fixture(false, false);
+        let path = dir.path().join(format!("Shared.{extension}"));
+        let bytes = if extension == "blk" {
+            vec![0, 1, 0, 1, 0, 1]
+        } else {
+            b"\tdb 0, 1, 0, 1, 0, 1 ; six decoded bytes\n".to_vec()
+        };
+        fs::write(&path, &bytes).unwrap();
+        h.state_mut().prepare_open(path.clone());
+        let form = h.state_mut().open_form.as_mut().unwrap();
+        form.tileset = "demo".into();
+        assert_eq!((form.width, form.height), (3, 2));
+        h.run();
+        assert!(h.query_by_label("Width").is_none());
+        assert!(h.query_by_label("(6 B)").is_some());
+        h.get_by_label("Size").click();
+        h.run();
+        h.get_by_label("2 x 3").click();
+        h.run();
+        let form = h.state().open_form.as_ref().unwrap();
+        assert_eq!((form.width, form.height), (2, 3));
+        h.get_by_label("Open map").click();
+        h.step();
+        let deadline = Instant::now() + Duration::from_secs(5);
+        while h.state().loading.is_some() && Instant::now() < deadline {
+            std::thread::sleep(Duration::from_millis(5));
+            h.step();
+        }
+        h.run();
+        assert!(h.state().loading.is_none());
+        assert!(h.state().error.is_none(), "{:?}", h.state().error);
+        let map = h.state().loaded.as_ref().unwrap().document.map();
+        assert_eq!((map.width(), map.height()), (2, 3));
+        assert_eq!(map.blocks(), &[0, 1, 0, 1, 0, 1]);
+        assert_eq!(fs::read(&path).unwrap(), bytes);
+    }
+}
+
+#[test]
+fn open_size_options_use_metadata_or_free_spinners_and_cancel_preserves_edits() {
+    let (dir, mut h) = tileset_editor_tests::fixture(false, false);
+    h.state_mut().apply(Command::Paint {
+        points: vec![Point { x: 0, y: 0 }],
+        block: 0,
+    });
+    let original_path = h
+        .state()
+        .loaded
+        .as_ref()
+        .unwrap()
+        .document
+        .path()
+        .to_owned();
+    for (name, count, expected, dropdown) in [
+        ("Unknown.blk", 90, (10, 9), true),
+        ("Explicit.2x2.blk", 6, (2, 2), true),
+        ("Empty.blk", 0, (10, 9), false),
+        ("Prime.blk", 257, (10, 9), false),
+    ] {
+        let path = dir.path().join(name);
+        fs::write(&path, vec![0; count]).unwrap();
+        h.state_mut().prepare_open(path);
+        h.run();
+        let form = h.state().open_form.as_ref().unwrap();
+        assert_eq!((form.width, form.height), expected);
+        assert_eq!(h.query_by_label("Size").is_some(), dropdown);
+        assert_eq!(h.query_by_label("Width").is_some(), !dropdown);
+        h.get_by_label("Cancel").click();
+        h.run();
+        let doc = &h.state().loaded.as_ref().unwrap().document;
+        assert_eq!(doc.path(), original_path);
+        assert!(doc.map().can_undo());
+    }
+    h.state_mut().prepare_new_in(dir.path().to_owned());
+    h.run();
+    let form = h.state().open_form.as_ref().unwrap();
+    assert_eq!((form.width, form.height), (10, 9));
+    assert!(h.query_by_label("Size").is_none());
+    assert!(h.query_by_label("Width").is_some());
+}
+
+#[test]
 fn oversized_map_warns_after_palette_choice_and_acknowledgment_publishes_only_the_prefix() {
     #[cfg(feature = "visual-tests")]
     let mut snapshots = egui_kittest::SnapshotResults::new();

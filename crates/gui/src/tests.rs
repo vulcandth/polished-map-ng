@@ -249,13 +249,14 @@ fn toolbar_controls_toggle_real_state() {
 
 #[test]
 fn open_options_cancel_preserves_editor_state() {
+    let directory = tempfile::tempdir().unwrap();
+    let path = directory.path().join("Example.2x1.demo.blk");
+    std::fs::write(&path, [0, 0]).unwrap();
     let mut harness = Harness::builder()
         .with_size(Vec2::new(800.0, 600.0))
         .with_theme(egui::Theme::Light)
         .build_eframe(|cc| Editor::new(cc));
-    harness
-        .state_mut()
-        .prepare_open(PathBuf::from("Example.2x1.demo.blk"));
+    harness.state_mut().prepare_open(path);
     harness.run();
     harness.get_by_label("Cancel").click();
     harness.run();
