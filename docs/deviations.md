@@ -277,8 +277,11 @@ collision-quadrant labels, including seven dark variants). Source-colored pixels
 and disabled-color arithmetic are retained. Button selection/hover/focus frames
 still use egui styling; full native toolbar themes remain pending. Disabled icon
 colors use upstream Greybird/Dark backgrounds on all platforms, consistently with
-the existing portable grid palette. The remaining toolbar items and popup-menu
-layout are not yet complete; Open/Undo/Redo retain text controls. Unreviewed
+the existing portable grid palette. All toolbar buttons now have source order,
+grouping and size. Fourteen unresolved images (including Open/Undo/Redo) use
+short text placeholders inside 24-point controls; this is an incomplete visual
+port, not an approved permanent replacement. Native popup/theme behavior remains
+incomplete. Unreviewed
 artwork is not replaced with silently redesigned copies or imported under an
 assumed repository-wide grant. See `docs/assets.md` for the per-asset audit.
 

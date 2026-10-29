@@ -39,6 +39,8 @@ mod tileset_editor;
 #[cfg(test)]
 mod tileset_workflow_tests;
 mod tileset_workflows;
+#[cfg(test)]
+mod toolbar_tests;
 mod transparency;
 #[cfg(test)]
 mod zoom_tests;
@@ -156,6 +158,7 @@ pub struct Editor {
     canvas_zoom: bool,
     canvas_scroll: Vec2,
     sidebar_scroll: f32,
+    roof_choices_available: bool,
     error: Option<String>,
     selected: u8,
     stroke: Vec<Point>,
@@ -240,6 +243,7 @@ impl Default for Editor {
             canvas_zoom: false,
             canvas_scroll: Vec2::ZERO,
             sidebar_scroll: 0.0,
+            roof_choices_available: false,
             error: None,
             selected: 0,
             stroke: Vec::new(),
@@ -950,8 +954,22 @@ impl Editor {
         {
             self.choose_new();
         }
-        if ui.button("Open…").clicked() {
+        if ui
+            .add(Button::placeholder("O", "Open…"))
+            .on_hover_text("Open… (Ctrl/Cmd+O)")
+            .clicked()
+        {
             self.choose_open();
+        }
+        if ui
+            .add_enabled(
+                self.loaded.is_some(),
+                Button::placeholder("LE", "Load events"),
+            )
+            .on_hover_text("Load Event Script… (Ctrl/Cmd+A)")
+            .clicked()
+        {
+            self.choose_events();
         }
         if ui
             .add_enabled(
@@ -978,25 +996,35 @@ impl Editor {
                     && self.print_request.is_none(),
                 Button::new(Icon::Print, "Print…"),
             )
-            .on_hover_text("Print (Ctrl+P)")
+            .on_hover_text("Print (Ctrl/Cmd+P)")
             .clicked()
         {
             self.prepare_print();
         }
         icons::separator(ui);
-        if let Some(loaded) = &mut self.loaded {
-            if ui
-                .add_enabled(loaded.document.map().can_undo(), egui::Button::new("Undo"))
-                .clicked()
-            {
-                loaded.document.map_mut().undo();
-            }
-            if ui
-                .add_enabled(loaded.document.map().can_redo(), egui::Button::new("Redo"))
-                .clicked()
-            {
-                loaded.document.map_mut().redo();
-            }
+        let undo = self
+            .loaded
+            .as_ref()
+            .is_some_and(|l| l.document.map().can_undo());
+        if ui
+            .add_enabled(undo, Button::placeholder("U", "Undo"))
+            .on_hover_text("Undo (Ctrl/Cmd+Z)")
+            .clicked()
+            && let Some(loaded) = &mut self.loaded
+        {
+            loaded.document.map_mut().undo();
+        }
+        let redo = self
+            .loaded
+            .as_ref()
+            .is_some_and(|l| l.document.map().can_redo());
+        if ui
+            .add_enabled(redo, Button::placeholder("R", "Redo"))
+            .on_hover_text("Redo (Ctrl/Cmd+Y)")
+            .clicked()
+            && let Some(loaded) = &mut self.loaded
+        {
+            loaded.document.map_mut().redo();
         }
         icons::separator(ui);
         for (icon, label, help, value) in [
@@ -1034,8 +1062,58 @@ impl Editor {
         {
             self.show_priority = !self.show_priority;
         }
+        for (text, label, help, value) in [
+            (
+                "GB",
+                "Game Boy screen",
+                "Game Boy Screen (Ctrl/Cmd+Shift+M)",
+                &mut self.event_ui.game_boy,
+            ),
+            (
+                "SE",
+                "Show events",
+                "Show Events (Ctrl/Cmd+Shift+V)",
+                &mut self.event_ui.show,
+            ),
+            (
+                "WI",
+                "Show warp IDs",
+                "Show Warp IDs (Ctrl/Cmd+Shift+3)",
+                &mut self.event_ui.warp_ids,
+            ),
+        ] {
+            if ui
+                .add(Button::placeholder(text, label).selected(*value))
+                .on_hover_text(help)
+                .clicked()
+            {
+                *value = !*value;
+            }
+        }
+        icons::separator(ui);
+        if ui
+            .add(Button::placeholder("B", "Blocks mode").selected(!self.event_ui.mode))
+            .on_hover_text("Blocks Mode (Ctrl/Cmd+Shift+B)")
+            .clicked()
+        {
+            self.set_event_mode(false);
+        }
+        if ui
+            .add(Button::placeholder("E", "Events mode").selected(self.event_ui.mode))
+            .on_hover_text("Events Mode (Ctrl/Cmd+Shift+E)")
+            .clicked()
+        {
+            self.set_event_mode(true);
+        }
         icons::separator(ui);
         self.palette_set_toolbar(ui);
+        if ui
+            .add(Button::placeholder("LP", "Load palettes"))
+            .on_hover_text("Load Palettes… (Ctrl/Cmd+L)")
+            .clicked()
+        {
+            self.choose_palettes(ui.ctx());
+        }
         if ui
             .add(Button::new(Icon::Palettes, "Edit current palettes"))
             .on_hover_text("Edit Current Palettes… (Ctrl/Cmd+Shift+L)")
@@ -1046,15 +1124,36 @@ impl Editor {
         icons::separator(ui);
         if ui
             .add_enabled(
+                self.loaded.as_ref().is_some_and(|l| l.blockset.is_some()),
+                Button::placeholder("+/-", "Resize blockset"),
+            )
+            .on_hover_text("Resize Blockset… (Ctrl/Cmd+B)")
+            .clicked()
+        {
+            self.prepare_block_count();
+        }
+        if ui
+            .add_enabled(
                 self.loaded.is_some(),
                 Button::new(Icon::Resize, "Resize map"),
             )
-            .on_hover_text("Resize Map…")
+            .on_hover_text("Resize Map… (Ctrl/Cmd+E)")
             .clicked()
         {
             self.prepare_resize();
         }
         icons::separator(ui);
+        let change = self
+            .loaded
+            .as_ref()
+            .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some());
+        if ui
+            .add_enabled(change, Button::placeholder("CT", "Change tileset"))
+            .on_hover_text("Change Tileset… (Ctrl/Cmd+H)")
+            .clicked()
+        {
+            self.request_tileset_change();
+        }
         if ui
             .add_enabled(
                 self.loaded.as_ref().is_some_and(|l| l.tileset.is_some()),
@@ -1064,6 +1163,30 @@ impl Editor {
             .clicked()
         {
             self.prepare_tileset();
+        }
+        icons::separator(ui);
+        if ui
+            .add_enabled(
+                self.can_change_roof(),
+                Button::placeholder("CR", "Change roof"),
+            )
+            .on_hover_text("Change Roof… (Ctrl/Cmd+Shift+H)")
+            .clicked()
+        {
+            self.request_roof_change();
+        }
+        let roof = self
+            .loaded
+            .as_ref()
+            .and_then(|l| l.tileset.as_ref())
+            .and_then(|t| t.roof())
+            .is_some();
+        if ui
+            .add_enabled(roof, Button::placeholder("RF", "Roof"))
+            .on_hover_text("Edit Roof… (Ctrl/Cmd+F)")
+            .clicked()
+        {
+            self.prepare_roof();
         }
     }
 

@@ -123,10 +123,15 @@ pub(super) fn paint(ui: &egui::Ui, bounds: Rect, icon: Icon, enabled: bool) {
 }
 
 pub(super) struct Button<'a> {
-    icon: Icon,
+    face: Face<'a>,
     label: &'a str,
     selected: Option<bool>,
     size: f32,
+}
+
+enum Face<'a> {
+    Icon(Icon),
+    Text(&'a str),
 }
 
 pub(super) fn separator(ui: &mut egui::Ui) {
@@ -142,7 +147,17 @@ pub(super) fn separator(ui: &mut egui::Ui) {
 impl<'a> Button<'a> {
     pub(super) fn new(icon: Icon, label: &'a str) -> Self {
         Self {
-            icon,
+            face: Face::Icon(icon),
+            label,
+            selected: None,
+            size: 24.0,
+        }
+    }
+
+    /// Keep source control geometry while the original artwork is under review.
+    pub(super) fn placeholder(text: &'a str, label: &'a str) -> Self {
+        Self {
+            face: Face::Text(text),
             label,
             selected: None,
             size: 24.0,
@@ -192,7 +207,20 @@ impl egui::Widget for Button<'_> {
                     egui::StrokeKind::Inside,
                 );
             }
-            paint(ui, rect, self.icon, ui.is_enabled());
+            match self.face {
+                Face::Icon(icon) => paint(ui, rect, icon, ui.is_enabled()),
+                Face::Text(text) => {
+                    ui.painter()
+                        .with_clip_rect(rect.intersect(ui.clip_rect()))
+                        .text(
+                            rect.center(),
+                            egui::Align2::CENTER_CENTER,
+                            text,
+                            egui::FontId::monospace(11.0),
+                            ui.visuals().text_color(),
+                        );
+                }
+            }
         }
         response
     }

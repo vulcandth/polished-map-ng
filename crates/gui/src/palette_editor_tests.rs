@@ -99,8 +99,12 @@ fn toolbar_palette_sets_share_menu_state_and_preserve_edits_and_history() {
     assert_eq!(label.height(), 24.0);
     assert_eq!(label.right(), initial_bounds.left());
     assert_eq!(
-        h.get_by_label("Edit current palettes").rect().left() - initial_bounds.right(),
+        h.get_by_label("Load palettes").rect().left() - initial_bounds.right(),
         4.0
+    );
+    assert_eq!(
+        h.get_by_label("Edit current palettes").rect().left() - initial_bounds.right(),
+        28.0
     );
     for (set, name) in PaletteSet::ALL
         .into_iter()

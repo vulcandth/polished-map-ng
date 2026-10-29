@@ -530,7 +530,7 @@ impl Editor {
             }
         }
     }
-    fn choose_events(&mut self) {
+    pub(super) fn choose_events(&mut self) {
         if self.loaded.is_none() {
             return;
         }

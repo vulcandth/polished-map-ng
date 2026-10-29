@@ -1,5 +1,39 @@
 # Compatibility evidence
 
+## Complete toolbar membership and source grouping
+
+The toolbar now has all 27 buttons from pinned `Main_Window::initialize` in
+source order. Previously absent event loading, Game Boy/event/warp visibility,
+block/event modes, palette loading, blockset resize, tileset change and roof
+change/edit controls share their existing command/dialog paths. Undo and Redo
+remain present but disabled without a map, matching `update_active_controls`.
+Buttons are 24×24 at y=22..46, in a 26-point toolbar below the 21-point menu.
+Eight groups use the original 2+2+2-point separators. The palette selector keeps
+its source text-width formulas, 24-point label, centered 22-point dropdown and
+four-point gap before Load Palettes. Narrow windows clip rather than reflow.
+
+Four interaction/geometry tests cover all button positions at 1×/2× DPI,
+empty-map and modal availability, radio selection and gesture clearing,
+keyboard/mouse activation, map undo/redo, and entry/cancellation of the existing
+blockset, tileset and roof dialogs. Source inspection also corrected Change
+Roof in the menu and toolbar: availability comes from a roof-file inventory
+cached at successful map open, as in `Map_Options_Dialog::num_roofs`. Listing a
+roof does not enable Edit Roof, which still requires loaded roof pixels. A new
+inventory test checks missing roofs, deferred refresh, reopening and closing.
+
+No artwork was imported. Thirteen buttons use already reviewed icon designs;
+fourteen use explicit short text placeholders pending per-asset clearance.
+Source-size controls and complete actions are not a claim of native theme,
+font, hover/focus, file-chooser or artwork equivalence. No computer use occurred.
+
+Local formatting, warnings-as-errors Clippy, workspace tests and documentation
+pass. The complete GUI visual suite passes 149 tests with one existing ignored
+test. The 79 changed existing snapshots and two new full-width light/dark views
+were inspected. Pixel comparison against the preceding commit confines changes
+in 76 existing images to the toolbar band; the two palette dropdowns also move
+with their source position, and the Tools menu reflects disabled Change Roof.
+No snapshot thresholds were changed.
+
 ## Numeric block hotkeys, badges and selection reveal
 
 `block_hotkeys.rs` adapts pinned master's `Main_Window::handle_hotkey` and
@@ -688,9 +722,9 @@ the original application. Unverified assets never become redistributable fixture
   derived/headless rendering evidence, not compiled FLTK or native DPI comparison.
   Interaction checks cover 24×24 bounds in the y=22..46 toolbar, 22×22 clipboard
   controls, accessible labels, keyboard activation, toggle state, editor dispatch
-  and modal/disabled guards. Full toolbar membership, popup-menu structure,
+  and modal/disabled guards. Complete toolbar membership is now covered above;
   native frame/theme styles and remaining artwork are still pending. Open,
-  Undo and Redo remain text controls while their icon provenance is reviewed.
+  Undo and Redo now use source-sized text placeholders while provenance is reviewed.
   The icon atlas and representative light/dark/tool-dialog snapshots were
   inspected. All 42 changed existing baselines differ only in the toolbar band
   and the four tile/roof clipboard-control areas; the remaining pixels are

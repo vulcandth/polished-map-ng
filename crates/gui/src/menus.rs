@@ -154,7 +154,7 @@ impl Editor {
                     if action(ui, tiles, "Edit Tileset…") {
                         self.prepare_tileset();
                     }
-                    if action(ui, change, "Change Roof…") {
+                    if action(ui, self.can_change_roof(), "Change Roof…") {
                         self.request_roof_change();
                     }
                     let roof = self

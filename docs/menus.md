@@ -23,6 +23,16 @@ keyboard and headless counterparts where applicable.
 
 ## Geometry and interaction gates
 
+All 27 source toolbar buttons are present, with eight six-point separators.
+Each button occupies 24×24 points, including currently unreviewed artwork slots.
+The palette label/dropdown precedes Load Palettes and Edit Current Palettes;
+blockset/map resize, tileset change/edit and roof change/edit follow in pairs.
+Undo/Redo stay visible when disabled. Change Roof requires a project roof
+inventory captured at successful map open; Edit Roof requires loaded roof pixels.
+The menu uses the same availability rules. Fourteen buttons use short text
+placeholders with full accessible names and tooltips while icon provenance is
+resolved. Native styles and remaining artwork are still parity gates.
+
 Numeric block shortcuts use physical Ctrl on all platforms: Ctrl+digit assigns
 the selected block, Ctrl+Shift+digit clears that digit, and a bound digit selects
 and reveals its block. Each block has at most one digit. Clear/assign events keep

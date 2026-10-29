@@ -17,6 +17,12 @@ RGB in the decoded hash. Decode exactly the declared width: `tileset.xpm` and
 `palettes.xpm` each have a 17-character final row for a 16-pixel image. All 42
 decoded hashes were independently checked against Pillow's XPM decoder.
 
+The complete toolbar now reserves all 27 source button positions. Its fourteen
+unreviewed designs use short text placeholders inside 24×24 controls with full
+accessible names/tooltips. They import no additional artwork and do not change
+the inventory's clearance decisions. Replacing these placeholders remains part
+of the visual port; they are not final icon designs.
+
 ### Authoritative licensing evidence
 
 - The pinned Polished Map repository is LGPL-3.0-only. Its About dialog separately

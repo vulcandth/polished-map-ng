@@ -38,6 +38,7 @@ impl Editor {
         // Upstream colors and selected set are global, outside Tileset::clear.
         self.unloaded_palettes = self.palette_document().clone();
         self.loaded = None;
+        self.roof_choices_available = false;
         self.textures.clear();
         self.selected = 0;
         self.block_clipboard = None;

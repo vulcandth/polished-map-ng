@@ -11,7 +11,18 @@ pub(super) struct RoofChoiceForm {
 }
 
 impl Editor {
+    pub(super) fn can_change_roof(&self) -> bool {
+        self.roof_choices_available
+            && self
+                .loaded
+                .as_ref()
+                .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some())
+    }
+
     pub(super) fn request_roof_change(&mut self) {
+        if !self.can_change_roof() {
+            return;
+        }
         let Some(loaded) = &self.loaded else {
             return;
         };

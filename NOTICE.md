@@ -12,6 +12,11 @@ contributors. Code is distributed under LGPL-3.0-only. See `LICENSE.md` and
 This port changes implementation language, ownership, validation, architecture,
 and UI toolkit. Individual modules identify upstream algorithm sources.
 
+The complete toolbar order, control extents, grouping and availability rules
+adapt master `Main_Window::{initialize,update_active_controls}` and
+`widgets.cpp::Toolbar::draw`, under LGPL-3.0-only. Text placeholders for
+unreviewed artwork contain no imported image pixels.
+
 Sidebar press/release selection and block-editor entry adapt master
 `Metatile_Button::handle` in `map-buttons.cpp` and
 `Main_Window::select_metatile_cb` in `main-window.cpp`, under LGPL-3.0-only.
