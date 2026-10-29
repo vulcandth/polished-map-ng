@@ -14,3 +14,9 @@ version = "2.7.1"
 repository = "https://github.com/pret/pokecrystal"
 commit = "bd983395006298e976ae1871ef092e87f3385506"
 purpose = "Contemporaneous master project fixture; fetched separately, assets not redistributed"
+
+[toolkits.fltk]
+repository = "https://github.com/fltk/fltk"
+commit = "a9b1113516ffd15fc7602a6d425a317df30f4720"
+version = "1.4.5"
+purpose = "Version specified by master INSTALL.md; popup layout and disabled-image arithmetic"

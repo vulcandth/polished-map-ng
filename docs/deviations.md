@@ -294,8 +294,18 @@ for implemented commands. The temporary Edit Block entry and Dark appearance
 checkbox remain; their corresponding context interactions and native Theme
 submenu are not yet fully ported. Help now opens the original reference text;
 About now has its source command and modal, with attribution moved into it.
-Missing source commands, popup image-column/row geometry, shortcut captions,
-mnemonics and persistent preferences are listed explicitly in `docs/menus.md`.
+The image/check columns, measured rows, trailing dividers and separate shortcut
+columns now follow source calculations. Theme-specific check/radio glyphs,
+beveled borders, disabled colors and native fonts remain incomplete; egui still
+owns popup positioning and keyboard focus. Missing commands, mnemonics and
+native behavior are listed explicitly in `docs/menus.md`.
+
+Mac modifier captions use the unchanged OFL-1.1 Noto Sans Symbols 2 font in a
+separate family because the existing bundled fonts lack some required symbols.
+Ordinary text remains unchanged. This supplies the original Unicode symbols
+without claiming native macOS glyph metrics or redistributing system fonts.
+Recent filenames are drawn literally, including ampersands, as in the previous
+NG menu; FLTK mnemonic interpretation of filename ampersands remains unported.
 
 Help retains the original product names and upstream documentation, including
 instructions for features still under development in NG. It adds a reference
@@ -303,7 +313,8 @@ notice instead of silently rewriting that text or claiming completed parity.
 Its HTML paragraphs/lists/styles/links render through egui, so font metrics,
 line breaks and HTML-view frame details can differ from FLTK. Hack, already
 bundled with egui, is appended as a proportional-font fallback for the original
-right-arrow glyph that Ubuntu Light lacks. No additional font is distributed.
+right-arrow glyph that Ubuntu Light lacks. Help itself adds no new font;
+the separately audited menu-symbol face is described above.
 Desktop Help uses an immediate child viewport; the embedded fallback preserves
 nonmodal interaction but is not evidence of native window behavior.
 

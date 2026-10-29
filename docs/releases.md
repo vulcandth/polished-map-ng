@@ -15,6 +15,11 @@ Development artifacts are not parity releases. Before publishing binaries:
   Python's standard library and requires no network for regeneration checks.
 - Publish matching complete source, Cargo.lock, toolchain configuration, patches,
   packaging inputs and instructions to rebuild/relink with a modified core.
+- Include `LICENSES/FLTK.txt` and the FLTK adaptation credit in `NOTICE.md`.
+  Bundle `crates/gui/assets/fonts` and
+  `LICENSES/egui-fonts/NotoSansSymbols2-OFL.txt`; verify the original font/license
+  hashes with `python3 tools/font_assets.py`. The font's OFL terms remain separate
+  from application code licensing.
 - Verify rebuilding from the source archive; include required dependency source
   or another license-compliant means of supplying corresponding source.
 - Build Windows MSVC ZIP, Linux tarball and both macOS application bundles.

@@ -177,8 +177,7 @@ impl Editor {
             ("Paste Block", copied, 1),
             ("Swap Block", copied, 2),
         ] {
-            if ui.add_enabled(enabled, egui::Button::new(label)).clicked() {
-                ui.close();
+            if menu_popup::action(ui, enabled, label) {
                 match action {
                     0 => self.copy_block(),
                     1 => self.paste_block(ui.ctx()),

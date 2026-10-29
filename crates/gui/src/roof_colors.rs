@@ -19,12 +19,10 @@ const LAYOUTS: [(RoofPaletteLayout, &str); 5] = [
 
 impl Editor {
     pub(super) fn roof_palette_menu(&mut self, ui: &mut egui::Ui) {
-        ui.menu_button("Roof Palettes", |ui| {
+        menu_popup::submenu(ui, "Roof Palettes", |ui| {
             for (layout, label) in LAYOUTS {
-                if ui
-                    .radio_value(&mut self.roof_palette_layout, layout, label)
-                    .clicked()
-                {
+                if menu_popup::radio(ui, self.roof_palette_layout == layout, label).clicked() {
+                    self.roof_palette_layout = layout;
                     ui.close();
                 }
             }
@@ -363,6 +361,7 @@ mod tests {
     #[test]
     fn roof_layout_choices_defer_recoloring_and_control_manual_and_next_open_imports() {
         let (dir, mut h) = fixture(false, "TOWN");
+        menu_popup::test_font_size(&h.ctx, 12.0);
         let before = h.state().palette_document().content_hash();
         for (layout, label) in LAYOUTS {
             h.get_by_label("Options").click();

@@ -550,46 +550,22 @@ impl Editor {
         }
     }
     pub(super) fn event_data_menu(&mut self, ui: &mut egui::Ui) {
-        if ui
-            .add_enabled(
-                self.loaded.is_some(),
-                egui::Button::new("Load Event Script…"),
-            )
-            .clicked()
-        {
-            ui.close();
+        if menu_popup::action(ui, self.loaded.is_some(), "Load Event Script…") {
             self.choose_events();
         }
         let enabled = self.loaded.as_ref().is_some_and(|l| l.events.is_some());
-        if ui
-            .add_enabled(enabled, egui::Button::new("Save Event Script"))
-            .clicked()
-        {
-            ui.close();
+        if menu_popup::action(ui, enabled, "Save Event Script") {
             self.save_events();
         }
-        if ui
-            .add_enabled(enabled, egui::Button::new("View Event Script"))
-            .clicked()
-        {
-            ui.close();
+        if menu_popup::action(ui, enabled, "View Event Script") {
             self.request_event_script(None);
         }
-        if ui
-            .add_enabled(enabled, egui::Button::new("Reload Event Script"))
-            .clicked()
-        {
-            ui.close();
+        if menu_popup::action(ui, enabled, "Reload Event Script") {
             self.request_event_change(EventChange::Reload);
         }
-        if ui
-            .add_enabled(enabled, egui::Button::new("Unload Event Script"))
-            .clicked()
-        {
-            ui.close();
+        if menu_popup::action(ui, enabled, "Unload Event Script") {
             self.request_event_change(EventChange::Unload);
         }
-        ui.separator();
     }
     pub(super) fn set_event_mode(&mut self, mode: bool) {
         self.event_ui.mode = mode;

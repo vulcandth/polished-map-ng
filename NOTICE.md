@@ -35,6 +35,17 @@ Windows/Unix conversion and preserved upstream attribution.
 About adapts `Main_Window::initialize/about_cb`, `Modal_Dialog::refresh` and
 the platform sizes in `themes.h`. Its text distinguishes NG's own identity from
 the retained Rangi/Fugue notices. Unverified application artwork is not included.
+Popup sizing adapts the pinned master's menu labels/flags and FLTK 1.4.5
+`Fl_Menu.cxx` measurement/drawing calculations. Polished Map NG is based in part
+on the work of the FLTK project (<https://www.fltk.org>), Copyright 1998-2024
+Bill Spitzak and others. The original FLTK license and exceptions are retained
+in `LICENSES/FLTK.txt`; the Rust adaptation follows LGPL-3.0 under its
+version-selection provision. Native frame/check/radio rasterization is not
+copied or claimed equivalent.
+The unchanged Noto Sans Symbols 2 font is Copyright 2022 The Noto Project
+Authors and remains OFL-1.1. Its separate family supplies Mac menu modifiers;
+see `crates/gui/assets/fonts/NOTICE.md` and the full copyright/license in
+`LICENSES/egui-fonts/NotoSansSymbols2-OFL.txt`.
 Event cursor and Game Boy guide placement/borders adapt `map-buttons.cpp`,
 `map.cpp`, `main-window.cpp` and `gameboy-screen.cpp`. The guide's uniformly
 colored source image is represented by a rectangle and its RGBA constant;

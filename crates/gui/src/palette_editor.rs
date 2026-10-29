@@ -326,7 +326,7 @@ impl Editor {
                 egui::ComboBox::from_id_salt("map-palette-set")
                     .width(dropdown_width)
                     .selected_text(egui::RichText::new(name).font(font))
-                    .show_ui(ui, |ui| self.palette_set_menu(ui))
+                    .show_ui(ui, |ui| self.palette_set_menu(ui, false))
                     .response
             })
             .inner;
@@ -338,10 +338,15 @@ impl Editor {
         });
         ui.add_space(4.0);
     }
-    pub(super) fn palette_set_menu(&mut self, ui: &mut egui::Ui) {
+    pub(super) fn palette_set_menu(&mut self, ui: &mut egui::Ui, source_menu: bool) {
         let selected = self.palette_document().selected();
         for (set, name) in PaletteSet::ALL.into_iter().zip(SET_NAMES) {
-            if ui.selectable_label(selected == set, name).clicked() {
+            let response = if source_menu {
+                menu_popup::radio(ui, selected == set, name)
+            } else {
+                ui.selectable_label(selected == set, name)
+            };
+            if response.clicked() {
                 let mut draft = self.palette_document().clone();
                 draft.select(set);
                 if let Err(e) = self.commit_palettes(ui.ctx(), draft) {

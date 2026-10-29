@@ -6,11 +6,8 @@ use std::fs;
 fn open(h: &mut Harness<'_, Editor>) {
     h.get_by_label("Tools").click();
     h.run();
-    let shortcut = h.ctx.format_shortcut(&egui::KeyboardShortcut::new(
-        egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
-        egui::Key::H,
-    ));
-    h.get_by_label(&format!("Change Roof… {shortcut}")).click();
+    h.get_by_role_and_label(egui::Role::MenuItem, "Change Roof…")
+        .click();
     h.run();
 }
 fn choose(h: &mut Harness<'_, Editor>, previous: &str, name: &str) {

@@ -16,6 +16,7 @@ mod help;
 mod icons;
 mod map_buttons;
 mod map_labels;
+mod menu_popup;
 mod menus;
 mod overworld;
 mod palette_editor;

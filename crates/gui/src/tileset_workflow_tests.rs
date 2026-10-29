@@ -435,11 +435,7 @@ fn missing_replacement_preserves_live_assets_and_source_sized_selector() {
     let (dir, mut h) = fixture();
     h.get_by_label("Tools").click();
     h.run();
-    let shortcut = h.ctx.format_shortcut(&egui::KeyboardShortcut::new(
-        egui::Modifiers::COMMAND,
-        egui::Key::H,
-    ));
-    h.get_by_label(&format!("Change Tileset… {shortcut}"))
+    h.get_by_role_and_label(egui::Role::MenuItem, "Change Tileset…")
         .click();
     h.run();
     for windows in [true, false] {

@@ -198,6 +198,12 @@ Options. Existing commands use their source groups; Undo/Redo menu actions now
 share map history, and mode choices share shortcut transitions. The remaining
 commands, preferences, popup geometry and native behavior are tracked in
 `docs/menus.md`; restored grouping does not complete menu parity.
+Their popups and nested recent/palette choices now share the source's measured
+row/image/check/shortcut geometry, platform font sizes and trailing dividers.
+Mac shortcut symbols have a separately licensed font; keyboard activation and
+1×/2× layout checks supplement inspected snapshots. Native fonts, exact theme
+glyphs/borders, mnemonics, screen-edge behavior and remaining commands still
+prevent a menu parity gate.
 Help/F1 now opens the complete pinned source documentation in a resizable,
 nonmodal child viewport. A reproducible converter retains all 95 blocks and
 16 linked spans, with C++-verified Windows/Unix constant expansion and LGPL

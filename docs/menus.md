@@ -23,6 +23,38 @@ keyboard and headless counterparts where applicable.
 
 ## Geometry and interaction gates
 
+All eight current groups and their recent/palette/roof submenus now use one
+measured popup renderer. `menu_popup/specs.rs` records each implemented row's
+mark, shortcut and trailing divider. Ordinary commands reserve the source's
+transparent 16×16 column without importing an empty bitmap. Visible command
+ellipses use the source's three periods; accessible names remain stable and
+shortcuts have their own accessibility property. Recent-file names remain
+literal, including Unicode ellipses; duplicate basenames use distinct indices.
+
+Master `widgets.h` supplies one leading and nine trailing label spaces and
+12/13-point platform sizes. FLTK 1.4.5, required by master `INSTALL.md`, supplies
+the remaining calculations: a row is the largest measured label/image height
+plus four; check/radio measurement reserves 18 points, submenus add 14; shortcut
+modifier and key maxima are measured separately, with four points after keys.
+Popup width is the largest item width plus both shortcut columns plus nine,
+bounded below by title width plus twelve. With a one-point panel border, height
+is `row_height * row_count + 1`. Dividers occupy the bottom of their preceding
+row, not a separate item. The menu bar remains in its original 21-point band.
+
+The source-derived backgrounds, square frame, row bounds, check/radio positions,
+image space and shortcut alignment are implemented; theme-specific beveled
+frames/checkmarks/radio rasterization, inactive-color arithmetic and native
+fonts remain incomplete. Keyboard submenu opening/activation and modal guards
+are tested headlessly. Activating Enter is consumed before a command can open
+a modal, preventing accidental acceptance/dismissal in that same frame.
+Mnemonic underlines/Alt navigation, screen-edge/native-popup behavior and the
+complete Theme/Transparent controls remain separate parity gates.
+
+Mac Shift/Option/Command captions use an unchanged, separately licensed Noto
+Sans Symbols 2 font because the existing bundled faces lack some glyphs. Its
+dedicated family does not alter ordinary UI text or claim native macOS metrics.
+See `assets.md` and `crates/gui/assets/fonts/NOTICE.md` for provenance.
+
 About uses the source Help-menu order/separator and command-/ shortcut. OK,
 Enter and Escape close its modal without modifying the loaded project or
 history. Parent commands and root-window closing are guarded while it is open.
@@ -164,10 +196,10 @@ pending; the current egui modal reproduces wording, button order and actions.
 
 - Preserve the 21-point menu-bar band and source top-level/command order. Tests
   verify bounds, command placement and disabled state when data is unavailable.
-- Reproduce the popup image/check column, row metrics, separators, shortcut
-  captions and mnemonics. Upstream's `BLANK_ICON` reserves an image column for
-  ordinary commands; it does not decorate all commands with toolbar artwork.
-  That alignment and the complete popup styling remain pending.
+- The popup image/check column, row metrics, dividers and shortcut columns are
+  implemented. Complete theme painting, mnemonics and native behavior remain.
+  Upstream's `BLANK_ICON` reserves an image column for ordinary commands;
+  it does not decorate all commands with toolbar artwork.
 - Verify source enablement for every data/profile condition. Current checks
   cover unavailable map/blockset/tileset/roof/events, history controls, existing
   workflow dialogs and modal guards; this is not the full profile matrix.

@@ -79,7 +79,7 @@ bundled XPMs. The dependency CI job runs verification without network access.
 | Twelve Fugue-family images above, plus grid-dark | Imported with original/adapted attribution, transformation history, CC BY 3.0 notice/text and LGPL adaptation notices. |
 | ids/ids-dark, hex/hex-dark | Imported as fixed Polished Map bitmap lettering under LGPL-3.0-only. History reviewed at `bf08f47`, `3e057b0` and the `530c963` recolor; no external font file or separate asset source is identified there. |
 | Eight collision-quadrant variants | Imported under LGPL-3.0-only with introducing commit `2086e18`, dark recolor `530c963`, individual source/pixel hashes and attribution. These geometric drawings now label the block editor's collision fields. |
-| blank | Still excluded. Source geometry/history inspected; menu integration and individual import record remain. |
+| blank | Its transparent 16×16 extent is represented by measured menu geometry. No bitmap is imported or required. |
 | priority | Imported under LGPL-3.0-only; Rangi's geometric zigzag matches all 252 opaque pixels in the 16×16 priority overlay, with four transparent corners. See the provenance below. |
 | open, load, undo, redo, show, warp, gameboy, add-sub, change, load-palettes | Still excluded. Trace composite artwork and other source families; nearest-image candidates remain unverified. |
 | blocks/blocks-dark, events, roof, change-roof | Still excluded. These visually resemble game sprites/tiles. Trace the underlying artwork; repository attribution alone is insufficient to clear it. Appearance is not proof of ownership. Resolve rights or use separately licensed/original artwork and record the visual deviation. |
@@ -196,6 +196,14 @@ About preserves the original 50×50 icon slot without drawing unverified artwork
 The `.ico` bundle and warning/error/success artwork still require separate audit.
 
 ## Fonts
+
+Mac menu modifiers use an unchanged Noto Sans Symbols 2 face in a dedicated
+font family. The Noto Project Authors' copyright and complete OFL-1.1 license
+are preserved in `LICENSES/egui-fonts/NotoSansSymbols2-OFL.txt`. The immutable
+Google Fonts source revision, Git blobs, original SHA-256 values and scope are
+recorded in `crates/gui/assets/fonts/NOTICE.md`. `tools/font_assets.py` verifies
+the font and license offline in CI. Headless tests verify all three required
+modifier glyphs; actual macOS font metrics remain a separate parity gate.
 
 GUI text currently uses egui's bundled fonts, whose notices are retained under
 `LICENSES/egui-fonts/`. The digit masks above are independent of native font

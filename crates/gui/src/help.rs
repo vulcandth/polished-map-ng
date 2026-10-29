@@ -16,6 +16,18 @@ pub(super) fn install_fonts(ctx: &egui::Context) {
         .get_mut(&egui::FontFamily::Proportional)
         .unwrap()
         .push("Hack".into());
+    // Mac menu modifier symbols are absent from the other bundled faces.
+    // Keep this audited OFL font in its own family: ordinary text is unchanged.
+    fonts.font_data.insert(
+        "NotoSansSymbols2".into(),
+        std::sync::Arc::new(egui::FontData::from_static(include_bytes!(
+            "../assets/fonts/NotoSansSymbols2-Regular.ttf"
+        ))),
+    );
+    fonts.families.insert(
+        egui::FontFamily::Name("Menu Symbols".into()),
+        vec!["NotoSansSymbols2".into()],
+    );
     ctx.set_fonts(fonts);
 }
 

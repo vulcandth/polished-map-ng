@@ -3,261 +3,229 @@
 use super::*;
 
 fn action(ui: &mut egui::Ui, enabled: bool, name: &str) -> bool {
-    let response = ui.add_enabled(enabled, egui::Button::new(name));
-    response.widget_info(|| {
-        egui::WidgetInfo::labeled(egui::Role::MenuItem, enabled && ui.is_enabled(), name)
-    });
-    if response.clicked() {
-        ui.close();
-        true
-    } else {
-        false
-    }
+    menu_popup::action(ui, enabled, name)
 }
 
 impl Editor {
     pub(super) fn menu_bar(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
-        egui::MenuBar::new().ui(ui, |ui| {
-            ui.menu_button("File", |ui| {
-                if action(ui, true, "New…") {
-                    self.choose_new();
-                }
-                if action(ui, true, "Open…") {
-                    self.choose_open();
-                }
-                self.recent_menu(ui);
-                ui.separator();
-                let loaded = self.loaded.is_some();
-                if action(ui, loaded, "Close") {
-                    self.request_close_map();
-                }
-                ui.separator();
-                let loaded = self.loaded.is_some();
-                if action(ui, loaded, "Save") {
-                    self.save();
-                }
-                if action(ui, loaded, "Save As…") {
-                    self.save_as();
-                }
-                if action(ui, loaded, "Save Map") {
-                    self.save_map();
-                }
-                let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
-                if action(ui, blocks, "Save Blockset") {
-                    self.save_blockset();
-                }
-                let tiles = self.loaded.as_ref().is_some_and(|l| l.tileset.is_some());
-                if action(ui, tiles, "Save Tileset") {
-                    self.save_tileset();
-                }
-                let roof = self
-                    .loaded
-                    .as_ref()
-                    .and_then(|l| l.tileset.as_ref())
-                    .and_then(|t| t.roof())
-                    .is_some();
-                if action(ui, roof, "Save Roof") {
-                    self.save_roof();
-                }
-                ui.separator();
-                if action(
-                    ui,
-                    loaded && self.print_worker.is_none() && self.print_request.is_none(),
-                    "Print…",
-                ) {
-                    self.prepare_print();
-                }
-                ui.separator();
-                if action(ui, true, "Exit") {
-                    self.request_exit(&ctx);
-                }
+        egui::MenuBar::new()
+            .config(menu_popup::config())
+            .ui(ui, |ui| {
+                menu_popup::menu(ui, "File", |ui| {
+                    if action(ui, true, "New…") {
+                        self.choose_new();
+                    }
+                    if action(ui, true, "Open…") {
+                        self.choose_open();
+                    }
+                    self.recent_menu(ui);
+                    let loaded = self.loaded.is_some();
+                    if action(ui, loaded, "Close") {
+                        self.request_close_map();
+                    }
+                    let loaded = self.loaded.is_some();
+                    if action(ui, loaded, "Save") {
+                        self.save();
+                    }
+                    if action(ui, loaded, "Save As…") {
+                        self.save_as();
+                    }
+                    if action(ui, loaded, "Save Map") {
+                        self.save_map();
+                    }
+                    let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
+                    if action(ui, blocks, "Save Blockset") {
+                        self.save_blockset();
+                    }
+                    let tiles = self.loaded.as_ref().is_some_and(|l| l.tileset.is_some());
+                    if action(ui, tiles, "Save Tileset") {
+                        self.save_tileset();
+                    }
+                    let roof = self
+                        .loaded
+                        .as_ref()
+                        .and_then(|l| l.tileset.as_ref())
+                        .and_then(|t| t.roof())
+                        .is_some();
+                    if action(ui, roof, "Save Roof") {
+                        self.save_roof();
+                    }
+                    if action(
+                        ui,
+                        loaded && self.print_worker.is_none() && self.print_request.is_none(),
+                        "Print…",
+                    ) {
+                        self.prepare_print();
+                    }
+                    if action(ui, true, "Exit") {
+                        self.request_exit(&ctx);
+                    }
+                });
+                menu_popup::menu(ui, "Data", |ui| {
+                    self.event_data_menu(ui);
+                    if action(ui, true, "Load Palettes…") {
+                        self.choose_palettes(&ctx);
+                    }
+                    if action(ui, true, "Export Palettes…") {
+                        self.export_palettes();
+                    }
+                    if action(ui, self.can_load_roof_colors(), "Load Roof Colors") {
+                        self.request_roof_colors(&ctx);
+                    }
+                });
+                menu_popup::menu(ui, "Edit", |ui| {
+                    let undo = self
+                        .loaded
+                        .as_ref()
+                        .is_some_and(|l| l.document.map().can_undo());
+                    if action(ui, undo, "Undo")
+                        && let Some(loaded) = &mut self.loaded
+                    {
+                        loaded.document.map_mut().undo();
+                    }
+                    let redo = self
+                        .loaded
+                        .as_ref()
+                        .is_some_and(|l| l.document.map().can_redo());
+                    if action(ui, redo, "Redo")
+                        && let Some(loaded) = &mut self.loaded
+                    {
+                        loaded.document.map_mut().redo();
+                    }
+                    self.block_menu(ui);
+                    // Temporary explicit entry while the complete source block
+                    // context-menu/gesture port is unfinished; see deviations.
+                    let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
+                    if action(ui, blocks, "Edit Block…") {
+                        self.prepare_block(&ctx);
+                    }
+                });
+                menu_popup::menu(ui, "View", |ui| {
+                    // Complete native Theme submenu is a separate parity item.
+                    if menu_popup::checkbox(ui, true, &mut self.dark, "Dark appearance").changed() {
+                        ctx.set_theme(if self.dark {
+                            egui::Theme::Dark
+                        } else {
+                            egui::Theme::Light
+                        });
+                    }
+                    menu_popup::checkbox(ui, true, &mut self.grid, "Grid");
+                    menu_popup::checkbox(ui, true, &mut self.rulers, "Rulers");
+                    menu_popup::checkbox(ui, true, &mut self.zoom, "Zoom");
+                    menu_popup::checkbox(ui, true, &mut self.ids, "Block IDs");
+                    menu_popup::checkbox(ui, true, &mut self.hex, "Hexadecimal");
+                    menu_popup::checkbox(
+                        ui,
+                        self.allow_priority,
+                        &mut self.show_priority,
+                        "Show Priority",
+                    );
+                    menu_popup::checkbox(ui, true, &mut self.event_ui.game_boy, "Game Boy Screen");
+                    menu_popup::checkbox(ui, true, &mut self.event_ui.show, "Show Events");
+                    menu_popup::checkbox(ui, true, &mut self.event_ui.warp_ids, "Show Warp IDs");
+                    menu_popup::submenu(ui, "Palettes", |ui| self.palette_set_menu(ui, true));
+                    super::fullscreen::menu(ui);
+                });
+                menu_popup::menu(ui, "Mode", |ui| {
+                    if menu_popup::radio(ui, !self.event_ui.mode, "Blocks").clicked() {
+                        self.set_event_mode(false);
+                        ui.close();
+                    }
+                    if menu_popup::radio(ui, self.event_ui.mode, "Events").clicked() {
+                        self.set_event_mode(true);
+                        ui.close();
+                    }
+                    if action(ui, true, "Switch Mode") {
+                        self.set_event_mode(!self.event_ui.mode);
+                    }
+                });
+                menu_popup::menu(ui, "Tools", |ui| {
+                    let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
+                    if action(ui, blocks, "Resize Blockset…") {
+                        self.prepare_block_count();
+                    }
+                    if action(ui, self.loaded.is_some(), "Resize Map…") {
+                        self.prepare_resize();
+                    }
+                    let change = self
+                        .loaded
+                        .as_ref()
+                        .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some());
+                    if action(ui, change, "Change Tileset…") {
+                        self.request_tileset_change();
+                    }
+                    let tiles = self.loaded.as_ref().is_some_and(|l| l.tileset.is_some());
+                    if action(ui, tiles, "Edit Tileset…") {
+                        self.prepare_tileset();
+                    }
+                    if action(ui, change, "Change Roof…") {
+                        self.request_roof_change();
+                    }
+                    let roof = self
+                        .loaded
+                        .as_ref()
+                        .and_then(|l| l.tileset.as_ref())
+                        .and_then(|t| t.roof())
+                        .is_some();
+                    if action(ui, roof, "Edit Roof…") {
+                        self.prepare_roof();
+                    }
+                    if action(ui, true, "Edit Current Palettes…") {
+                        self.prepare_palettes();
+                    }
+                });
+                menu_popup::menu(ui, "Options", |ui| {
+                    if menu_popup::checkbox(ui, true, &mut self.monochrome, "Monochrome").changed()
+                    {
+                        self.request_tile_mode_reload(&ctx);
+                    }
+                    if menu_popup::checkbox(ui, true, &mut self.allow_priority, "Tile Priority")
+                        .changed()
+                        && let Some(tileset) = self.loaded.as_mut().and_then(|l| l.tileset.as_mut())
+                    {
+                        tileset.set_allow_priority(self.allow_priority);
+                    }
+                    if menu_popup::checkbox(ui, true, &mut self.allow_256, "256 Tiles").changed() {
+                        self.request_tile_mode_reload(&ctx);
+                    }
+                    self.roof_palette_menu(ui);
+                    menu_popup::checkbox(
+                        ui,
+                        true,
+                        &mut self.event_ui.auto_load,
+                        "Auto-Load Events",
+                    );
+                    menu_popup::checkbox(
+                        ui,
+                        true,
+                        &mut self.auto_special_palettes,
+                        "Auto-Load Special Palettes",
+                    );
+                    menu_popup::checkbox(
+                        ui,
+                        true,
+                        &mut self.auto_roof_colors,
+                        "Auto-Load Roof Colors",
+                    );
+                    if menu_popup::checkbox(ui, true, &mut self.drag_and_drop, "Drag and Drop")
+                        .changed()
+                    {
+                        self.sidebar_drag = None;
+                    }
+                    if action(ui, true, "Overworld Map Size…") {
+                        self.prepare_overworld();
+                    }
+                });
+                menu_popup::menu(ui, "Help", |ui| {
+                    if action(ui, true, "Help") {
+                        self.help_window.open();
+                    }
+                    if action(ui, true, "About") {
+                        self.about = Some(Default::default());
+                    }
+                });
             });
-            ui.menu_button("Data", |ui| {
-                self.event_data_menu(ui);
-                if action(ui, true, "Load Palettes…") {
-                    self.choose_palettes(&ctx);
-                }
-                if action(ui, true, "Export Palettes…") {
-                    self.export_palettes();
-                }
-                ui.separator();
-                if action(ui, self.can_load_roof_colors(), "Load Roof Colors") {
-                    self.request_roof_colors(&ctx);
-                }
-            });
-            ui.menu_button("Edit", |ui| {
-                let undo = self
-                    .loaded
-                    .as_ref()
-                    .is_some_and(|l| l.document.map().can_undo());
-                if action(ui, undo, "Undo")
-                    && let Some(loaded) = &mut self.loaded
-                {
-                    loaded.document.map_mut().undo();
-                }
-                let redo = self
-                    .loaded
-                    .as_ref()
-                    .is_some_and(|l| l.document.map().can_redo());
-                if action(ui, redo, "Redo")
-                    && let Some(loaded) = &mut self.loaded
-                {
-                    loaded.document.map_mut().redo();
-                }
-                ui.separator();
-                self.block_menu(ui);
-                // Temporary explicit entry while the complete source block
-                // context-menu/gesture port is unfinished; see deviations.
-                ui.separator();
-                let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
-                if action(ui, blocks, "Edit Block…") {
-                    self.prepare_block(&ctx);
-                }
-            });
-            ui.menu_button("View", |ui| {
-                // Complete native Theme submenu is a separate parity item.
-                if ui.checkbox(&mut self.dark, "Dark appearance").changed() {
-                    ctx.set_theme(if self.dark {
-                        egui::Theme::Dark
-                    } else {
-                        egui::Theme::Light
-                    });
-                }
-                ui.separator();
-                ui.checkbox(&mut self.grid, "Grid");
-                ui.checkbox(&mut self.rulers, "Rulers");
-                ui.checkbox(&mut self.zoom, "Zoom");
-                ui.checkbox(&mut self.ids, "Block IDs");
-                ui.checkbox(&mut self.hex, "Hexadecimal");
-                ui.add_enabled(
-                    self.allow_priority,
-                    egui::Checkbox::new(&mut self.show_priority, "Show Priority"),
-                );
-                ui.checkbox(&mut self.event_ui.game_boy, "Game Boy Screen");
-                ui.checkbox(&mut self.event_ui.show, "Show Events");
-                ui.checkbox(&mut self.event_ui.warp_ids, "Show Warp IDs");
-                ui.separator();
-                ui.menu_button("Palettes", |ui| self.palette_set_menu(ui));
-                super::fullscreen::menu(ui);
-            });
-            ui.menu_button("Mode", |ui| {
-                if ui.radio(!self.event_ui.mode, "Blocks").clicked() {
-                    self.set_event_mode(false);
-                    ui.close();
-                }
-                if ui.radio(self.event_ui.mode, "Events").clicked() {
-                    self.set_event_mode(true);
-                    ui.close();
-                }
-                ui.separator();
-                if action(ui, true, "Switch Mode") {
-                    self.set_event_mode(!self.event_ui.mode);
-                }
-            });
-            ui.menu_button("Tools", |ui| {
-                let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
-                if action(ui, blocks, "Resize Blockset…") {
-                    self.prepare_block_count();
-                }
-                if action(ui, self.loaded.is_some(), "Resize Map…") {
-                    self.prepare_resize();
-                }
-                ui.separator();
-                let change = self
-                    .loaded
-                    .as_ref()
-                    .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some());
-                if ui
-                    .add_enabled(
-                        change,
-                        egui::Button::new("Change Tileset…").shortcut_text(ctx.format_shortcut(
-                            &egui::KeyboardShortcut::new(egui::Modifiers::COMMAND, egui::Key::H),
-                        )),
-                    )
-                    .clicked()
-                {
-                    ui.close();
-                    self.request_tileset_change();
-                }
-                let tiles = self.loaded.as_ref().is_some_and(|l| l.tileset.is_some());
-                if action(ui, tiles, "Edit Tileset…") {
-                    self.prepare_tileset();
-                }
-                ui.separator();
-                if ui
-                    .add_enabled(
-                        change,
-                        egui::Button::new("Change Roof…").shortcut_text(ctx.format_shortcut(
-                            &egui::KeyboardShortcut::new(
-                                egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
-                                egui::Key::H,
-                            ),
-                        )),
-                    )
-                    .clicked()
-                {
-                    ui.close();
-                    self.request_roof_change();
-                }
-                let roof = self
-                    .loaded
-                    .as_ref()
-                    .and_then(|l| l.tileset.as_ref())
-                    .and_then(|t| t.roof())
-                    .is_some();
-                if action(ui, roof, "Edit Roof…") {
-                    self.prepare_roof();
-                }
-                ui.separator();
-                if action(ui, true, "Edit Current Palettes…") {
-                    self.prepare_palettes();
-                }
-            });
-            ui.menu_button("Options", |ui| {
-                if ui.checkbox(&mut self.monochrome, "Monochrome").changed() {
-                    self.request_tile_mode_reload(&ctx);
-                }
-                if ui
-                    .checkbox(&mut self.allow_priority, "Tile Priority")
-                    .changed()
-                    && let Some(tileset) = self.loaded.as_mut().and_then(|l| l.tileset.as_mut())
-                {
-                    tileset.set_allow_priority(self.allow_priority);
-                }
-                if ui.checkbox(&mut self.allow_256, "256 Tiles").changed() {
-                    self.request_tile_mode_reload(&ctx);
-                }
-                self.roof_palette_menu(ui);
-                ui.separator();
-                ui.checkbox(&mut self.event_ui.auto_load, "Auto-Load Events");
-                ui.checkbox(
-                    &mut self.auto_special_palettes,
-                    "Auto-Load Special Palettes",
-                );
-                ui.checkbox(&mut self.auto_roof_colors, "Auto-Load Roof Colors");
-                ui.separator();
-                if ui
-                    .checkbox(&mut self.drag_and_drop, "Drag and Drop")
-                    .changed()
-                {
-                    self.sidebar_drag = None;
-                }
-                ui.separator();
-                if action(ui, true, "Overworld Map Size…") {
-                    self.prepare_overworld();
-                }
-            });
-            ui.menu_button("Help", |ui| {
-                if action(ui, true, "Help") {
-                    self.help_window.open();
-                }
-                ui.separator();
-                if action(ui, true, "About") {
-                    self.about = Some(Default::default());
-                }
-            });
-        });
     }
 }
 
@@ -377,6 +345,7 @@ mod tests {
     #[test]
     fn edit_history_and_mode_menu_actions_use_existing_state_transitions() {
         let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+        menu_popup::test_font_size(&h.ctx, 12.0);
         // A loaded map alone is insufficient: this fixture has no known group.
         h.get_by_label("Data").click();
         h.run();

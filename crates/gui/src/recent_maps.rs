@@ -127,35 +127,39 @@ impl Editor {
     }
 
     pub(super) fn recent_menu(&mut self, ui: &mut egui::Ui) {
-        ui.menu_button("Open Recent", |ui| {
+        let labels: Vec<_> = self
+            .recent_maps
+            .0
+            .iter()
+            .map(|path| {
+                path.file_name()
+                    .unwrap_or(path.as_os_str())
+                    .to_string_lossy()
+                    .into_owned()
+            })
+            .collect();
+        let shortcuts: Vec<_> = (0..labels.len())
+            .map(|i| format!("A+{}", (i + 1) % 10))
+            .collect();
+        let mut specs: Vec<_> = labels
+            .iter()
+            .zip(&shortcuts)
+            .enumerate()
+            .map(|(i, (label, key))| menu_popup::Spec::recent(label, key, i + 1 == labels.len()))
+            .collect();
+        specs.push(menu_popup::Spec::recent("Clear Recent", "", false));
+        menu_popup::submenu_with(ui, "Open Recent", &specs, |ui| {
             let mut chosen = None;
             for (index, path) in self.recent_maps.0.iter().enumerate() {
-                let label = path
-                    .file_name()
-                    .unwrap_or(path.as_os_str())
-                    .to_string_lossy();
                 let response = ui
-                    .push_id(index, |ui| {
-                        ui.add(egui::Button::new(label.as_ref()).shortcut_text(
-                            ui.ctx().format_shortcut(&egui::KeyboardShortcut::new(
-                                egui::Modifiers::ALT,
-                                KEYS[index],
-                            )),
-                        ))
-                    })
+                    .push_id(index, |ui| menu_popup::row_at(ui, true, index, None))
                     .inner;
-                response.widget_info(|| {
-                    egui::WidgetInfo::labeled(egui::Role::MenuItem, ui.is_enabled(), label.as_ref())
-                });
                 if response.on_hover_text(path.to_string_lossy()).clicked() {
                     chosen = Some(index);
                     ui.close();
                 }
             }
-            if !self.recent_maps.0.is_empty() {
-                ui.separator();
-            }
-            if ui.button("Clear Recent").clicked() {
+            if menu_popup::row_at(ui, true, labels.len(), None).clicked() {
                 self.recent_maps.0.clear();
                 ui.close();
             }
@@ -225,6 +229,7 @@ mod tests {
     #[test]
     fn recent_shortcuts_open_options_guard_edits_and_clear_without_touching_files() {
         let (dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+        menu_popup::test_font_size(&h.ctx, 12.0);
         let original = fs::canonicalize(dir.path().join("Map.2x1.blk")).unwrap();
         assert_eq!(h.state().recent_maps.0, std::slice::from_ref(&original));
         for i in 0..10 {

@@ -14,8 +14,7 @@ pub(super) fn menu(ui: &mut egui::Ui) {
     // Use the reported native state, including OS-initiated transitions and
     // restoration. A second app preference could disagree with eframe's store.
     let mut fullscreen = active(ui.ctx());
-    if ui
-        .checkbox(&mut fullscreen, "Full Screen")
+    if crate::menu_popup::checkbox(ui, true, &mut fullscreen, "Full Screen")
         .on_hover_text("Full Screen (F11)")
         .changed()
     {
@@ -94,6 +93,7 @@ mod tests {
             .with_size(Vec2::new(800.0, 600.0))
             .with_theme(egui::Theme::Light)
             .build_eframe(|cc| Editor::new(cc));
+        crate::menu_popup::test_font_size(&h.ctx, 12.0);
         for state in [true, false] {
             reported(&mut h, Some(state));
             h.get_by_label("View").click();

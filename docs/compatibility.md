@@ -1,5 +1,45 @@
 # Compatibility evidence
 
+## Measured popup menus and platform shortcut captions
+
+The eight current main groups plus recent files, palettes and roof palettes now
+share a renderer derived from master `Main_Window::initialize`, `widgets.h` and
+FLTK 1.4.5 `Fl_Menu.cxx`. The latter is pinned in `upstream.lock.toml`, with its
+original license and attribution retained. Layout uses supplied font metrics,
+one/nine label padding spaces, blank-image/check reserves, four-point leading,
+separate shortcut columns and preceding-row divider lines. Source 12/13-point
+sizes, Greybird/Dark background colors and square popup frames are implemented.
+
+Independent numeric vectors check maximum-width/height/title/shortcut rules.
+Interaction tests check every File row's bounds at both font sizes and 1×/2×
+DPI, zero extra divider rows, image-column text offset, aligned shortcut keys,
+accessible shortcuts, disabled entries, arrow-key submenu opening and Enter
+activation. A regression test prevents activating Enter from also dismissing
+the newly opened About modal. Duplicate recent names retain distinct rows and
+literal Unicode punctuation. Existing workflow tests exercise the same actions.
+
+Mac captions use a dedicated Noto Sans Symbols 2 family after glyph coverage
+checks found the original bundled faces incomplete. Original font/license bytes
+are hash-verified offline; no font modification or Rust dependency was added.
+The font remains OFL-1.1 with its full notice. Ordinary UI fonts are unchanged.
+
+Popup snapshots cover all eight groups, recent/roof submenus, fullscreen state,
+Mac symbols and a Unix dark menu at 2× scale. These are headless renderings, not
+native platform verification. Remaining gates include native fonts and frames,
+exact check/radio/theme/disabled-color painting, mnemonics, native screen-edge
+behavior, unported commands and unresolved toolbar artwork. No computer use
+was performed.
+
+Formatting, warnings-as-errors Clippy, workspace tests and documentation pass
+locally. The full visual suite passes 126 tests with one existing ignored test.
+Eleven existing popup snapshots changed and two platform/DPI snapshots were
+added; every changed/new image was inspected. Other existing baselines are
+unchanged. The new font/license verifier also passes.
+
+The preceding About CI run
+[`40828921493`](https://github.com/vulcandth/polished-map-ng/actions/runs/40828921493)
+passed all eight jobs after the Unix default-lint correction.
+
 ## About command, measured layout and attribution
 
 Help now has the original Help/separator/About order. About and command-/ open

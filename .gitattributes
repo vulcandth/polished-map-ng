@@ -8,7 +8,10 @@
 *.blk binary
 *.ablk binary
 *.png binary
+*.ttf binary
 *.rgba binary
 *.xpm text eol=lf
 # Preserve the immutable upstream help blob, including its original CRLF bytes.
 crates/gui/assets/help/master-help.html.inc -text
+# Retain the hash-verified upstream license, including its original trailing space.
+LICENSES/egui-fonts/NotoSansSymbols2-OFL.txt whitespace=-blank-at-eol
