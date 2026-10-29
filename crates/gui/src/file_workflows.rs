@@ -4,6 +4,7 @@ use super::*;
 
 impl Editor {
     pub(super) fn request_close_map(&mut self) {
+        self.pending_recent = None;
         if self.loaded.is_none() {
             return;
         }
@@ -19,6 +20,7 @@ impl Editor {
     }
 
     pub(super) fn request_exit(&mut self, ctx: &egui::Context) {
+        self.pending_recent = None;
         self.pending_close = false;
         self.pending_new = false;
         self.event_ui.warp_path = None;
@@ -128,6 +130,7 @@ impl Editor {
             cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
         });
         if cancel {
+            self.pending_recent = None;
             self.confirm_discard = false;
             self.pending_close = false;
             self.pending_exit = false;

@@ -24,7 +24,14 @@ File Close, dedicated Save Map and Exit now share source-derived dirty-domain
 guards and preserve the source distinction between document changes and palette
 session edits. Headless tests cover state clearing/retention, all dirty domains,
 map-only writes/conflicts and Close/Exit/event-unload shortcut routing. Native
-warning geometry, remaining preferences and recent-file history remain pending.
+warning geometry and remaining preferences remain pending.
+
+Open Recent now has ten entries, Alt+1 through Alt+0 and Clear Recent. Successful
+opens and Save As promote the source path spelling; canceled/failed operations
+leave history intact. Headless checks exercise the submenu, all shortcuts,
+unsaved-warning and Map Options cancellation, eviction/duplicates, native path
+serialization and persistence across app reconstruction. Native popup navigation
+and actual shutdown/storage delivery remain separate platform checks.
 
 Manual Load Roof Colors and all five Roof Palettes choices now use a shared
 headless import API. Tests cover consent, dirty-state preservation, failure

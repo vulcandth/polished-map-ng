@@ -6,7 +6,7 @@ use polished_map_project::RoofPaletteLayout;
 use serde::{Deserialize, Serialize};
 
 const KEY: &str = "polished-map-ng.preferences";
-const MAX_BYTES: usize = 16 * 1024;
+const MAX_BYTES: usize = 4 * 1024 * 1024;
 
 /// Versioned app settings, deliberately excluding documents, colors and UI drafts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -29,6 +29,7 @@ struct Preferences {
     auto_special_palettes: bool,
     auto_roof_colors: bool,
     resize_anchor: ResizeAnchor,
+    recent_maps: recent_maps::RecentMaps,
 }
 
 impl Default for Preferences {
@@ -57,6 +58,7 @@ impl Preferences {
             auto_special_palettes: editor.auto_special_palettes,
             auto_roof_colors: editor.auto_roof_colors,
             resize_anchor: editor.resize_anchor,
+            recent_maps: editor.recent_maps.clone(),
         }
     }
 
@@ -77,6 +79,7 @@ impl Preferences {
         editor.auto_special_palettes = self.auto_special_palettes;
         editor.auto_roof_colors = self.auto_roof_colors;
         editor.resize_anchor = self.resize_anchor;
+        editor.recent_maps = self.recent_maps;
     }
 }
 
@@ -103,7 +106,11 @@ impl Editor {
             return;
         }
         match serde_json::to_string(&Preferences::capture(self)) {
-            Ok(raw) => storage.set_string(KEY, raw),
+            Ok(raw) if raw.len() <= MAX_BYTES => storage.set_string(KEY, raw),
+            Ok(_) => {
+                self.status =
+                    "Preferences exceed the storage limit; preserving the saved record.".into()
+            }
             Err(error) => self.status = format!("Could not encode preferences: {error}"),
         }
     }
@@ -201,6 +208,7 @@ mod tests {
                 "palette_set": "custom", "roof_layout": "morn_day_nite_custom",
                 "auto_events": false, "auto_special_palettes": false, "auto_roof_colors": false,
                 "resize_anchor": "bottom_right",
+                "recent_maps": [{"utf8": std::fs::canonicalize(dir.path().join("Map.2x1.blk")).unwrap()}],
             })
         );
         let restored = restore(&storage);
@@ -283,6 +291,8 @@ mod tests {
             r#"{"version":1,"roof_layout":99}"#.into(),
             r#"{"version":1,"resize_anchor":"sideways"}"#.into(),
             r#"{"version":1,"new_feature":true}"#.into(),
+            r#"{"recent_maps":[{"utf8":""}]}"#.into(),
+            r#"{"recent_maps":[{"utf8":"a"},{"utf8":"a"}]}"#.into(),
             " ".repeat(MAX_BYTES + 1),
         ] {
             let mut storage = MemoryStorage::default();
@@ -304,5 +314,29 @@ mod tests {
             assert_eq!(storage.values[KEY], raw);
             assert_eq!(storage.values["unrelated"], "keep");
         }
+    }
+
+    #[test]
+    fn long_recent_paths_restore_without_opening_files_and_clear_survives_restart() {
+        let mut editor = Editor::default();
+        // Ten long paths exceed the old 16 KiB settings cap. No filesystem
+        // access is needed to remember or restore paths to disconnected drives.
+        for i in 0..10 {
+            editor
+                .recent_maps
+                .remember(format!("{i}/{}/Map.blk", "a".repeat(4000)).into());
+        }
+        let mut storage = MemoryStorage::default();
+        eframe::App::save(&mut editor, &mut storage);
+        assert!(storage.values[KEY].len() > 16 * 1024);
+        let mut restored = restore(&storage);
+        assert_eq!(restored.state().recent_maps, editor.recent_maps);
+        assert!(restored.state().loaded.is_none() && restored.state().open_form.is_none());
+        let mut editor = std::mem::take(restored.state_mut());
+        drop(restored);
+        editor.recent_maps = recent_maps::RecentMaps::default();
+        eframe::App::save(&mut editor, &mut storage);
+        let next = restore(&storage);
+        assert_eq!(next.state().recent_maps, recent_maps::RecentMaps::default());
     }
 }

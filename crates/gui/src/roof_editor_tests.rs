@@ -38,6 +38,7 @@ pub(super) fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
     let graphics = tileset.graphics(blockset.blockset()).unwrap();
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
+        recent_path: None,
         palette_plan: None,
         events: None,
         event_warning: None,

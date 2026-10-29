@@ -88,6 +88,14 @@ impl Editor {
             "New map (unsaved)".into()
         };
         self.error = loaded.event_warning.take();
+        if loaded.document.has_backing_file() {
+            self.recent_maps.remember(
+                loaded
+                    .recent_path
+                    .take()
+                    .unwrap_or_else(|| loaded.document.path().to_owned()),
+            );
+        }
         self.event_ui.drag = None;
         self.event_ui.form = None;
         self.loaded = Some(loaded);

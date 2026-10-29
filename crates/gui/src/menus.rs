@@ -26,6 +26,7 @@ impl Editor {
                 if action(ui, true, "Open…") {
                     self.choose_open();
                 }
+                self.recent_menu(ui);
                 ui.separator();
                 let loaded = self.loaded.is_some();
                 if action(ui, loaded, "Close") {

@@ -19,6 +19,7 @@ mod palette_session;
 #[cfg(test)]
 mod palette_session_tests;
 mod preferences;
+mod recent_maps;
 mod roof_colors;
 #[cfg(test)]
 mod roof_workflow_tests;
@@ -52,6 +53,8 @@ use polished_map_project::{
 };
 
 struct Loaded {
+    // Keep the chosen spelling for history independently of canonical I/O paths.
+    recent_path: Option<PathBuf>,
     events: Option<polished_map_project::EventDocument>,
     event_warning: Option<String>,
     palette_plan: Option<polished_map_project::MapPalettePlan>,
@@ -108,6 +111,8 @@ pub struct Editor {
     auto_special_palettes: bool,
     auto_roof_colors: bool,
     preferences_writable: bool,
+    recent_maps: recent_maps::RecentMaps,
+    pending_recent: Option<PathBuf>,
     #[cfg(windows)]
     native_color_request: Option<polished_map_core::ColorSlot>,
     #[cfg(windows)]
@@ -173,6 +178,8 @@ impl Default for Editor {
             auto_special_palettes: true,
             auto_roof_colors: true,
             preferences_writable: true,
+            recent_maps: recent_maps::RecentMaps::default(),
+            pending_recent: None,
             #[cfg(windows)]
             native_color_request: None,
             #[cfg(windows)]
@@ -255,6 +262,7 @@ impl Editor {
     }
 
     fn choose_open(&mut self) {
+        self.pending_recent = None;
         self.pending_close = false;
         self.pending_new = false;
         if self.is_modified() {
@@ -270,6 +278,7 @@ impl Editor {
     }
 
     fn choose_new(&mut self) {
+        self.pending_recent = None;
         self.pending_close = false;
         self.pending_new = true;
         if self.is_modified() {
@@ -393,6 +402,7 @@ impl Editor {
                 let (events, event_warning) =
                     event_workflows::auto_load_events(&document, auto_events);
                 Ok(Loaded {
+                    recent_path: (!form.new_map).then_some(form.path),
                     events,
                     event_warning,
                     palette_plan: Some(palette_plan),
@@ -606,10 +616,24 @@ impl Editor {
         };
         // The native Save dialog supplies the overwrite decision. Observe the target
         // immediately after it returns, then recheck before atomic replacement.
+        self.save_as_path(path);
+    }
+
+    fn save_as_path(&mut self, path: PathBuf) {
+        if self.loaded.is_none() {
+            return;
+        }
         match prepare_save_as(&path)
             .and_then(|target| self.loaded.as_mut().unwrap().document.save_as(&target))
         {
-            Ok(()) => self.status = format!("Saved {}", path.display()),
+            Ok(()) => {
+                let mut recent_path = path.clone();
+                if recent_path.extension().is_none() {
+                    recent_path.set_extension("blk");
+                }
+                self.recent_maps.remember(recent_path);
+                self.status = format!("Saved {}", path.display());
+            }
             Err(error) => self.error = Some(error.to_string()),
         }
     }
@@ -873,6 +897,8 @@ impl Editor {
             self.close_map();
         } else if self.pending_new {
             self.start_new_options();
+        } else if let Some(path) = self.pending_recent.take() {
+            self.prepare_open(path);
         } else if let Some(path) = self.event_ui.warp_path.take() {
             self.open_warp(path, ctx);
         } else if let Some(path) = rfd::FileDialog::new()
@@ -1367,6 +1393,7 @@ impl Editor {
             || self.pending_open.is_some()
             || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            self.recent_shortcuts(&ctx);
             if ctx.input_mut(|i| {
                 i.consume_key(
                     egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,

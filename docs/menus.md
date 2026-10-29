@@ -12,7 +12,7 @@ keyboard and headless counterparts where applicable.
 
 | Group | Present in this port | Remaining source items or differences |
 |---|---|---|
-| File | New, Open, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Open Recent (ten entries and Clear Recent). Print's complete options/overlays remain pending. Native close delivery still needs platform verification. |
+| File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Print's complete options/overlays remain pending. Native close delivery still needs platform verification. |
 | Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialogs and complete popup geometry remain pending. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The extra Edit Block entry is temporary access to the existing editor; upstream opens it through block interactions. Complete context-menu/gesture equivalence is pending. |
 | View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Game Boy Screen, Show Events, Show Warp IDs, six palette sets | Theme submenu, Show Priority, Transparent, Full Screen. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
@@ -22,6 +22,14 @@ keyboard and headless counterparts where applicable.
 | Help | Inline development status, project attribution and icon licensing links | Original Help and About actions/dialogs, including keyboard shortcuts. Attribution remains available throughout the port. |
 
 ## Geometry and interaction gates
+
+Open Recent shows up to ten basenames with Alt+1 through Alt+0. Full paths are
+available on hover; duplicate basenames remain separate entries. Completed opens
+and Save As promote the exact path spelling, removing an existing exact match
+and evicting the oldest entry when full. New unsaved maps, canceled options,
+failed opens/saves and ordinary Save do not add entries. Selection uses the
+normal unsaved warning followed by Map Options. Clear Recent changes only the
+list, persists on exit, and remains available when empty. History survives Close.
 
 Load Roof Colors requires a known map group and resolves the modern project
 roof table before the legacy path. Manual loading is available for indoor and

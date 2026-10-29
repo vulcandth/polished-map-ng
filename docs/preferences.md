@@ -18,6 +18,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Roof Palettes layout | Morn + Day, Night |
 | Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | On |
 | Resize anchor | Center |
+| Recent maps | Empty; at most ten paths |
 
 The three auto-load toggles affect subsequent opens, not the current document.
 Special palettes and roof colors are independent; turning either off skips
@@ -26,7 +27,7 @@ and roof-color imports remain available. The default project palette import is
 independent of these toggles. Contextual palette selection on a later map open
 continues to follow upstream; restoring a selected set does not pin it forever.
 
-Documents, unsaved colors, palette dirty state, history, clipboard contents,
+Documents, unsaved colors, palette dirty state, undo history, clipboard contents,
 selection, scroll positions and open dialogs are not serialized. The selected
 palette set is saved, but the color bank starts from defaults at the next launch.
 egui's general widget-memory persistence is disabled. Native window placement
@@ -46,10 +47,17 @@ title. eframe 0.37 stores `app.ron` in its platform data directory:
 The `polished-map-ng.preferences` storage key contains a version-1 JSON object.
 Its named enum values and booleans are independent of the native window record.
 Missing fields receive defaults. Unknown versions, invalid values, unknown
-fields or records exceeding 16 KiB restore defaults and disable writes to that
+fields or records exceeding 4 MiB restore defaults and disable writes to that
 key for the session, preserving the existing record. Startup status reports this.
 This is an internal settings schema, not the stable automation API promised by
 the roadmap.
+
+Recent paths use tagged UTF-8 strings, with native Unix bytes or Windows UTF-16
+units for names that cannot be represented as UTF-8. Native encodings from the
+other OS are rejected and the existing record is preserved. The ten-entry limit,
+nonempty paths and exact duplicate exclusion are checked on restoration. Startup
+does not probe paths or reopen a map. The larger record cap accommodates long
+paths; writing also checks the cap before replacing the saved record.
 
 The outer RON file is owned by eframe. Unreadable/malformed outer files and write
 errors follow its logged, best-effort behavior; this is not a power-loss-safe
@@ -59,7 +67,7 @@ or rename its `app.ron` before relaunching.
 ## Remaining parity and verification
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
-or modified. Native theme variants, recent paths, monochrome/priority/256-tile
+or modified. Native theme variants, monochrome/priority/256-tile
 options, transparency/fullscreen controls, drag-and-drop, overworld threshold
 and print preferences still need their complete menu/persistence work.
 

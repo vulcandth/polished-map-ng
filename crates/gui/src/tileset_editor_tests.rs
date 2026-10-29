@@ -49,6 +49,7 @@ pub(super) fn fixture(
         .build_eframe(|cc| Editor::new(cc));
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
+        recent_path: None,
         palette_plan: None,
         events: None,
         event_warning: None,

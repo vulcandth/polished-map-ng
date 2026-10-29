@@ -11,6 +11,7 @@ fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
     std::fs::write(&blocks, [[0; 16], [1; 16], [2; 16]].concat()).unwrap();
     std::fs::write(&collisions, [[0; 4], [1; 4], [2; 4]].concat()).unwrap();
     let loaded = Loaded {
+        recent_path: None,
         palette_plan: None,
         events: None,
         event_warning: None,

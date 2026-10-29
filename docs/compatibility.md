@@ -2,6 +2,18 @@
 
 Status: initial implementation in progress. Neither upstream parity gate passed.
 
+Open Recent follows master's ten-entry ordering, exact-string promotion, basename
+labels, Alt+1..Alt+0 shortcuts and Clear Recent. `recent_maps::tests` covers
+eviction, original path spelling, Unicode/native encodings, all ten shortcut
+routes, menu selection, both cancellation stages, completed/failed opens, New
+Map, Save As and ordinary Save. The file menu and populated recent submenu have
+headless visual baselines. Preference tests restore long recent paths without
+accessing files or reopening maps, and retain Clear Recent across reconstruction.
+Native menu navigation and real shutdown/storage delivery are still unverified.
+The full local visual suite passed (91 tests, one ignored); only the existing
+File popup baseline changed, with one new ten-entry submenu baseline. Both were
+inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pass.
+
 | Area | Reference | State / required evidence |
 |---|---|---|
 | Binary maps / dimensions | master map.cpp, map.h | Exact byte I/O, New Map, Save As/ASM conversion, filename/explicit/metadata dimensions tested; oversized-file consent pending |
