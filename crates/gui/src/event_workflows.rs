@@ -241,6 +241,7 @@ pub(super) fn canvas_events(
     cell: f32,
     dimensions: (u8, u8),
     state: &mut EventUi,
+    interact: bool,
 ) -> Option<EventAction> {
     if !state.mode && !state.show {
         return None;
@@ -255,16 +256,17 @@ pub(super) fn canvas_events(
     let pointer = ui
         .input(|i| i.pointer.hover_pos())
         .filter(|p| ui.clip_rect().contains(*p));
-    let hovered = if state.mode && ui.is_enabled() && ui.rect_contains_pointer(ui.clip_rect()) {
-        pointer.and_then(|p| {
-            model
-                .entries()
-                .iter()
-                .rposition(|e| rect(e.definition()).contains(p))
-        })
-    } else {
-        None
-    };
+    let hovered =
+        if interact && state.mode && ui.is_enabled() && ui.rect_contains_pointer(ui.clip_rect()) {
+            pointer.and_then(|p| {
+                model
+                    .entries()
+                    .iter()
+                    .rposition(|e| rect(e.definition()).contains(p))
+            })
+        } else {
+            None
+        };
     let map_name = doc
         .source()
         .path()
@@ -327,7 +329,7 @@ pub(super) fn canvas_events(
                 );
             }
         }
-        if state.mode {
+        if state.mode && interact {
             let response = ui.interact(
                 area,
                 ui.scope_id().with(("map-event", index)),
@@ -359,6 +361,7 @@ pub(super) fn canvas_events(
         }
     }
     if state.mode
+        && interact
         && ui.is_enabled()
         && let Some(index) = state.drag
     {

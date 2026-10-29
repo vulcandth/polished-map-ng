@@ -45,7 +45,7 @@ Synthetic bold and native rasterization still require fidelity work;
 see the evidence and limitations in `docs/compatibility.md`.
 
 The block editor now uses the original sidebar right-release workflow without
-the temporary Edit Block menu entry. Left/middle releases select; right releases
+the temporary Edit Block menu entry. Left releases select; right releases
 select and edit only when they return to the pressed block inside the visible
 clip. Pointer loss, canceled releases, modals and document replacement clear the
 transient press. Tests exercise zoom, drag-option combinations, scrolled clips,
@@ -57,6 +57,16 @@ changes. Source red/white labels and half-block sidebar reveal thresholds are
 implemented; right-button map picking now selects on press and reveals the block.
 Native keyboard/numpad delivery, mouse/child-window behavior and Courier Bold
 rasterization still require verification.
+
+Middle-button presses are intercepted by the parent workspace before block or
+event controls. Map and sidebar panning now use the source integer press anchor,
+visible-scrollbar bounds, immediate movement and no inertial fling. Rulers follow
+the map offset, and panning leaves selection, edits and history unchanged. Tests
+cover both zoom sizes, rulers, DPI, minimum client size, captured movement outside
+the workspace, wheel interleaving, zoom-retained blank space and cancellation.
+The minimum-width map viewport no longer inherits egui's 64-point floor, which
+could put its scrollbar beyond the client edge. Native mouse capture and cursor
+delivery still require platform verification.
 
 File Close, dedicated Save Map and Exit now share source-derived dirty-domain
 guards and preserve the source distinction between document changes and palette

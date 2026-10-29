@@ -124,6 +124,8 @@ impl Editor {
         self.block_clipboard = None;
         self.sidebar_drag = None;
         self.sidebar_press = None;
+        self.canvas_pan.reset();
+        self.sidebar_pan.reset();
         self.block_hotkeys = Default::default();
         self.sidebar_reveal = None;
         self.reset_sidebar_scroll = true;

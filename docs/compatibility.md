@@ -1,5 +1,44 @@
 # Compatibility evidence
 
+## Middle-button workspace panning
+
+Pinned master `widgets.cpp::Workspace::handle` intercepts middle presses before
+its children. This corrects the earlier child-only reading of
+`Metatile_Button::handle`: a middle release in the sidebar does **not** select a
+block. The port now captures map/sidebar middle drags, displays the move cursor,
+and computes each offset from the original integer press coordinate and scroll
+position. For each axis, the limit is `max(content - outer + perpendicular
+visible scrollbar, 0)`. The sidebar remains vertical-only. Map extents include
+the original three-block border on every side, and ruler offsets follow panning.
+There is no movement threshold, anchor rebasing at an edge, or release fling.
+Wheel events still scroll during capture; subsequent movement uses the original
+press anchor. Zoom-retained blank space is clamped to natural content on drag.
+
+`workspace_pan::tests` exercises real egui input at 1×/2× DPI, both zoom sizes,
+rulers on/off, both drag-and-drop settings, integer/subpixel movement, edge
+clamping and return, event markers, blank margins, same-frame press/move/release
+outside the workspace, wheel interleaving, popup guards and cancellation on
+pointer/focus loss, modals, zoom/reset and Close. Map bytes, event files,
+selection, edit history and editor dialogs are checked for unwanted changes.
+Nine tests include independently calculated limits for 800×600 and the original
+335×262 minimum client size. The latter exposed egui's 64-point minimum viewport
+placing a scrollbar outside the client; removing that floor keeps both bars
+within the source workspace. Bounds are checked on actual scrollbar widgets,
+not inferred from the final scroll offset alone.
+
+This is source inspection plus headless input/geometry evidence. Native pointer
+capture, cursor delivery and platform mouse mapping remain unverified. No
+computer-use session or native parity claim is included.
+
+The prior icon commit's Windows CI also exposed a test settling race in the
+oversized-map warning helper. It now dispatches Open with one frame and uses its
+existing bounded worker-completion wait before settling the result UI. This
+changes test synchronization, not production file-loading behavior.
+
+Local formatting, warnings-as-errors workspace Clippy, workspace tests and
+rustdoc pass. The full visual suite passes 177 tests with four existing ignored
+tests, using unchanged snapshot baselines.
+
 ## Open, Load Events and Load Palettes icons
 
 The three toolbar controls now use the unchanged pinned `open.xpm`, `load.xpm`
@@ -479,7 +518,8 @@ Only the two new hotkey atlases were added; all existing snapshots pass unchange
 
 Pinned master's `Metatile_Button::handle` calls back on release, and
 `Main_Window::select_metatile_cb` requires the pointer to be over the pressed
-button. Any mouse button selects; right release also opens the block editor.
+button. Left release selects; right release also opens the block editor. The
+parent Workspace intercepts middle presses for panning, as documented above.
 There is no sidebar context menu or double-click editor action in this source.
 The port now tracks the pressed cell/button despite using one egui interaction
 region for the grid. Releases cannot cross into another cell, blank space or
@@ -490,7 +530,7 @@ operations still use their own validated source/target route.
 
 The temporary Edit Block menu entry and its extra divider are removed. Existing
 block editing/cancel/accept/save/conflict and collision-layout tests now enter
-through actual right-button events. Four new interaction tests cover all three
+through actual right-button events. Four interaction tests cover left/right
 buttons, both zoom sizes, both transfer settings, near-border release mismatch,
 blank/off-sidebar releases, return-to-source drag, pointer loss, modal guards
 and partially clipped rows after scrolling. Source-derived layout determines
@@ -1148,7 +1188,8 @@ the original application. Unverified assets never become redistributable fixture
   [Fl_Slider::scrollvalue](https://github.com/fltk/fltk/blob/release-1.4.5/src/Fl_Slider.cxx)
   (range includes position plus viewport size). These are source-derived and
   headless egui tests, not a native FLTK interaction differential; native wheel,
-  initial positioning, resize and middle-button panning coverage remain pending.
+  initial positioning and resize remain pending. Middle-button source/headless
+  coverage is now documented above; native panning remains unverified.
   Three zoom snapshots (scrolled normal, enlarged and far-edge space) were
   rendered and inspected. All 39 changed existing baselines differ only within
   sidebar/canvas scrollbar bands; menu, toolbar, dialog and status pixels remain

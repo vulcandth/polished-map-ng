@@ -36,7 +36,7 @@ The palette label/dropdown precedes Load Palettes and Edit Current Palettes;
 blockset/map resize, tileset change/edit and roof change/edit follow in pairs.
 Undo/Redo stay visible when disabled. Change Roof requires a project roof
 inventory captured at successful map open; Edit Roof requires loaded roof pixels.
-The menu uses the same availability rules. Thirteen buttons use short text
+The menu uses the same availability rules. Ten buttons use short text
 placeholders with full accessible names and tooltips while icon provenance is
 resolved. Native styles and remaining artwork are still parity gates.
 

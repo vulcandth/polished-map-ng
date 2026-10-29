@@ -71,6 +71,8 @@ impl Editor {
         self.reset_sidebar_scroll = true;
         self.reset_canvas_scroll = true;
         self.canvas_scroll = Vec2::ZERO;
+        self.canvas_pan.reset();
+        self.sidebar_pan.reset();
         self.ruler_scroll = Vec2::ZERO;
         self.ruler_cursor = None;
         self.event_ui.clear_document_state();

@@ -47,6 +47,7 @@ mod tileset_workflows;
 mod toolbar_tests;
 mod transparency;
 mod window_title;
+mod workspace_pan;
 #[cfg(test)]
 mod zoom_tests;
 use block_editor::BlockForm;
@@ -170,6 +171,8 @@ pub struct Editor {
     canvas_zoom: bool,
     canvas_scroll: Vec2,
     sidebar_scroll: f32,
+    canvas_pan: workspace_pan::WorkspacePan,
+    sidebar_pan: workspace_pan::WorkspacePan,
     roof_choices_available: bool,
     error: Option<String>,
     selected: u8,
@@ -257,6 +260,8 @@ impl Default for Editor {
             reset_canvas_scroll: false,
             canvas_zoom: false,
             canvas_scroll: Vec2::ZERO,
+            canvas_pan: Default::default(),
+            sidebar_pan: Default::default(),
             sidebar_scroll: 0.0,
             roof_choices_available: false,
             error: None,
@@ -1232,6 +1237,22 @@ impl Editor {
     }
 
     fn sidebar(&mut self, ui: &mut egui::Ui, block_size: f32) {
+        if self.reset_sidebar_scroll || self.sidebar_reveal.is_some() {
+            self.sidebar_pan.reset();
+        }
+        let pan = self.sidebar_pan.update(
+            ui,
+            Vec2::new(0.0, self.sidebar_scroll),
+            Vec2::new(
+                block_size * 4.0,
+                block_size * self.textures.len().div_ceil(4) as f32,
+            ),
+            true,
+        );
+        if pan.handled {
+            self.sidebar_press = None;
+            self.sidebar_drag = None;
+        }
         let priority = self
             .show_priority
             .then(|| priority::Textures::get(ui.ctx()));
@@ -1243,6 +1264,14 @@ impl Editor {
                 ..Default::default()
             })
             .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible);
+        if let Some(offset) = pan.offset {
+            scroll = scroll
+                .scroll_offset(offset)
+                .scroll_source(egui::scroll_area::ScrollSource {
+                    mouse_wheel: true,
+                    ..egui::scroll_area::ScrollSource::NONE
+                });
+        }
         if self.reset_sidebar_scroll {
             scroll = scroll.scroll_offset(Vec2::ZERO);
             self.reset_sidebar_scroll = false;
@@ -1279,7 +1308,10 @@ impl Editor {
             if !self.drag_and_drop || !ui.is_enabled() {
                 self.sidebar_drag = None;
             }
-            if self.drag_and_drop && response.drag_started_by(egui::PointerButton::Primary) {
+            if !pan.handled
+                && self.drag_and_drop
+                && response.drag_started_by(egui::PointerButton::Primary)
+            {
                 self.sidebar_drag = ui.input(|i| i.pointer.press_origin()).and_then(hit);
             }
             let drop = if response.drag_stopped_by(egui::PointerButton::Primary) {
@@ -1292,7 +1324,7 @@ impl Editor {
             // select_metatile_cb acts only if the pointer is still over it.
             // Keep that cell identity even though egui uses one sidebar region.
             let mut released = None;
-            if ui.is_enabled() {
+            if ui.is_enabled() && !pan.handled {
                 for event in ui.input(|i| i.events.clone()) {
                     match event {
                         egui::Event::PointerButton {
@@ -1300,8 +1332,9 @@ impl Editor {
                             button,
                             pressed: true,
                             ..
-                        } if response.contains_pointer()
-                            || response.is_pointer_button_down_on() =>
+                        } if button != egui::PointerButton::Middle
+                            && (response.contains_pointer()
+                                || response.is_pointer_button_down_on()) =>
                         {
                             self.sidebar_press = hit(pos).map(|id| (button, id));
                         }
@@ -1400,6 +1433,21 @@ impl Editor {
     }
 
     fn canvas(&mut self, ui: &mut egui::Ui, layout: &geometry::Layout) {
+        if self.reset_canvas_scroll || self.canvas_zoom != self.zoom {
+            self.canvas_pan.reset();
+        }
+        let content = self.loaded.as_ref().map_or(Vec2::ZERO, |loaded| {
+            let map = loaded.document.map();
+            Vec2::new(f32::from(map.width()) + 6.0, f32::from(map.height()) + 6.0)
+                * layout.block_size
+        });
+        let pan = self
+            .canvas_pan
+            .update(ui, self.canvas_scroll, content, false);
+        if pan.handled {
+            self.stroke.clear();
+            self.event_ui.drag = None;
+        }
         let priority = self
             .show_priority
             .then(|| priority::Textures::get(ui.ctx()));
@@ -1428,11 +1476,24 @@ impl Editor {
         let mut scroll = egui::ScrollArea::both()
             .id_salt("map")
             .auto_shrink([false, false])
+            // At the source minimum window size, zoom/rulers leave less than
+            // egui's default 64-point viewport. Keep the bars inside that area.
+            .min_scrolled_width(0.0)
+            .min_scrolled_height(0.0)
             .scroll_source(egui::scroll_area::ScrollSource {
                 drag: egui::scroll_area::DragScroll::Never,
                 ..Default::default()
             });
         let mut retained_scroll = self.canvas_scroll;
+        if let Some(offset) = pan.offset {
+            retained_scroll = offset;
+            scroll = scroll
+                .scroll_offset(offset)
+                .scroll_source(egui::scroll_area::ScrollSource {
+                    mouse_wheel: true,
+                    ..egui::scroll_area::ScrollSource::NONE
+                });
+        }
         if self.reset_canvas_scroll || self.canvas_zoom != self.zoom {
             // egui starts physics against the previous frame's bounds. A source
             // zoom/reset is immediate, even when it exceeds those old bounds.
@@ -1507,6 +1568,7 @@ impl Editor {
                         );
                     }
                     let hovered = !self.event_ui.mode
+                        && !pan.handled
                         && ui.is_enabled()
                         && ui.rect_contains_pointer(cell.intersect(clip));
                     map_buttons::decorate(
@@ -1530,9 +1592,11 @@ impl Editor {
                     size / 2.0,
                     (map.width(), map.height()),
                     &mut self.event_ui,
+                    !pan.handled,
                 );
             }
             if ui.is_enabled()
+                && !pan.handled
                 && ui.rect_contains_pointer(clip)
                 && let Some(pos) = ui.input(|i| i.pointer.hover_pos())
             {
@@ -1560,6 +1624,7 @@ impl Editor {
                 }
             }
             if !self.event_ui.mode
+                && !pan.handled
                 && let Some(pos) = response
                     .interact_pointer_pos()
                     .or_else(|| response.hover_pos())

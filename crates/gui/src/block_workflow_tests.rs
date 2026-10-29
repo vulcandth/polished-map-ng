@@ -42,11 +42,7 @@ fn sidebar_releases_match_original_buttons_and_right_click_edits_the_released_bl
             h.run();
             let size = if zoom { 64.0 } else { 32.0 };
             let pos = Pos2::new(size * 1.5, 47.0 + size * 0.5);
-            for button in [
-                egui::PointerButton::Primary,
-                egui::PointerButton::Middle,
-                egui::PointerButton::Secondary,
-            ] {
+            for button in [egui::PointerButton::Primary, egui::PointerButton::Secondary] {
                 h.state_mut().selected = 0;
                 h.run();
                 pointer(&mut h, pos, button, true);

@@ -43,6 +43,10 @@ FLTK 1.4.5 `fl_labeltype.cxx` under the retained FLTK terms described below.
 Sidebar press/release selection and block-editor entry adapt master
 `Metatile_Button::handle` in `map-buttons.cpp` and
 `Main_Window::select_metatile_cb` in `main-window.cpp`, under LGPL-3.0-only.
+Parent middle-button interception, integer anchored panning, scroll limits and
+correlated ruler updates adapt `widgets.cpp::Workspace::{handle,scroll_to}` and
+`Main_Window::update_layout`, under LGPL-3.0-only. Transient capture cancellation
+and egui viewport sizing are Rust integration code.
 Numeric block assignment, selection reveal and digit badges adapt
 `Main_Window::{handle_hotkey,select_metatile,force_add_sub_metatiles,close_cb}`,
 `Metatile_Button::draw` and `utils.cpp::draw_outlined_text`. Map picking adapts

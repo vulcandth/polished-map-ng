@@ -19,7 +19,9 @@ fn open(h: &mut Harness<'_, Editor>, path: &Path) {
     form.height = 1;
     h.run();
     h.get_by_label("Open map").click();
-    h.run();
+    // Dispatch once: the active worker legitimately requests more frames than
+    // Harness::run's settling budget. Wait for its completion below instead.
+    h.step();
     let deadline = Instant::now() + Duration::from_secs(5);
     while h.state().loading.is_some() && Instant::now() < deadline {
         std::thread::sleep(Duration::from_millis(5));
