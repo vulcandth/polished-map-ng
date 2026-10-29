@@ -1,6 +1,7 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
 mod about;
 mod block_editor;
+mod block_hotkeys;
 mod block_workflows;
 #[cfg(test)]
 mod drag_tests;
@@ -147,12 +148,13 @@ pub struct Editor {
     paste_shortcut_handled: bool,
     sidebar_drag: Option<u8>,
     sidebar_press: Option<(egui::PointerButton, u8)>,
+    block_hotkeys: block_hotkeys::BlockHotkeys,
+    sidebar_reveal: Option<u8>,
     reset_sidebar_scroll: bool,
     resize_anchor: ResizeAnchor,
     reset_canvas_scroll: bool,
     canvas_zoom: bool,
     canvas_scroll: Vec2,
-    #[cfg(test)]
     sidebar_scroll: f32,
     error: Option<String>,
     selected: u8,
@@ -230,12 +232,13 @@ impl Default for Editor {
             paste_shortcut_handled: false,
             sidebar_drag: None,
             sidebar_press: None,
+            block_hotkeys: Default::default(),
+            sidebar_reveal: None,
             reset_sidebar_scroll: false,
             resize_anchor: ResizeAnchor::default(),
             reset_canvas_scroll: false,
             canvas_zoom: false,
             canvas_scroll: Vec2::ZERO,
-            #[cfg(test)]
             sidebar_scroll: 0.0,
             error: None,
             selected: 0,
@@ -1079,6 +1082,17 @@ impl Editor {
         if self.reset_sidebar_scroll {
             scroll = scroll.scroll_offset(Vec2::ZERO);
             self.reset_sidebar_scroll = false;
+            self.sidebar_reveal = None;
+        } else if let Some(id) = self.sidebar_reveal.take() {
+            let offset = block_hotkeys::reveal_offset(
+                id,
+                block_size,
+                ui.available_height(),
+                self.sidebar_scroll,
+            );
+            scroll = scroll.scroll_offset(Vec2::new(0.0, offset));
+            ui.spacing_mut().scroll.kinetic.rubber_band = false;
+            ui.spacing_mut().scroll.kinetic.decay_time = 0.0;
         }
         let output = scroll.show(ui, |ui| {
             let rows = self.textures.len().div_ceil(4);
@@ -1194,6 +1208,9 @@ impl Editor {
                             false,
                         );
                     }
+                    if let Some(digit) = self.block_hotkeys.digit(id as u8) {
+                        block_hotkeys::draw(ui.painter(), cell, digit, id as u8, self);
+                    }
                 }
             }
             if let Some((id, button)) = released {
@@ -1215,12 +1232,7 @@ impl Editor {
                 }
             }
         });
-        #[cfg(test)]
-        {
-            self.sidebar_scroll = output.state.clamped_offset().y;
-        }
-        #[cfg(not(test))]
-        let _ = output;
+        self.sidebar_scroll = output.state.clamped_offset().y;
     }
 
     fn canvas(&mut self, ui: &mut egui::Ui, layout: &geometry::Layout) {
@@ -1394,8 +1406,16 @@ impl Editor {
                     let point = Point { x, y };
                     let old =
                         map.blocks()[usize::from(y) * usize::from(map.width()) + usize::from(x)];
-                    if response.secondary_clicked() && usize::from(old) < self.textures.len() {
+                    // Block::handle calls change_block_cb on FL_PUSH, not release.
+                    if ui.is_enabled()
+                        && response.contains_pointer()
+                        && clip.contains(pos)
+                        && ui.input(|i| i.pointer.secondary_pressed())
+                        && usize::from(old) < self.textures.len()
+                    {
                         self.selected = old;
+                        self.sidebar_reveal = Some(old);
+                        ui.ctx().request_repaint();
                     }
                     let (pressed, down, modifiers) = ui.input(|i| {
                         (
@@ -1506,6 +1526,7 @@ impl Editor {
             || self.pending_open.is_some()
             || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            self.block_hotkey_input(&ctx);
             if ctx.input_mut(|i| {
                 i.modifiers.matches_exact(egui::Modifiers::COMMAND)
                     && i.consume_key(egui::Modifiers::COMMAND, egui::Key::Slash)

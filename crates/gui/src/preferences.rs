@@ -179,6 +179,9 @@ mod tests {
     #[test]
     fn shutdown_settings_restore_at_startup_without_documents_colors_or_transient_state() {
         let (dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+        h.key_press_modifiers(egui::Modifiers::CTRL, egui::Key::Num7);
+        h.run();
+        assert_eq!(h.state().block_hotkeys.digit(0), Some(7));
         let editor = h.state_mut();
         editor.dark = true;
         editor.event_ui.mode = true;
@@ -263,6 +266,8 @@ mod tests {
             Preferences::capture(h.state())
         );
         assert!(editor.loaded.is_none() && editor.block_clipboard.is_none());
+        assert_eq!(editor.block_hotkeys.digit(0), None);
+        assert_eq!(editor.sidebar_reveal, None);
         assert!(editor.resize_form.is_none() && editor.textures.is_empty());
         assert_eq!(editor.canvas_scroll, Vec2::ZERO);
         assert!(!editor.is_modified() && !editor.palette_document().is_modified());

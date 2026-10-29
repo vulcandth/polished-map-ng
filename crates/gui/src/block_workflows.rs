@@ -94,6 +94,8 @@ impl Editor {
                     })
                     .collect();
                 let count = self.textures.len();
+                self.block_hotkeys.prune(count);
+                self.sidebar_reveal = self.sidebar_reveal.filter(|&id| usize::from(id) < count);
                 if usize::from(self.selected) >= count {
                     self.selected = 0;
                     self.reset_sidebar_scroll = true;

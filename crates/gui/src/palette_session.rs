@@ -110,6 +110,8 @@ impl Editor {
         self.block_clipboard = None;
         self.sidebar_drag = None;
         self.sidebar_press = None;
+        self.block_hotkeys = Default::default();
+        self.sidebar_reveal = None;
         self.reset_sidebar_scroll = true;
         self.stroke.clear();
         if !self.pending_palette_warnings.is_empty() {

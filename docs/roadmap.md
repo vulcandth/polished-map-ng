@@ -26,8 +26,13 @@ select and edit only when they return to the pressed block inside the visible
 clip. Pointer loss, canceled releases, modals and document replacement clear the
 transient press. Tests exercise zoom, drag-option combinations, scrolled clips,
 real editor entry, cancellation, saving and map-history preservation. Existing
-drag copy/swap tests remain active. Numeric block hotkeys and native mouse/child-
-window verification remain separate requirements.
+drag copy/swap tests remain active. Numeric block hotkeys now assign with physical
+Ctrl+digit, clear with Ctrl+Shift+digit and select with digit. Bindings reset on
+successful map replacement/Close and prune removed IDs on block-count/tileset
+changes. Source red/white labels and half-block sidebar reveal thresholds are
+implemented; right-button map picking now selects on press and reveals the block.
+Native keyboard/numpad delivery, mouse/child-window behavior and Courier Bold
+rasterization still require verification.
 
 File Close, dedicated Save Map and Exit now share source-derived dirty-domain
 guards and preserve the source distinction between document changes and palette
@@ -112,7 +117,7 @@ palette sets, project/roof colors, compound graphics and roof tile replacement.
 Block editing now has shared placement/collision commands, a GUI draft editor,
 ASM/binary collision fields and paired persistence with rollback/backups.
 Clipboard copy/paste/swap, sidebar drag/copy and block-count controls are also
-implemented. Native shortcut dispatch, remaining block controls/hotkeys and
+implemented. Native shortcut dispatch, remaining block controls and
 automatic recovery remain.
 The shared tileset draft/command model and palette-map/grayscale export routines
 are implemented with C++ pixel-operation comparisons. Project persistence now

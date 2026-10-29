@@ -43,6 +43,8 @@ impl Editor {
         self.block_clipboard = None;
         self.sidebar_drag = None;
         self.sidebar_press = None;
+        self.block_hotkeys = Default::default();
+        self.sidebar_reveal = None;
         self.paste_shortcut_handled = false;
         self.stroke.clear();
         self.reset_sidebar_scroll = true;

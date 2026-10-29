@@ -15,6 +15,10 @@ and UI toolkit. Individual modules identify upstream algorithm sources.
 Sidebar press/release selection and block-editor entry adapt master
 `Metatile_Button::handle` in `map-buttons.cpp` and
 `Main_Window::select_metatile_cb` in `main-window.cpp`, under LGPL-3.0-only.
+Numeric block assignment, selection reveal and digit badges adapt
+`Main_Window::{handle_hotkey,select_metatile,force_add_sub_metatiles,close_cb}`,
+`Metatile_Button::draw` and `utils.cpp::draw_outlined_text`. Map picking adapts
+`Block::handle` and `Main_Window::change_block_cb`, including press-time selection.
 
 Event handling adapts master `event.cpp`, `map-events.cpp`, event path discovery
 in `config.cpp`, and resize/drag coordinate rules in `main-window.cpp`/`map.h`.

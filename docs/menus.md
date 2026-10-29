@@ -23,6 +23,15 @@ keyboard and headless counterparts where applicable.
 
 ## Geometry and interaction gates
 
+Numeric block shortcuts use physical Ctrl on all platforms: Ctrl+digit assigns
+the selected block, Ctrl+Shift+digit clears that digit, and a bound digit selects
+and reveals its block. Each block has at most one digit. Clear/assign events keep
+propagating, so Ctrl+Shift+3/4 can also run the View commands. Bound Alt+digits
+select before Open Recent; unbound ones retain the recent-map shortcut. Red digits
+with white outlines are visible independently of Block IDs, shifting down for
+three-digit decimal IDs at normal zoom. These session bindings are never saved.
+Native keyboard/numpad delivery and native font matching remain verification gates.
+
 Transparent precedes Full Screen and shares the source F10 shortcut. It requests
 75% whole-window opacity (Win32 byte 191, X11 CARDINAL `0xBFFFFFFF`, AppKit 0.75).
 The platform adapter changes the root window, including its content; no image,

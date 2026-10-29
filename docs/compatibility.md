@@ -1,5 +1,43 @@
 # Compatibility evidence
 
+## Numeric block hotkeys, badges and selection reveal
+
+`block_hotkeys.rs` adapts pinned master's `Main_Window::handle_hotkey` and
+`select_metatile`. Physical Ctrl+0–9 assigns the selected block; Ctrl+Shift+0–9
+clears that digit. A block has at most one digit and a digit at most one block.
+Assignments and clears propagate to menu shortcuts, including the View toggles
+on Ctrl+Shift+3/4. A bound digit without Ctrl selects and consumes its press,
+even with Alt/Shift/Command; a bound Alt+digit therefore precedes Open Recent.
+Unbound digits and key releases propagate. Existing modal/text-input guards apply.
+
+Bindings are transient: successful map replacement and Close clear them; failed
+opens keep them. Block resize and tileset replacement remove only out-of-range
+IDs, and growing again does not resurrect bindings. Swapping block contents does
+not move bindings. Preferences, serialized documents and undo history exclude
+them. Selection reveal uses the original inclusive half-block thresholds and
+four-column row math at 32/64-point block sizes. Canvas right-button picking now
+uses press-time selection, as `Block::handle(FL_PUSH)` does, and shares this reveal.
+
+Red digits with white diagonal outlines use 14-point text. The top-right position
+comes from `Metatile_Button::draw` and the `ms+1` button width in `update_layout`.
+Unzoomed decimal IDs of 100 or more move the digit down 14 points only when IDs
+are shown. Two inspected atlas snapshots cover all ten digits, decimal/hex,
+99/100 boundaries, hidden IDs, zoom and 1×/2× DPI. No artwork is imported.
+
+Tests cover all digit events, conflicting assignments, per-event modifiers,
+physical Ctrl versus macOS Command, event propagation, focus/modal blocking,
+Open Recent precedence, failed/successful opens, Close, resizing, tileset changes,
+preference exclusion, first/last-row reveal and map-history preservation.
+`egui-winit` 0.37 maps digit and numpad keycodes to the same egui digits, preferring
+logical keys and falling back to physical keys. Native keyboard layouts/NumLock
+and OS shortcut delivery remain unverified. The bundled map-label font remains
+an approximation of native Courier Bold; these are source-derived/headless
+checks, not a claim of native font or input equivalence. No computer use occurred.
+
+Local formatting, warnings-as-errors Clippy, workspace tests and documentation
+pass. The full GUI visual suite passes 144 tests with one existing ignored test.
+Only the two new hotkey atlases were added; all existing snapshots pass unchanged.
+
 ## Sidebar release gestures and original block-editor entry
 
 Pinned master's `Metatile_Button::handle` calls back on release, and
@@ -19,8 +57,8 @@ through actual right-button events. Four new interaction tests cover all three
 buttons, both zoom sizes, both transfer settings, near-border release mismatch,
 blank/off-sidebar releases, return-to-source drag, pointer loss, modal guards
 and partially clipped rows after scrolling. Source-derived layout determines
-the target positions. Numeric hotkeys and native input/child-window behavior
-remain unimplemented/unverified gates, respectively.
+the target positions. Numeric hotkeys are now covered above; native input/child-
+window behavior remains an unverified gate.
 
 Local formatting, warnings-as-errors Clippy, workspace tests and documentation
 pass. The full visual suite passes 134 tests with one existing ignored test.
@@ -690,7 +728,7 @@ the original application. Unverified assets never become redistributable fixture
   border, Cmd/Ctrl+G, modal suppression, sidebar source/target drag outlines and
   a no-op invalid drop. These are headless GPU and source-derived expectations,
   not native DPI or compiled FLTK output comparisons. Native theme completeness,
-  native drag dispatch and hotkey badges remain pending.
+  native drag dispatch remain pending. Hotkey badges are now covered above.
   The border atlas, hover/drag views and representative light/dark, zoomed and
   modal snapshots were inspected. All 35 updated existing snapshots keep menu,
   toolbar and status pixels unchanged; differences stay in the editor body.

@@ -282,6 +282,11 @@ fn tile_mode_failure_retains_document_and_missing_palette_reenables_monochrome()
 #[test]
 fn tileset_switch_preserves_map_history_and_palette_edits_and_clears_invalid_selection() {
     let (dir, mut h) = fixture();
+    h.key_press_modifiers(egui::Modifiers::CTRL, egui::Key::Num7);
+    h.run();
+    h.state_mut().selected = 1;
+    h.key_press_modifiers(egui::Modifiers::CTRL, egui::Key::Num8);
+    h.run();
     h.state_mut().apply(Command::Paint {
         points: vec![Point { x: 0, y: 0 }],
         block: 1,
@@ -328,6 +333,8 @@ fn tileset_switch_preserves_map_history_and_palette_edits_and_clears_invalid_sel
         &[34, 56, 78]
     );
     assert_eq!(current(&h).name(), "01");
+    assert_eq!(h.state().block_hotkeys.digit(0), Some(7));
+    assert_eq!(h.state().block_hotkeys.digit(1), None);
     assert_eq!(current(&h).palettes().bank(), &bank);
     assert!(current(&h).palettes().is_modified());
     assert_eq!(current(&h).roof().unwrap().name(), "demo");
@@ -347,6 +354,12 @@ fn tileset_switch_preserves_map_history_and_palette_edits_and_clears_invalid_sel
     open(&mut h);
     choose(&mut h, "01: OTHER", "demo");
     assert_eq!(h.state().textures.len(), 2);
+    assert_eq!(h.state().block_hotkeys.digit(0), Some(7));
+    assert_eq!(
+        h.state().block_hotkeys.digit(1),
+        None,
+        "growing never resurrects discarded bindings"
+    );
     assert!(
         h.state().block_clipboard.is_some(),
         "an in-range copied block remains available after a switch"
