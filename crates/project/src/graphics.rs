@@ -187,6 +187,24 @@ pub fn write_png(path: &Path, raster: &RgbImage) -> Result<(), ProjectError> {
 /// This does not authorize replacing an existing file. A failed encode never
 /// leaves a partial output; a concurrent creator is reported as a conflict.
 pub fn write_new_png(path: &Path, raster: &RgbImage) -> Result<(), ProjectError> {
+    write_observed_png(path, None, raster)
+}
+
+/// Replace an observed screenshot only after the caller has obtained consent.
+/// Recheck its content before and after encoding. Existing-file replacement
+/// still has the same narrow check/rename race as other document saves.
+pub fn write_png_export(
+    target: &crate::PngExportTarget,
+    raster: &RgbImage,
+) -> Result<(), ProjectError> {
+    write_observed_png(target.path(), target.observed.hash, raster)
+}
+
+fn write_observed_png(
+    path: &Path,
+    expected_hash: Option<[u8; 32]>,
+    raster: &RgbImage,
+) -> Result<(), ProjectError> {
     use image::ImageEncoder;
     let expected = usize::try_from(raster.width)
         .ok()
@@ -211,8 +229,17 @@ pub fn write_new_png(path: &Path, raster: &RgbImage) -> Result<(), ProjectError>
         .parent()
         .filter(|p| !p.as_os_str().is_empty())
         .unwrap_or_else(|| Path::new("."));
+    if crate::png_export::png_hash(path)? != expected_hash {
+        return Err(ProjectError::Conflict(path.into()));
+    }
     let mut staged =
         tempfile::NamedTempFile::new_in(parent).map_err(|e| ProjectError::io(path, e))?;
+    if expected_hash.is_some() {
+        staged
+            .as_file()
+            .set_permissions(fs_permissions(path)?)
+            .map_err(|e| ProjectError::io(path, e))?;
+    }
     image::codecs::png::PngEncoder::new(&mut staged)
         .write_image(
             &raster.pixels,
@@ -228,7 +255,15 @@ pub fn write_new_png(path: &Path, raster: &RgbImage) -> Result<(), ProjectError>
         .as_file()
         .sync_all()
         .map_err(|e| ProjectError::io(path, e))?;
-    staged.persist_noclobber(path).map_err(|e| {
+    if crate::png_export::png_hash(path)? != expected_hash {
+        return Err(ProjectError::Conflict(path.into()));
+    }
+    let result = if expected_hash.is_some() {
+        staged.persist(path)
+    } else {
+        staged.persist_noclobber(path)
+    };
+    result.map_err(|e| {
         if e.error.kind() == std::io::ErrorKind::AlreadyExists {
             ProjectError::Conflict(path.into())
         } else {
@@ -236,6 +271,12 @@ pub fn write_new_png(path: &Path, raster: &RgbImage) -> Result<(), ProjectError>
         }
     })?;
     Ok(())
+}
+
+fn fs_permissions(path: &Path) -> Result<std::fs::Permissions, ProjectError> {
+    std::fs::metadata(path)
+        .map(|m| m.permissions())
+        .map_err(|e| ProjectError::io(path, e))
 }
 
 /// Same two-bit grayscale format as master Image::write_image.

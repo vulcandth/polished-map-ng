@@ -12,6 +12,7 @@ mod graphics;
 mod map_palette_plan;
 mod palette_document;
 mod palettes;
+mod png_export;
 mod print_fonts;
 mod roof;
 mod tile_palettes;
@@ -28,13 +29,16 @@ pub use document::{
     MapDocument, OpenOptions, ProjectError, SaveTarget, prepare_save_as, read_bounded,
 };
 pub use events::{EventDocument, EventScript, EventScriptError, event_script_path};
-pub use graphics::{load_master_graphics, load_master_map_graphics, write_new_png, write_png};
+pub use graphics::{
+    load_master_graphics, load_master_map_graphics, write_new_png, write_png, write_png_export,
+};
 pub use map_palette_plan::MapPalettePlan;
 pub use palette_document::{PaletteDocument, prepare_palette_export};
 pub use palettes::{
     MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,
     roof_palette_path,
 };
+pub use png_export::{PngExportTarget, prepare_png_export};
 pub use print_fonts::{PrintFontFace, PrintFonts};
 pub use roof::{RoofDocument, list_roofs};
 pub use tileset::{MasterTileMode, MasterTilesetDocument, TilesetOutput};

@@ -47,6 +47,10 @@ Its differential harness compiles those functions unchanged, plus the original
 warp-label placement and event metadata, in ignored scratch storage. The harness
 uses extracted event/priority/warp images solely as test inputs; it does not
 distribute additional assets or native fonts.
+The Print Options layout and preference/cancellation semantics adapt
+`Print_Options_Dialog` in `option-dialogs.cpp` and `Main_Window::print_cb`.
+Worker dispatch, observed PNG replacement and clipboard handoff are Rust
+implementations; native frame/font/clipboard fidelity remains under verification.
 Priority zigzag artwork by Rangi originates in Polished Map++ commit
 `d090450b5649b5cfcc7645884d44f6414c3f0a96`, ported to master with the toolbar
 icon in `0a627967a3ff6e68ca062aef69184065e16a4efe`. The three source PNG patterns

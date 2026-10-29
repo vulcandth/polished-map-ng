@@ -174,9 +174,13 @@ The compiled-original comparison covers 256 compositions; real-project tests
 exercise 96 combinations with roof/palette/event inputs. A shared Skrifa/Vello
 CPU font adapter now supports installed bold fonts and caller-provided faces;
 the CLI exposes the five Print flags, bases, grid colors and explicit fonts.
-Print Options dialog/persistence, clipboard image transfer and PNG overwrite
-workflow remain required before claiming the Print command complete. Native
-font metrics and display-driver alpha differences are separate parity gates.
+Print Options now has the five independent controls, source sizing formulas,
+platform button order, shortcuts, Cancel-retained preferences and success text.
+GUI Copy and Export share the CPU renderer and snapshot unsaved document data
+before worker dispatch. PNG replacement uses an observed target with conflict
+checks; image copy queues an egui clipboard command. Native clipboard delivery,
+chooser/overwrite behavior, font metrics and display-driver alpha differences
+remain parity gates, along with native dialog frame/theme matching.
 The menu/toolbar port is in progress within master parity, before plusplus.
 Twenty-six reviewed image files now provide toolbar icons, tile/roof clipboard
 icons and collision-quadrant labels, including dark variants, source-sized controls and integer disabled-color

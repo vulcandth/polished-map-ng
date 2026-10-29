@@ -34,6 +34,7 @@ struct Preferences {
     drag_and_drop: bool,
     overworld_map_size: u16,
     show_priority: bool,
+    print_options: polished_map_core::PrintOptions,
     resize_anchor: ResizeAnchor,
     recent_maps: recent_maps::RecentMaps,
 }
@@ -69,6 +70,7 @@ impl Preferences {
             drag_and_drop: editor.drag_and_drop,
             overworld_map_size: editor.overworld_map_size,
             show_priority: editor.show_priority,
+            print_options: editor.print_options,
             resize_anchor: editor.resize_anchor,
             recent_maps: editor.recent_maps.clone(),
         }
@@ -96,6 +98,7 @@ impl Preferences {
         editor.drag_and_drop = self.drag_and_drop;
         editor.overworld_map_size = self.overworld_map_size;
         editor.show_priority = self.show_priority;
+        editor.print_options = self.print_options;
         editor.resize_anchor = self.resize_anchor;
         editor.recent_maps = self.recent_maps;
     }
@@ -192,6 +195,13 @@ mod tests {
         editor.allow_256 = true;
         editor.drag_and_drop = false;
         editor.overworld_map_size = 4096;
+        editor.print_options = polished_map_core::PrintOptions {
+            grid: true,
+            ids: true,
+            priority: true,
+            events: true,
+            warp_ids: true,
+        };
         editor.roof_palette_layout = RoofPaletteLayout::MornDayNiteCustom;
         editor.resize_anchor = ResizeAnchor::BottomRight;
         let palettes = editor
@@ -237,6 +247,7 @@ mod tests {
                 "drag_and_drop": false,
                 "overworld_map_size": 4096,
                 "show_priority": false,
+                "print_options": {"grid":true,"ids":true,"priority":true,"events":true,"warp_ids":true},
                 "resize_anchor": "bottom_right",
                 "recent_maps": [{"utf8": std::fs::canonicalize(dir.path().join("Map.2x1.blk")).unwrap()}],
             })
@@ -286,6 +297,10 @@ mod tests {
         assert!(editor.drag_and_drop);
         assert_eq!(editor.overworld_map_size, 1300);
         assert!(editor.show_priority);
+        assert_eq!(
+            editor.print_options,
+            polished_map_core::PrintOptions::default()
+        );
         assert_eq!(editor.palette_document().selected(), PaletteSet::Day);
         assert_eq!(editor.roof_palette_layout, RoofPaletteLayout::DayNite);
         assert_eq!(editor.resize_anchor, ResizeAnchor::Center);
@@ -326,6 +341,8 @@ mod tests {
             r#"{"version":1,"roof_layout":99}"#.into(),
             r#"{"version":1,"resize_anchor":"sideways"}"#.into(),
             r#"{"version":1,"new_feature":true}"#.into(),
+            r#"{"print_options":{"grid":"yes"}}"#.into(),
+            r#"{"print_options":{"future":true}}"#.into(),
             r#"{"overworld_map_size":0}"#.into(),
             r#"{"overworld_map_size":4097}"#.into(),
             r#"{"overworld_map_size":65536}"#.into(),

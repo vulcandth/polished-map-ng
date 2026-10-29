@@ -61,8 +61,12 @@ impl Editor {
                     self.save_roof();
                 }
                 ui.separator();
-                if action(ui, loaded && self.export.is_none(), "Print…") {
-                    self.export_png(&ctx);
+                if action(
+                    ui,
+                    loaded && self.print_worker.is_none() && self.print_request.is_none(),
+                    "Print…",
+                ) {
+                    self.prepare_print();
                 }
                 ui.separator();
                 if action(ui, true, "Exit") {

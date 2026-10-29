@@ -12,8 +12,12 @@ Implementation-specific exceptions will be recorded here with tests and rational
 - New PNG exports stage the full image and use an atomic no-clobber install.
   A destination created after the initial chooser/CLI check is preserved, with
   a conflict returned. Invalid RGB dimensions/data fail without leaving a
-  partial file. The GUI's original overwrite-confirmation workflow is still
-  pending; this change preserves its interim new-file-only behavior.
+  partial file. GUI Print also permits confirmed replacement of an observed
+  file, rechecking its SHA-256 before and after staging. A changed destination
+  produces a conflict instead of silently overwriting another writer's output.
+  Like other document saves, existing-file replacement retains a narrow
+  check/rename race; this is not an OS-level compare-and-swap transaction.
+  Destination hashing streams with a 256-MiB limit. The CLI remains new-file-only.
 
 - Undo after saving marks changed data dirty. Upstream's undo/redo callbacks do
   not update the modified flag, potentially allowing edits to be lost on close.

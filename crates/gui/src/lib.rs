@@ -23,6 +23,7 @@ mod palette_session;
 #[cfg(test)]
 mod palette_session_tests;
 mod preferences;
+mod printing;
 mod priority;
 mod recent_maps;
 mod roof_colors;
@@ -54,7 +55,7 @@ use polished_map_core::{Command, Graphics, Point, ResizeAnchor};
 use polished_map_project::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
     discover_map, list_tilesets, prepare_blockset_save_as, prepare_collision_save_as,
-    prepare_save_as, write_new_png,
+    prepare_save_as,
 };
 
 struct Loaded {
@@ -97,7 +98,11 @@ pub struct Editor {
     open_palette_warning: Option<String>,
     textures: Vec<egui::TextureHandle>,
     loading: Option<mpsc::Receiver<LoadResult>>,
-    export: Option<mpsc::Receiver<Result<(), String>>>,
+    print_worker: Option<mpsc::Receiver<Result<printing::PrintOutput, String>>>,
+    print_form: Option<printing::PrintForm>,
+    print_options: polished_map_core::PrintOptions,
+    print_request: Option<printing::PrintJob>,
+    print_success: Option<String>,
     open_form: Option<OpenForm>,
     resize_form: Option<ResizeForm>,
     overworld_form: Option<overworld::OverworldForm>,
@@ -172,7 +177,11 @@ impl Default for Editor {
             open_palette_warning: None,
             textures: Vec::new(),
             loading: None,
-            export: None,
+            print_worker: None,
+            print_form: None,
+            print_options: Default::default(),
+            print_request: None,
+            print_success: None,
             open_form: None,
             resize_form: None,
             overworld_form: None,
@@ -468,19 +477,7 @@ impl Editor {
                 }
             }
         }
-        if let Some(result) = self.export.as_ref().and_then(|rx| match rx.try_recv() {
-            Ok(r) => Some(r),
-            Err(mpsc::TryRecvError::Disconnected) => {
-                Some(Err("Export worker stopped unexpectedly".into()))
-            }
-            Err(_) => None,
-        }) {
-            self.export = None;
-            match result {
-                Ok(()) => self.status = "PNG exported".into(),
-                Err(e) => self.error = Some(e),
-            }
-        }
+        self.poll_print(ctx);
     }
 
     fn apply(&mut self, command: Command) {
@@ -683,37 +680,6 @@ impl Editor {
         }
     }
 
-    fn export_png(&mut self, ctx: &egui::Context) {
-        let Some(loaded) = &self.loaded else {
-            return;
-        };
-        let Some(path) = rfd::FileDialog::new()
-            .add_filter("PNG image", &["png"])
-            .set_file_name("map.png")
-            .save_file()
-        else {
-            return;
-        };
-        if path.exists() {
-            self.error = Some("Choose a new PNG output path.".into());
-            return;
-        }
-        let map = loaded.document.map().clone();
-        let graphics = loaded.graphics.clone();
-        let (tx, rx) = mpsc::channel();
-        let ctx = ctx.clone();
-        std::thread::spawn(move || {
-            let result = graphics
-                .render_map(&map)
-                .map_err(|e| e.to_string())
-                .and_then(|image| write_new_png(&path, &image).map_err(|e| e.to_string()));
-            let _ = tx.send(result);
-            ctx.request_repaint();
-        });
-        self.export = Some(rx);
-        self.status = "Exporting PNG…".into();
-    }
-
     fn dialogs(&mut self, ctx: &egui::Context) {
         if let Some(message) = self.error.clone() {
             egui::Modal::new(egui::Id::unique("error")).show(ctx, |ui| {
@@ -733,6 +699,10 @@ impl Editor {
                     self.open_palette_warning = None;
                 }
             });
+            return;
+        }
+        if self.print_form.is_some() || self.print_success.is_some() {
+            self.print_dialog(ctx);
             return;
         }
         if self.overworld_warning.is_some() || self.overworld_form.is_some() {
@@ -981,13 +951,15 @@ impl Editor {
         icons::separator(ui);
         if ui
             .add_enabled(
-                self.loaded.is_some() && self.export.is_none(),
+                self.loaded.is_some()
+                    && self.print_worker.is_none()
+                    && self.print_request.is_none(),
                 Button::new(Icon::Print, "Print…"),
             )
-            .on_hover_text("Print map to PNG")
+            .on_hover_text("Print (Ctrl+P)")
             .clicked()
         {
-            self.export_png(ui.ctx());
+            self.prepare_print();
         }
         icons::separator(ui);
         if let Some(loaded) = &mut self.loaded {
@@ -1440,13 +1412,24 @@ impl Editor {
         self.poll_workers(&ctx);
         self.poll_event_scripts();
         if ctx.input(|i| i.viewport().close_requested())
+            && (self.print_form.is_some()
+                || self.print_success.is_some()
+                || self.print_request.is_some()
+                || self.print_worker.is_some())
+        {
+            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+        } else if ctx.input(|i| i.viewport().close_requested())
             && self.is_modified()
             && !self.exit_approved
         {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             self.request_exit(&ctx);
         }
-        let blocked = self.open_form.is_some()
+        let blocked = self.print_form.is_some()
+            || self.print_success.is_some()
+            || self.print_worker.is_some()
+            || self.print_request.is_some()
+            || self.open_form.is_some()
             || self.overworld_form.is_some()
             || self.overworld_warning.is_some()
             || self.event_ui.change.is_some()
@@ -1471,6 +1454,14 @@ impl Editor {
         if !blocked && !ctx.egui_wants_keyboard_input() {
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F11)) {
                 fullscreen::toggle(&ctx);
+            }
+            if ctx.input_mut(|i| {
+                // egui's logical match ignores extra Shift/Alt modifiers.
+                // Command+Shift+P belongs to Show Priority, even when disabled.
+                i.modifiers.matches_exact(egui::Modifiers::COMMAND)
+                    && i.consume_key(egui::Modifiers::COMMAND, egui::Key::P)
+            }) {
+                self.prepare_print();
             }
             self.recent_shortcuts(&ctx);
             if ctx.input_mut(|i| {
@@ -1691,7 +1682,10 @@ impl eframe::App for Editor {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         self.show(ui);
         #[cfg(not(test))]
-        self.dispatch_event_script(ui.ctx(), polished_map_platform::ScriptOpenRequest::open);
+        {
+            self.dispatch_event_script(ui.ctx(), polished_map_platform::ScriptOpenRequest::open);
+            self.dispatch_print(ui.ctx(), printing::choose_export, printing::run);
+        }
         #[cfg(windows)]
         self.choose_palette_color(_frame);
     }

@@ -67,6 +67,22 @@ three ASCII digits/hex characters or one uppercase symbol, outline paths to
 4096 elements and ink masks to 128x64. Native text metrics/hinting and driver
 blending must be verified before claiming platform-exact Print output.
 
+GUI Print captures the current map, composed graphics, events, options and style
+in a queued job. A native adapter selects the PNG destination, then a worker
+renders/encodes or constructs the clipboard image. Completion returns through
+a channel; only the UI thread emits egui's image-copy command. Interaction
+tests inject picker/worker adapters without opening OS windows. The source's
+five flags persist independently of view flags, including on Cancel.
+
+`PngExportTarget` records a normalized path and streamed content hash. Preparation
+does not grant overwrite consent. The GUI relies on the native Save chooser's
+confirmation and additionally confirms an existing destination when appending
+`.png` changed the path. Encoding stages in the destination directory, rechecks
+the observed hash and installs the complete PNG. CLI new-file output retains
+atomic no-clobber semantics. Existing-file replacement has the same narrow
+check/rename race as other document writes. An egui CopyImage request confirms
+handoff, not successful OS clipboard ownership or delivery to another app.
+
 ## ADR 4: Fail safely without pretending to have upstream parity
 
 `Map::overworld_buffer_bytes` reports the WRAM requirement including master's

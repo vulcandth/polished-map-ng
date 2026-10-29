@@ -24,6 +24,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Recent maps | Empty; at most ten paths |
 | Overworld Map Size | 1300 bytes; accepted range 1–4096 |
 | Drag and Drop | On; internal block, tile, roof and palette transfers |
+| Print Grid, IDs, Priority, Events, Warp IDs | All off; independent of editor view flags |
 
 The three auto-load toggles affect subsequent opens, not the current document.
 Special palettes and roof colors are independent; turning either off skips
@@ -41,6 +42,9 @@ record and restore defaults, like other invalid preferences.
 Documents, unsaved colors, palette dirty state, undo history, clipboard contents,
 selection, scroll positions and open dialogs are not serialized. The selected
 palette set is saved, but the color bank starts from defaults at the next launch.
+Print options are retained even when Cancel or Escape dismisses the form, as in
+the source. Canceling the subsequent file chooser also retains those values.
+Print jobs, output images and success dialogs are transient and are not stored.
 egui's general widget-memory persistence is disabled. Native window placement,
 maximized state and fullscreen use eframe's separate built-in persistence,
 including its monitor-bound checks. Full Screen defaults off on a fresh launch.
@@ -84,8 +88,8 @@ or rename its `app.ron` before relaunching.
 ## Remaining parity and verification
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
-or modified. Native theme variants, transparency controls,
-and print preferences still need their complete menu/persistence work.
+or modified. Native theme variants and transparency controls still need their
+complete menu/persistence work.
 
 Tests inject an in-memory eframe Storage into the real app constructor and use
 its save callback. They cover restoration of all implemented settings, 270

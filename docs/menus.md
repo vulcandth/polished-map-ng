@@ -12,7 +12,7 @@ keyboard and headless counterparts where applicable.
 
 | Group | Present in this port | Remaining source items or differences |
 |---|---|---|
-| File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Print's complete options/overlays remain pending. Native close delivery still needs platform verification. |
+| File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Print's native fonts, clipboard delivery and chooser behavior remain verification gates. Native close delivery still needs platform verification. |
 | Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialogs and complete popup geometry remain pending. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The extra Edit Block entry is temporary access to the existing editor; upstream opens it through block interactions. Complete context-menu/gesture equivalence is pending. |
 | View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Full Screen | Theme submenu, Transparent. The existing Dark appearance checkbox remains a portable interim control; native theme/font matching remains incomplete. |
@@ -23,15 +23,16 @@ keyboard and headless counterparts where applicable.
 
 ## Geometry and interaction gates
 
-Print has a tested CPU composition API, but its command still needs the source
-options and output workflow. `Print_Options_Dialog::refresh` uses 10-point outer
+Print now connects its CPU compositor to the options, clipboard and PNG export
+workflow. `Print_Options_Dialog::refresh` uses 10-point outer
 margins, 22-point controls, 4-point checkbox gaps and 80-point buttons. The Show
 label width is `text_width("Show:", 4)`; each checkbox gets
-`text_width(label, 2) + 22`. Derive the client width from the final checkbox plus
+`text_width(label, 2) + 22`. The client width comes from the final checkbox plus
 the trailing margin, with a minimum of 288. The button row starts at y=48 and
 the client height is 80. Button order is Export/Copy/Cancel on Windows and
-Cancel/Copy/Export on Unix. Preserve Enter, command-C, Escape and initial Export
-focus, and center the fixed-size dialog in its parent.
+Cancel/Copy/Export on Unix. Enter, command-C, Escape and initial Export focus
+are implemented in a centered egui modal. Its heading/frame and font metrics
+remain different from the original native child window.
 
 Grid, IDs, Priority, Events and Warp IDs are independent controls, default off.
 The source copies their values into preferences even when the options dialog is
@@ -39,8 +40,12 @@ canceled. Warp IDs only affect output when Events is on; the checkbox itself
 stays enabled. Export opens `Print Screenshot` with `screenshot.png`, PNG filter
 and overwrite confirmation. Copy sends an image without writing a file. Both
 use native map dimensions regardless of zoom or current canvas visibility.
-Integrate the CPU font adapter, safe PNG save target and platform image clipboard
-before claiming this command complete. Native font metrics, clipboard payloads,
+File/Print, the toolbar and command-P share this workflow. Command-Shift-P remains
+Show Priority. Rendering captures live unsaved map, graphics and event data,
+then runs off the UI thread. The image clipboard request is emitted on the UI
+thread after completion. Export retains any existing filename suffix, adding
+`.png` only when absent, and confirms a newly suffixed existing destination.
+The save target is hashed and rechecked before installation. Native font metrics, clipboard payloads,
 file chooser behavior and dialog frame/DPI remain targeted platform checks.
 
 Full Screen follows the source View entry and F11 shortcut, including use before

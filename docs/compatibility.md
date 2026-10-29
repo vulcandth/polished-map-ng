@@ -1,5 +1,50 @@
 # Compatibility evidence
 
+## GUI Print options, image copy and PNG replacement
+
+The Print command now follows pinned master's `Print_Options_Dialog` and
+`Main_Window::print_cb`. File/Print, toolbar Print and command-P open the same
+form. Its five flags default off independently of view toggles; Cancel and Escape
+retain changes as the source does. Settings serialize those flags on shutdown.
+The content area follows the source's text-width formulas, 80-point height,
+10-point margins, 22-point control slots and Windows/Unix button order. Initial
+Export focus, Enter, command-C and Escape are implemented. An exact modifier
+check prevents Print from stealing command-Shift-P from Show Priority.
+
+Copy and Export capture current unsaved map, composed graphics, events, flags
+and style. A worker runs the shared font adapter/compositor; output ignores
+canvas zoom, scroll and view toggles. Export uses `Print Screenshot`, defaults
+to `screenshot.png`, and retains existing filename suffixes. Appending `.png`
+requires another confirmation if that changed destination already exists.
+Observed file hashes are checked before and after staging a complete PNG.
+Clipboard output is handed to egui on the UI thread, then the source success
+wording is shown. Print options, queued work and completion dialogs guard
+document interactions and native root-window closing.
+
+Five headless workflow tests cover both button orders and calculated geometry,
+independent flags, cancellation/reopening, all three invocation routes, keyboard
+actions, picker cancellation/errors, worker errors/disconnection, close guards,
+image-copy commands and actual PNG replacement. A captured output test edits
+map blocks, RGB8 palette colors and event coordinates without saving, verifies
+those captured values, then proves Copy and PNG use identical RGB data while
+preserving project files and map history. Four project PNG tests cover image
+validation, no-clobber creation, replacement, a 9-MiB existing destination,
+suffix rules, conflict preservation and cleanup. Preference tests include the
+five flags, old-record defaults and malformed nested-field preservation.
+
+The Windows/Unix form and clipboard-success snapshots were inspected. These
+remain egui modals; native child-window frames, font metrics/hinting, actual
+clipboard ownership/paste, chooser/overwrite behavior and display-driver alpha
+are still platform acceptance gates. No manual computer use was performed.
+
+Local formatting, warnings-as-errors Clippy, workspace tests and rustdoc pass.
+The full visual suite passes 113 tests with one existing ignored test. Only
+three new Print snapshots were added; no existing baselines changed.
+
+The preceding font/CLI commit's CI run
+[`40822639418`](https://github.com/vulcandth/polished-map-ng/actions/runs/40822639418)
+passed all eight jobs, including installed-font tests on all three OSes.
+
 ## Print fonts and autonomous PNG output
 
 `PrintFonts` now supplies bounded CPU masks for source Print font requests.
@@ -31,10 +76,10 @@ all overlays and installed Windows fonts was inspected locally. That is a
 layout/legibility check, not native FLTK pixel equivalence.
 
 New-file PNG output now stages encoding and installs with `persist_noclobber`.
-Both CLI and the current GUI export use it. Tests decode RGB pixels, preserve an
+Both CLI and GUI new-file exports use it. Tests decode RGB pixels, preserve an
 existing output, reject malformed/oversized images and check failure cleanup.
-The original Print Options UI, persistence, Copy and overwrite confirmation are
-still pending. Native font hinting/metrics, font substitution and platform alpha
+The follow-up Print Options UI, persistence, Copy and overwrite workflow are
+recorded above. Native font hinting/metrics, font substitution and platform alpha
 differences remain fidelity gates; this implementation does not close them.
 
 Local checks pass: workspace formatting, warnings-as-errors Clippy, tests and
@@ -245,7 +290,7 @@ inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pas
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex and block-ID tests pass; light/dark development snapshots inspected; native fonts/themes, persisted preferences and initial scroll positioning pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts and normal-size digit pixels tested; native fonts, export overlays, remaining gestures and native workflows pending |
-| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-one implemented settings plus recent history restore/save with malformed-record protection; palette auto-load, Monochrome, 256 Tiles, Tile Priority, Show Priority and Overworld Map Size tested. Legacy import, remaining preferences, native storage/placement, complete overlays and print/clipboard parity pending |
+| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-seven implemented settings plus recent history restore/save with malformed-record protection; Print flags/Copy/Export and internal Drag and Drop join the tested view, import and size options. Legacy import, remaining preferences, native storage/placement, complete overlays and native print/clipboard parity pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |
