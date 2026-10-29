@@ -446,7 +446,7 @@ fn resize_dialog_anchor_accept_and_cancel_use_shared_command() {
     .unwrap();
     harness.state_mut().loading = Some(rx);
     harness.run();
-    harness.get_by_label("Edit").click();
+    harness.get_by_label("Tools").click();
     harness.run();
     harness.get_by_label("Resize Map…").click();
     harness.run();
@@ -461,7 +461,7 @@ fn resize_dialog_anchor_accept_and_cancel_use_shared_command() {
     assert_eq!(doc.map().blocks(), [0, 0, 0, 0, 1, 2]);
     assert!(!doc.map().can_undo());
     assert!(doc.map().is_modified());
-    harness.get_by_label("Edit").click();
+    harness.get_by_label("Tools").click();
     harness.run();
     harness.get_by_label("Resize Map…").click();
     harness.run();

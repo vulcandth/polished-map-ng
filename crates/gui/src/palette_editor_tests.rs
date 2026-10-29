@@ -8,7 +8,7 @@ use polished_map_project::prepare_palette_export;
 use std::fs;
 
 fn open(h: &mut Harness<'_, Editor>) {
-    h.get_by_label("Edit").click();
+    h.get_by_label("Tools").click();
     h.run();
     h.get_by_label("Edit Current Palettes…").click();
     h.run();

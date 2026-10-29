@@ -545,7 +545,7 @@ impl Editor {
             }
         }
     }
-    pub(super) fn event_file_menu(&mut self, ui: &mut egui::Ui) {
+    pub(super) fn event_data_menu(&mut self, ui: &mut egui::Ui) {
         if ui
             .add_enabled(
                 self.loaded.is_some(),
@@ -587,23 +587,24 @@ impl Editor {
         }
         ui.separator();
     }
+    pub(super) fn set_event_mode(&mut self, mode: bool) {
+        self.event_ui.mode = mode;
+        self.event_ui.drag = None;
+        self.stroke.clear();
+    }
     pub(super) fn event_shortcuts(&mut self, ctx: &egui::Context) {
         let shift = egui::Modifiers::COMMAND | egui::Modifiers::SHIFT;
         if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Tab)) {
             // egui prepares focus traversal before widgets consume input.
             // Cancel it when Tab is used as the original mode shortcut.
             ctx.memory_mut(|m| m.move_focus(egui::FocusDirection::None));
-            self.event_ui.mode = !self.event_ui.mode;
-            self.event_ui.drag = None;
-            self.stroke.clear();
+            self.set_event_mode(!self.event_ui.mode);
         }
         if ctx.input_mut(|i| i.consume_key(shift, egui::Key::E)) {
-            self.event_ui.mode = true;
-            self.stroke.clear();
+            self.set_event_mode(true);
         }
         if ctx.input_mut(|i| i.consume_key(shift, egui::Key::B)) {
-            self.event_ui.mode = false;
-            self.event_ui.drag = None;
+            self.set_event_mode(false);
         }
         if ctx.input_mut(|i| i.consume_key(shift, egui::Key::V)) {
             self.event_ui.show = !self.event_ui.show;

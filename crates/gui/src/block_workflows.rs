@@ -115,7 +115,7 @@ impl Editor {
         }
     }
 
-    fn prepare_block_count(&mut self) {
+    pub(super) fn prepare_block_count(&mut self) {
         self.block_count_form = self
             .loaded
             .as_ref()
@@ -176,19 +176,16 @@ impl Editor {
             ("Copy Block", available, 0),
             ("Paste Block", copied, 1),
             ("Swap Block", copied, 2),
-            ("Resize Blockset…", available, 3),
         ] {
             if ui.add_enabled(enabled, egui::Button::new(label)).clicked() {
                 ui.close();
                 match action {
                     0 => self.copy_block(),
                     1 => self.paste_block(ui.ctx()),
-                    2 => self.swap_copied_block(ui.ctx()),
-                    _ => self.prepare_block_count(),
+                    _ => self.swap_copied_block(ui.ctx()),
                 }
             }
         }
-        ui.separator();
     }
 
     pub(super) fn block_count_dialog(&mut self, ctx: &egui::Context) {

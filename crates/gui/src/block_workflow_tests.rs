@@ -64,7 +64,12 @@ fn assert_blocks(h: &Harness<'_, Editor>, ids: &[u8]) {
 }
 
 fn menu(h: &mut Harness<'_, Editor>, label: &str) {
-    h.get_by_label("Edit").click();
+    h.get_by_label(if label == "Resize Blockset…" {
+        "Tools"
+    } else {
+        "Edit"
+    })
+    .click();
     h.run();
     h.get_by_label(label).click();
     h.run();

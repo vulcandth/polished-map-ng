@@ -55,7 +55,7 @@ pub(super) fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
     (dir, h)
 }
 fn open(h: &mut Harness<'_, Editor>) {
-    h.get_by_label("Edit").click();
+    h.get_by_label("Tools").click();
     h.run();
     h.get_by_label("Edit Roof…").click();
     h.run();

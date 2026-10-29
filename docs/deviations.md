@@ -251,3 +251,10 @@ proportional font; exact native font metrics, dropdown frame/arrow styling and
 native popup navigation still need parity work. The selector and View menu use
 one palette operation and preserve the original separate palette-edit dirty
 state and map history.
+
+The main menus now use upstream's eight top-level groups and the source locations
+for implemented commands. The temporary Edit Block entry and Dark appearance
+checkbox remain; their corresponding context interactions and native Theme
+submenu are not yet fully ported. Help still presents inline attribution.
+Missing source commands, popup image-column/row geometry, shortcut captions,
+mnemonics and persistent preferences are listed explicitly in `docs/menus.md`.

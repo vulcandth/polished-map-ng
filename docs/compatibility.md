@@ -24,6 +24,19 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- Main-menu grouping now follows the pinned source's File/Data/Edit/View/Mode/
+  Tools/Options/Help order. Event/palette data operations moved to Data; resize
+  and editor dialogs moved to Tools; modes and auto-load moved to Mode/Options.
+  Undo/Redo menu entries share map history. Mode radio choices and Switch Mode
+  use the same transition as shortcuts, clearing active gesture state. Headless
+  tests verify the 21-point bar bounds, ordered groups/commands, unavailable-data
+  guards, menu undo/redo and mode changes without map edits. Existing editor,
+  save and script workflows now exercise their final menu routes. See
+  `menus.md` for the explicit remaining command and geometry inventory.
+  All eight open-menu snapshots were inspected. The 45 changed existing
+  baselines differ only in the menu-bar band (y=0..20); toolbar, editor body,
+  dialog and status pixels remain unchanged.
+
 - The toolbar's six-set palette selector follows `Main_Window::initialize`,
   `palettes_cb` and `Toolbar::draw`: 24-point label, 22-point dropdown centered
   in the row, widths measured from "Palettes:"/"Custom" plus six-point text

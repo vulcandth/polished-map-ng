@@ -263,7 +263,7 @@ fn event_editor_requests_preserve_saved_script_and_dispatch_errors() {
     }
     assert_eq!(h.state().status, "Event script opener completed");
     assert!(h.state().error.is_none());
-    h.get_by_label("File").click();
+    h.get_by_label("Data").click();
     h.run();
     h.get_by_label("View Event Script").click();
     h.run();

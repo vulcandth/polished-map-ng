@@ -67,7 +67,7 @@ pub(super) fn fixture(
 }
 
 fn open(h: &mut Harness<'_, Editor>) {
-    h.get_by_label("Edit").click();
+    h.get_by_label("Tools").click();
     h.run();
     h.get_by_label("Edit Tileset…").click();
     h.run();

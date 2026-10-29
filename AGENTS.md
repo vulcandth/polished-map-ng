@@ -19,6 +19,8 @@ exist from day one; a partial slice is not a completed parity milestone.
   in `docs/deviations.md`. Never silently convert formats or rewrite unrelated ASM.
 - Initial themes are upstream default light and dark. Other themes are deferred.
 - Do not claim pokecrystal/Polished Crystal parity from synthetic tests alone.
+- Specify UTF-8 explicitly in text tooling (including Python on Windows); use
+  byte-preserving operations for fixtures and assets with exact-byte contracts.
 
 ## Architecture and Rust
 

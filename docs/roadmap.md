@@ -110,6 +110,11 @@ The toolbar palette selector now shares the View menu's six sets and palette
 operation, with source-derived text widths, padding and control heights. Tests
 cover live recoloring, menu synchronization, existing palette edits, map history,
 keyboard activation/cancellation, modal guards and use before loading a map.
+The eight source top-level menu groups are restored, including Data, Mode and
+Options. Existing commands use their source groups; Undo/Redo menu actions now
+share map history, and mode choices share shortcut transitions. The remaining
+commands, preferences, popup geometry and native behavior are tracked in
+`docs/menus.md`; restored grouping does not complete menu parity.
 Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
 source harness verifies 8,192 decimal/hex placement and zoomed text cases, including
 the original overflow/truncation differences. Source-derived outline colors,
