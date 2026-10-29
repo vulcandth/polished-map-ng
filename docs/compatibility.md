@@ -1,5 +1,40 @@
 # Compatibility evidence
 
+## Native clipboard/browser adapter wiring
+
+Inspection of the resolved production dependency graph and egui-winit 0.37's
+`clipboard.rs`/`open_url_in_browser` found that eframe's disabled default features
+also disabled native clipboard and URL output. Image copies from Print and the
+tile/roof editors were queued by headless tests but could not reach arboard;
+Help/About links likewise had no browser dispatcher. Text editing used only an
+in-process fallback clipboard. The direct arboard dependency used by explicit
+image-paste buttons did not enable the separate egui-winit feature.
+
+Explicit eframe `clipboard` and `links` features now enable these adapters.
+`tools/native_features.py` failed on the previous production graph, then passed
+for Windows x64, Linux x64 and both macOS architectures after the change. It
+excludes dev dependencies, checks actual downstream features/packages, and runs
+on every native CI host. These are dependency-graph checks, not cross-compilation
+or proof of successful OS delivery. Existing tests cover queued image/URL
+commands and incoming clipboard events; native ownership/paste, Linux compositor
+compatibility and browser launch remain unverified. No computer use was performed.
+
+The preceding popup CI run
+[`40833843444`](https://github.com/vulcandth/polished-map-ng/actions/runs/40833843444)
+passed seven jobs, including all three platform Rust checks, MSRV, dependency,
+reference and real-project checks. Visuals reported three snapshot differences.
+Downloaded Linux File/Options/roof-palette images were inspected and compared
+with the committed Windows images: all channel differences were at most 2/255;
+only two/one/one pixels respectively exceeded 1/255, at underlying toolbar text
+edges. Those three snapshots now use the existing narrowly scoped Linux 3.0
+perceptual threshold. No baseline images, geometry assertions or other platform
+thresholds changed.
+
+Local formatting, warnings-as-errors Clippy, workspace tests, documentation and
+the full visual suite pass (126 visual tests passed, one existing ignored test).
+All four production target-graph checks and the dependency audit pass. The
+visual suite ran without updating snapshots.
+
 ## Measured popup menus and platform shortcut captions
 
 The eight current main groups plus recent files, palettes and roof palettes now

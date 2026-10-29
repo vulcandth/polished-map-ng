@@ -405,8 +405,10 @@ mod tests {
             h.run();
             // Inspected CI 40801569788: these three popups differ only by
             // <=2/255 RGB at glyph/rounded-control edges (six pixels >1/255
-            // in total). Keep the default threshold for every other menu.
-            let options = if matches!(menu, "Data" | "View" | "Mode") {
+            // in total). CI 40833843444 adds File/Options: max 2/255,
+            // three pixels >1/255 at underlying toolbar text edges.
+            // Keep the default threshold for every other menu.
+            let options = if matches!(menu, "File" | "Data" | "View" | "Mode" | "Options") {
                 egui_kittest::SnapshotOptions::default()
                     .threshold(egui_kittest::OsThreshold::<f32>::default().linux(3.0))
             } else {

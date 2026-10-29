@@ -20,7 +20,8 @@ png = "0.18"
 sha2 = "0.10"
 tempfile = "3"
 clap = { version = "4", features = ["derive"] }
-eframe = { version = "0.37", default-features = false, features = ["default_fonts", "wgpu", "x11", "wayland", "accesskit", "persistence"] }
+# Native output adapters are opt-in when default features are disabled.
+eframe = { version = "0.37", default-features = false, features = ["default_fonts", "wgpu", "x11", "wayland", "accesskit", "persistence", "clipboard", "links"] }
 egui_kittest = { version = "0.37", features = ["eframe"] }
 rfd = "0.17"
 arboard = { version = "3.7", default-features = false, features = ["image-data", "wayland-data-control"] }

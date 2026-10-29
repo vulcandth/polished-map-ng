@@ -385,7 +385,13 @@ mod tests {
             h.run();
             h.remove_cursor();
             h.run();
-            h.snapshot("roof-palette-layouts");
+            // Inspected CI 40833843444: max 2/255 channel difference,
+            // only one pixel >1/255, on the underlying Palettes label.
+            h.snapshot_options(
+                "roof-palette-layouts",
+                &egui_kittest::SnapshotOptions::default()
+                    .threshold(egui_kittest::OsThreshold::<f32>::default().linux(3.0)),
+            );
             h.key_press(egui::Key::Escape);
             h.run();
         }

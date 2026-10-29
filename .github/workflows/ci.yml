@@ -20,6 +20,8 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev pkg-config fonts-liberation
       - name: Install pinned toolchain
         run: rustup show
+      - name: Verify production native adapters
+        run: python tools/native_features.py
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked

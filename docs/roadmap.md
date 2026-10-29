@@ -178,8 +178,11 @@ Print Options now has the five independent controls, source sizing formulas,
 platform button order, shortcuts, Cancel-retained preferences and success text.
 GUI Copy and Export share the CPU renderer and snapshot unsaved document data
 before worker dispatch. PNG replacement uses an observed target with conflict
-checks; image copy queues an egui clipboard command. Native clipboard delivery,
-chooser/overwrite behavior, font metrics and display-driver alpha differences
+checks; image copy queues an egui clipboard command. The production eframe
+features now explicitly enable native clipboard and browser output adapters;
+a CI graph check excludes dev dependencies and verifies the downstream wiring.
+Native clipboard delivery, chooser/overwrite behavior, font metrics and
+display-driver alpha differences
 remain parity gates, along with native dialog frame/theme matching.
 The menu/toolbar port is in progress within master parity, before plusplus.
 Twenty-six reviewed image files now provide toolbar icons, tile/roof clipboard

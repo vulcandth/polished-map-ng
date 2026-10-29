@@ -40,7 +40,8 @@ exist from day one; a partial slice is not a completed parity milestone.
 
 Run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --locked
 -- -D warnings`, `cargo test --workspace --locked`, and `cargo doc --workspace
---no-deps --locked`. CI also checks MSRV and `cargo deny check`.
+--no-deps --locked`. CI also checks MSRV, `cargo deny check`, and the production
+native-adapter graph with `python tools/native_features.py` (no dev dependencies).
 
 Test behavior, malformed inputs, independent golden vectors, reference outputs,
 and real project integration. Test geometry mathematically and input through

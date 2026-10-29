@@ -1,5 +1,25 @@
 # Dependency review
 
+eframe 0.37 now explicitly enables `clipboard` and `links` alongside the existing
+selected features. Disabling defaults without these features left egui's image
+copy and URL output commands without native adapters; a direct GUI dependency on
+arboard did not enable egui-winit's optional arboard integration. The production
+graph now connects eframe -> egui-winit -> arboard (image copy/paste),
+smithay-clipboard (Linux/Wayland text clipboard), and webbrowser (URL dispatch).
+`tools/native_features.py` checks this graph without dev dependencies on each CI
+host; it can also inspect a supplied target without cross-compiling.
+
+The lockfile adds 33 packages and removes/upgrades none of the existing package
+versions. The new roots are webbrowser 1.2.4 (MIT OR Apache-2.0) and
+smithay-clipboard 0.7.3 (MIT). Their transitive additions include URL/IDNA/ICU,
+Smithay client toolkit 0.20, calloop 0.14 and Wayland protocol crates. The new
+packages declare MIT, Apache-2.0 or Unicode-3.0 terms already allowed by our
+policy; declared Rust minima are at most 1.88, below our 1.95 MSRV. `cargo deny`
+passes with no new license or advisory exception. Preserve their notices/source
+in release dependency bundles. This graph check is not native clipboard/browser
+runtime verification; clipboard ownership and compositor support remain native
+acceptance gates.
+
 Print now directly uses the already-locked Skrifa 0.44 and Vello CPU 0.2
 (MIT OR Apache-2.0), plus Fontique 0.12 (MIT OR Apache-2.0, MSRV 1.88) for
 native font enumeration. Vello enables only std and its u8 raster pipeline;
