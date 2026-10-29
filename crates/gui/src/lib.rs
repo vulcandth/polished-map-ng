@@ -939,6 +939,7 @@ impl Editor {
             }
         }
         icons::separator(ui);
+        self.palette_set_toolbar(ui);
         if ui
             .add(Button::new(Icon::Palettes, "Edit current palettes"))
             .on_hover_text("Edit Current Palettes… (Ctrl/Cmd+Shift+L)")

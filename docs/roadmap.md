@@ -103,9 +103,13 @@ Twenty-five reviewed image files now provide toolbar icons, tile/roof clipboard
 icons and collision-quadrant labels, including dark variants, source-sized controls and integer disabled-color
 conversion. CC BY 3.0 Fugue attribution, LGPL adaptation notices, source/pixel
 hashes and reproducible asset verification are included. Continue the per-asset
-audit in `docs/assets.md`, full toolbar membership/palette selector, popup-menu
+audit in `docs/assets.md`, full toolbar membership, popup-menu
 structure, and native frame/theme matching. Open/Undo/Redo still use text;
 unreviewed or game-derived imagery remains excluded pending resolution.
+The toolbar palette selector now shares the View menu's six sets and palette
+operation, with source-derived text widths, padding and control heights. Tests
+cover live recoloring, menu synchronization, existing palette edits, map history,
+keyboard activation/cancellation, modal guards and use before loading a map.
 Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
 source harness verifies 8,192 decimal/hex placement and zoomed text cases, including
 the original overflow/truncation differences. Source-derived outline colors,

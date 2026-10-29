@@ -16,6 +16,7 @@ const NAMES: [&str; 9] = [
     "MONOCHROME",
 ];
 const HUES: [u8; 4] = [0, 2, 1, 3];
+const SET_NAMES: [&str; 6] = ["Morn", "Day", "Night", "Dark", "Indoor", "Custom"];
 
 pub(super) struct PaletteForm {
     pub(super) draft: PaletteDocument,
@@ -285,12 +286,58 @@ impl Editor {
             }
         }
     }
+    pub(super) fn palette_set_toolbar(&mut self, ui: &mut egui::Ui) {
+        // Main_Window::initialize and utils.cpp::text_width(s, 3): six
+        // points of text padding, 24 extra for the dropdown, then four-space.
+        // Toolbar::draw centers the 22-point dropdown in its 24-point row.
+        let font = egui::FontId::proportional(13.0);
+        let text_width = |text: &str| {
+            ui.painter()
+                .layout_no_wrap(text.into(), font.clone(), ui.visuals().text_color())
+                .size()
+                .x
+        };
+        let label_width = text_width("Palettes:") + 6.0;
+        let dropdown_width = text_width("Custom") + 6.0 + 24.0;
+        let (label, response) =
+            ui.allocate_exact_size(Vec2::new(label_width, 24.0), Sense::hover());
+        response.widget_info(|| {
+            egui::WidgetInfo::labeled(egui::Role::Label, ui.is_enabled(), "Palettes:")
+        });
+        ui.painter().text(
+            Pos2::new(label.left() + 3.0, label.center().y),
+            egui::Align2::LEFT_CENTER,
+            "Palettes:",
+            font.clone(),
+            ui.visuals().text_color(),
+        );
+        let selected = self.palette_document().selected();
+        let name = SET_NAMES[selected as usize];
+        let response = ui
+            .scope(|ui| {
+                ui.style_mut().override_font_id = Some(font.clone());
+                ui.spacing_mut().interact_size.y = 22.0;
+                ui.spacing_mut().button_padding = Vec2::splat(3.0);
+                ui.spacing_mut().icon_width = 16.0;
+                ui.spacing_mut().item_spacing.x = 3.0;
+                egui::ComboBox::from_id_salt("map-palette-set")
+                    .width(dropdown_width)
+                    .selected_text(egui::RichText::new(name).font(font))
+                    .show_ui(ui, |ui| self.palette_set_menu(ui))
+                    .response
+            })
+            .inner;
+        response.widget_info(|| {
+            let mut info =
+                egui::WidgetInfo::labeled(egui::Role::ComboBox, ui.is_enabled(), "Map palette set");
+            info.current_text_value = Some(name.into());
+            info
+        });
+        ui.add_space(4.0);
+    }
     pub(super) fn palette_set_menu(&mut self, ui: &mut egui::Ui) {
         let selected = self.palette_document().selected();
-        for (set, name) in PaletteSet::ALL
-            .into_iter()
-            .zip(["Morn", "Day", "Night", "Dark", "Indoor", "Custom"])
-        {
+        for (set, name) in PaletteSet::ALL.into_iter().zip(SET_NAMES) {
             if ui.selectable_label(selected == set, name).clicked() {
                 let mut draft = self.palette_document().clone();
                 draft.select(set);

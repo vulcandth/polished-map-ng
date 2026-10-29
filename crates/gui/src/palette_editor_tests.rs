@@ -1,5 +1,8 @@
 use super::*;
-use egui_kittest::{Harness, kittest::Queryable};
+use egui_kittest::{
+    Harness,
+    kittest::{NodeT, Queryable},
+};
 use polished_map_core::{ColorSlot, PaletteSet};
 use polished_map_project::prepare_palette_export;
 use std::fs;
@@ -51,6 +54,150 @@ fn channel_controls_and_set_selection_refresh_colors_without_map_edits() {
     );
     assert!(h.state().palette_document().is_modified());
     assert!(!h.state().is_modified());
+}
+
+#[test]
+fn toolbar_palette_sets_share_menu_state_and_preserve_edits_and_history() {
+    let (_dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    // Preserve an existing palette edit and a map undo/redo boundary while
+    // switching all six sets. Palette selection itself must create neither.
+    open(&mut h);
+    h.get_by_label("GRAY color 3").click();
+    h.run();
+    hex(&mut h, "123456");
+    h.get_by_label("OK").click();
+    h.run();
+    h.state_mut().apply(Command::Paint {
+        points: vec![Point { x: 0, y: 0 }],
+        block: 1,
+    });
+    h.state_mut()
+        .loaded
+        .as_mut()
+        .unwrap()
+        .document
+        .map_mut()
+        .undo();
+    h.run();
+    let palette_hash = h.state().palette_document().content_hash();
+    let palette_colors = h.state().palette_document().bank().clone();
+    let map_modified = h
+        .state()
+        .loaded
+        .as_ref()
+        .unwrap()
+        .document
+        .map()
+        .is_modified();
+    let initial_bounds = h.get_by_label("Map palette set").rect();
+    assert_eq!(initial_bounds.height(), 22.0);
+    assert_eq!(
+        (initial_bounds.top(), initial_bounds.bottom()),
+        (23.0, 45.0)
+    );
+    let label = h.get_by_label("Palettes:").rect();
+    assert_eq!(label.height(), 24.0);
+    assert_eq!(label.right(), initial_bounds.left());
+    assert_eq!(
+        h.get_by_label("Edit current palettes").rect().left() - initial_bounds.right(),
+        4.0
+    );
+    for (set, name) in PaletteSet::ALL
+        .into_iter()
+        .zip(["Morn", "Day", "Night", "Dark", "Indoor", "Custom"])
+    {
+        h.get_by_label("Map palette set").click();
+        h.run();
+        h.get_by_label(name).click();
+        h.run();
+        assert_eq!(h.state().palette_document().selected(), set);
+        assert_eq!(
+            h.get_by_label("Map palette set")
+                .accesskit_node()
+                .value()
+                .as_deref(),
+            Some(name)
+        );
+        assert_eq!(h.get_by_label("Map palette set").rect(), initial_bounds);
+        assert_eq!(h.state().palette_document().bank(), &palette_colors);
+        assert!(h.state().palette_document().is_modified());
+        let loaded = h.state().loaded.as_ref().unwrap();
+        assert_eq!(loaded.document.map().is_modified(), map_modified);
+        assert!(!loaded.document.map().can_undo());
+        assert!(loaded.document.map().can_redo());
+        assert!(!loaded.tileset.as_ref().unwrap().tileset().is_modified());
+        assert_eq!(
+            loaded.graphics.render_block(0).unwrap().pixels[..3],
+            h.state().palette_document().bank().colors(set)[0][1],
+        );
+        h.get_by_label("View").click();
+        h.run();
+        h.get_by_label("Palettes").click();
+        h.run();
+        assert_eq!(
+            h.get_by_label(name).accesskit_node().toggled(),
+            Some(egui::accesskit::Toggled::True)
+        );
+        h.get_by_label("Day").click();
+        h.run();
+        assert_eq!(
+            h.get_by_label("Map palette set")
+                .accesskit_node()
+                .value()
+                .as_deref(),
+            Some("Day")
+        );
+    }
+    h.get_by_label("Map palette set").focus();
+    h.key_press(egui::Key::Space);
+    h.run();
+    assert!(h.query_by_label("Custom").is_some());
+    #[cfg(feature = "visual-tests")]
+    {
+        h.remove_cursor();
+        h.run();
+        h.snapshot("toolbar-palette-list-light");
+        h.ctx.set_theme(egui::Theme::Dark);
+        h.state_mut().dark = true;
+        h.run();
+        h.snapshot("toolbar-palette-list-dark");
+        h.ctx.set_theme(egui::Theme::Light);
+        h.state_mut().dark = false;
+        h.run();
+    }
+    h.key_press(egui::Key::Escape);
+    h.run();
+    assert_eq!(h.state().palette_document().selected(), PaletteSet::Day);
+    open(&mut h);
+    assert!(
+        h.get_by_label("Map palette set")
+            .accesskit_node()
+            .is_disabled()
+    );
+    h.get_by_label("Map palette set").click();
+    h.run();
+    assert!(h.query_by_label("Custom").is_none());
+    h.get_by_label("Cancel").click();
+    h.run();
+    h.get_by_label("Redo").click();
+    h.run();
+    assert!(h.state().is_modified());
+    assert_eq!(h.state().palette_document().content_hash(), palette_hash);
+}
+
+#[test]
+fn toolbar_palette_selector_works_without_a_map() {
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .build_eframe(|cc| Editor::new(cc));
+    h.get_by_label("Map palette set").click();
+    h.run();
+    h.get_by_label("Night").click();
+    h.run();
+    assert_eq!(h.state().palette_document().selected(), PaletteSet::Nite);
+    assert!(!h.state().palette_document().is_modified());
+    assert!(!h.state().is_modified());
+    assert!(h.state().loaded.is_none());
 }
 
 #[test]

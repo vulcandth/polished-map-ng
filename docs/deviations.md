@@ -244,3 +244,10 @@ the existing portable grid palette. The remaining toolbar items and popup-menu
 layout are not yet complete; Open/Undo/Redo retain text controls. Unreviewed
 artwork is not replaced with silently redesigned copies or imported under an
 assumed repository-wide grant. See `docs/assets.md` for the per-asset audit.
+
+The toolbar palette label and dropdown use upstream text-width/padding formulas
+and 24/22-point heights. Their text is measured with the bundled 13-point
+proportional font; exact native font metrics, dropdown frame/arrow styling and
+native popup navigation still need parity work. The selector and View menu use
+one palette operation and preserve the original separate palette-edit dirty
+state and map history.

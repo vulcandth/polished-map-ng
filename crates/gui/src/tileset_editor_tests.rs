@@ -164,7 +164,8 @@ fn tileset_draft_cancel_accept_preview_save_and_conflict_preserve_map_history() 
 fn pixel_gestures_palette_priority_and_delete_match_shared_commands() {
     let (_dir, mut h) = fixture(false, false);
     open(&mut h);
-    h.get_by_role(egui::Role::ComboBox).click();
+    h.get_by_role_and_label(egui::Role::ComboBox, "Palette:")
+        .click();
     h.run();
     h.key_press(egui::Key::Escape);
     h.run();

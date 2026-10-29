@@ -24,6 +24,27 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- The toolbar's six-set palette selector follows `Main_Window::initialize`,
+  `palettes_cb` and `Toolbar::draw`: 24-point label, 22-point dropdown centered
+  in the row, widths measured from "Palettes:"/"Custom" plus six-point text
+  padding (and 24 points for the dropdown), followed by four-point spacing.
+  It shares the View menu's palette-switching operation. Interaction tests check
+  all six sets, live block recoloring, two-way menu synchronization, stable
+  control bounds, accessibility names/values, Space/Escape, modal guards and
+  selection before loading a map. Existing RGB edits, palette dirty state and
+  map undo/redo history survive selection. Native font/frame and popup input
+  equivalence remain unverified.
+  Light/dark open-dropdown snapshots were inspected; all 43 changed existing
+  baselines differ only in the toolbar band (y=21..46). The tileset-gesture test
+  identifies its own palette dropdown by name now that the toolbar has one too.
+
+- Linux CI exposed a host-dependent button order in the new disabled-collision
+  snapshot. Its artifact differed meaningfully only in OK/Cancel text; all other
+  per-channel differences were at most one level. That test now explicitly uses
+  Windows button order on every host, as do the other fixed-order baselines.
+  No snapshot tolerance was loosened; Windows and Unix order retain separate
+  coverage in the existing block-editor workflow test.
+
 - Eight collision-quadrant images now replace the procedural placeholders in
   the block editor, bringing the reviewed icon inventory to 25 files. Exact XPM
   and RGBA hashes and LGPL provenance are recorded per asset. Named and binary
