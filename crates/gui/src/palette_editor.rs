@@ -1,4 +1,5 @@
 //! master palette-window.cpp and Main_Window palette callbacks. LGPL-3.0-only.
+//! Swatch transfers and borders follow Color_Button in master map-buttons.cpp.
 //! Text-measured offsets preserve the original 20px colors and 21px grid pitch.
 use super::*;
 use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
@@ -24,6 +25,7 @@ pub(super) struct PaletteForm {
     selected: ColorSlot,
     hex: String,
     clipboard: Option<(ColorSlot, [u8; 3])>,
+    drag: Option<ColorSlot>,
     paste_handled: bool,
     swap_held: bool,
     pub(super) windows_buttons: bool,
@@ -165,6 +167,7 @@ impl Editor {
             selected,
             hex: String::new(),
             clipboard: None,
+            drag: None,
             paste_handled: false,
             swap_held: false,
             windows_buttons: cfg!(target_os = "windows"),
@@ -352,6 +355,9 @@ impl Editor {
         let Some(mut form) = self.palette_form.take() else {
             return;
         };
+        if !self.drag_and_drop {
+            form.drag = None;
+        }
         if let Err(e) = form.shortcuts(ctx) {
             self.error = Some(e);
         }
@@ -440,6 +446,7 @@ impl Editor {
                     let response = ui.put(
                         r,
                         egui::Button::new("")
+                            .sense(Sense::click_and_drag())
                             .fill(Color32::from_rgb(rgb[0], rgb[1], rgb[2]))
                             .corner_radius(0.0),
                     );
@@ -450,24 +457,46 @@ impl Editor {
                             format!("{} color {}", NAMES[usize::from(palette)], col + 1),
                         )
                     });
-                    if slot == form.selected {
-                        ui.painter().rect_stroke(
-                            r.shrink(1.0),
-                            0.0,
-                            (1.0, Color32::BLACK),
-                            egui::StrokeKind::Inside,
-                        );
-                        ui.painter().rect_stroke(
-                            r.shrink(2.0),
-                            0.0,
-                            (1.0, Color32::WHITE),
-                            egui::StrokeKind::Inside,
-                        );
+                    if slot == form.selected
+                        || form
+                            .drag
+                            .is_some_and(|from| from == slot || response.contains_pointer())
+                    {
+                        super::block_editor::selection_border(ui, r);
                     }
                     if response.clicked() {
                         form.select(slot);
                     }
+                    if self.drag_and_drop && response.drag_started_by(egui::PointerButton::Primary)
+                    {
+                        form.drag = Some(slot);
+                    }
+                    if response.contains_pointer()
+                        && ui.input(|i| i.pointer.button_released(egui::PointerButton::Primary))
+                        && let Some(from) = form.drag
+                    {
+                        if from != slot {
+                            // Color_Button copies the live RGB8 value, unlike the
+                            // keyboard clipboard's intentionally quantized RGB5.
+                            command = Some(if ui.input(|i| i.modifiers.ctrl) {
+                                PaletteCommand::SetRgb {
+                                    slot,
+                                    rgb: form
+                                        .draft
+                                        .bank()
+                                        .color(from)
+                                        .expect("validated drag source"),
+                                }
+                            } else {
+                                PaletteCommand::Swap { a: from, b: slot }
+                            });
+                        }
+                        form.select(slot);
+                    }
                 }
+            }
+            if ui.input(|i| !i.pointer.primary_down()) {
+                form.drag = None;
             }
             let rgb = form.draft.bank().color(form.selected).unwrap();
             for (channel, name) in ["R", "G", "B"].into_iter().enumerate() {

@@ -402,6 +402,9 @@ impl Editor {
         let Some(mut form) = self.tileset_form.take() else {
             return;
         };
+        if !self.drag_and_drop {
+            form.drag = None;
+        }
         if let Err(e) = form.shortcuts(ctx).and_then(|()| form.update_texture(ctx)) {
             self.error = Some(e);
         }
@@ -550,18 +553,25 @@ impl Editor {
                         polished_map_core::PriorityPattern::Large,
                     );
                 }
-                if form.selected == id {
+                if form.selected == id
+                    || form
+                        .drag
+                        .is_some_and(|from| from == id || enabled && response.contains_pointer())
+                {
                     super::block_editor::selection_border(ui, cell);
                 }
                 if response.clicked() {
                     form.selected = id;
                 }
-                if response.drag_started() {
+                if self.drag_and_drop
+                    && enabled
+                    && response.drag_started_by(egui::PointerButton::Primary)
+                {
                     form.drag = Some(id);
                 }
                 if enabled
                     && response.contains_pointer()
-                    && ui.input(|i| i.pointer.any_released())
+                    && ui.input(|i| i.pointer.button_released(egui::PointerButton::Primary))
                     && let Some(from) = form.drag
                 {
                     command = Some(if ui.input(|i| i.modifiers.ctrl) {

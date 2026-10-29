@@ -23,6 +23,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Show Priority | On; control enabled only while Tile Priority is on |
 | Recent maps | Empty; at most ten paths |
 | Overworld Map Size | 1300 bytes; accepted range 1–4096 |
+| Drag and Drop | On; internal block, tile, roof and palette transfers |
 
 The three auto-load toggles affect subsequent opens, not the current document.
 Special palettes and roof colors are independent; turning either off skips
@@ -78,7 +79,7 @@ or rename its `app.ron` before relaunching.
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
 or modified. Native theme variants, transparency/fullscreen controls,
-drag-and-drop and print preferences still need their complete menu/persistence work.
+and print preferences still need their complete menu/persistence work.
 
 Tests inject an in-memory eframe Storage into the real app constructor and use
 its save callback. They cover restoration of all implemented settings, 270

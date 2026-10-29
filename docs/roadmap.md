@@ -40,7 +40,7 @@ The compiled original overlay function matches 120 complete-bank cases; manual
 and automatic imports also agree on the pinned real project. Native dialog
 fidelity and native restart verification remain outstanding.
 
-Twenty-one implemented view/mode/palette/auto-load/resize/buffer settings now restore and
+Twenty-two implemented view/mode/palette/auto-load/resize/buffer/drag settings now restore and
 save through eframe with a versioned record and stable app ID. The two palette
 auto-load menu options affect subsequent imports independently. Headless restart
 and malformed-record tests pass; legacy preference import, remaining options,
@@ -59,6 +59,14 @@ headless map summaries expose it as `overworld_buffer_bytes`. Tests cover exact
 capacity boundaries, maximum dimensions, successful/failed/clean saves, Save As,
 modal guards and four named maps from the pinned real project. Native warning
 artwork/frame and actual preference storage remain unverified.
+
+Drag and Drop now has a persistent, default-on Options toggle for sidebar,
+tileset, roof and palette transfers. Palette swatches swap on drag and copy exact
+RGB8 values on Ctrl-drag; keyboard Copy retains upstream's RGB5 quantization.
+Disabling transfers preserves selection, clipboard commands, map painting,
+pixel edits and event movement. Source/target borders use the original geometry.
+External map-file dropping is a separate upstream feature and remains pending,
+along with native drag delivery and cross-platform verification.
 
 Tile Priority now controls priority editing and palette output independently of
 attribute bits. The GUI retains it across maps and Close, and priority palette

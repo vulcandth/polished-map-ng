@@ -232,6 +232,13 @@ impl Editor {
                 );
                 ui.checkbox(&mut self.auto_roof_colors, "Auto-Load Roof Colors");
                 ui.separator();
+                if ui
+                    .checkbox(&mut self.drag_and_drop, "Drag and Drop")
+                    .changed()
+                {
+                    self.sidebar_drag = None;
+                }
+                ui.separator();
                 if action(ui, true, "Overworld Map Size…") {
                     self.prepare_overworld();
                 }

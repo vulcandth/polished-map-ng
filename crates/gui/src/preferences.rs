@@ -31,6 +31,7 @@ struct Preferences {
     allow_priority: bool,
     monochrome: bool,
     allow_256: bool,
+    drag_and_drop: bool,
     overworld_map_size: u16,
     show_priority: bool,
     resize_anchor: ResizeAnchor,
@@ -65,6 +66,7 @@ impl Preferences {
             allow_priority: editor.allow_priority,
             monochrome: editor.monochrome,
             allow_256: editor.allow_256,
+            drag_and_drop: editor.drag_and_drop,
             overworld_map_size: editor.overworld_map_size,
             show_priority: editor.show_priority,
             resize_anchor: editor.resize_anchor,
@@ -91,6 +93,7 @@ impl Preferences {
         editor.allow_priority = self.allow_priority;
         editor.monochrome = self.monochrome;
         editor.allow_256 = self.allow_256;
+        editor.drag_and_drop = self.drag_and_drop;
         editor.overworld_map_size = self.overworld_map_size;
         editor.show_priority = self.show_priority;
         editor.resize_anchor = self.resize_anchor;
@@ -187,6 +190,7 @@ mod tests {
         editor.show_priority = false;
         editor.monochrome = true;
         editor.allow_256 = true;
+        editor.drag_and_drop = false;
         editor.overworld_map_size = 4096;
         editor.roof_palette_layout = RoofPaletteLayout::MornDayNiteCustom;
         editor.resize_anchor = ResizeAnchor::BottomRight;
@@ -230,6 +234,7 @@ mod tests {
                 "auto_events": false, "auto_special_palettes": false, "auto_roof_colors": false,
                 "allow_priority": true,
                 "monochrome": true, "allow_256": true,
+                "drag_and_drop": false,
                 "overworld_map_size": 4096,
                 "show_priority": false,
                 "resize_anchor": "bottom_right",
@@ -278,6 +283,7 @@ mod tests {
         assert!(editor.auto_special_palettes && editor.auto_roof_colors);
         assert!(!editor.allow_priority);
         assert!(!editor.monochrome && !editor.allow_256);
+        assert!(editor.drag_and_drop);
         assert_eq!(editor.overworld_map_size, 1300);
         assert!(editor.show_priority);
         assert_eq!(editor.palette_document().selected(), PaletteSet::Day);

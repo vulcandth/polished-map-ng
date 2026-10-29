@@ -527,6 +527,8 @@ fn event_options_geometry_fields_and_actual_canvas_drag_match_source() {
         .entries()[0];
     assert_eq!(event.definition().prefix.as_deref(), Some("SPRITE_BLUE,"));
     assert_eq!(event.definition().x, 3);
+    // Internal asset transfers can be disabled without disabling event movement.
+    h.state_mut().drag_and_drop = false;
     let from = h.get_by_label("Event 0: person_event").rect().center();
     let to = Pos2::new(264.0, 167.0); // event cell (1,1), independent of block coordinates
     h.hover_at(from);

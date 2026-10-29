@@ -1,6 +1,8 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
 mod block_editor;
 mod block_workflows;
+#[cfg(test)]
+mod drag_tests;
 #[cfg(all(test, feature = "visual-tests"))]
 mod event_label_tests;
 #[cfg(test)]
@@ -112,6 +114,7 @@ pub struct Editor {
     monochrome: bool,
     allow_256: bool,
     pending_palette_load: Option<PathBuf>,
+    drag_and_drop: bool,
     pending_roof_colors: Option<PathBuf>,
     roof_color_success: Option<String>,
     roof_palette_layout: polished_map_project::RoofPaletteLayout,
@@ -185,6 +188,7 @@ impl Default for Editor {
             unloaded_palettes: polished_map_project::PaletteDocument::default(),
             monochrome: false,
             allow_256: false,
+            drag_and_drop: true,
             pending_palette_load: None,
             pending_roof_colors: None,
             roof_color_success: None,
@@ -1102,7 +1106,10 @@ impl Editor {
                     && (id as usize) < self.textures.len())
                 .then_some(id as u8)
             };
-            if response.drag_started_by(egui::PointerButton::Primary) {
+            if !self.drag_and_drop {
+                self.sidebar_drag = None;
+            }
+            if self.drag_and_drop && response.drag_started_by(egui::PointerButton::Primary) {
                 self.sidebar_drag = ui.input(|i| i.pointer.press_origin()).and_then(hit);
             }
             let drop = if response.drag_stopped_by(egui::PointerButton::Primary) {

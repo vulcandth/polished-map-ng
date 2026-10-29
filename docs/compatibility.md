@@ -2,6 +2,37 @@
 
 Status: initial implementation in progress. Neither upstream parity gate passed.
 
+## Internal drag-and-drop option and palette transfers
+
+The pinned master's `Main_Window` preference/menu callbacks and
+`Metatile_Button`, `Deep_Tile_Button` and `Color_Button` in `src/map-buttons.cpp`
+define a default-on internal-transfer option. The port applies it to the block
+sidebar and both tile editors and adds palette drag-to-swap/Ctrl-drag-to-copy.
+Color copying preserves live RGB8 channels, independently of the original
+keyboard clipboard's RGB5 quantization. Swatches now use the source's three-ring
+black/white/black selection border; tile and palette sources/destinations show
+that border during a drag.
+
+`drag_tests` exercises enabled/disabled transfers, exact colors, outside/same-slot
+releases, draft cancellation, acceptance and ordinary selection/edit/clipboard
+commands with transfers disabled. The event workflow also moves an event with
+the option disabled. Preferences tests cover the default and restoration. Visual
+tests assert source/target border pixels for palette, base tiles and roof tiles;
+the existing selection-border oracle additionally covers 20-pixel swatches at
+1x and 2x. These are headless egui checks, not native OS drag verification.
+External file dropping (`Workspace`/`DnD_Receiver` and
+`Main_Window::drag_and_drop_cb`) is independent of this option in upstream and
+remains unimplemented.
+
+The three new drag-feedback snapshots and seven changed baselines were reviewed.
+Four palette-form changes are confined to the selected 20x20 swatch, two menu
+changes to the new option and shifted bottom rows, and the border atlas gains
+one palette case and the canvas height needed to contain it. Formatting,
+workspace Clippy/tests/docs and visual-feature Clippy pass locally. The final
+visual suite passes 105 tests with one independent-oracle test ignored by default.
+
+## Other master parity evidence
+
 Overworld Map Size follows `Overworld_Map_Size_Dialog` and
 `Main_Window::save_map`: default 1300, range 1–4096, measured 380-point form,
 platform button order and a post-write warning using the padded map area.

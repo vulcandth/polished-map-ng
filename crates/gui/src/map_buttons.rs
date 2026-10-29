@@ -82,21 +82,23 @@ mod tests {
                 }
             }
         }
-        // Event half-cells and unzoomed tile/chip editors use the same rings.
+        // Event half-cells, tile/chip editors and palette swatches share the rings.
         cases.extend([
             (16, false, false, true, false),
             (24, false, false, true, false),
             (32, true, false, true, false),
             (64, false, false, true, false),
+            (20, false, false, true, false),
         ]);
+        let extent = Vec2::new(340.0, 20.0 + cases.len().div_ceil(4) as f32 * 80.0);
         for scale in [1, 2] {
             let painted_cases = cases.clone();
             let mut h = egui_kittest::Harness::builder()
-                .with_size(Vec2::new(340.0, 420.0))
+                .with_size(extent)
                 .with_pixels_per_point(scale as f32)
                 .build_ui(move |ui| {
                     ui.painter().rect_filled(
-                        Rect::from_min_size(Pos2::ZERO, Vec2::new(340.0, 420.0)),
+                        Rect::from_min_size(Pos2::ZERO, extent),
                         0.0,
                         Color32::WHITE,
                     );
