@@ -24,6 +24,27 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- Zoom now follows `Main_Window::update_zoom/update_layout`: double offsets on
+  zoom-in, integer-halved offsets on zoom-out, and reset the sidebar to row zero.
+  Toolbar/menu/command-plus/command-equals tests cover both axes, fractional and
+  odd offsets, modal suppression, explicit reset precedence, empty views and
+  unchanged document bytes/history. The new layout is calculated after controls
+  so a click cannot apply a new offset against old content geometry. Scrollbar
+  spacing reserves exactly 16 points, removing egui's extra four-point gap.
+  Far-edge tests retain the source's blank space after zoom-out and verify that
+  the scroll range contracts when returning toward the map. This follows
+  [FLTK 1.4.5 Fl_Scroll](https://github.com/fltk/fltk/blob/release-1.4.5/src/Fl_Scroll.cxx)
+  (unclamped `scroll_to` and child-derived position) and
+  [Fl_Slider::scrollvalue](https://github.com/fltk/fltk/blob/release-1.4.5/src/Fl_Slider.cxx)
+  (range includes position plus viewport size). These are source-derived and
+  headless egui tests, not a native FLTK interaction differential; native wheel,
+  initial positioning, resize and middle-button panning coverage remain pending.
+  Three zoom snapshots (scrolled normal, enlarged and far-edge space) were
+  rendered and inspected. All 39 changed existing baselines differ only within
+  sidebar/canvas scrollbar bands; menu, toolbar, dialog and status pixels remain
+  unchanged. Representative light/dark, ruler, clipped-guide and modal views
+  were also inspected.
+
 - `map_buttons` ports bottom/right grid lines, the grid-reserved outer row/column,
   and opaque black/white/black or black/white/white/black selection rings from
   `map-buttons.cpp`. The shared renderer is used by the map, sidebar, event

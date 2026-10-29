@@ -95,6 +95,16 @@ Map/sidebar grid edges, hover/selection rings and sidebar drag feedback now
 follow `map-buttons.cpp`, sharing the ring renderer with event and editor cursors.
 Rendered pixel tests cover both map zooms, event/tile/chip sizes and 1×/2× scale;
 native DPI/drag dispatch and complete native themes still need verification.
+Zoom now scales map offsets with source integer rounding, resets the sidebar,
+and preserves far-edge blank space until scrolling back. Headless controls and
+edge tests pass; initial positioning and native pan/scroll checks remain pending.
+Next, port the main menu and toolbar layout and icons within master parity,
+before starting plusplus. Audit each
+icon's provenance and license first, including the separately credited Yusuke
+Kamiyamane assets; retain required notices and record cleared assets in
+`docs/assets.md`. Match source dimensions, spacing, dark variants and disabled
+states with geometry/pixel tests and inspected snapshots. Any asset whose
+redistribution rights remain unclear stays excluded and is recorded as a gap.
 Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
 source harness verifies 8,192 decimal/hex placement and zoomed text cases, including
 the original overflow/truncation differences. Source-derived outline colors,

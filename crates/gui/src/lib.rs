@@ -23,6 +23,8 @@ mod tileset_editor;
 #[cfg(test)]
 mod tileset_workflow_tests;
 mod tileset_workflows;
+#[cfg(test)]
+mod zoom_tests;
 use block_editor::BlockForm;
 
 #[cfg(test)]
@@ -106,6 +108,10 @@ pub struct Editor {
     reset_sidebar_scroll: bool,
     resize_anchor: ResizeAnchor,
     reset_canvas_scroll: bool,
+    canvas_zoom: bool,
+    canvas_scroll: Vec2,
+    #[cfg(test)]
+    sidebar_scroll: f32,
     error: Option<String>,
     selected: u8,
     stroke: Vec<Point>,
@@ -158,6 +164,10 @@ impl Default for Editor {
             reset_sidebar_scroll: false,
             resize_anchor: ResizeAnchor::default(),
             reset_canvas_scroll: false,
+            canvas_zoom: false,
+            canvas_scroll: Vec2::ZERO,
+            #[cfg(test)]
+            sidebar_scroll: 0.0,
             error: None,
             selected: 0,
             stroke: Vec::new(),
@@ -186,6 +196,8 @@ impl Editor {
             s.spacing.item_spacing = Vec2::new(4.0, 2.0);
             s.spacing.button_padding = Vec2::new(4.0, 2.0);
             s.spacing.scroll.bar_width = 16.0;
+            // update_layout reserves exactly Fl::scrollbar_size(), without a gap.
+            s.spacing.scroll.bar_inner_margin = 0.0;
             s.spacing.scroll.floating = false;
             s.text_styles
                 .insert(egui::TextStyle::Body, egui::FontId::proportional(13.0));
@@ -899,7 +911,7 @@ impl Editor {
             scroll = scroll.scroll_offset(Vec2::ZERO);
             self.reset_sidebar_scroll = false;
         }
-        scroll.show(ui, |ui| {
+        let output = scroll.show(ui, |ui| {
             let rows = self.textures.len().div_ceil(4);
             let (rect, response) = ui.allocate_exact_size(
                 Vec2::new(block_size * 4.0, block_size * rows as f32),
@@ -990,6 +1002,12 @@ impl Editor {
                 }
             }
         });
+        #[cfg(test)]
+        {
+            self.sidebar_scroll = output.state.clamped_offset().y;
+        }
+        #[cfg(not(test))]
+        let _ = output;
     }
 
     fn canvas(&mut self, ui: &mut egui::Ui, layout: &geometry::Layout) {
@@ -1004,6 +1022,8 @@ impl Editor {
             self.event_ui.drag = None;
         }
         let Some(loaded) = &self.loaded else {
+            self.canvas_zoom = self.zoom;
+            self.canvas_scroll = Vec2::ZERO;
             ui.centered_and_justified(|ui| {
                 ui.label("Open a map to edit blocks.");
             });
@@ -1020,16 +1040,35 @@ impl Editor {
                 drag: egui::scroll_area::DragScroll::Never,
                 ..Default::default()
             });
+        let mut retained_scroll = self.canvas_scroll;
+        if self.reset_canvas_scroll || self.canvas_zoom != self.zoom {
+            // egui starts physics against the previous frame's bounds. A source
+            // zoom/reset is immediate, even when it exceeds those old bounds.
+            ui.spacing_mut().scroll.kinetic.rubber_band = false;
+            ui.spacing_mut().scroll.kinetic.decay_time = 0.0;
+        }
         if self.reset_canvas_scroll {
+            retained_scroll = Vec2::ZERO;
             scroll = scroll.scroll_offset(Vec2::ZERO);
             self.reset_canvas_scroll = false;
+        } else if self.canvas_zoom != self.zoom {
+            retained_scroll = Vec2::new(
+                geometry::zoom_scroll(self.canvas_scroll.x, self.zoom),
+                geometry::zoom_scroll(self.canvas_scroll.y, self.zoom),
+            );
+            scroll = scroll.scroll_offset(retained_scroll);
         }
         let viewport_origin = ui.max_rect().min;
-        scroll.show(ui, |ui| {
+        let output = scroll.show_viewport(ui, |ui, viewport| {
             let extent = Vec2::new(
                 (f32::from(map.width()) + 6.0) * size,
                 (f32::from(map.height()) + 6.0) * size,
-            );
+            )
+            // FLTK 1.4.5 Fl_Slider::scrollvalue extends the range to include
+            // pos + page size. Zooming out can therefore leave blank space at
+            // the far edge. Retain only the last committed offset, not rubber
+            // band overscroll, and let the range contract as the user returns.
+            .max(retained_scroll + viewport.size());
             let (rect, response) = ui.allocate_exact_size(extent, Sense::click_and_drag());
             self.ruler_scroll = viewport_origin - rect.min;
             let clip = ui.clip_rect();
@@ -1186,6 +1225,8 @@ impl Editor {
                 }
             }
         });
+        self.canvas_zoom = self.zoom;
+        self.canvas_scroll = output.state.clamped_offset();
         if let Some(command) = command {
             self.apply(command);
         }
@@ -1225,6 +1266,18 @@ impl Editor {
             || self.pending_open.is_some()
             || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            if ctx.input_mut(|i| {
+                i.consume_key(
+                    egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+                    egui::Key::Plus,
+                ) || i.consume_key(
+                    egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
+                    egui::Key::Equals,
+                ) || i.consume_key(egui::Modifiers::COMMAND, egui::Key::Equals)
+                    || i.consume_key(egui::Modifiers::COMMAND, egui::Key::Plus)
+            }) {
+                self.zoom = !self.zoom;
+            }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::G)) {
                 self.grid = !self.grid;
             }
@@ -1293,13 +1346,6 @@ impl Editor {
             }
         }
         let bounds = ui.max_rect();
-        let layout = geometry::Layout::new(
-            bounds.width(),
-            bounds.height(),
-            self.zoom,
-            self.rulers,
-            16.0,
-        );
         ui.painter()
             .rect_filled(bounds, 0.0, ui.visuals().panel_fill);
         ui.add_enabled_ui(!blocked, |ui| {
@@ -1495,6 +1541,20 @@ impl Editor {
             ui.scope_builder(egui::UiBuilder::new().max_rect(toolbar), |ui| {
                 ui.horizontal(|ui| self.toolbar(ui));
             });
+            // Controls can change zoom/rulers during this frame. Size content
+            // before applying the scaled offset, so the old extent cannot clamp it.
+            let layout = geometry::Layout::new(
+                bounds.width(),
+                bounds.height(),
+                self.zoom,
+                self.rulers,
+                16.0,
+            );
+            if self.canvas_zoom != self.zoom {
+                // update_layout repositions sidebar children at its origin;
+                // FLTK derives a zero scroll position from those child bounds.
+                self.reset_sidebar_scroll = true;
+            }
             let rect = |r: geometry::Rect| {
                 Rect::from_min_size(
                     bounds.min + Vec2::new(r.x, r.y),

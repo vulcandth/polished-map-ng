@@ -101,6 +101,22 @@ pub fn snap_to_pixel(point: f32, pixels_per_point: f32) -> f32 {
     (point * pixels_per_point).round() / pixels_per_point
 }
 
+/// Main_Window::update_zoom scales nonnegative integer scroll positions.
+/// Quantize egui's fractional scrolling at the transition to retain integer
+/// division when zooming out. Invalid/transient negative offsets start at zero.
+pub fn zoom_scroll(offset: f32, zoom: bool) -> f32 {
+    let offset = if offset.is_finite() {
+        offset.max(0.0).floor()
+    } else {
+        0.0
+    };
+    if zoom {
+        offset * 2.0
+    } else {
+        (offset / 2.0).floor()
+    }
+}
+
 /// master Map::block_under, Block::right_half/bottom_half and
 /// Main_Window::update_event_cursor. Coordinates are relative to the map origin.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -154,6 +170,22 @@ impl EventCursor {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn zoom_scroll_matches_integer_source_vectors() {
+        for (offset, enlarged, reduced) in [
+            (0.0, 0.0, 0.0),
+            (1.0, 2.0, 0.0),
+            (31.0, 62.0, 15.0),
+            (32.0, 64.0, 16.0),
+            (37.5, 74.0, 18.0),
+            (115.0, 230.0, 57.0),
+            (-0.25, 0.0, 0.0),
+            (f32::NAN, 0.0, 0.0),
+        ] {
+            assert_eq!(zoom_scroll(offset, true), enlarged);
+            assert_eq!(zoom_scroll(offset, false), reduced);
+        }
+    }
     #[test]
     fn event_cursor_halves_margin_quirks_and_screen_geometry() {
         for size in [32.0, 64.0] {
