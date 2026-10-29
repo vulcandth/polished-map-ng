@@ -31,6 +31,11 @@ the three About tests also pass after isolating platform metrics before initial
 layout. The Help-menu baseline changed and three About snapshots were added;
 other existing baselines are unchanged.
 
+The first About CI run exposed a Unix-only `derivable_impls` warning for a
+boolean platform default. About now stores its actual 12/13-point font size,
+preserving behavior on every host without suppressing the lint. The targeted
+visual checks require the same snapshots after this representation change.
+
 The preceding Help CI run
 [`40826594651`](https://github.com/vulcandth/polished-map-ng/actions/runs/40826594651)
 passed all eight jobs, including the new original-C++ help comparison.

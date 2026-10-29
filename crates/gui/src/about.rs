@@ -53,7 +53,7 @@ impl Layout {
 }
 
 pub(super) struct AboutDialog {
-    windows_fonts: bool,
+    font_size: f32,
     #[cfg(test)]
     bounds: Option<Rect>,
 }
@@ -61,7 +61,8 @@ pub(super) struct AboutDialog {
 impl Default for AboutDialog {
     fn default() -> Self {
         Self {
-            windows_fonts: cfg!(windows),
+            // themes.h uses 12 on Windows and 13 elsewhere.
+            font_size: if cfg!(windows) { 12.0 } else { 13.0 },
             #[cfg(test)]
             bounds: None,
         }
@@ -74,8 +75,7 @@ impl AboutDialog {
         egui::Modal::new(egui::Id::unique("about")).show(ctx, |ui| {
             ui.heading(TITLE);
             let text = ui.visuals().text_color();
-            // themes.h uses 12 on Windows and 13 elsewhere, with heading +4.
-            let font_size = if self.windows_fonts { 12.0 } else { 13.0 };
+            let font_size = self.font_size;
             let heading_font = egui::FontId::proportional(font_size + 4.0);
             let body_font = egui::FontId::proportional(font_size);
             let heading = ui
@@ -180,16 +180,16 @@ mod tests {
     fn about_contains_source_identity_and_asset_attribution_with_measured_layout() {
         #[cfg(feature = "visual-tests")]
         let mut snapshots = egui_kittest::SnapshotResults::new();
-        for (windows_fonts, dark, _name) in [
-            (true, false, "about-light"),
-            (false, false, "about-unix"),
-            (true, true, "about-dark"),
+        for (font_size, dark, _name) in [
+            (12.0, false, "about-light"),
+            (13.0, false, "about-unix"),
+            (12.0, true, "about-dark"),
         ] {
             let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
             // Select platform metrics before the first layout pass; a native
             // platform's initial size must not leak into another platform's image.
             h.state_mut().about = Some(AboutDialog {
-                windows_fonts,
+                font_size,
                 ..Default::default()
             });
             h.state_mut().dark = dark;
