@@ -8,3 +8,5 @@
 *.blk binary
 *.ablk binary
 *.png binary
+*.rgba binary
+*.xpm text eol=lf

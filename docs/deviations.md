@@ -233,3 +233,13 @@ Greybird light (85,85,85) and Dark (38,38,38) inactive colors on every OS; this
 does not reproduce Windows' default Blue theme or the remaining native themes.
 Sidebar drag feedback follows source/target/selected state, while the existing
 egui drag gesture remains in-process rather than the source's native FLTK DND.
+
+The icon port currently includes 17 reviewed image files (14 commands plus three
+dark variants). Source-colored pixels, 24-point toolbar/22-point clipboard bounds
+and disabled-color arithmetic are retained. Button selection/hover/focus frames
+still use egui styling; full native toolbar themes remain pending. Disabled icon
+colors use upstream Greybird/Dark backgrounds on all platforms, consistently with
+the existing portable grid palette. The remaining toolbar items and popup-menu
+layout are not yet complete; Open/Undo/Redo retain text controls. Unreviewed
+artwork is not replaced with silently redesigned copies or imported under an
+assumed repository-wide grant. See `docs/assets.md` for the per-asset audit.

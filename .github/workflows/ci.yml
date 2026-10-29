@@ -35,6 +35,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - run: python3 tools/icon_assets.py
       - run: cargo install cargo-deny --locked
       - run: cargo deny check
   reference:

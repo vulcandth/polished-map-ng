@@ -7,6 +7,7 @@ mod event_label_tests;
 mod event_workflow_tests;
 mod event_workflows;
 pub mod geometry;
+mod icons;
 mod map_buttons;
 mod map_labels;
 mod palette_editor;
@@ -856,16 +857,47 @@ impl Editor {
     }
 
     fn toolbar(&mut self, ui: &mut egui::Ui) {
+        use icons::{Button, Icon};
+        ui.spacing_mut().item_spacing.x = 0.0;
+        if ui
+            .add(Button::new(Icon::New, "New"))
+            .on_hover_text("New… (Ctrl/Cmd+N)")
+            .clicked()
+        {
+            self.choose_new();
+        }
         if ui.button("Open…").clicked() {
             self.choose_open();
         }
         if ui
-            .add_enabled(self.loaded.is_some(), egui::Button::new("Save"))
+            .add_enabled(
+                self.loaded.as_ref().is_some_and(|l| l.events.is_some()),
+                Button::new(Icon::Reload, "Reload events"),
+            )
+            .on_hover_text("Reload Event Script (Ctrl/Cmd+R)")
+            .clicked()
+        {
+            self.request_event_change(event_workflows::EventChange::Reload);
+        }
+        if ui
+            .add_enabled(self.loaded.is_some(), Button::new(Icon::Save, "Save"))
+            .on_hover_text("Save (Ctrl/Cmd+S)")
             .clicked()
         {
             self.save();
         }
-        ui.separator();
+        icons::separator(ui);
+        if ui
+            .add_enabled(
+                self.loaded.is_some() && self.export.is_none(),
+                Button::new(Icon::Print, "Print…"),
+            )
+            .on_hover_text("Print map to PNG")
+            .clicked()
+        {
+            self.export_png(ui.ctx());
+        }
+        icons::separator(ui);
         if let Some(loaded) = &mut self.loaded {
             if ui
                 .add_enabled(loaded.document.map().can_undo(), egui::Button::new("Undo"))
@@ -880,21 +912,61 @@ impl Editor {
                 loaded.document.map_mut().redo();
             }
         }
-        ui.separator();
-        ui.toggle_value(&mut self.grid, "Grid");
-        ui.toggle_value(&mut self.zoom, "Zoom");
-        ui.toggle_value(&mut self.ids, "IDs")
-            .on_hover_text("Block IDs (Ctrl/Cmd+I)");
-        ui.toggle_value(&mut self.hex, "Hex")
-            .on_hover_text("Hexadecimal (Ctrl/Cmd+Shift+4)");
+        icons::separator(ui);
+        for (icon, label, help, value) in [
+            (Icon::Grid, "Grid", "Grid (Ctrl/Cmd+G)", &mut self.grid),
+            (
+                Icon::Rulers,
+                "Rulers",
+                "Rulers (Ctrl/Cmd+Shift+R)",
+                &mut self.rulers,
+            ),
+            (Icon::Zoom, "Zoom", "Zoom (Ctrl/Cmd+=)", &mut self.zoom),
+            (Icon::Ids, "IDs", "Block IDs (Ctrl/Cmd+I)", &mut self.ids),
+            (
+                Icon::Hex,
+                "Hex",
+                "Hexadecimal (Ctrl/Cmd+Shift+4)",
+                &mut self.hex,
+            ),
+        ] {
+            if ui
+                .add(Button::new(icon, label).selected(*value))
+                .on_hover_text(help)
+                .clicked()
+            {
+                *value = !*value;
+            }
+        }
+        icons::separator(ui);
         if ui
-            .add_enabled(
-                self.loaded.is_some() && self.export.is_none(),
-                egui::Button::new("Print…"),
-            )
+            .add(Button::new(Icon::Palettes, "Edit current palettes"))
+            .on_hover_text("Edit Current Palettes… (Ctrl/Cmd+Shift+L)")
             .clicked()
         {
-            self.export_png(ui.ctx());
+            self.prepare_palettes();
+        }
+        icons::separator(ui);
+        if ui
+            .add_enabled(
+                self.loaded.is_some(),
+                Button::new(Icon::Resize, "Resize map"),
+            )
+            .on_hover_text("Resize Map…")
+            .clicked()
+        {
+            self.prepare_resize();
+        }
+        icons::separator(ui);
+        if ui
+            .add_enabled(
+                self.loaded.as_ref().is_some_and(|l| l.tileset.is_some()),
+                Button::new(Icon::Tileset, "Tileset"),
+            )
+            .on_hover_text("Edit Tileset… (Ctrl/Cmd+T)")
+            .clicked()
+        {
+            self.prepare_tileset();
         }
     }
 
@@ -1531,6 +1603,14 @@ impl Editor {
                         ui.label("Polished Map NG — development");
                         ui.label("Derived from Polished Map by Rangi42.");
                         ui.label("LGPL v3. See repository notices.");
+                        ui.hyperlink_to(
+                            "Fugue icons by Yusuke Kamiyamane",
+                            "https://p.yusukekamiyamane.com/",
+                        );
+                        ui.hyperlink_to(
+                            "CC BY 3.0; adapted by Polished Map",
+                            "https://creativecommons.org/licenses/by/3.0/",
+                        );
                     });
                 });
             });
@@ -1539,7 +1619,13 @@ impl Editor {
                 Vec2::new(bounds.width(), geometry::TOOLBAR_HEIGHT),
             );
             ui.scope_builder(egui::UiBuilder::new().max_rect(toolbar), |ui| {
-                ui.horizontal(|ui| self.toolbar(ui));
+                ui.set_clip_rect(toolbar.intersect(ui.clip_rect()));
+                ui.scope_builder(
+                    egui::UiBuilder::new().max_rect(toolbar.shrink2(Vec2::new(0.0, 1.0))),
+                    |ui| {
+                        ui.horizontal(|ui| self.toolbar(ui));
+                    },
+                );
             });
             // Controls can change zoom/rulers during this frame. Size content
             // before applying the scaled offset, so the old extent cannot clamp it.

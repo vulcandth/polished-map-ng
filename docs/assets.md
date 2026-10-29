@@ -1,8 +1,9 @@
 # Asset provenance
 
 Game graphics and maps are not distributed. Reference checkouts and extracted
-oracle inputs stay ignored. Third-party toolbar icons remain excluded pending
-their separate review; this record does not authorize importing other assets.
+oracle inputs stay ignored. Only the 17 reviewed icon images marked with a
+`distribution` entry in the inventory are imported. Other icons remain excluded;
+this record does not authorize importing other assets.
 
 ## Menu and toolbar icon audit (in progress)
 
@@ -10,7 +11,8 @@ The master-parity work following zoom/scroll compatibility is the main menu and
 toolbar port. `src/icons.h` at pinned master includes **42 XPM images, all 16×16**.
 [`icon-inventory.json`](icon-inventory.json) records their Git-blob SHA-256,
 decoded RGBA8 SHA-256, palette size and last-changing upstream commit. It contains
-metadata only and is not redistribution clearance. Transparent pixels use zero
+metadata only; each reviewed import has an explicit `distribution` entry.
+Entries without that field are not cleared for import. Transparent pixels use zero
 RGB in the decoded hash. Decode exactly the declared width: `tileset.xpm` and
 `palettes.xpm` each have a 17-character final row for a 16-pixel image. All 42
 decoded hashes were independently checked against Pillow's XPM decoder.
@@ -66,18 +68,24 @@ commit explicitly refers to Tilemap Studio
 ([`5adf7d2`](https://github.com/Rangi42/polished-map/commit/5adf7d2bf85375c9b6a0207572804455e331427e));
 retain that intermediary history in its import record.
 
-Before asset import, finish the per-file records and notices for these groups:
+The initial import is now covered by the per-file records and
+[`icons/NOTICE.md`](../crates/gui/assets/icons/NOTICE.md), the full CC BY 3.0 text,
+root NOTICE/README and in-app Help attribution. `tools/icon_assets.py` verifies
+every imported XPM and decoded RGBA hash; `--write` regenerates pixels from the
+bundled XPMs. The dependency CI job runs verification without network access.
 
-| Group | Remaining review |
+| Group | Import/review status |
 |---|---|
-| Twelve Fugue-family images above, plus grid-dark | Record original/adapted attribution and transformation history; bundle CC BY 3.0 notice/text alongside LGPL adaptation notices. |
-| blank, ids/ids-dark, hex/hex-dark, eight collision-quadrant variants | Trace repository-authored geometry/text and recolors; do not infer a separate font license from their appearance. |
-| open, load, undo, redo, show, warp, priority, gameboy, add-sub, change, load-palettes | Trace composite artwork and other source families; nearest-image candidates remain unverified. |
-| blocks/blocks-dark, events, roof, change-roof | These visually resemble game sprites/tiles. Trace the underlying artwork; repository attribution alone is insufficient to clear it. Appearance is not proof of ownership. Keep excluded until resolved or replace with separately licensed/original artwork and record the visual deviation. |
+| Twelve Fugue-family images above, plus grid-dark | Imported with original/adapted attribution, transformation history, CC BY 3.0 notice/text and LGPL adaptation notices. |
+| ids/ids-dark, hex/hex-dark | Imported as fixed Polished Map bitmap lettering under LGPL-3.0-only. History reviewed at `bf08f47`, `3e057b0` and the `530c963` recolor; no external font file or separate asset source is identified there. |
+| blank, eight collision-quadrant variants | Still excluded. Source geometry/history inspected; integration and individual import records remain. |
+| open, load, undo, redo, show, warp, priority, gameboy, add-sub, change, load-palettes | Still excluded. Trace composite artwork and other source families; nearest-image candidates remain unverified. |
+| blocks/blocks-dark, events, roof, change-roof | Still excluded. These visually resemble game sprites/tiles. Trace the underlying artwork; repository attribution alone is insufficient to clear it. Appearance is not proof of ownership. Resolve rights or use separately licensed/original artwork and record the visual deviation. |
 
 Application logos and warning/error/success imagery are outside the 42-image
-`icons.h` inventory and require their own audit before import. No toolbar artwork
-has yet been added to the Rust application or its committed snapshots.
+`icons.h` inventory and require their own audit before import. The imported icons
+and their disabled/dark variants appear in the Rust GUI and rendered snapshots;
+those snapshots carry the same asset notices and terms.
 
 ### Port and validation sequence
 
@@ -90,10 +98,12 @@ has yet been added to the Rust application or its committed snapshots.
 3. Preserve popup menu structure and check/radio marks. The pinned source uses
    `BLANK_ICON` for non-check/radio menu entries to reserve the image column;
    it does not assign all the toolbar pictures to popup menu commands.
-4. Port disabled pixels from `Image::make_deimage`: desaturate, then average with
-   the theme's `FL_GRAY` at 0.5. Inspect FLTK's actual integer arithmetic before
-   implementing this; ordinary egui opacity is not assumed equivalent. Keep
-   accessible names, keyboard actions and tooltips on icon-only controls.
+4. Disabled pixels are implemented for the imported assets from
+   `Image::make_deimage` and the inspected FLTK 1.4.5 `Fl_Pixmap.cxx`: integer
+   grayscale `(31*r + 61*g + 8*b)/100`, then `(gray + background)/2`. The portable
+   light/dark backgrounds are Greybird 206 and Dark 83. This bypasses egui's extra
+   disabled opacity. Extend the verified transformation to later imports and
+   native theme choices. Keep accessible names, keyboard actions and tooltips.
 5. Verify source hashes, every enabled/disabled/dark image pixel, 1×/2× placement,
    button bounds and input behavior. Review toolbar/menu snapshots before
    accepting baselines; reserve native tests for platform-specific interactions.
@@ -108,7 +118,7 @@ dated 2022-03-28. Both that commit and the pinned revision contain the repositor
 LGPL-3.0 license. The source and introducing commit identify no separate license
 or external font/image source for this digit array. Review also checked the
 application's About attribution; its separate “Some icons by Yusuke Kamiyamane”
-credit is retained upstream, and those toolbar icons remain excluded here.
+credit is handled by the toolbar audit above, separately from these digit masks.
 
 The adaptation is distributed under LGPL-3.0-only with Rangi/Polished Map
 attribution in `NOTICE.md` and `crates/core/src/warp_label.rs`. The image is decoded

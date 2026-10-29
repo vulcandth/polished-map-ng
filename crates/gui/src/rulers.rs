@@ -266,7 +266,8 @@ mod tests {
         assert!(h.state().ruler_cursor.is_none());
         h.get_by_label("View").click();
         h.run();
-        h.get_by_label("Rulers").click();
+        h.get_by_role_and_label(egui::Role::CheckBox, "Rulers")
+            .click();
         h.run();
         assert!(!h.state().rulers);
     }

@@ -482,31 +482,17 @@ impl Editor {
                 ),
             ] {
                 let key = if label == "C" { "C" } else { "V" };
-                let response = ui
-                    .put(rect(x, toolbar_y, 22.0, 22.0), egui::Button::new(""))
-                    .on_hover_text(format!("{title} (Ctrl/Cmd+Shift+{key})"));
-                response.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, title));
-                // Code-drawn clipboard/page symbols; no unaudited upstream assets.
-                let front = rect(x + 8.0, toolbar_y + 7.0, 9.0, 11.0);
-                if label == "C" {
-                    ui.painter().rect_stroke(
-                        rect(x + 5.0, toolbar_y + 4.0, 9.0, 11.0),
-                        0.0,
-                        (1.0, text),
-                        egui::StrokeKind::Inside,
-                    );
+                let icon = if label == "C" {
+                    icons::Icon::Copy
                 } else {
-                    ui.painter().rect_stroke(
-                        rect(x + 5.0, toolbar_y + 4.0, 12.0, 15.0),
-                        0.0,
-                        (1.0, text),
-                        egui::StrokeKind::Inside,
-                    );
-                }
-                ui.painter()
-                    .rect_filled(front, 0.0, ui.visuals().panel_fill);
-                ui.painter()
-                    .rect_stroke(front, 0.0, (1.0, text), egui::StrokeKind::Inside);
+                    icons::Icon::Paste
+                };
+                let response = ui
+                    .put(
+                        rect(x, toolbar_y, 22.0, 22.0),
+                        icons::Button::new(icon, title).size(22.0),
+                    )
+                    .on_hover_text(format!("{title} (Ctrl/Cmd+Shift+{key})"));
                 if response.clicked() {
                     if label == "C" {
                         form.copy_image(ctx);

@@ -44,10 +44,17 @@ come from the Greybird and Dark inactive colors in master `themes.cpp`.
 
 ## Assets and fixtures
 
-No upstream game graphics, example maps, native font files, or toolbar icons are currently
-redistributed. Tests create synthetic data. The original About dialog credits
-some icons to Yusuke Kamiyamane; those assets require a separate provenance
-review before inclusion. Reference checkouts are ignored and not shipped.
+No upstream game graphics, example maps or native font files are redistributed.
+Tests create synthetic data. Seventeen reviewed toolbar/editor icon images are
+included with unchanged XPM sources, decoded RGBA pixels and provenance hashes.
+Some adapt **Fugue Icons**, copyright © 2013 Yusuke Kamiyamane, under **CC BY 3.0**:
+<https://p.yusukekamiyamane.com/> and <https://creativecommons.org/licenses/by/3.0/>.
+Polished Map simplified/recolored that artwork; its adaptations remain attributed
+to Rangi/Polished Map under LGPL-3.0-only. NG preserves source pixels, converts
+storage and generates disabled appearances. The original asset terms are not
+replaced by this code license. See `crates/gui/assets/icons/NOTICE.md`,
+`docs/assets.md` and `LICENSES/CC-BY-3.0.txt`, also applicable to icon-containing
+GUI snapshots. Unreviewed icons remain excluded. Reference checkouts are not shipped.
 
 Rust dependencies retain their own licenses. Dependency notices must accompany
 binary releases. This notice does not relicense third-party assets.

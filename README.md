@@ -318,3 +318,7 @@ event overlays in exports and native platform verification remain pending.
 
 LGPL-3.0-only, preserving upstream attribution. See [NOTICE.md](NOTICE.md),
 [LICENSE.md](LICENSE.md), and [release obligations](docs/releases.md).
+Some toolbar/editor icons adapt Fugue Icons by [Yusuke Kamiyamane](https://p.yusukekamiyamane.com/)
+under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), with Polished Map
+adaptations and NG storage/disabled-state changes. See the
+[icon notices](crates/gui/assets/icons/NOTICE.md); these asset terms remain separate.

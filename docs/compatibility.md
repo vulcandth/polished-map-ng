@@ -24,6 +24,27 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Current evidence (2026-10-28)
 
+- Seventeen reviewed icon images (including dark variants) now reproduce the
+  pinned XPM pixels in the toolbar and tileset/roof clipboard controls. Imported
+  XPM and decoded RGBA hashes are checked by `tools/icon_assets.py` in CI, with
+  Fugue CC BY 3.0 and Polished Map LGPL adaptation notices retained. Help and
+  README include attribution. The renderer preserves hard transparency and
+  source colors; disabled colors use FLTK's two integer truncations:
+  `(31*r + 61*g + 8*b)/100`, then `(gray + background)/2`, with Greybird 206 or
+  Dark 83 background. Seven fixed color vectors and rendered 22/24-point controls
+  cover enabled/disabled and light/dark states at 1×/2× scale. This is source-
+  derived/headless rendering evidence, not compiled FLTK or native DPI comparison.
+  Interaction checks cover 24×24 bounds in the y=22..46 toolbar, 22×22 clipboard
+  controls, accessible labels, keyboard activation, toggle state, editor dispatch
+  and modal/disabled guards. Full toolbar membership, popup-menu structure,
+  native frame/theme styles and remaining artwork are still pending. Open,
+  Undo and Redo remain text controls while their icon provenance is reviewed.
+  The icon atlas and representative light/dark/tool-dialog snapshots were
+  inspected. All 42 changed existing baselines differ only in the toolbar band
+  and the four tile/roof clipboard-control areas; the remaining pixels are
+  unchanged. The atlas covers all 14 commands, dark variants, enabled/disabled
+  states, two control sizes and two DPI scales (224 rendered cases).
+
 - Zoom now follows `Main_Window::update_zoom/update_layout`: double offsets on
   zoom-in, integer-halved offsets on zoom-out, and reset the sidebar to row zero.
   Toolbar/menu/command-plus/command-equals tests cover both axes, fractional and
@@ -318,8 +339,9 @@ the original application. Unverified assets never become redistributable fixture
   directly from Tileset_Window::initialize. These are headless GUI tests backed by
   the separately compared core operations, not FLTK/native event differentials.
   Native image clipboard transport, separate child windows, priority overlays
-  and comprehensive DPI/theme behavior remain pending. Clipboard icons are drawn
-  in code; upstream image assets have not been redistributed.
+  and comprehensive DPI/theme behavior remain pending. The initial code-drawn
+  clipboard symbols have since been replaced with reviewed upstream icon pixels;
+  their provenance and tests are described above.
 - Headless GUI tests exercise toolbar state, accessible open options, a complete
   paint/undo/redo/save flow, New Map, resize accept/cancel, and source-derived geometry. Optional visual tests:
   `cargo test -p polished-map-gui --features visual-tests -- --test-threads=1`.
