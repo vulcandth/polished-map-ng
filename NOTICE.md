@@ -32,6 +32,9 @@ The Help window adapts `help-window.cpp` and `widgets.cpp::HTML_View`. Its
 bundled original documentation is Copyright © 2021 Rangi under LGPL-3.0-only;
 see `crates/gui/assets/help/NOTICE.md` for the immutable source, reproducible
 Windows/Unix conversion and preserved upstream attribution.
+About adapts `Main_Window::initialize/about_cb`, `Modal_Dialog::refresh` and
+the platform sizes in `themes.h`. Its text distinguishes NG's own identity from
+the retained Rangi/Fugue notices. Unverified application artwork is not included.
 Event cursor and Game Boy guide placement/borders adapt `map-buttons.cpp`,
 `map.cpp`, `main-window.cpp` and `gameboy-screen.cpp`. The guide's uniformly
 colored source image is represented by a rectangle and its RGBA constant;

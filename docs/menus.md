@@ -19,9 +19,24 @@ keyboard and headless counterparts where applicable.
 | Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
 | Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Drag and Drop; Overworld Map Size | Remaining native/persistence gaps are tracked in `preferences.md`. |
-| Help | Help/F1 with bundled source documentation; inline development status, project attribution and icon licensing links | About action/dialog and command-/ shortcut remain pending. Native Help window behavior and HTML/font appearance still need verification. |
+| Help | Help/F1 with bundled source documentation; About/command-/ with project and icon attribution | About's application icon remains excluded pending provenance review. Native window/frame/font appearance still needs verification. |
 
 ## Geometry and interaction gates
+
+About uses the source Help-menu order/separator and command-/ shortcut. OK,
+Enter and Escape close its modal without modifying the loaded project or
+history. Parent commands and root-window closing are guarded while it is open.
+It remains available before loading a map. The text identifies NG's own version,
+source and copyright separately from Polished Map 4.7.1/Rangi's original notice,
+and retains Fugue creator, source, CC BY 3.0 and adaptation attribution.
+
+The source `Modal_Dialog` APP_ICON layout measures at a 620-point wrap width,
+adds 80 plus OS_FONT_SIZE to the larger text width, and enforces a 280-point
+minimum. OS_FONT_SIZE is 12 on Windows and 13 elsewhere, with heading +4.
+The heading has a 25-point slot at (70,10), body starts at (70,45), and the
+80×22 OK button stays ten points from the bottom/right. The 50×50 image slot
+at (10,10) is reserved but blank until the application artwork is cleared.
+The native frame/system font and missing art remain explicit fidelity gaps.
 
 Help opens a nonmodal, resizable child viewport with an initial 700×500 client
 size and a 48-point offset from the parent. Its body uses `(10,10,w-20,h-52)`;

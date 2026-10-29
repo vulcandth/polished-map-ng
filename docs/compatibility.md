@@ -1,5 +1,40 @@
 # Compatibility evidence
 
+## About command, measured layout and attribution
+
+Help now has the original Help/separator/About order. About and command-/ open
+one modal before or after a map is loaded; OK, Enter and Escape dismiss it.
+Document actions and root-window closing are guarded while it is open. The
+content distinguishes NG's version/source/license from the retained original
+Rangi notice, and includes Fugue creator/source/license/adaptation attribution.
+It replaces the interim attribution-only menu without importing new artwork.
+
+The APP_ICON branch of `Modal_Dialog::refresh` supplies the width formula,
+620-point measurement limit, 280-point minimum, heading/body/icon coordinates,
+25-point heading slot and anchored 80×22 OK button. `themes.h` specifies body
+sizes 12 on Windows and 13 elsewhere, with headings four points larger. Pure
+geometry vectors cover both allowances, including the source's possible final
+width of 712/713 despite its 700-point measurement setting. Interaction tests
+check identity/attribution, control bounds, menu/shortcut/Enter/Escape, empty-map
+access, modal guards, unchanged project bytes and retained dirty-map history.
+
+The application image remains excluded after history/hash/visual review; the
+icon slot stays blank. That is an unresolved visual gap, not artwork clearance.
+Native window chrome/system fonts also remain unverified. Windows-light,
+Unix-light and Windows-dark snapshots were inspected, with platform metrics
+selected before the first layout pass for reproducible cross-platform baselines.
+No computer use was performed.
+
+Formatting, warnings-as-errors Clippy, workspace tests and documentation pass
+locally. The full visual suite passes 120 tests with one existing ignored test;
+the three About tests also pass after isolating platform metrics before initial
+layout. The Help-menu baseline changed and three About snapshots were added;
+other existing baselines are unchanged.
+
+The preceding Help CI run
+[`40826594651`](https://github.com/vulcandth/polished-map-ng/actions/runs/40826594651)
+passed all eight jobs, including the new original-C++ help comparison.
+
 ## Help window and complete upstream documentation
 
 Help/F1 now uses a nonmodal, resizable child viewport based on `Help_Window`

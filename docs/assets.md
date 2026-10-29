@@ -172,6 +172,29 @@ GUI tests check texture pixels at 1×/2× DPI over light/dark backgrounds. The
 26-icon atlas now covers 19 designs and 304 size/theme/disabled/DPI combinations.
 Native FLTK/egui compositing equivalence still needs platform verification.
 
+## Application icon audit (unresolved)
+
+The About `APP_ICON` path uses `res/app.xpm`, a 48×48 tree/grass image. It was
+introduced with the About dialog in
+[`4cd0350`](https://github.com/Rangi42/polished-map/commit/4cd03509ed8b38bd4295d99dcf487b3c9fde6571)
+and replaced in
+[`5862da0`](https://github.com/Rangi42/polished-map/commit/5862da0bccf0a8421ec25f57cefcbf53e7d898ef).
+The 16×16 `res/app-icon.xpm` arrived with Linux support in
+[`bc704f9`](https://github.com/Rangi42/polished-map/commit/bc704f9098c07076d840eac798fb7301dce74709).
+These history entries establish the repository changes but do not identify the
+underlying artwork's source or an independent permission chain. Visual inspection
+alone does not establish ownership. Neither file has been cleared or imported.
+
+Pinned-master SHA-256 metadata (original Git blobs, then decoded RGBA8 pixels):
+
+| Image | Source SHA-256 | RGBA SHA-256 |
+|---|---|---|
+| app.xpm | `c12a076f845397709b2d61c9db4ea26d853baf6a2e1ad71b1f9d6582dcc51375` | `6dc8a03ed5cffd7c148fe0af647793852da71369ca18e79503c81706f8747f50` |
+| app-icon.xpm | `072e9cba4bd023562067337ad366b62e2a24d9e0000816cb24711c59908793f8` | `0ce263222ecd94986e5220d34415b1d590dfce83e284b0bccafa0fbef6e3223b` |
+
+About preserves the original 50×50 icon slot without drawing unverified artwork.
+The `.ico` bundle and warning/error/success artwork still require separate audit.
+
 ## Fonts
 
 GUI text currently uses egui's bundled fonts, whose notices are retained under

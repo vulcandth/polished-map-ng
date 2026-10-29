@@ -253,17 +253,9 @@ impl Editor {
                     self.help_window.open();
                 }
                 ui.separator();
-                ui.label("Polished Map NG — development");
-                ui.label("Derived from Polished Map by Rangi42.");
-                ui.label("LGPL v3. See repository notices.");
-                ui.hyperlink_to(
-                    "Fugue icons by Yusuke Kamiyamane",
-                    "https://p.yusukekamiyamane.com/",
-                );
-                ui.hyperlink_to(
-                    "CC BY 3.0; adapted by Polished Map",
-                    "https://creativecommons.org/licenses/by/3.0/",
-                );
+                if action(ui, true, "About") {
+                    self.about = Some(Default::default());
+                }
             });
         });
     }

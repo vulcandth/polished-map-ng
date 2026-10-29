@@ -1,4 +1,5 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
+mod about;
 mod block_editor;
 mod block_workflows;
 #[cfg(test)]
@@ -92,6 +93,7 @@ struct ResizeForm {
 }
 
 pub struct Editor {
+    about: Option<about::AboutDialog>,
     help_window: help::HelpWindow,
     event_ui: event_workflows::EventUi,
     loaded: Option<Loaded>,
@@ -172,6 +174,7 @@ pub struct Editor {
 impl Default for Editor {
     fn default() -> Self {
         Self {
+            about: None,
             help_window: Default::default(),
             event_ui: event_workflows::EventUi::default(),
             loaded: None,
@@ -703,6 +706,12 @@ impl Editor {
                     self.open_palette_warning = None;
                 }
             });
+            return;
+        }
+        if let Some(mut about) = self.about.take() {
+            if !about.show(ctx) {
+                self.about = Some(about);
+            }
             return;
         }
         if self.print_form.is_some() || self.print_success.is_some() {
@@ -1416,7 +1425,8 @@ impl Editor {
         self.poll_workers(&ctx);
         self.poll_event_scripts();
         if ctx.input(|i| i.viewport().close_requested())
-            && (self.print_form.is_some()
+            && (self.about.is_some()
+                || self.print_form.is_some()
                 || self.print_success.is_some()
                 || self.print_request.is_some()
                 || self.print_worker.is_some())
@@ -1429,7 +1439,8 @@ impl Editor {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             self.request_exit(&ctx);
         }
-        let blocked = self.print_form.is_some()
+        let blocked = self.about.is_some()
+            || self.print_form.is_some()
             || self.print_success.is_some()
             || self.print_worker.is_some()
             || self.print_request.is_some()
@@ -1456,6 +1467,12 @@ impl Editor {
             || self.pending_open.is_some()
             || self.open_palette_warning.is_some();
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            if ctx.input_mut(|i| {
+                i.modifiers.matches_exact(egui::Modifiers::COMMAND)
+                    && i.consume_key(egui::Modifiers::COMMAND, egui::Key::Slash)
+            }) {
+                self.about = Some(Default::default());
+            }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F1)) {
                 self.help_window.open();
             }

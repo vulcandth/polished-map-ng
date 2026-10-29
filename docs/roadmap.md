@@ -203,7 +203,10 @@ nonmodal child viewport. A reproducible converter retains all 95 blocks and
 16 linked spans, with C++-verified Windows/Unix constant expansion and LGPL
 attribution. Content bounds, scrolling, link requests, close controls and
 nonmodal editing are tested headlessly. Native window behavior and HTML/font
-matching remain gates; About and its artwork audit remain unfinished.
+matching remain gates. About now has its source menu/shortcut/dismissal behavior,
+measured APP_ICON layout, platform font sizes and explicit NG/upstream/Fugue
+attribution. Its application artwork audit and native frame/fonts remain
+unfinished; the original image slot is reserved without importing the image.
 Normal-size warp ID glyphs now match every original bitmap pixel. A compiled
 source harness verifies 8,192 decimal/hex placement and zoomed text cases, including
 the original overflow/truncation differences. Source-derived outline colors,
