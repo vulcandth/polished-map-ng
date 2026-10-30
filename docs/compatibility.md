@@ -26,9 +26,9 @@ application acceptance; native interactions additionally need M6.
 | `map-buttons.cpp`, `widgets.cpp`: sidebar selection/right-release editing, map/tile/pixel picking and painting, internal swap/Control-copy drags, enabled Drag and Drop | [Block gestures](../crates/gui/src/block_workflow_tests.rs), [tile gestures](../crates/gui/src/tileset_editor_tests.rs), [drag tests](../crates/gui/src/drag_tests.rs), [palette tests](../crates/gui/src/palette_editor_tests.rs) | M4 native input delivery and widget visuals |
 | `main-window.cpp`, `widgets.cpp`: external URI/file drops and workspace eligibility | [Positioned drops](../crates/gui/src/external_drop.rs), [native adapter evidence](#native-external-file-drops) | M3 native file-manager/DPI/cancellation and clipboard acceptance |
 | `main-window.cpp`, `ruler.cpp`, `gameboy-screen.cpp`: rulers, grids, IDs/hex, priority, event/warp overlays, status, zoom, pan, hover guide and numeric hotkeys | [Rulers](../crates/gui/src/rulers.rs), [status](../crates/gui/src/status_bar.rs), [hotkeys](../crates/gui/src/block_hotkeys.rs), [event hover tests](../crates/gui/src/event_workflow_tests.rs), [zoom tests](../crates/gui/src/zoom_tests.rs) | M4 fonts and native scrolling/resize/DPI; M3 window opacity |
-| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/block_editor.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) | M4 child window |
-| `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/tileset_editor.rs), [editor tests](../crates/gui/src/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/project/tests/tileset.rs) | M4 child window/native clipboard |
-| `roof-window.cpp`: nine-tile selection, pixel tools, internal/image clipboard, reversed roof display and independent save | [Roof editor tests](../crates/gui/src/roof_editor_tests.rs), [roof workflows](../crates/gui/src/roof_workflow_tests.rs), [project roof tests](../crates/project/tests/roof.rs) | M4 child window/native clipboard |
+| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/block_editor.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) | M4/M6 integrated window acceptance |
+| `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/tileset_editor.rs), [editor tests](../crates/gui/src/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/project/tests/tileset.rs) | M4/M6 integrated window/clipboard acceptance |
+| `roof-window.cpp`: nine-tile selection, pixel tools, internal/image clipboard, reversed roof display and independent save | [Roof editor tests](../crates/gui/src/roof_editor_tests.rs), [roof workflows](../crates/gui/src/roof_workflow_tests.rs), [project roof tests](../crates/project/tests/roof.rs) | M4/M6 integrated window/clipboard acceptance |
 | `palette-window.cpp`, `colors.cpp`: color/monochrome grids, RGB5 sliders/spinners, RGB8 hex, Windows chooser, color copy/paste/live swap/drag, six palette sets and export | [Palette editor](../crates/gui/src/palette_editor.rs), [palette editor tests](../crates/gui/src/palette_editor_tests.rs), [palette model tests](../crates/core/tests/palette_edit.rs) | M4 native chooser; I2 shared graphical picker |
 | `option-dialogs.cpp`: Open/New size, tileset, roof and metadata choices | [M1a–M1e evidence](#open-map-size-selection), [Map Options tests](../crates/gui/src/map_options/tests.rs) | M4 native dialog/widget fidelity |
 | `option-dialogs.cpp`: Resize dimensions/nine anchors, Add/Sub block count, Overworld Map Size | [Resize tests](../crates/core/tests/resize.rs), [block workflows](../crates/gui/src/block_workflow_tests.rs), [overworld dialog/tests](../crates/gui/src/overworld.rs) | M4 client measurements and native windows |
@@ -480,14 +480,15 @@ state teardown and destruction of all four hidden windows. Windows additionally
 checks preservation of an owner that was already disabled. The
 [Wayland peer](../tools/wayland_modal_probe.py) passes with and without the optional
 dialog protocol, verifying exact parent identities/order, three modal hints when
-supported, and resource destruction before toplevel teardown. The macOS code and
-probe cross-compile; its native run is assigned to the macOS CI job.
+supported, and resource destruction before toplevel teardown. The same hidden
+probe also passes on the macOS CI runner. The
+[implementation CI run](https://github.com/vulcandth/polished-map-ng/actions/runs/41010677779)
+records successful Windows/macOS ownership probes and both Linux native probes.
 
 Windows workspace format, warnings-as-errors Clippy, tests and rustdoc pass.
-Linux visual-feature Clippy and all seven viewport-host tests pass. The full
-Ubuntu/WSL offscreen visual suite passed 242 tests with four existing ignored
-checks before the additional mouse-retention regression, which then passed in
-the focused host suite. No visual baseline changed. macOS target Clippy passes.
+Linux visual-feature Clippy, all seven viewport-host tests and the full offscreen
+visual suite pass; CI also verifies the final visual suite with no baseline
+changes. macOS target Clippy passes; the optional Glow backend also compiles on Windows.
 Vendor archive/patch hashes, all three native production graphs and documentation
 links/examples are verified.
 

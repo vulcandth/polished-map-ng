@@ -144,7 +144,7 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   confirmations are implemented; evidence: [option dialog metrics](compatibility.md#remaining-option-dialog-client-metrics)
   and [message clients](compatibility.md#error-warning-and-success-message-dialogs).
   Native editor/modal hosting, ownership, draft/close guards and isolated Windows,
-  X11 and Wayland lifetime checks are implemented; see [native hosting](compatibility.md#native-dialog-hosting-and-ownership).
+  macOS, X11 and Wayland lifetime checks are implemented; see [native hosting](compatibility.md#native-dialog-hosting-and-ownership).
   Finish integrated window placement/focus acceptance, font fallback/Windows bold synthesis,
   popup placement/arrows/mnemonics/screen-edge behavior, focus and dismissal.
   Include the remaining source spinner/slider/dropdown/scrollbar rendering and
