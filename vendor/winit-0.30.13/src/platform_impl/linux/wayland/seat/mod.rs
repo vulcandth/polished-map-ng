@@ -21,6 +21,7 @@ use crate::platform_impl::wayland::state::WinitState;
 
 mod keyboard;
 mod file_drop;
+pub(crate) use file_drop::DropDevice;
 mod pointer;
 mod text_input;
 mod touch;
@@ -35,8 +36,7 @@ use touch::TouchPoint;
 
 #[derive(Debug, Default)]
 pub struct WinitSeatState {
-    pub(super) data_device: Option<sctk::data_device_manager::data_device::DataDevice>,
-    pending_drop: Option<file_drop::PendingDrop>,
+    pub(super) data_device: Option<file_drop::DropDevice>,
     /// The pointer bound on the seat.
     pointer: Option<Arc<ThemedPointer<WinitPointerData>>>,
 
@@ -209,7 +209,7 @@ impl SeatHandler for WinitState {
         seat: WlSeat,
     ) {
         let mut state = WinitSeatState::new();
-        state.data_device = self.data_device_manager.as_ref().map(|manager| manager.get_data_device(queue_handle, &seat));
+        state.data_device = self.data_device_manager.as_ref().map(|manager| file_drop::DropDevice::new(manager, queue_handle, &seat));
         self.seats.insert(seat.id(), state);
     }
 
@@ -219,7 +219,7 @@ impl SeatHandler for WinitState {
         _queue_handle: &QueueHandle<Self>,
         seat: WlSeat,
     ) {
-        self.cancel_file_drop(&seat.id());
+        self.cancel_file_drops(&seat.id());
         let _ = self.seats.remove(&seat.id());
         self.on_keyboard_destroy(&seat.id());
     }

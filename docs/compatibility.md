@@ -1131,6 +1131,15 @@ Protocol evidence cannot prove
 compositor blending, wgpu output, fullscreen behavior or native preference
 restoration. Those remain M3/M5/M6 acceptance requirements.
 
+A subsequent Linux run exposed a harness shutdown race: the client had completed
+teardown but closed with unread cleanup replies, producing a socket reset. The
+peer now treats reset/broken-pipe as connection closure while still requiring
+successful process exit, complete request parsing and every resource/state
+assertion. All three opacity scenarios pass locally on Ubuntu 22.04.5 LTS under
+WSL2, kernel `6.18.54.1-microsoft-standard-WSL2`, Rust 1.98.1, with a private
+socket and no desktop/GPU connection. Protocol XML is resolved from the test's
+actual Cargo build artifacts, avoiding unrelated whole-workspace downloads.
+
 Local formatting, warnings-as-errors Clippy, workspace tests, documentation,
 dependency audit and the production adapter graph check pass. The full visual
 suite passes 130 tests with one existing ignored test, without snapshot updates.
@@ -1466,6 +1475,19 @@ Automated evidence:
 - The [shared native helper tests](../crates/gui/tests/native_file_drop.rs)
   cover unique transfer IDs and invalid records; Unix additionally exercises
   non-UTF-8 filenames, escaped newlines, malformed/remote URLs and size limits.
+- The [Wayland protocol probe](../tools/wayland_file_drop_probe.py) runs the actual
+  adapter and Rust event consumer against private wl_data_device events and real
+  SCM_RIGHTS pipes. Its 13 scenarios cover ordered paths and 2× coordinates,
+  overlapping receives completing in reverse order, legacy protocol support,
+  leave, unsupported MIME/action/decoration targets, invalid/oversized payloads,
+  timeout, seat removal, window closure and the 16-receive bound. Every scenario
+  includes a clipboard offer that must not be read or replace selection ownership.
+  Partial pipes wait for a native resize acknowledgment before sending the rest,
+  so a blocking read fails instead of being hidden by immediate EOF. All 13
+  scenarios pass natively on Ubuntu 22.04.5 LTS/WSL2, kernel
+  `6.18.54.1-microsoft-standard-WSL2`, Rust 1.98.1. Linux cross-target
+  compilation/Clippy also pass. This exercises the real adapter, independently
+  of WSLg or any running desktop compositor.
 - Windows workspace checks run locally. Cross-target checks pass for the
   macOS GUI and Linux winit with X11/Wayland enabled. Cross-compilation is not
   native execution. Original crate archives and every bundled source/patch hash
@@ -1473,9 +1495,10 @@ Automated evidence:
 
 Still required: actual file-manager delivery, off-window cancellation,
 multiple-monitor/mixed-DPI placement, clipboard coexistence, seat/window teardown
-and compositor behavior on Windows, macOS, X11 and Wayland. In particular, the
-Wayland receive timeout/leave lifecycle and X11 asynchronous selection flow need
-native protocol acceptance. Whole-window opacity implementation and its remaining
+and compositor behavior on Windows, macOS, X11 and Wayland. Wayland's isolated
+protocol cases are verified locally; real-desktop workflows remain. X11's
+asynchronous selection flow still needs native protocol acceptance.
+Whole-window opacity implementation and its remaining
 native gates are tracked in [transparency evidence](#whole-window-transparency).
 These are M3 gates; no complete desktop parity claim follows from these tests.
 

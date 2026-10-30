@@ -127,7 +127,9 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   Positioned, ordered native drops and guarded workspace Open are implemented
   through pinned adapters, including Wayland receiving. Wayland opacity now
   covers the root and client frame, with explicit capability errors and guarded
-  request/reply handling. Complete native file-manager/clipboard/DPI acceptance;
+  request/reply handling. Wayland receives retain independent offer lifetimes
+  and cancel on seat/window teardown; native protocol probes cover opacity and
+  transfer behavior. Complete native file-manager/clipboard/DPI acceptance;
   verify opacity on Windows, macOS, X11 and Wayland. Evidence:
   [external drops](compatibility.md#native-external-file-drops),
   [transparency](compatibility.md#whole-window-transparency).

@@ -33,6 +33,11 @@ against a private socket peer, checking six surface multipliers, synchronized
 commits, capability rejection/loss and destruction order. It uses protocol XML
 from locked registry packages and requires no desktop/GPU. This is protocol
 acceptance, not compositor pixel verification.
+`python tools/wayland_file_drop_probe.py` uses the same private-peer harness to
+exercise real data-device events and transferred pipe descriptors. It checks
+ordered paths/scale, overlapping receives, leave, unsupported data/actions,
+bounds, timeout, seat/window removal and clipboard non-interference at the
+protocol level. Real file-manager and clipboard workflows still need acceptance.
 
 Keep this patch focused on native transfer/opacity integration. Re-evaluate it
 when a compatible egui/winit release supplies these capabilities; remove it only

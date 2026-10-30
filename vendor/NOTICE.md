@@ -22,7 +22,11 @@ Modified for Polished Map NG on 2026-10-29, under Apache-2.0:
   preserve filename bytes with per-URI percent decoding.
 - Wayland: bind receive-only data devices on the existing connection/queue,
   retain each offer's surface/coordinates, and read URI data through bounded
-  nonblocking calloop sources with a timeout and seat-removal cleanup.
+  nonblocking calloop sources with a timeout and seat/window-removal cleanup.
+  Own wl_data_device/offer lifecycle directly so completed asynchronous receives
+  survive a subsequent enter/leave. Keep up to 16 independent receives per seat;
+  leave clipboard ownership with its separate adapter. SCTK still supplies
+  manager binding and its public pipe helper; its hover ownership is not reused.
 - Wayland opacity: bind alpha-modifier on that same connection/queue, multiply
   the root and all client-frame surfaces, reject unsupported/server-frame cases,
   and restore opaque state with a capability-loss event on frame transitions.

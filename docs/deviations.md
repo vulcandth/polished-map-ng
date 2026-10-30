@@ -424,16 +424,26 @@ avoiding the original pointer-to-u32 over-read on LP64. Win32 checks failed call
 and attempts to undo a newly added layered style if setting alpha fails. The
 menu changes only after an accepted request; startup intent survives an error.
 macOS uses NSWindow alphaValue as the native equivalent of upstream's X11 path.
-The current Wayland integration reports that whole-window opacity is unsupported;
-this is an incomplete parity item, not an approved permanent omission. Pixel
-alpha or a faded egui panel is not substituted for whole-window opacity.
+Wayland applies alpha-modifier to the root and its client frame when supported.
+A missing protocol or visible compositor-owned frame reports a capability error;
+the client cannot change another process's title-bar surface. Native visual
+acceptance remains incomplete, not an approved permanent omission. Pixel alpha
+or a faded egui panel is not substituted for whole-window opacity.
 ## External transfer bounds and OLE correctness
 
 The native file-drop adapters limit one transfer to 4 MiB and 4,096 paths, and
 the GUI queue retains at most 16 completed transfers per viewport. Wayland
-receives at most 64 KiB per event dispatch and cancels a stalled receive after
-ten seconds. These limits keep external input from blocking the UI or growing
+retains at most 16 simultaneous receives per seat, reads at most 64 KiB per
+source dispatch and cancels a stalled receive after ten seconds. A seventeenth
+pending drop is rejected without replacing earlier accepted transfers. These
+limits keep external input from blocking the UI or growing
 memory indefinitely; ordinary map-file drops retain upstream's first-file rule.
+
+The receive-only Wayland adapter owns dropped offers through completion rather
+than using SCTK's hover lifetime. This prevents a later enter/leave from destroying
+an accepted offer while its asynchronous read is still pending. Closing the
+target window or removing its seat also cancels the pipes/timers immediately;
+no late completion is delivered to a destroyed window.
 
 The Windows adapter corrects winit's handwritten OLE POINTL argument from a
 pointer to the documented by-value ABI, implements its previously unimplemented

@@ -30,13 +30,15 @@ def blob(value):
     return word(len(value)) + value + b"\0" * (-len(value) % 4)
 
 
-def schemas():
-    rustc = subprocess.run(["rustc", "-vV"], check=True, capture_output=True, text=True, encoding="utf-8")
-    host = next(line.removeprefix("host: ") for line in rustc.stdout.splitlines() if line.startswith("host: "))
-    result = subprocess.run(["cargo", "metadata", "--locked", "--offline", "--filter-platform", host, "--format-version=1"],
-                            cwd=ROOT, check=True, capture_output=True, text=True, encoding="utf-8")
-    packages = json.loads(result.stdout)["packages"]
-    package = lambda name: Path(next(p["manifest_path"] for p in packages if p["name"] == name)).parent
+def schemas(artifacts):
+    # Cargo's actual compiler artifacts identify the exact protocol sources used
+    # by this native test. Whole-workspace metadata would unnecessarily fetch
+    # every GUI dependency on a fresh machine, even with a platform-only build.
+    def package(name):
+        roots = {Path(a["manifest_path"]).parent for a in artifacts
+                 if a.get("reason") == "compiler-artifact" and a["target"]["name"] == name.replace("-", "_")}
+        assert len(roots) == 1, f"Expected one compiled {name} protocol source, got {roots}"
+        return roots.pop()
     protocols = package("wayland-protocols") / "protocols"
     paths = [package("wayland-client") / "wayland.xml",
              protocols / "stable/xdg-shell/xdg-shell.xml",
@@ -46,8 +48,11 @@ def schemas():
 
 
 class Peer:
+    poll_interval = 1
+
     def __init__(self, connection, definitions, scenario):
         self.connection = connection
+        self.connection_closed = False
         self.definitions = definitions
         self.scenario = scenario
         self.objects = {1: ("wl_display", 1)}
@@ -81,17 +86,42 @@ class Peer:
         for arg, value in zip(args, values):
             kind = arg.attrib["type"]
             if kind == "string":
-                body += blob(value.encode("utf-8") + b"\0")
+                body += blob(value.encode("utf-8") + b"\0") if value is not None else word(0)
             elif kind == "array":
                 body += blob(value)
             else:
-                assert kind in ("uint", "int", "object", "fixed")
+                if kind == "new_id":
+                    assert value not in self.objects
+                    self.objects[value] = (arg.attrib["interface"], self.objects[object_id][1])
+                assert kind in ("uint", "int", "object", "fixed", "new_id")
                 body += word(value & OPAQUE)
-        self.connection.sendall(word(object_id) + word(((len(body) + 8) << 16) | opcode) + body)
+        if not self.connection_closed:
+            try:
+                self.connection.sendall(word(object_id) + word(((len(body) + 8) << 16) | opcode) + body)
+            except (BrokenPipeError, ConnectionResetError):
+                # A client can close with cleanup replies still unread. Keep
+                # parsing requests already received; exit status and complete
+                # resource/state assertions below distinguish teardown from a
+                # crash or premature disconnect.
+                self.connection_closed = True
 
     def retire(self, object_id):
-        self.emit(1, "delete_id", object_id)
+        if object_id < 0xff000000:  # Server-created IDs use their separate range.
+            self.emit(1, "delete_id", object_id)
         del self.objects[object_id]
+
+    def consume_fd(self, interface, request, fd):
+        os.close(fd)  # Base peer only receives SHM; it does not inspect pixels.
+
+    def tick(self):
+        pass
+
+    def global_version(self, name):
+        return int(self.definitions[name].attrib["version"])
+
+    def close(self):
+        for fd in self.fds:
+            os.close(fd)
 
     def decode(self, object_id, opcode, payload):
         interface, version = self.objects[object_id]
@@ -118,12 +148,12 @@ class Peer:
             kind = arg.attrib["type"]
             if kind == "fd":
                 value = self.fds.popleft()
-                os.close(value)  # SHM contents are irrelevant to protocol assertions.
+                self.consume_fd(interface, request.attrib["name"], value)
             elif kind in ("string", "array"):
                 value = data()
                 if kind == "string":
-                    assert value.endswith(b"\0")
-                    value = value[:-1].decode("utf-8")
+                    assert value.endswith(b"\0") or (not value and arg.attrib.get("allow-null") == "true")
+                    value = value[:-1].decode("utf-8") if value else None
             elif kind == "new_id":
                 new_interface = arg.attrib.get("interface")
                 new_version = version
@@ -140,12 +170,12 @@ class Peer:
         assert offset == len(payload), (interface, request.attrib["name"], offset, len(payload))
         return interface, request, values
 
-    def configure(self, server_frame=False):
+    def configure(self, server_frame=False, width=640, height=480):
         self.serial += 1
         for decoration in self.decorations:
             self.emit(decoration, "configure", 2 if server_frame else 1)
         for toplevel in self.toplevels:
-            self.emit(toplevel, "configure", 640, 480, b"")
+            self.emit(toplevel, "configure", width, height, b"")
         for xdg in self.xdg:
             self.emit(xdg, "configure", self.serial)
 
@@ -178,9 +208,14 @@ class Peer:
         name = request.attrib["name"]
         call = f"{interface}.{name}"
         self.trace.append((object_id, call, v))
+        self.handle_request(object_id, call, v)
+        if request.attrib.get("type") == "destructor":
+            self.retire(object_id)
+
+    def handle_request(self, object_id, call, v):
         if call == "wl_display.get_registry":
             for i, global_name in enumerate(self.globals, 1):
-                self.emit(v["registry"], "global", i, global_name, int(self.definitions[global_name].attrib["version"]))
+                self.emit(v["registry"], "global", i, global_name, self.global_version(global_name))
         elif call == "wl_display.sync":
             self.emit(v["callback"], "done", self.serial)
             self.retire(v["callback"])
@@ -203,7 +238,7 @@ class Peer:
             self.surfaces[v["surface"]].update(parent=v["parent"], sync=True)
         elif call in ("wl_subsurface.set_sync", "wl_subsurface.set_desync"):
             state = self.surfaces[self.subsurfaces[object_id]]
-            state["sync"] = name == "set_sync"
+            state["sync"] = call == "wl_subsurface.set_sync"
             if not state["sync"]:
                 state["applied"] = state["cached"]
         elif call == "wp_alpha_modifier_v1.get_surface":
@@ -227,11 +262,14 @@ class Peer:
         elif call == "wl_surface.destroy":
             assert self.surfaces[object_id]["alpha"] is None, "Alpha must die before wl_surface"
             del self.surfaces[object_id]
-        if request.attrib.get("type") == "destructor":
-            self.retire(object_id)
-
     def receive(self):
-        data, ancillary, flags, _ = self.connection.recvmsg(65536, socket.CMSG_SPACE(128))
+        if self.connection_closed:
+            return False
+        try:
+            data, ancillary, flags, _ = self.connection.recvmsg(65536, socket.CMSG_SPACE(128))
+        except ConnectionResetError:
+            self.connection_closed = True
+            return False
         assert not flags & (socket.MSG_TRUNC | socket.MSG_CTRUNC)
         for level, kind, raw in ancillary:
             assert (level, kind) == (socket.SOL_SOCKET, socket.SCM_RIGHTS)
@@ -266,27 +304,28 @@ class Peer:
             assert self.alpha_created == 0 and not self.commits, "Unsupported request partially changed native state"
 
 
-def run_scenario(binary, definitions, scenario):
+def run_scenario(binary, definitions, scenario, peer_type=Peer, test_name="native_wayland_opacity",
+                 env_name="POLISHED_MAP_WAYLAND_OPACITY_PROBE", label="opacity"):
     with tempfile.TemporaryDirectory(prefix="polished-map-wayland-") as directory:
         address = str(Path(directory) / "wayland-probe")
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as listener:
             listener.bind(address)
             listener.listen(1)
             listener.settimeout(20)
-            env = dict(os.environ, WAYLAND_DISPLAY=address, XDG_RUNTIME_DIR=directory,
-                       POLISHED_MAP_WAYLAND_OPACITY_PROBE=scenario)
+            env = dict(os.environ, WAYLAND_DISPLAY=address, XDG_RUNTIME_DIR=directory)
+            env[env_name] = scenario
             # This inherited FD would take precedence over WAYLAND_DISPLAY and
             # could attach a test to the caller's compositor instead of our peer.
             env.pop("WAYLAND_SOCKET", None)
             with tempfile.TemporaryFile() as output:
-                process = subprocess.Popen([str(binary), "native_wayland_opacity", "--ignored", "--exact", "--nocapture"],
+                process = subprocess.Popen([str(binary), test_name, "--ignored", "--exact", "--nocapture"],
                                            cwd=ROOT, env=env, stdout=output, stderr=subprocess.STDOUT)
                 peer = None
                 try:
                     connection, _ = listener.accept()
                     with connection:
-                        connection.settimeout(1)
-                        peer = Peer(connection, definitions, scenario)
+                        connection.settimeout(peer_type.poll_interval)
+                        peer = peer_type(connection, definitions, scenario)
                         deadline = time.monotonic() + 25
                         while time.monotonic() < deadline:
                             try:
@@ -295,6 +334,7 @@ def run_scenario(binary, definitions, scenario):
                             except socket.timeout:
                                 if process.poll() is not None:
                                     break
+                            peer.tick()
                         else:
                             raise TimeoutError("Wayland probe exceeded 25 seconds")
                     assert process.wait(timeout=5) == 0, "Native probe failed"
@@ -309,21 +349,26 @@ def run_scenario(binary, definitions, scenario):
                     raise
                 finally:
                     if peer:
-                        for fd in peer.fds:
-                            os.close(fd)
-        print(f"Passed Wayland opacity protocol: {scenario}")
+                        peer.close()
+        print(f"Passed Wayland {label} protocol: {scenario}")
+
+
+def build_probe(name):
+    result = subprocess.run(["cargo", "test", "-p", "polished-map-platform", "--locked", "--test", name,
+                             "--no-run", "--message-format=json"], cwd=ROOT,
+                            capture_output=True, text=True, encoding="utf-8")
+    if result.returncode:
+        raise SystemExit(result.stderr + result.stdout)
+    artifacts = [json.loads(line) for line in result.stdout.splitlines()]
+    binary = next(Path(a["executable"]) for a in artifacts
+                  if a.get("reason") == "compiler-artifact" and a.get("executable") and a["target"]["name"] == name)
+    return binary, schemas(artifacts)
 
 
 def main():
     if sys.platform != "linux":
         raise SystemExit("This native protocol probe runs on Linux")
-    result = subprocess.run(["cargo", "test", "-p", "polished-map-platform", "--locked", "--test", "wayland_opacity",
-                             "--no-run", "--message-format=json"], cwd=ROOT, check=True,
-                            capture_output=True, text=True, encoding="utf-8")
-    artifacts = [json.loads(line) for line in result.stdout.splitlines()]
-    binary = next(Path(a["executable"]) for a in artifacts
-                  if a.get("reason") == "compiler-artifact" and a.get("executable") and a["target"]["name"] == "wayland_opacity")
-    definitions = schemas()
+    binary, definitions = build_probe("wayland_opacity")
     for scenario in ("client-frame", "server-frame", "missing-protocol"):
         run_scenario(binary, definitions, scenario)
 

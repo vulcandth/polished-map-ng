@@ -9,7 +9,7 @@
       "archive_sha256": "a6755fa58a9f8350bd1e472d4c3fcc25f824ec358933bba33306d0b63df5978d",
       "archive_url": "https://static.crates.io/crates/winit/winit-0.30.13.crate",
       "patch": "patches/winit-0.30.13.patch",
-      "patch_sha256": "701be0096253db324b0ad4b2185c89105e7afc2c3c9edd475c952fad09e41c52",
+      "patch_sha256": "f546c85a81e286a0083b58564bbd7bb3041ba445de1f98d9c0b0917c0e083b89",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "b8b2549c91dbf3dc4087197a6be89ab5acb5511c2d1eadc7349c249f646047bb",
@@ -372,7 +372,7 @@
           "original_sha256": "ee825f75ba79a7a12932640e8b085fdc897a35d3ec8105a37987ffd166d1c9f2"
         },
         "src/platform_impl/linux/wayland/event_loop/mod.rs": {
-          "sha256": "dd1ceefa859550fb109460ff9b536307dfa457069899244da0220c0a81267edb",
+          "sha256": "f6db03c037b95bb02a19a0b1b8b88ca85fcb80bf6a92ea064eeb2dc7089b0ecb",
           "original_sha256": "dd1ceefa859550fb109460ff9b536307dfa457069899244da0220c0a81267edb"
         },
         "src/platform_impl/linux/wayland/event_loop/proxy.rs": {
@@ -392,7 +392,7 @@
           "original_sha256": "14982bc1e6ba130eb2c3d0da790905d28075cd1cec215b6f74e560fa449f5421"
         },
         "src/platform_impl/linux/wayland/seat/file_drop.rs": {
-          "sha256": "cb63729c4b8272cadef0f2a516261547722247b94d0860f8808e56cb1773536e",
+          "sha256": "c723cce7709e365bb7740e5a7ca35cec5fd82075bca3eff7851c78e45546fe5e",
           "original_sha256": null
         },
         "src/platform_impl/linux/wayland/seat/keyboard/mod.rs": {
@@ -400,7 +400,7 @@
           "original_sha256": "dd20e74809b3a7987864bc5cabdbeaf62a8474400ddbc4fc86188ed7a84dea62"
         },
         "src/platform_impl/linux/wayland/seat/mod.rs": {
-          "sha256": "96164d2b62262408e85f09d87cd76fab2850db04da7ccae1f57e334e5994122f",
+          "sha256": "510db8bc612f806e588b2cb2f874b96c3fcca727e60448edefb91c9f6ab73707",
           "original_sha256": "70bbd2a8c43a898f4cb2580d38c4f14e478e7331ab65d2e115feb0377fe2fc44"
         },
         "src/platform_impl/linux/wayland/seat/pointer/mod.rs": {
@@ -420,7 +420,7 @@
           "original_sha256": "dd16a75607cab3ba5723ad6b7a2ad6dd09fa2a63fffa57622367f137ea5d3987"
         },
         "src/platform_impl/linux/wayland/state.rs": {
-          "sha256": "cf01a4417380fbaff8f16e205f52f34cb7c8904d49bd942c138d2b90a61ddc55",
+          "sha256": "98fc9521d2d77eba2d5af64de1c1cf9464205e6cc9aad514562fba551dac5a4c",
           "original_sha256": "18beef206a1d0a1cf72ac65b1cefb4984bc204ca0638ecbbe2cb2c8d316422c9"
         },
         "src/platform_impl/linux/wayland/types/alpha_modifier.rs": {

@@ -229,8 +229,12 @@ pixels to egui points once using native scale × egui zoom.
 Payloads are limited to 4 MiB and 4,096 paths; the bridge queues at most 16
 transfers per viewport. Unix URI decoding preserves path bytes and rejects
 non-file/remote URLs, malformed escapes and NULs. Wayland reads are nonblocking,
-limited per dispatch, and time out after ten seconds; removing a seat cancels
-its receive source. These defensive limits are recorded in
+limited per dispatch, and time out after ten seconds. The native adapter owns
+hover and completed offers separately: leave/new-enter cannot destroy a pending
+completed transfer. Up to 16 receives per seat retain independent paths,
+coordinates, timers and pipe sources. Removing the seat or target window cancels
+the associated receives immediately. Clipboard offers are released without
+reading or changing selection ownership. These defensive limits are recorded in
 [deviations](deviations.md#external-transfer-bounds-and-ole-correctness).
 Native file-manager delivery, cancellation, mixed-DPI placement and clipboard
 coexistence still require the desktop checks in item 4. See
