@@ -37,6 +37,12 @@ exist from day one; a partial slice is not a completed parity milestone.
   "pending" claims next to newer evidence. Clearly label historical observations
   as historical; they must not override the roadmap's current task status.
   Keep temporary work logs in ignored `.scratch/`, not product documentation.
+- Keep the roadmap's current-position table and **Next** instruction aligned
+  with its checkboxes. Name the next actionable task by stable ID, and split
+  broad work into separately verifiable steps as it becomes understood. Do not
+  use "not complete" as a substitute for "not started" or "in progress".
+  A completed implementation step does not complete its native verification or
+  milestone acceptance; retain those as explicit unchecked gates.
 
 ## Evidence and compatibility
 

@@ -25,6 +25,12 @@ source attribution; its only file adapter uses standard streams for synthetic
 ASCII paths. Empty-image acceptance follows the original 2bpp/CHR loaders; the
 Rust parser deliberately reports malformed operands instead of substituting bytes.
 
+Binary-map metadata discovery adapts master `Map_Options_Dialog` guess methods,
+`Config` path selection, `Map_Attributes` and `utils.cpp` string helpers under
+LGPL-3.0-only. The reference harness compiles unchanged snippets with inert widget
+storage and standard streams for synthetic ASCII paths. Generated source and
+snippet hashes remain in ignored storage; no project/game assets are distributed.
+
 PNG decoding adapts master `Tiled_Image::read_png_graphics`, `Color::mono_hue`,
 FLTK 1.4.5 `Fl_PNG_Image::load_png_`, `Fl_RGB_Image::desaturate` and
 `Fl_WinAPI_System_Driver::png_extra_rgba_processing`. FLTK attribution, license

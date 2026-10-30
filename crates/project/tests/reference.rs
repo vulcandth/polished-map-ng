@@ -5,6 +5,8 @@ use std::{fs, process::Command};
 
 #[path = "reference/assembly.rs"]
 mod assembly;
+#[path = "reference/discovery.rs"]
+mod discovery;
 #[path = "reference/lz.rs"]
 mod lz;
 #[path = "reference/png_import.rs"]

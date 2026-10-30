@@ -28,8 +28,7 @@ Right-click a block in the sidebar to edit its tile definition. See the
 event workflows, or the [CLI guide](docs/cli.md) for experimental headless editing.
 
 Development follows the [roadmap](docs/roadmap.md). Contributors should read
-[AGENTS.md](AGENTS.md), [architecture](docs/architecture.md) and
-[compatibility evidence](docs/compatibility.md).
+[AGENTS.md](AGENTS.md) for project instructions and development documentation.
 
 ## License and credits
 

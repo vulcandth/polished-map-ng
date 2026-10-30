@@ -23,9 +23,9 @@ closes only when its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M1, reconcile the master coverage inventory and close project-discovery
-gaps. Then M2–M6, followed by M7 acceptance. If a task is externally blocked,
-record the blocker and advance another unchecked master task. Do not advance to
+**Next:** M1e, verify legacy asset-path discovery against the pinned source.
+Then finish the M1f coverage inventory, M2–M6 and M7 acceptance. If a task is
+externally blocked, record the blocker and advance another unchecked master task. Do not advance to
 plusplus merely because one feature or test suite is complete.
 
 ## Foundation — bootstrap complete
@@ -60,6 +60,9 @@ adding improvements. Each completed group below still participates in M7.
 - [x] **M1c — Open/New client geometry and dismissal:** measured source rows,
   control bounds, font sizes, platform button order and guarded Enter/Escape
   handling are implemented. Evidence: [dialog layout](compatibility.md#opennew-client-layout-and-keyboard-actions).
+- [x] **M1d — Binary-map metadata rules:** supported dimension/header macros,
+  path precedence, filename overrides, group-byte behavior and shared-file
+  non-inference are compared with original source. Evidence: [metadata discovery](compatibility.md#binary-map-metadata-discovery).
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
   anchors, zero fill and source-compatible history boundaries.
 - [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
@@ -84,15 +87,23 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 ### Remaining work, in execution order
 
 - [ ] **M1 — Close the master coverage inventory and project-discovery gaps.**
-  Reconcile every original menu, dialog, gesture, preference and format with a
-  test or explicit remaining item. Finish shared-map attribution, legacy/numbered
-  project-profile coverage and inventory reconciliation. Size/asset selection
-  and client layout are completed as M1a–M1c above; native window/widget fidelity
-  and focus delivery remain M4/M6 requirements.
-  Add any uncovered block/event gestures as tasks here. Done when the inventory
-  has no unclassified source feature and discovery fixtures cover each supported
-  original profile and ambiguous-input path. Start from [menus](menus.md) and
-  the [coverage matrix](compatibility.md#current-coverage-matrix).
+  In progress: M1a–M1d are implemented above; M1e–M1f remain below. Close M1 only
+  when both remaining steps pass. Native window/widget fidelity and focus
+  delivery remain separate M4/M6 requirements.
+- [ ] **M1e — Verify legacy asset-path discovery (next).**
+  Inventory the pinned `Config` path rules for graphics, compound tilesets,
+  metatiles, collisions, palettes, roofs and event scripts. Compare supported
+  layouts, extension/fallback precedence, missing files and ambiguous candidates
+  against source behavior. Done when each path rule has a fixture and any
+  discovered mismatch is fixed or explicitly recorded as remaining work before
+  M1 can close. Keep detailed results in [compatibility evidence](compatibility.md).
+- [ ] **M1f — Reconcile the complete master feature inventory.**
+  Classify every original menu, dialog, gesture, preference and format as
+  implemented with evidence, an explicit remaining task, or an approved
+  deviation. Add uncovered work here with a completion condition, including
+  block/event gestures. Done when no source feature remains unclassified and
+  each gap has a roadmap task. Start from [menus](menus.md) and the
+  [coverage matrix](compatibility.md#current-coverage-matrix).
 - [ ] **M2 — Finish icon and application-artwork provenance and porting.**
   Resolve the ten toolbar placeholders, application/About image and message
   shields. Import only cleared assets, preserve notices, and verify decoded

@@ -170,3 +170,29 @@ fn nearest_makefile_and_constant_boundaries_are_preserved() {
         assert_eq!(map_constant(input), expected);
     }
 }
+
+#[test]
+fn legacy_db_headers_keep_the_original_whitespace_token_and_group_is_a_byte() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    write(root, "gfx/tilesets/overworld.png", "");
+    for (header, hint, resolved) in [
+        ("\tdb OVERWORLD ; tileset\n", "overworld", Some("overworld")),
+        ("\tdb OVERWORLD, 0\n", "overworld,", None),
+        ("\tdb OVERWORLD,0\n", "overworld,0", None),
+    ] {
+        write(root, "data/mapHeaders/Town.asm", header);
+        let metadata = discover_map(&root.join("Town.blk"), Some(root)).unwrap();
+        assert_eq!(metadata.tileset_hint.as_deref(), Some(hint));
+        assert_eq!(metadata.tileset.as_deref(), resolved);
+        assert!(metadata.environment.is_empty());
+    }
+    for (groups, expected) in [(255, 255), (256, 0), (257, 1)] {
+        let source = "\tnewgroup\n".repeat(groups) + "\tmap_const TOWN, 3, 2\n";
+        let path = write(root, "constants/map_constants.asm", &source);
+        let metadata = discover_map(&root.join("Town.blk"), Some(root)).unwrap();
+        assert_eq!(metadata.group, expected);
+        assert_eq!(metadata.dimensions, Some((3, 2)));
+        assert_eq!(fs::read_to_string(path).unwrap(), source);
+    }
+}

@@ -191,7 +191,8 @@ fn read_dimensions(path: &Path, metadata: &mut MapMetadata) -> Result<(), Projec
             continue;
         };
         if name == "newgroup" {
-            metadata.group += 1;
+            // Map_Attributes::group is uint8_t in the source; increment wraps.
+            metadata.group = (metadata.group + 1) % 256;
             continue;
         }
         if !matches!(name, "map_const" | "mapgroup" | "mapconst")
@@ -224,7 +225,11 @@ fn read_headers(
         if individual {
             let hint = match name {
                 "map_header" => args.get(2).copied(),
-                "db" => args.first().and_then(|s| s.split_whitespace().next()),
+                // Source uses stream >> token here, not comma-delimited parsing.
+                "db" => line
+                    .split(';')
+                    .next()
+                    .and_then(|s| s.split_whitespace().nth(1)),
                 _ => None,
             };
             if let Some(hint) = hint {

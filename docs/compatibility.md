@@ -6,6 +6,40 @@ The feature records below retain source calculations and verification results;
 test counts and local-run observations describe those individual changes, not
 the current size or acceptance status of the whole suite.
 
+## Binary-map metadata discovery
+
+`tools/discovery_oracle.py` compiles unchanged master `guess_map_constant`,
+`Map_Options_Dialog::{guess_map_size,guess_map_tileset,add_map_size,add_valid_sizes}`,
+the three `Config` metadata-path selectors and their string helpers. It retains
+the original `Map_Attributes` definition and records snippet hashes. Widget
+storage is inert; ASCII fixture paths use standard streams. ASM decoding and
+native filesystem case handling are outside this harness. `--windows` selects
+the original case-insensitive global-header matching branch; the default is Unix.
+
+The differential covers 391 cases: all three dimension macros and constant-file
+paths, both global header macros and paths, symbolic/decimal/hex/unknown tilesets,
+filename dimension/tileset overrides, both individual-header paths with legacy
+`map_header`/`db` forms, existing-file precedence (including non-matching files),
+map-name/acronym boundaries, global header case matching, repeated headers,
+shared block files and group-byte boundaries. Filename overrides short-circuit
+the corresponding metadata reads. Existing higher-priority files suppress
+lower-priority profiles even when they contain no matching map. The first matching
+global header wins, including an unresolved tileset token.
+
+Two observed differences were corrected: individual `db` headers read one
+whitespace-delimited token, so `db OVERWORLD, 0` retains `overworld,` rather than
+being silently repaired; and `newgroup` increments wrap through the original
+`uint8_t` range. The public metadata field can represent the result without
+changing its Rust type. Regular regression fixtures retain punctuation, group
+values and source bytes. Unknown shared block filenames remain unattributed:
+master does not follow `INCBIN` references to infer another map's header or size.
+The GUI offers explicit choices; strict headless opening requires dimensions.
+
+This establishes the listed binary-map metadata rules, not complete support for
+every legacy project's asset layout or arbitrary assembly expressions. Source
+allocation/error safety rules remain in force. Full native filesystem behavior,
+legacy asset-path coverage and application save/reopen acceptance remain open.
+
 ## Open map-size selection
 
 `MapSizeOptions` and the GUI Open form adapt pinned master
@@ -36,7 +70,7 @@ fallback/New controls, and retain edits on cancellation. Existing oversized,
 short-input and palette-warning flows remain covered.
 
 This establishes size-choice behavior, not complete Open/New parity:
-project-profile attribution and native dialog delivery remain M1/M4 work.
+full asset-profile coverage and native dialog delivery remain M1/M4 work.
 Client geometry is covered below; no native GUI validation is claimed here.
 
 ## Open/New asset selectors
@@ -1282,7 +1316,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; GUI resize stages map/event shifts; full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Compiled-source comparisons cover all 65,536 bitplane pairs, 12,390 LZ cases, 151 assembly/CHR cases and 90 PNG cases including Adam7 and both platform policies; empty-image composition and edit/save/reopen pass. Full-application interoperability remains pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
-| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; Open size choices match compiled source across every representable area; Open/New asset dropdowns, numeric ordering and measured client layout are implemented. Full profile/shared-map attribution coverage and native dialog fidelity remain incomplete |
+| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Binary-map metadata rules match compiled source across supported macros, paths, precedence and shared-file non-inference; Open size choices match every representable area; Open/New asset dropdowns, numeric ordering and measured client layout are implemented. Full legacy asset-profile coverage and native dialog fidelity remain incomplete |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts, normal-size digit pixels and CPU Print event overlays tested; native fonts, full gesture coverage and native workflows pending |
