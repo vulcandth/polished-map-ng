@@ -21,6 +21,10 @@ Development artifacts are not parity releases. Before publishing binaries:
   Python's standard library and requires no network for regeneration checks.
 - Publish matching complete source, Cargo.lock, toolchain configuration, patches,
   packaging inputs and instructions to rebuild/relink with a modified core.
+- Include the complete `vendor/` trees, source/adaptation manifests, readable
+  patches, notices and all retained licenses, including the SCTK frame's MIT
+  license. Run `python3 tools/vendor_sources.py` on the source archive; preserve
+  the root Cargo patch table so rebuilding uses the same native adapters.
 - Include `LICENSES/FLTK.txt` and the FLTK adaptation credit in `NOTICE.md`.
   Bundle `crates/gui/assets/fonts` and
   `LICENSES/egui-fonts/NotoSansSymbols2-OFL.txt`; verify the original font/license

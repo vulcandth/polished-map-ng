@@ -275,6 +275,9 @@ def run_scenario(binary, definitions, scenario):
             listener.settimeout(20)
             env = dict(os.environ, WAYLAND_DISPLAY=address, XDG_RUNTIME_DIR=directory,
                        POLISHED_MAP_WAYLAND_OPACITY_PROBE=scenario)
+            # This inherited FD would take precedence over WAYLAND_DISPLAY and
+            # could attach a test to the caller's compositor instead of our peer.
+            env.pop("WAYLAND_SOCKET", None)
             with tempfile.TemporaryFile() as output:
                 process = subprocess.Popen([str(binary), "native_wayland_opacity", "--ignored", "--exact", "--nocapture"],
                                            cwd=ROOT, env=env, stdout=output, stderr=subprocess.STDOUT)

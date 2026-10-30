@@ -42,10 +42,13 @@ def main():
         "webbrowser": set(),
     }
     if "linux" in target:
-        required["egui-winit"].add("smithay-clipboard")
+        required["egui-winit"].update({"smithay-clipboard", "wayland"})
+        required["winit"] = {"wayland", "x11"}
         required["arboard"].add("wayland-data-control")
         required["smithay-clipboard"] = set()
     errors = []
+    if "linux" in target and "sctk-adwaita" in packages.get("winit", set()):
+        errors.append("Wayland opacity requires the adapted fallback client frame, not sctk-adwaita")
     for name, version in {"winit": "0.30.13", "egui-winit": "0.37.0"}.items():
         entries = [line.split("|", 1)[0] for line in graph.splitlines() if line.startswith(name + " ")]
         if not entries or any(not entry.startswith(f"{name} v{version} ")
@@ -59,7 +62,7 @@ def main():
             errors.append(f"{name} missing features: {', '.join(sorted(missing))}")
     if errors:
         raise SystemExit(f"Native adapter graph failed for {target}:\n" + "\n".join(errors))
-    print(f"Verified production clipboard/image/browser and pinned file-drop adapters for {target}")
+    print(f"Verified production clipboard/image/browser and pinned drop/opacity adapters for {target}")
 
 
 if __name__ == "__main__":

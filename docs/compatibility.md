@@ -1121,8 +1121,13 @@ patched winit adapter against an isolated socket peer using the locked protocol
 XML. It checks matching root/frame multipliers at commit, all six resources,
 unsupported-frame/missing-protocol rejection, server-frame transition rollback,
 and alpha-before-surface destruction. It needs no GPU or running desktop.
-Local Windows workspace tests and Linux cross-target compilation/Clippy pass;
-execution of this new Linux probe is pending CI. Protocol evidence cannot prove
+Local Windows workspace tests (371 passed, 33 ignored), format, Clippy and
+rustdoc pass; the full GUI also cross-compiles for Linux and macOS. Linux CI
+[`40997726203`](https://github.com/vulcandth/polished-map-ng/actions/runs/40997726203)
+executed the protocol probe successfully for client-frame, server-frame and
+missing-protocol scenarios, alongside the Xvfb property test. The native macOS,
+visual, dependency/license, MSRV, reference and real-project jobs also passed.
+Protocol evidence cannot prove
 compositor blending, wgpu output, fullscreen behavior or native preference
 restoration. Those remain M3/M5/M6 acceptance requirements.
 

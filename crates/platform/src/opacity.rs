@@ -29,7 +29,7 @@ impl WindowOpacity {
         }
     }
 
-    /// X11 CARDINAL, retaining floor(alpha * UINT32_MAX).
+    /// X11 CARDINAL / Wayland multiplier, retaining floor(alpha * UINT32_MAX).
     pub const fn alpha32(self) -> u32 {
         match self {
             Self::Opaque => u32::MAX,
@@ -55,6 +55,8 @@ pub enum OpacityError {
 /// Set the owner's whole-window opacity on its UI thread. Handles are borrowed
 /// only for this call and never retained. X11 completion means the property was
 /// sent; a compositor must honor it. This does not alter client drawing/exports.
+/// Wayland returns [`OpacityError::WaylandProtocolRequired`]; the caller must
+/// dispatch through the patched winit window on its existing connection/queue.
 pub fn set_window_opacity(
     owner: &(impl HasWindowHandle + HasDisplayHandle),
     opacity: WindowOpacity,
