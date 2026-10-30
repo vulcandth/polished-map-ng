@@ -219,9 +219,7 @@ impl Editor {
                         quadrant_icon(ui, rect(x, y, width, 22.0), i, true);
                         let response = ui.put(
                             rect(x, y, width, 22.0),
-                            egui::DragValue::new(&mut *value)
-                                .range(0..=255)
-                                .hexadecimal(2, false, true),
+                            numeric_input::IntegerInput::new(&mut *value, 0..=255).hex(),
                         );
                         response.widget_info(|| {
                             egui::WidgetInfo::labeled(egui::Role::SpinButton, true, labels[i])

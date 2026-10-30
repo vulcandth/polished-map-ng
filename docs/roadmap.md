@@ -18,14 +18,15 @@ and design decisions in [architecture](architecture.md).
 | 6. Platform delivery | In progress — CI only | Three-OS build/test infrastructure exists; complete native verification and distributable packages remain. |
 
 `[x]` means the stated work is implemented with linked evidence, not that its
-entire milestone has passed. `[ ]` means work or acceptance remains. A milestone
-closes only when its acceptance gate passes, including approved exceptions.
+entire milestone has passed. `[ ]` means work or acceptance remains. Unchecked
+tasks are not started unless explicitly marked **in progress**; a next task is
+scheduled, not completed or necessarily started. A milestone closes only when
+its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M1g, finish numeric stepping/wrapping and Event Options input behavior;
-middle-click resets are complete as M1g1. Then M1h,
-save feedback and the one-time block-limit warning. Follow with M2–M6 and M7
+**Next:** M1h, restore save feedback and the block-limit warning. Shared-control
+input behavior is implemented as M1g. Follow with M2–M6 and M7
 acceptance. If a task is externally blocked, record the blocker and
 advance another unchecked master task. Do not advance to plusplus merely because
 one feature or test suite is complete.
@@ -72,11 +73,17 @@ adding improvements. Each completed group below still participates in M7.
 - [x] **M1f — Master feature inventory reconciliation:** source feature families,
   implementation/tests and remaining owners are mapped in the
   [source inventory](compatibility.md#master-source-inventory). Newly identified
-  implementation gaps are M1g/M1h below; classification is not parity acceptance.
+  gaps were control behavior (M1g, now complete) and save feedback (M1h);
+  classification is not parity acceptance.
 - [x] **M1g1 — Middle-click defaults:** Resize Map/Blockset, Overworld Map Size,
   event coordinates, binary collisions and palette spinners/sliders restore
   source defaults on middle release, including palette selection/transfer
   capture boundaries. Evidence: [control defaults](compatibility.md#middle-click-control-defaults).
+- [x] **M1g — Shared-control input behavior:** numeric stepping/repeat/wrap,
+  typed-value clamping, signed hex, focus/cancellation and Event Options field
+  modes/Enter handling are implemented and tested across affected forms.
+  Evidence: [shared controls](compatibility.md#shared-numeric-and-event-options-controls).
+  Source widget painting and native verification remain M4/M6.
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
   anchors, zero fill and source-compatible history boundaries.
 - [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
@@ -100,37 +107,28 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 
 ### Remaining work, in execution order
 
-- [ ] **M1 — Close the master coverage inventory and project-discovery gaps.**
-  In progress: M1a–M1f are completed above; the inventory exposed M1g/M1h below.
-  Close M1 when those gaps are resolved and the inventory remains reconciled.
+- [ ] **M1 — Close the master coverage inventory and project-discovery gaps (in progress).**
+  M1a–M1g are completed above. Close M1 when M1h is resolved and the inventory
+  remains reconciled.
   Native window/widget fidelity and focus delivery remain M4/M6 requirements.
-- [ ] **M1g — Restore shared-control input behavior (next).**
-  Middle-release resets and default-capture boundaries are complete in M1g1.
-  Reconcile numeric step/repeat/wrap/clamp, signed hex input and Event Options'
-  measured single-/multiline fields and Enter delivery. Done when source-derived
-  input tests cover each affected control, bounds, cancellation, focus/disabled
-  guards and unchanged unrelated state. Source widget painting remains M4.
-- [ ] **M1h — Restore save feedback and the 128-block warning.**
-  Inventory source success dialogs for Save/Save As and individual map, blockset,
-  tileset/palette-map, roof, event-script and palette-export operations; deliver
-  their ordering through the guarded save flow. Add the collision-blockset
-  warning above 128 blocks and persist its `meta128` acknowledgment. Done when
-  clean/dirty saves, Save All sequencing, failures/conflicts, threshold boundaries,
-  acknowledgment and restored preferences have tests. Status text alone does not
-  replace a source modal. See [source inventory](compatibility.md#master-source-inventory).
-- [ ] **M2 — Finish icon and application-artwork provenance and porting.**
+- [ ] **M1h — Restore save feedback and the 128-block warning (next).**
+  Restore source success dialogs and warning acknowledgment through guarded
+  Save/Save As/Save All and export flows. Done when all affected domains have
+  ordering, failure/conflict and persisted-warning tests. Source routes and
+  thresholds are recorded in the [source inventory](compatibility.md#master-source-inventory).
+- [ ] **M2 — Finish icon and application-artwork provenance and porting (in progress).**
   Resolve the ten toolbar placeholders, application/About image and message
   shields. Import only cleared assets, preserve notices, and verify decoded
   pixels, enabled/disabled states and source bounds at both DPI scales. Any
   replacement must be explicitly recorded as a deviation. This belongs to master
   parity, not the later redesign phase. See [assets](assets.md).
-- [ ] **M3 — Complete external file drops and whole-window transparency.**
+- [ ] **M3 — Complete external file drops and whole-window transparency (in progress).**
   Deliver real drop coordinates/path order through the window adapter; accept
   only workspace drops and use the normal guarded Open flow. Resolve Wayland's
   missing external-drop and opacity integration; verify Windows, macOS, X11 and
   Wayland behavior. Done when the gates in [architecture](architecture.md) pass;
   stale pointer coordinates or widget alpha are not substitutes.
-- [ ] **M4 — Complete source-derived GUI and native-window fidelity.**
+- [ ] **M4 — Complete source-derived GUI and native-window fidelity (in progress).**
   Finish editor/modal child-window behavior, font fallback/Windows bold synthesis,
   popup placement/arrows/mnemonics/screen-edge behavior, focus and dismissal.
   Include the remaining source spinner/slider/dropdown/scrollbar rendering and
@@ -140,7 +138,7 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   clipboard, external editor/browser dispatch, shortcuts, scrolling and resizing.
   Record platform-specific results and any accepted chrome/rasterization differences.
   Client snapshots alone do not close this task.
-- [ ] **M5 — Finish preference and window lifecycle compatibility.**
+- [ ] **M5 — Finish preference and window lifecycle compatibility (in progress).**
   Resolve legacy FLTK user/executable-adjacent preference import, remaining
   inventory differences and native storage/restart/shutdown behavior. Verify
   placement, fullscreen restoration, transparency startup and canceled exits
@@ -227,7 +225,7 @@ Platform feasibility runs during parity work, not at the end. Final packaging
 and release acceptance follow the preceding objectives.
 
 - [x] Windows/Linux/macOS build/test CI and selected native adapter/font checks exist.
-- [ ] **P1:** Finish native runtime acceptance on Windows, Linux X11/Wayland and
+- [ ] **P1 (in progress):** Finish native runtime acceptance on Windows, Linux X11/Wayland and
   macOS, including both Mac architectures. Carry forward M6 and plusplus/unified
   results; distinguish compilation, automated native checks and interactive checks.
 - [ ] **P2:** Produce Windows x86-64 MSVC ZIP, Linux x86-64 tarball and macOS

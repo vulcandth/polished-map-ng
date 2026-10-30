@@ -29,6 +29,51 @@ fn color(h: &Harness<'_, Editor>, palette: u8, hue: u8) -> [u8; 3] {
 }
 
 #[test]
+fn palette_spinners_wrap_but_slider_keys_clamp_and_cancel_discards_both() {
+    let (_dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    let original = h.state().palette_document().bank().clone();
+    open(&mut h);
+    for (channel, name) in ["R", "G", "B"].into_iter().enumerate() {
+        let spin = format!("{name} channel");
+        h.get_by_label(&spin).set_value_accesskit(31.0);
+        h.run();
+        h.get_by_label(&spin).focus();
+        h.run();
+        h.key_press(egui::Key::ArrowUp);
+        h.run();
+        assert_eq!(color(&h, 0, 0)[channel], 0);
+        h.key_press(egui::Key::ArrowDown);
+        h.run();
+        assert_eq!(color(&h, 0, 0)[channel], 255);
+        let slider = format!("{name} slider");
+        h.get_by_label(&slider).focus();
+        h.run();
+        h.key_press(egui::Key::ArrowRight);
+        h.run();
+        assert_eq!(color(&h, 0, 0)[channel], 255);
+        h.key_press(egui::Key::ArrowLeft);
+        h.run();
+        assert_eq!(color(&h, 0, 0)[channel], 247);
+        h.key_press(egui::Key::ArrowUp);
+        h.run();
+        assert_eq!(
+            color(&h, 0, 0)[channel],
+            247,
+            "horizontal slider ignores up/down"
+        );
+        h.get_by_label(&slider).set_value_accesskit(0.0);
+        h.run();
+        h.key_press(egui::Key::ArrowLeft);
+        h.run();
+        assert_eq!(color(&h, 0, 0)[channel], 0);
+    }
+    h.get_by_label("Cancel").click();
+    h.run();
+    assert_eq!(h.state().palette_document().bank(), &original);
+    assert!(!h.state().is_modified());
+}
+
+#[test]
 fn channel_controls_and_set_selection_refresh_colors_without_map_edits() {
     let (_dir, mut h) = super::tileset_editor_tests::fixture(false, false);
     open(&mut h);

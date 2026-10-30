@@ -3,9 +3,9 @@
 A map and tileset editor being rewritten in Rust with egui/eframe, based on
 [Polished Map](https://github.com/Rangi42/polished-map) by Rangi42.
 
-**Under development.** Porting the upstream `master` editor is in progress;
-`plusplus` support has not started. This is not yet a replacement for either
-upstream editor. Windows, Linux and macOS are the target platforms.
+**Development version; compatibility is still being verified.** Windows, Linux
+and macOS are the target platforms. See the [roadmap](docs/roadmap.md) for supported
+scope and remaining work.
 
 See [INSTALL.md](INSTALL.md) to build and run the development version. Work on
 project copies while compatibility testing is incomplete; game assets are not
@@ -27,8 +27,8 @@ Right-click a block in the sidebar to edit its tile definition. See the
 [editing guide](docs/usage.md) for saving, specialist editors, palette colors and
 event workflows, or the [CLI guide](docs/cli.md) for experimental headless editing.
 
-Development follows the [roadmap](docs/roadmap.md). Contributors should read
-[AGENTS.md](AGENTS.md) for project instructions and development documentation.
+Contributors should read [AGENTS.md](AGENTS.md) for project instructions and
+development documentation.
 
 ## License and credits
 

@@ -111,7 +111,7 @@ has at least {bytes} bytes.",
             );
             let response = ui.put(
                 rect(10.0 + label_width, spinner_y, spinner_width, 22.0),
-                egui::DragValue::new(&mut form.size).range(1..=4096),
+                numeric_input::IntegerInput::new(&mut form.size, 1..=4096),
             );
             response.widget_info(|| {
                 egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "Overworld map buffer size")

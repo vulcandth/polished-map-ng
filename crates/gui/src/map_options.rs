@@ -176,7 +176,7 @@ impl Editor {
                 client
                     .put(
                         rect(layout.dimensions),
-                        egui::DragValue::new(&mut form.width).range(1..=255),
+                        numeric_input::IntegerInput::new(&mut form.width, 1..=255),
                     )
                     .widget_info(|| {
                         egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "Width")
@@ -184,7 +184,7 @@ impl Editor {
                 client
                     .put(
                         rect(height),
-                        egui::DragValue::new(&mut form.height).range(1..=255),
+                        numeric_input::IntegerInput::new(&mut form.height, 1..=255),
                     )
                     .widget_info(|| {
                         egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "Height")

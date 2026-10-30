@@ -7,6 +7,13 @@ may differ. All other safe observable behavior remains a parity requirement.
 
 Implementation-specific exceptions will be recorded here with tests and rationale.
 
+Numeric GUI fields bound draft text to 64 characters and saturate oversized
+integer parsing before applying the field's limits, avoiding C integer overflow
+and platform-dependent `long` sizes. Signed hex accepts the existing 32-bit
+display representation as well as a leading minus sign. Valid field-range values,
+arrow wrapping and typed-value clamping retain their source behavior; the
+oversized-input policy is covered by the shared numeric-control tests.
+
 Asset selectors use FLTK's case-sensitive numeric comparison, including its
 leading-zero and consumed-separator behavior. When that comparison reports equal,
 NG breaks the tie by the complete UTF-8 filename to make results independent of

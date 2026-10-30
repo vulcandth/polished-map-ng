@@ -540,7 +540,7 @@ impl Editor {
                 let mut value = rgb[channel] / 8;
                 let spin = ui.put(
                     rect(ox + wo, y, ww, 22.0),
-                    egui::DragValue::new(&mut value).range(0..=31),
+                    numeric_input::IntegerInput::new(&mut value, 0..=31),
                 );
                 spin.widget_info(|| {
                     egui::WidgetInfo::labeled(
@@ -551,7 +551,10 @@ impl Editor {
                 });
                 let slider = ui.put(
                     rect(ox + wo + ww + 6.0, y, ss - wo - ww, 22.0),
-                    egui::Slider::new(&mut value, 0..=31).show_value(false),
+                    egui::Slider::new(&mut value, 0..=31)
+                        .step_by(1.0)
+                        .smart_aim(false)
+                        .show_value(false),
                 );
                 slider.widget_info(|| {
                     egui::WidgetInfo::labeled(egui::Role::Slider, true, format!("{name} slider"))

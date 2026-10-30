@@ -220,7 +220,7 @@ impl Editor {
             );
             let response = ui.put(
                 rect(offset, 10.0, spinner_width, 22.0),
-                egui::DragValue::new(&mut count).range(1..=256),
+                numeric_input::IntegerInput::new(&mut count, 1..=256),
             );
             response.widget_info(|| {
                 egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "Block count")

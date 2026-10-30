@@ -3,6 +3,178 @@ use super::*;
 use egui_kittest::kittest::Queryable;
 
 #[test]
+fn event_options_measurement_uses_source_word_boundaries_and_integer_threshold() {
+    use super::event_workflows::measured_field_lines;
+    let width = |s: &str| s.chars().count() as f32;
+    for (text, max, expected) in [
+        ("", 5.0, 0),
+        ("short", 5.0, 1),
+        ("identifier_without_spaces", 5.0, 1),
+        ("one two", 6.0, 2),
+        ("one two", 7.0, 1),
+        ("one  two", 7.0, 2),
+        ("one\ntwo\n", 20.0, 2),
+        ("\n\n", 20.0, 2),
+        ("a\tb c", 9.0, 2),
+        ("a\u{1} b", 4.0, 2),
+    ] {
+        assert_eq!(measured_field_lines(text, max, width), expected, "{text:?}");
+    }
+    assert_eq!(measured_field_lines("one two", 7.0, |s| width(s) * 1.1), 1);
+}
+
+#[test]
+fn event_options_enter_dispatch_and_field_mode_are_fixed_until_reopen() {
+    for (label, long) in [
+        ("Event prefix", false),
+        ("Event suffix", false),
+        ("Event prefix", true),
+        ("Event suffix", true),
+    ] {
+        let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+        let path = dir.path().join("Map.asm");
+        let prefix = if label == "Event prefix" && long {
+            "SPRITE_RED + ".repeat(15)
+        } else {
+            "SPRITE_RED".into()
+        };
+        let suffix = if label == "Event suffix" && long {
+            "FLAG + ".repeat(30)
+        } else {
+            "FLAGS".into()
+        };
+        let source = format!(
+            "\tperson_event {prefix}, $00, $00, {suffix} ; keep\n\twarp_event 2, 0, MAP, 1\n"
+        );
+        std::fs::write(&path, &source).unwrap();
+        h.state_mut()
+            .request_event_change(EventChange::Load(path.clone()));
+        let ctx = h.ctx.clone();
+        h.state_mut().event_action(EventAction::Options(0), &ctx);
+        h.run();
+        let original_bounds = h.state().event_ui.form.as_ref().unwrap().bounds.size();
+        assert_eq!(original_bounds.y > 158.0, long);
+        h.get_by_label(label).focus();
+        h.run();
+        h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::A);
+        h.run();
+        // Shrinking a wrapped input does not turn it single-line. Growing a
+        // short input does not turn it multiline or enlarge the dialog.
+        let replacement = if long {
+            "SHORT".into()
+        } else {
+            "LONG + ".repeat(60)
+        };
+        h.get_by_label(label).type_text(&replacement);
+        h.run();
+        assert_eq!(
+            h.state().event_ui.form.as_ref().unwrap().bounds.size(),
+            original_bounds
+        );
+        h.key_press(egui::Key::Enter);
+        h.run();
+        assert_eq!(
+            h.state().event_ui.form.is_some(),
+            long,
+            "{label}, long={long}"
+        );
+        if long {
+            // Enter inserts a newline; Escape still discards the entire draft.
+            assert!(h.get_by_label(label).value().unwrap().contains('\n'));
+            h.key_press(egui::Key::Escape);
+            h.run();
+            assert!(!h.state().is_modified());
+        } else {
+            assert!(
+                h.state()
+                    .loaded
+                    .as_ref()
+                    .unwrap()
+                    .events
+                    .as_ref()
+                    .unwrap()
+                    .script()
+                    .events()
+                    .is_modified()
+            );
+            h.state_mut().event_action(EventAction::Options(0), &ctx);
+            h.run();
+            assert!(h.state().event_ui.form.as_ref().unwrap().bounds.height() > 158.0);
+            h.get_by_label("Cancel").click();
+            h.run();
+        }
+        let loaded = h.state().loaded.as_ref().unwrap();
+        let untouched = loaded.events.as_ref().unwrap().script().events().entries()[1].definition();
+        assert_eq!((untouched.x, untouched.y), (2, 0));
+        assert!(!loaded.document.map().is_modified());
+        assert_eq!(std::fs::read_to_string(path).unwrap(), source);
+    }
+}
+
+#[test]
+fn event_options_numeric_enter_commits_without_accepting_and_default_enter_accepts() {
+    for coordinate in ["0", "$00"] {
+        let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+        let path = dir.path().join("Map.asm");
+        std::fs::write(
+            &path,
+            format!("\tperson_event SPRITE_RED, {coordinate}, {coordinate}, FLAGS\n"),
+        )
+        .unwrap();
+        h.state_mut().request_event_change(EventChange::Load(path));
+        let ctx = h.ctx.clone();
+        h.state_mut().event_action(EventAction::Options(0), &ctx);
+        h.run();
+        h.get_by_label("Event X").set_value_accesskit(249.0);
+        h.run();
+        h.get_by_label("Event X").focus();
+        h.run();
+        h.key_press(egui::Key::ArrowUp);
+        h.run();
+        assert_eq!(
+            h.get_by_label("Event X").value().as_deref(),
+            Some(if coordinate == "0" { "-6" } else { "FFFFFFFA" })
+        );
+        h.key_press(egui::Key::ArrowDown);
+        h.run();
+        assert_eq!(
+            h.get_by_label("Event X").value().as_deref(),
+            Some(if coordinate == "0" { "249" } else { "F9" })
+        );
+        h.get_by_label("Event X").click();
+        h.run();
+        h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::A);
+        h.run();
+        h.get_by_label("Event X").type_text("03");
+        h.run();
+        h.key_press(egui::Key::Enter);
+        h.run();
+        assert!(h.state().event_ui.form.is_some());
+        assert!(!h.state().is_modified());
+        h.get_by_label("OK").focus();
+        h.run();
+        h.key_press(egui::Key::Enter);
+        h.run();
+        assert!(h.state().event_ui.form.is_none());
+        assert_eq!(
+            h.state()
+                .loaded
+                .as_ref()
+                .unwrap()
+                .events
+                .as_ref()
+                .unwrap()
+                .script()
+                .events()
+                .entries()[0]
+                .definition()
+                .x,
+            3
+        );
+    }
+}
+
+#[test]
 fn event_cursor_and_game_boy_guide_follow_hover_zoom_and_modal_guards() {
     let (_dir, mut h) = super::tileset_editor_tests::fixture(false, false);
     // The cursor and guide work before any event script is loaded.

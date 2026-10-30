@@ -25,6 +25,7 @@ mod map_options;
 mod menu_popup;
 mod menus;
 mod message_dialog;
+mod numeric_input;
 #[cfg(test)]
 mod open_scroll_tests;
 mod overworld;
@@ -890,7 +891,7 @@ impl Editor {
                             ui.horizontal(|ui| {
                                 let label = ui.label(label);
                                 let response = ui
-                                    .add(egui::DragValue::new(&mut *value).range(1..=255))
+                                    .add(numeric_input::IntegerInput::new(&mut *value, 1..=255))
                                     .labelled_by(label.id);
                                 default.restore(ui, &response, value);
                             });
@@ -962,8 +963,10 @@ impl Editor {
                     accept = ui.button("Resize").clicked();
                     cancel = ui.button("Cancel").clicked();
                 });
+                accept |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
+                cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
             });
-            if accept {
+            if accept && !cancel {
                 self.resize_anchor = form.anchor;
                 self.stroke.clear();
                 self.apply(Command::Resize {

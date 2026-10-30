@@ -19,7 +19,8 @@ Tileset choices show the project's discovered graphics, including numbered label
 and compound names. Roof choices start at `(none)`; the control is disabled when
 no roofs exist. Expand Project options to change Project folder, then use Reload
 project options before opening. An empty tileset inventory disables OK. Enter
-accepts valid options; Escape closes an open dropdown first, then cancels the dialog.
+accepts valid options unless a numeric field is being edited; there it commits
+the number first. Escape closes an open dropdown first, then cancels the dialog.
 The project
 adapter supports master tilesets with PNG/2bpp/LZ/CHR graphics, binary
 metatiles, tilepal mappings, all six palette sets, project/special palettes and
@@ -38,6 +39,12 @@ binary collision value to restore its value from when that dialog opened.
 In the palette editor, middle-click a channel spinner or slider to restore that
 channel's value from when you selected the swatch. Reset happens on release;
 Cancel still discards the draft.
+
+Use a number field's arrow buttons or Up/Down to step; stepping past a limit
+wraps to the other end. Hold an arrow button to repeat. Typed numbers commit on
+Enter or when you leave the field and are clamped to its limits. Enter while
+editing a number keeps the dialog open; use its confirmation button to apply
+the draft. Palette sliders instead stop at their limits and use Left/Right.
 
 Tools → Resize Map supports all nine anchors. Resizing fills new cells with
 block zero and clears undo history,
@@ -140,7 +147,9 @@ and right-click Event Options; Ctrl/Cmd+Shift+B returns to Blocks Mode and Tab
 switches modes when no dialog or text control has focus. Shift-click
 a warp to open its destination, with the normal unsaved-change prompt. Event
 Options retains macro-specific prefix/suffix fields, source lines, warp IDs and
-decimal/hex coordinate controls. Cancel discards only the draft.
+decimal/hex coordinate controls. Short text fields accept with Enter; fields
+that open as wrapped multiline inputs insert a newline instead. Their size and
+mode stay fixed until you reopen the dialog. Cancel or Escape discards the draft.
 
 View → Show Events and Show Warp IDs control overlays; Events Mode always shows
 events. Options → Auto-Load Events controls subsequent opens and is persisted.

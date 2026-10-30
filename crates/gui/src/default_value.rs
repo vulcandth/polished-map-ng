@@ -71,6 +71,7 @@ impl<T: Copy> DefaultValue<T> {
             self.armed = false;
         }
         if restored {
+            numeric_input::reset_text(ui.ctx(), response.id);
             ui.ctx().request_repaint();
         }
         restored

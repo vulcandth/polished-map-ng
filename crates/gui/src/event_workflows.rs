@@ -68,6 +68,7 @@ pub(super) struct EventForm {
     index: usize,
     definition: EventDefinition,
     defaults: [default_value::DefaultValue<i16>; 2],
+    field_heights: Option<[f32; 2]>,
     title: String,
     pub windows_buttons: bool,
     #[cfg(test)]
@@ -481,6 +482,7 @@ impl Editor {
                         index,
                         title: format!("{}{suffix}:", d.kind.macro_name()),
                         defaults: [d.x, d.y].map(default_value::DefaultValue::new),
+                        field_heights: None,
                         definition: d,
                         windows_buttons: cfg!(windows),
                         #[cfg(test)]
@@ -718,22 +720,26 @@ impl Editor {
             let field_width = 290.0 - offset;
             let height = |s: &Option<String>| {
                 s.as_ref().map_or(0.0, |s| {
-                    ui.painter()
-                        .layout(
-                            s.clone(),
-                            font.clone(),
-                            ui.visuals().text_color(),
-                            field_width,
-                        )
+                    let line_height = ui
+                        .painter()
+                        .layout_no_wrap("M".into(), font.clone(), ui.visuals().text_color())
                         .size()
                         .y
-                        .ceil()
-                        .max(18.0)
-                        + 4.0
+                        .ceil();
+                    (measured_field_lines(s, field_width, measure) as f32 * line_height + 4.0)
+                        .max(22.0)
                 })
             };
-            let ph = height(&form.definition.prefix);
-            let sh = height(&form.definition.suffix);
+            // Option_Dialog::show refreshes once. Editing text must not resize
+            // the dialog or change an input's mode underneath the cursor.
+            let first_frame = form.field_heights.is_none();
+            let [ph, sh] = *form.field_heights.get_or_insert_with(|| {
+                [
+                    height(&form.definition.prefix),
+                    height(&form.definition.suffix),
+                ]
+            });
+            let mut multiline_focused = false;
             let ch = 48.0
                 + if ph > 0.0 { ph + 4.0 } else { 0.0 }
                 + if sh > 0.0 { sh + 4.0 } else { 0.0 };
@@ -766,13 +772,14 @@ impl Editor {
                     rect(10.0, y, offset - 14.0, 22.0),
                     egui::Label::new("Prefix:"),
                 );
-                ui.put(
-                    rect(offset, y, field_width, ph),
-                    egui::TextEdit::multiline(field).desired_rows(1),
-                )
-                .widget_info(|| {
+                let response = event_field(ui, rect(offset, y, field_width, ph), field, "prefix");
+                response.widget_info(|| {
                     egui::WidgetInfo::labeled(egui::Role::TextInput, true, "Event prefix")
                 });
+                multiline_focused |= ph > 22.0 && response.has_focus();
+                accept |= ph <= 22.0
+                    && response.lost_focus()
+                    && ui.input(|i| i.key_pressed(egui::Key::Enter));
                 y += ph + 4.0;
             }
             for ((label, value, x), default) in [
@@ -795,16 +802,9 @@ impl Editor {
                     font.clone(),
                     ui.visuals().text_color(),
                 );
-                let mut spinner = egui::DragValue::new(&mut *value).range(-6..=249).speed(1.0);
+                let mut spinner = numeric_input::IntegerInput::new(&mut *value, -6..=249);
                 if form.definition.hex_coordinates {
-                    spinner = spinner
-                        .custom_formatter(|n, _| format!("{:02X}", n as i32 as u32))
-                        .custom_parser(|s| {
-                            i64::from_str_radix(s.trim().trim_start_matches('$'), 16)
-                                .ok()
-                                .filter(|n| (i64::from(i32::MIN)..=i64::from(u32::MAX)).contains(n))
-                                .map(|n| f64::from(n as i32))
-                        });
+                    spinner = spinner.hex();
                 }
                 let response = ui.put(rect(x, y, number_width, 22.0), spinner);
                 response.widget_info(|| {
@@ -822,26 +822,32 @@ impl Editor {
                     rect(10.0, y, offset - 14.0, 22.0),
                     egui::Label::new("Suffix:"),
                 );
-                ui.put(
-                    rect(offset, y, field_width, sh),
-                    egui::TextEdit::multiline(field).desired_rows(1),
-                )
-                .widget_info(|| {
+                let response = event_field(ui, rect(offset, y, field_width, sh), field, "suffix");
+                response.widget_info(|| {
                     egui::WidgetInfo::labeled(egui::Role::TextInput, true, "Event suffix")
                 });
+                multiline_focused |= sh > 22.0 && response.has_focus();
+                accept |= sh <= 22.0
+                    && response.lost_focus()
+                    && ui.input(|i| i.key_pressed(egui::Key::Enter));
             }
             let (ok, no) = if form.windows_buttons {
                 (116.0, 210.0)
             } else {
                 (210.0, 116.0)
             };
-            accept = ui
-                .put(rect(ok, ch + 26.0, 80.0, 22.0), egui::Button::new("OK"))
-                .clicked();
+            let ok = ui.put(rect(ok, ch + 26.0, 80.0, 22.0), egui::Button::new("OK"));
+            if first_frame {
+                ok.request_focus();
+            }
+            accept |= ok.clicked();
             cancel = ui
                 .put(rect(no, ch + 26.0, 80.0, 22.0), egui::Button::new("Cancel"))
                 .clicked();
             cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
+            if !multiline_focused {
+                accept |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
+            }
         });
         if cancel {
             return;
@@ -867,4 +873,77 @@ impl Editor {
             self.event_ui.form = Some(form);
         }
     }
+}
+
+/// FLTK fl_measure/expand_text_ with draw_symbols=false: wrap at ASCII spaces,
+/// never split an oversized first word, and do not count a trailing newline
+/// as an extra line. Width measurements remain supplied by the active font.
+pub(super) fn measured_field_lines(text: &str, width: f32, measure: impl Fn(&str) -> f32) -> usize {
+    let chars: Vec<_> = text.chars().collect();
+    let mut position = 0;
+    let mut lines = 0;
+    while position < chars.len() {
+        let mut buffer = String::new();
+        let mut word_end = 0;
+        let mut word_start = position;
+        let mut used_width = 0.0;
+        loop {
+            let c = chars.get(position).copied().unwrap_or('\0');
+            if matches!(c, '\0' | ' ' | '\n') {
+                if word_start < position {
+                    let new_width = used_width + measure(&buffer[word_end..]);
+                    if word_end > 0 && new_width.trunc() > width {
+                        position = word_start;
+                        break;
+                    }
+                    word_end = buffer.len();
+                    used_width = new_width;
+                }
+                if c == '\0' {
+                    position = chars.len();
+                    break;
+                }
+                if c == '\n' {
+                    position += 1;
+                    break;
+                }
+                word_start = position + 1;
+            }
+            match c {
+                '\t' => buffer.extend(std::iter::repeat_n(' ', 8 - buffer.chars().count() % 8)),
+                c if c < ' ' || c == '\u{7f}' => {
+                    buffer.push('^');
+                    buffer.push(char::from(c as u8 ^ 0x40));
+                }
+                c => buffer.push(c),
+            }
+            position += 1;
+        }
+        lines += 1;
+    }
+    lines
+}
+
+/// A source input keeps its opening bounds and scrolls internally as text grows.
+fn event_field(ui: &mut egui::Ui, rect: Rect, text: &mut String, name: &str) -> egui::Response {
+    if rect.height() <= 22.0 {
+        return ui.put(rect, egui::TextEdit::singleline(text).cursor_at_end(false));
+    }
+    let mut child = ui.new_child(egui::UiBuilder::new().max_rect(rect));
+    child.set_clip_rect(rect.intersect(ui.clip_rect()));
+    let mut response = egui::ScrollArea::vertical()
+        .id_salt(("event-field", name))
+        .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
+        .auto_shrink([false, false])
+        .max_height(rect.height())
+        .show(&mut child, |ui| {
+            ui.add_sized(
+                rect.size(),
+                egui::TextEdit::multiline(text).cursor_at_end(false),
+            )
+        })
+        .inner;
+    response.rect = rect;
+    response.interact_rect = rect.intersect(ui.clip_rect());
+    response
 }

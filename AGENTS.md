@@ -17,6 +17,9 @@ exist from day one; a partial slice is not a completed parity milestone.
 - Never append implementation progress, test counts, internal type names,
   per-turn notes, detailed CLI examples or outstanding-task lists to README.
   Change it only when its user-facing introduction or navigation needs changing.
+- Routine implementation completion is not a reason to edit README. Keep one
+  concise development/availability notice and link to the roadmap for milestone
+  status; do not duplicate the roadmap's status table or next task there.
 - `docs/roadmap.md` is the authoritative execution plan. Before feature work,
   choose the next unchecked item in the active milestone. Update that item and
   its evidence when work advances; do not append a chronological narrative.
@@ -43,6 +46,14 @@ exist from day one; a partial slice is not a completed parity milestone.
   use "not complete" as a substitute for "not started" or "in progress".
   A completed implementation step does not complete its native verification or
   milestone acceptance; retain those as explicit unchecked gates.
+- Keep each roadmap task to its outcome, completion condition and evidence link.
+  Move source walkthroughs, calculations, test-case inventories and work-session
+  observations to the owning evidence document. When splitting an active task,
+  preserve its ID and split only when independent acceptance or a real blocker
+  warrants it. Do not turn each implementation detail or work session into a
+  new roadmap item. Carry the selected task through implementation and required
+  verification before reporting it done. Update status and evidence together;
+  an unchecked item alone does not distinguish started from unstarted work.
 
 ## Evidence and compatibility
 

@@ -37,6 +37,14 @@ in `option-dialogs`, `block-window` and `palette-window`, under LGPL-3.0-only.
 The Rust adapter keeps capture with the editing session and abandons interrupted
 gestures; palette channel/hex/chooser edits retain the selected swatch baseline.
 
+Integer input and Event Options adapt master `hex-spinner.cpp` and
+`option-dialogs.cpp` under LGPL-3.0-only. Decimal input, repeat timing and field
+measurement also adapt FLTK 1.4.5 `Fl_Spinner.cxx`, `Fl_Repeat_Button.cxx`,
+`Fl_Button.cxx`, `Fl_Input.cxx`, `Fl_Input_.cxx` and `fl_draw.cxx`, Copyright 1998-2024 Bill
+Spitzak and others, under the retained FLTK license/version-selection terms
+below and in `LICENSES/FLTK.txt`. The Rust implementation uses egui for text
+editing and drawing; numeric limits and interrupted gestures are checked.
+
 The asset-path reference harness extracts unchanged master `Config` graphics,
 block, collision, palette, roof, event and constants-path functions, plus
 `remove_suffix`, `before_suffix` and `after_suffix`, under LGPL-3.0-only. Its
