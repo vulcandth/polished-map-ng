@@ -102,7 +102,10 @@ or rename its `app.ron` before relaunching.
 ## Remaining parity and verification
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
-or modified. Native theme variants still need their complete menu/persistence
+or modified. Source `meta128` (default false), the one-time acknowledgment after
+saving a collision blockset with more than 128 blocks, is not yet implemented.
+The warning and its persistence are explicit M1h work in the [roadmap](roadmap.md).
+Startup theme/placement policy and native theme variants still need their menu/persistence
 work. Transparency's Wayland integration and native compositor/GPU appearance
 remain open; its menu and saved-intent workflow are implemented.
 

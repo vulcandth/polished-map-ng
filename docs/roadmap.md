@@ -23,8 +23,9 @@ closes only when its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M1f, reconcile the complete master feature inventory. Then finish
-M2–M6 and M7 acceptance. If a task is externally blocked, record the blocker and
+**Next:** M1g, restore the remaining shared-control input behavior; then M1h,
+save feedback and the one-time block-limit warning. Follow with M2–M6 and M7
+acceptance. If a task is externally blocked, record the blocker and
 advance another unchecked master task. Do not advance to plusplus merely because
 one feature or test suite is complete.
 
@@ -67,6 +68,10 @@ adding improvements. Each completed group below still participates in M7.
   destinations, block/collision/palette fallbacks, roofs, events, constants and
   saved/unsaved-map palette selection match source fixtures. Evidence:
   [asset paths](compatibility.md#legacy-asset-path-selection).
+- [x] **M1f — Master feature inventory reconciliation:** source feature families,
+  implementation/tests and remaining owners are mapped in the
+  [source inventory](compatibility.md#master-source-inventory). Newly identified
+  implementation gaps are M1g/M1h below; classification is not parity acceptance.
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
   anchors, zero fill and source-compatible history boundaries.
 - [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
@@ -91,16 +96,25 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 ### Remaining work, in execution order
 
 - [ ] **M1 — Close the master coverage inventory and project-discovery gaps.**
-  In progress: M1a–M1e are implemented above; M1f remains below. Close M1 only
-  when M1f passes and any newly discovered discovery gaps are resolved. Native
-  window/widget fidelity and focus delivery remain separate M4/M6 requirements.
-- [ ] **M1f — Reconcile the complete master feature inventory (next).**
-  Classify every original menu, dialog, gesture, preference and format as
-  implemented with evidence, an explicit remaining task, or an approved
-  deviation. Add uncovered work here with a completion condition, including
-  block/event gestures. Done when no source feature remains unclassified and
-  each gap has a roadmap task. Start from [menus](menus.md) and the
-  [coverage matrix](compatibility.md#current-coverage-matrix).
+  In progress: M1a–M1f are completed above; the inventory exposed M1g/M1h below.
+  Close M1 when those gaps are resolved and the inventory remains reconciled.
+  Native window/widget fidelity and focus delivery remain M4/M6 requirements.
+- [ ] **M1g — Restore shared-control input behavior (next).**
+  Implement source middle-release resets for Resize Map, Resize Blockset,
+  Overworld Map Size, event coordinates, binary collisions and palette RGB5
+  spinners/sliders. Preserve each control's original default-capture boundary.
+  Reconcile numeric step/repeat/wrap/clamp, signed hex input and Event Options'
+  measured single-/multiline fields and Enter delivery. Done when source-derived
+  input tests cover each affected control, bounds, cancellation, focus/disabled
+  guards and unchanged unrelated state. Source widget painting remains M4.
+- [ ] **M1h — Restore save feedback and the 128-block warning.**
+  Inventory source success dialogs for Save/Save As and individual map, blockset,
+  tileset/palette-map, roof, event-script and palette-export operations; deliver
+  their ordering through the guarded save flow. Add the collision-blockset
+  warning above 128 blocks and persist its `meta128` acknowledgment. Done when
+  clean/dirty saves, Save All sequencing, failures/conflicts, threshold boundaries,
+  acknowledgment and restored preferences have tests. Status text alone does not
+  replace a source modal. See [source inventory](compatibility.md#master-source-inventory).
 - [ ] **M2 — Finish icon and application-artwork provenance and porting.**
   Resolve the ten toolbar placeholders, application/About image and message
   shields. Import only cleared assets, preserve notices, and verify decoded
@@ -116,6 +130,9 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 - [ ] **M4 — Complete source-derived GUI and native-window fidelity.**
   Finish editor/modal child-window behavior, font fallback/Windows bold synthesis,
   popup placement/arrows/mnemonics/screen-edge behavior, focus and dismissal.
+  Include the remaining source spinner/slider/dropdown/scrollbar rendering and
+  measured Resize/Change Tileset/Change Roof/Event/confirmation dialog details;
+  stock egui controls do not by themselves establish that fidelity.
   Verify source geometry at 1×/2× before targeted native checks of dialogs,
   clipboard, external editor/browser dispatch, shortcuts, scrolling and resizing.
   Record platform-specific results and any accepted chrome/rasterization differences.
