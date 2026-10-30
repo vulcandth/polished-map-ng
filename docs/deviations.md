@@ -456,5 +456,9 @@ Unix URI lists are split before decoding, retaining escaped newlines within one
 filename and preserving non-UTF-8 path bytes. Remote/non-file URLs and malformed
 escapes are rejected; the adapter never downloads or silently repairs them.
 X11 waits for the drop's matching selection response instead of losing a fast
-drop while hover data is still in flight. Native desktop acceptance is still
+drop while hover data is still in flight. Later position messages cannot erase
+that pending drop's captured point. Rejected status/finished replies use numeric
+None (zero), rather than an atom interned with the name "None", as required by the
+[XDND protocol](https://wiki.freedesktop.org/www/Specifications/XDND/).
+Native desktop acceptance is still
 open in [M3](roadmap.md).

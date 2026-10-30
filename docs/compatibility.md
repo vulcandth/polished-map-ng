@@ -1475,6 +1475,18 @@ Automated evidence:
 - The [shared native helper tests](../crates/gui/tests/native_file_drop.rs)
   cover unique transfer IDs and invalid records; Unix additionally exercises
   non-UTF-8 filenames, escaped newlines, malformed/remote URLs and size limits.
+- The [native X11 probe](../crates/platform/tests/x11_file_drop.rs) runs actual
+  winit windows and an independent x11rb source under a private Xvfb server.
+  Its 17 scenarios cover inline/type-list offers, INCR chunks, wrong source/target,
+  positions arriving after Drop, stale/duplicate notifications, malformed URI or
+  property format, payload/INCR limits, refused selection, leave, missing position,
+  unsupported MIME, a new enter during a pending selection and target destruction.
+  It checks ordered UTF-8/non-UTF-8 paths, negative root coordinates and physical
+  client coordinates at 2× scale. All pass on Ubuntu 22.04.5 LTS/WSL2, Rust 1.98.1,
+  Xvfb `2:21.1.4-2ubuntu1.7~22.04.16`. The probe exposed and now prevents two
+  regressions: rejected actions must use numeric None (zero), and a later position
+  must not erase an already dropped transfer's captured point. Both conform to
+  the [XDND protocol](https://wiki.freedesktop.org/www/Specifications/XDND/).
 - The [Wayland protocol probe](../tools/wayland_file_drop_probe.py) runs the actual
   adapter and Rust event consumer against private wl_data_device events and real
   SCM_RIGHTS pipes. Its 13 scenarios cover ordered paths and 2× coordinates,
@@ -1496,8 +1508,8 @@ Automated evidence:
 Still required: actual file-manager delivery, off-window cancellation,
 multiple-monitor/mixed-DPI placement, clipboard coexistence, seat/window teardown
 and compositor behavior on Windows, macOS, X11 and Wayland. Wayland's isolated
-protocol cases are verified locally; real-desktop workflows remain. X11's
-asynchronous selection flow still needs native protocol acceptance.
+protocol cases and X11's asynchronous selection flow are verified locally;
+real-desktop workflows remain.
 Whole-window opacity implementation and its remaining
 native gates are tracked in [transparency evidence](#whole-window-transparency).
 These are M3 gates; no complete desktop parity claim follows from these tests.

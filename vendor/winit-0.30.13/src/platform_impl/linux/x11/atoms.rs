@@ -91,7 +91,6 @@ atom_manager! {
     XdndFinished,
     XdndTypeList,
     TextUriList: b"text/uri-list",
-    None: b"None",
 
     // Miscellaneous Atoms
     _GTK_THEME_VARIANT,

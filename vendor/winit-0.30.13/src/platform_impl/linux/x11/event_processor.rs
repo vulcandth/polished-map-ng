@@ -476,6 +476,12 @@ impl EventProcessor {
             return;
         }
         if xev.message_type == atoms[XdndPosition] as c_ulong {
+            if self.dnd.pending_time.is_some() {
+                // A completed drop owns its captured point while waiting for
+                // selection data. Later motion must not erase that point.
+                unsafe { let _ = self.dnd.send_status(window, source, DndState::Rejected); }
+                return;
+            }
             let packed = xev.data.get_long(2) as u32;
             // XDND packs signed 16-bit root coordinates. Translate against the
             // destination's root, including windows on a different X screen.

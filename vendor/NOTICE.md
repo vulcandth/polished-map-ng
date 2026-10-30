@@ -19,7 +19,9 @@ Modified for Polished Map NG on 2026-10-29, under Apache-2.0:
 - X11: associate enter/position/drop with source and target windows, request the
   URI selection on drop, await its matching response (including incremental
   property transfers), bound property reads, and
-  preserve filename bytes with per-URI percent decoding.
+  preserve filename bytes with per-URI percent decoding. Preserve a pending
+  drop's captured point across later position messages and use numeric X11 None
+  for rejected actions, as required by XDND.
 - Wayland: bind receive-only data devices on the existing connection/queue,
   retain each offer's surface/coordinates, and read URI data through bounded
   nonblocking calloop sources with a timeout and seat/window-removal cleanup.

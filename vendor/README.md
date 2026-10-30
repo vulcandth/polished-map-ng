@@ -39,6 +39,13 @@ ordered paths/scale, overlapping receives, leave, unsupported data/actions,
 bounds, timeout, seat/window removal and clipboard non-interference at the
 protocol level. Real file-manager and clipboard workflows still need acceptance.
 
+On Linux with Xvfb and the X11 runtime libraries from [INSTALL](../INSTALL.md), run
+`xvfb-run --auto-servernum env WINIT_X11_SCALE_FACTOR=2 POLISHED_MAP_X11_DROP_PROBE=1 cargo test -p polished-map-platform --locked --test x11_file_drop native_x11_file_drop -- --ignored --exact --nocapture`.
+The independent x11rb source exercises real X server selections, normal and INCR
+payloads, negative screen positions, delayed/stale events, rejection and teardown
+against winit's native windows. It uses an isolated server and synthetic paths;
+it neither operates a desktop nor proves real file-manager/compositor behavior.
+
 Keep this patch focused on native transfer/opacity integration. Re-evaluate it
 when a compatible egui/winit release supplies these capabilities; remove it only
 after the same behavioral gates pass. Preserve upstream copyrights and license

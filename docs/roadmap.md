@@ -25,9 +25,12 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M3, complete external file drops and whole-window transparency.
+**Next:** M4, finish source-derived GUI and native-window fidelity, then M5
+lifecycle compatibility. M3's implementation and isolated native protocol checks
+are in place; its integrated file-manager, compositor, clipboard and mixed-DPI
+acceptance remains open and will run with M6 against the finished windows.
 M1 inventory/discovery/save feedback and M2 original artwork are complete.
-Follow with M4–M6 and M7 acceptance. If a task is externally blocked, record the blocker and
+Follow with M6 and M7 acceptance. If a task is externally blocked, record the blocker and
 advance another unchecked master task. Do not advance to plusplus merely because
 one feature or test suite is complete.
 
@@ -129,7 +132,8 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   covers the root and client frame, with explicit capability errors and guarded
   request/reply handling. Wayland receives retain independent offer lifetimes
   and cancel on seat/window teardown; native protocol probes cover opacity and
-  transfer behavior. Complete native file-manager/clipboard/DPI acceptance;
+  transfer behavior, including X11 selection/INCR exchanges. Complete integrated
+  native file-manager/clipboard/DPI acceptance alongside M6;
   verify opacity on Windows, macOS, X11 and Wayland. Evidence:
   [external drops](compatibility.md#native-external-file-drops),
   [transparency](compatibility.md#whole-window-transparency).

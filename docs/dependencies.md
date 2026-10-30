@@ -139,6 +139,11 @@ to an incompatible prerelease windowing API. The GUI's direct egui-winit
 dependency disables defaults and shares the features already selected by eframe.
 The platform's Windows-only test dependencies reuse winit's locked Windows ABI
 and tracing versions; they do not affect the production platform graph.
+Linux-only tests enable both winit backends and use the already locked x11rb
+0.13.2 for an independent XDND source; this adds no package/version to the lockfile
+and no production dependency. The private Xvfb checks require
+`libxkbcommon-x11-0` as well as the base xkbcommon library: `libxkbcommon-dev`
+alone does not supply `libxkbcommon-x11.so.0`. CI installs the runtime explicitly.
 
 See [vendor maintenance](../vendor/README.md), [source hashes](../vendor/sources.json)
 and [license/modification notices](../vendor/NOTICE.md). CI verifies these trees

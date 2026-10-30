@@ -1660,7 +1660,7 @@
          }
 --- a/winit-0.30.13/src/platform_impl/linux/x11/atoms.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/x11/atoms.rs
-@@ -85,7 +85,8 @@
+@@ -85,12 +85,12 @@
      XdndDrop,
      XdndPosition,
      XdndStatus,
@@ -1670,9 +1670,14 @@
      XdndSelection,
      XdndFinished,
      XdndTypeList,
+     TextUriList: b"text/uri-list",
+-    None: b"None",
+ 
+     // Miscellaneous Atoms
+     _GTK_THEME_VARIANT,
 --- a/winit-0.30.13/src/platform_impl/linux/x11/dnd.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/x11/dnd.rs
-@@ -1,15 +1,9 @@
+@@ -1,15 +1,8 @@
 -use std::io;
 -use std::os::raw::*;
 -use std::path::{Path, PathBuf};
@@ -1682,7 +1687,7 @@
 -use percent_encoding::percent_decode;
 -use x11rb::protocol::xproto::{self, ConnectionExt};
 -
- use super::atoms::AtomName::None as DndNone;
+-use super::atoms::AtomName::None as DndNone;
  use super::atoms::*;
  use super::{util, CookieResultExt, X11Error, XConnection};
 +use std::os::raw::*;
@@ -1691,7 +1696,7 @@
  
  #[derive(Debug, Clone, Copy)]
  pub enum DndState {
-@@ -17,25 +11,9 @@
+@@ -17,25 +10,9 @@
      Rejected,
  }
  
@@ -1720,7 +1725,7 @@
  }
  
  pub struct Dnd {
-@@ -45,20 +23,34 @@
+@@ -45,20 +22,34 @@
      pub type_list: Option<Vec<xproto::Atom>>,
      // Populated by XdndPosition event handler
      pub source_window: Option<xproto::Window>,
@@ -1759,13 +1764,15 @@
      }
  
      pub unsafe fn send_status(
-@@ -69,17 +61,17 @@
+@@ -69,17 +60,18 @@
      ) -> Result<(), X11Error> {
          let atoms = self.xconn.atoms();
          let (accepted, action) = match state {
 -            DndState::Accepted => (1, atoms[XdndActionPrivate]),
+-            DndState::Rejected => (0, atoms[DndNone]),
 +            DndState::Accepted => (1, atoms[XdndActionCopy]),
-             DndState::Rejected => (0, atoms[DndNone]),
++            // XDND's None is the predefined zero value, not an interned name.
++            DndState::Rejected => (0, x11rb::NONE),
          };
          self.xconn
 -            .send_client_msg(target_window, target_window, atoms[XdndStatus] as _, None, [
@@ -1790,8 +1797,9 @@
          let atoms = self.xconn.atoms();
          let (accepted, action) = match state {
 -            DndState::Accepted => (1, atoms[XdndActionPrivate]),
+-            DndState::Rejected => (0, atoms[DndNone]),
 +            DndState::Accepted => (1, atoms[XdndActionCopy]),
-             DndState::Rejected => (0, atoms[DndNone]),
++            DndState::Rejected => (0, x11rb::NONE),
          };
          self.xconn
 -            .send_client_msg(target_window, target_window, atoms[XdndFinished] as _, None, [
@@ -1881,7 +1889,7 @@
  }
 --- a/winit-0.30.13/src/platform_impl/linux/x11/event_processor.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/x11/event_processor.rs
-@@ -452,159 +452,102 @@
+@@ -452,159 +452,108 @@
          }
  
          if xev.message_type == atoms[XdndEnter] as c_ulong {
@@ -1950,6 +1958,12 @@
 -
 -            let accepted = if let Some(ref type_list) = self.dnd.type_list {
 -                type_list.contains(&atoms[TextUriList])
++            if self.dnd.pending_time.is_some() {
++                // A completed drop owns its captured point while waiting for
++                // selection data. Later motion must not erase that point.
++                unsafe { let _ = self.dnd.send_status(window, source, DndState::Rejected); }
++                return;
++            }
 +            let packed = xev.data.get_long(2) as u32;
 +            // XDND packs signed 16-bit root coordinates. Translate against the
 +            // destination's root, including windows on a different X screen.
@@ -2115,7 +2129,7 @@
          }
      }
  
-@@ -821,10 +764,11 @@
+@@ -821,10 +770,11 @@
          callback(&self.target, event);
      }
  
@@ -2128,7 +2142,7 @@
          let wt = Self::window_target(&self.target);
  
          let window = xev.window as xproto::Window;
-@@ -852,6 +796,24 @@
+@@ -852,6 +802,24 @@
          let wt = Self::window_target(&self.target);
          let atoms = wt.x_connection().atoms();
          let atom = xev.atom as xproto::Atom;

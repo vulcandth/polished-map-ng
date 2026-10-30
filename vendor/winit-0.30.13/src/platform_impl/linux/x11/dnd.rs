@@ -1,4 +1,3 @@
-use super::atoms::AtomName::None as DndNone;
 use super::atoms::*;
 use super::{util, CookieResultExt, X11Error, XConnection};
 use std::os::raw::*;
@@ -62,7 +61,8 @@ impl Dnd {
         let atoms = self.xconn.atoms();
         let (accepted, action) = match state {
             DndState::Accepted => (1, atoms[XdndActionCopy]),
-            DndState::Rejected => (0, atoms[DndNone]),
+            // XDND's None is the predefined zero value, not an interned name.
+            DndState::Rejected => (0, x11rb::NONE),
         };
         self.xconn
             .send_client_msg(
@@ -86,7 +86,7 @@ impl Dnd {
         let atoms = self.xconn.atoms();
         let (accepted, action) = match state {
             DndState::Accepted => (1, atoms[XdndActionCopy]),
-            DndState::Rejected => (0, atoms[DndNone]),
+            DndState::Rejected => (0, x11rb::NONE),
         };
         self.xconn
             .send_client_msg(

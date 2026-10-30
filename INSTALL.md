@@ -17,10 +17,12 @@ workspace's minimum supported Rust version is checked separately in CI.
 
 ```sh
 sudo apt-get update
-sudo apt-get install -y build-essential pkg-config libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev fonts-liberation xvfb xauth
+sudo apt-get install -y build-essential pkg-config libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev fonts-liberation xvfb xauth
 ```
 
 The Linux GUI needs a working X11 or Wayland desktop and graphics driver.
+The X11 backend also loads `libxkbcommon-x11.so.0` at runtime; installing only
+`libxkbcommon-dev` does not supply that separate library on a minimal system.
 Installed-font discovery uses Fontconfig; headless rendering can instead accept
 explicit font files. CI compilation/tests do not establish complete native desktop
 compatibility on any platform.

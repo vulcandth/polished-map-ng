@@ -222,7 +222,8 @@ The adapters and guarded workspace route are implemented. The editor consumes
 only complete positioned transfers, never `RawInput.dropped_files` or cached
 ordinary pointer state. Windows uses the by-value OLE drop point; macOS converts
 the dragging location through its flipped content view; X11 uses the last
-position belonging to the source/target transfer and waits for its URI response;
+position belonging to the source/target transfer and waits for its URI response,
+preserving that captured point when later position messages arrive;
 Wayland uses the offer's surface-local position. The bridge converts physical
 pixels to egui points once using native scale × egui zoom.
 

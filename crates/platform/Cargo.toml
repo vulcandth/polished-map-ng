@@ -25,8 +25,9 @@ tempfile.workspace = true
 
 [target.'cfg(target_os = "linux")'.dev-dependencies]
 # Drive the actual window adapter against an isolated protocol peer, without a GPU.
-winit = { version = "=0.30.13", default-features = false, features = ["wayland", "wayland-dlopen", "rwh_06"] }
+winit = { version = "=0.30.13", default-features = false, features = ["wayland", "wayland-dlopen", "x11", "rwh_06"] }
 wayland-sys = { version = "0.31", features = ["client", "dlopen"] }
+x11rb = "0.13"
 
 [target.'cfg(windows)'.dev-dependencies]
 # Test the exact vendored OLE callback against its original Windows ABI types.
