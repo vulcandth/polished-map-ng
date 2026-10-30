@@ -124,10 +124,12 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 ### Remaining work, in execution order
 
 - [ ] **M3 — Complete external file drops and whole-window transparency (in progress).**
-  Deliver real drop coordinates/path order through the window adapter; accept
-  only workspace drops and use the normal guarded Open flow. Resolve Wayland's
-  missing external-drop and opacity integration; verify Windows, macOS, X11 and
-  Wayland behavior. Done when the gates in [architecture](architecture.md) pass;
+  Positioned, ordered native drops and guarded workspace Open are implemented
+  through pinned adapters, including Wayland receiving. Complete native
+  file-manager/clipboard/DPI acceptance and Wayland whole-window opacity;
+  verify opacity on Windows, macOS, X11 and Wayland. Evidence:
+  [external drops](compatibility.md#native-external-file-drops).
+  Done when the gates in [architecture](architecture.md) pass;
   stale pointer coordinates or widget alpha are not substitutes.
 - [ ] **M4 — Complete source-derived GUI and native-window fidelity (in progress).**
   Finish editor/modal child-window behavior, font fallback/Windows bold synthesis,

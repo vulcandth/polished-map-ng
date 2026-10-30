@@ -24,7 +24,7 @@ application acceptance; native interactions additionally need M6.
 | `main-window.cpp`: all eight menu groups, 27 toolbar positions, availability, shortcuts and mode changes | [Menus and tests](../crates/gui/src/menus.rs), [toolbar tests](../crates/gui/src/toolbar_tests.rs), [menu inventory](menus.md) | M4 popup traversal/mnemonics/placement; I3 deferred theme commands |
 | `main-window.cpp`, `map.cpp`: map paint, fill, replace, swap, drag history, Undo/Redo, resize and event translation | [Map model](../crates/core/src/map.rs), [editing](../crates/core/tests/editing.rs), [resize](../crates/core/tests/resize.rs), [event workflows](../crates/gui/src/event_workflow_tests.rs) | M4 resize client/widget fidelity |
 | `map-buttons.cpp`, `widgets.cpp`: sidebar selection/right-release editing, map/tile/pixel picking and painting, internal swap/Control-copy drags, enabled Drag and Drop | [Block gestures](../crates/gui/src/block_workflow_tests.rs), [tile gestures](../crates/gui/src/tileset_editor_tests.rs), [drag tests](../crates/gui/src/drag_tests.rs), [palette tests](../crates/gui/src/palette_editor_tests.rs) | M4 native input delivery and widget visuals |
-| `main-window.cpp`, `widgets.cpp`: external URI/file drops and workspace eligibility | [File workflows](../crates/gui/src/file_workflows.rs), [external-drop gate](architecture.md#native-external-file-drop-integration-gate) | M3 coordinate/path delivery and Wayland integration |
+| `main-window.cpp`, `widgets.cpp`: external URI/file drops and workspace eligibility | [Positioned drops](../crates/gui/src/external_drop.rs), [native adapter evidence](#native-external-file-drops) | M3 native file-manager/DPI/cancellation and clipboard acceptance |
 | `main-window.cpp`, `ruler.cpp`, `gameboy-screen.cpp`: rulers, grids, IDs/hex, priority, event/warp overlays, status, zoom, pan, hover guide and numeric hotkeys | [Rulers](../crates/gui/src/rulers.rs), [status](../crates/gui/src/status_bar.rs), [hotkeys](../crates/gui/src/block_hotkeys.rs), [event hover tests](../crates/gui/src/event_workflow_tests.rs), [zoom tests](../crates/gui/src/zoom_tests.rs) | M4 fonts and native scrolling/resize/DPI; M3 window opacity |
 | `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/block_editor.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) | M4 child window |
 | `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/tileset_editor.rs), [editor tests](../crates/gui/src/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/project/tests/tileset.rs) | M4 child window/native clipboard |
@@ -1409,6 +1409,52 @@ passed all eight jobs, including three OS builds/tests and the visual suite.
 
 Status: initial implementation in progress. Neither upstream parity gate passed.
 
+## Native external file drops
+
+Pinned master `DnD_Receiver` receives only in `_map_scroll`; its callback rejects
+modals, applies the unsaved guard and opens the first supplied filename. NG now
+uses [the same guarded Open entry](../crates/gui/src/recent_maps.rs) for native
+drops and recent files. [Workspace routing](../crates/gui/src/external_drop.rs)
+includes blank canvas margins and excludes sidebar, rulers, menu/toolbar and
+status areas. Rejected and accepted transfers are consumed once; a second drop
+cannot replace a pending modal path. The internal Drag and Drop setting remains
+independent.
+
+The [pinned native patches](../vendor/NOTICE.md) emit one complete transfer before
+legacy path-only events. Windows uses OLE's actual screen point and
+ScreenToClient; macOS converts draggingLocation into its flipped content view;
+X11 tracks source/target position and waits for the drop's matching selection
+response, including INCR chunks; Wayland receives URI lists on winit's own
+connection and calloop queue.
+The egui bridge preserves ordered paths and transfer identity per viewport and
+divides by native scale × egui zoom once. Path-only RawInput and ordinary cursor
+state cannot initiate an Open.
+
+Automated evidence:
+
+- Egui input tests cover workspace edges, blank margins, 2.5× conversion,
+  first-file selection, dirty/modal rejection, cancellation, failure retention,
+  unchanged recent history, queue bounds and viewport isolation.
+- The Windows [OLE callback test](../crates/platform/tests/ole_file_drop.rs)
+  includes the exact patched vtable/handler. An unseen native window receives
+  synthetic CF_HDROP data with Unicode and an unpaired UTF-16 filename. The test
+  checks ordered paths, actual screen-to-client translation, QueryInterface
+  identity and both STGMEDIUM owner releases. It does not operate the desktop.
+- The [shared native helper tests](../crates/gui/tests/native_file_drop.rs)
+  cover unique transfer IDs and invalid records; Unix additionally exercises
+  non-UTF-8 filenames, escaped newlines, malformed/remote URLs and size limits.
+- Windows workspace checks run locally. Cross-target checks pass for the
+  macOS GUI and Linux winit with X11/Wayland enabled. Cross-compilation is not
+  native execution. Original crate archives and every bundled source/patch hash
+  are verified by [vendor_sources.py](../tools/vendor_sources.py).
+
+Still required: actual file-manager delivery, off-window cancellation,
+multiple-monitor/mixed-DPI placement, clipboard coexistence, seat/window teardown
+and compositor behavior on Windows, macOS, X11 and Wayland. In particular, the
+Wayland receive timeout/leave lifecycle and X11 asynchronous selection flow need
+native protocol acceptance. Whole-window Wayland opacity is still unimplemented.
+These are M3 gates; no complete desktop parity claim follows from these tests.
+
 ## Internal drag-and-drop option and palette transfers
 
 The pinned master's `Main_Window` preference/menu callbacks and
@@ -1429,7 +1475,7 @@ the existing selection-border oracle additionally covers 20-pixel swatches at
 1x and 2x. These are headless egui checks, not native OS drag verification.
 External file dropping (`Workspace`/`DnD_Receiver` and
 `Main_Window::drag_and_drop_cb`) is independent of this option in upstream and
-remains unimplemented.
+is now implemented through the separate [native transfer route](#native-external-file-drops).
 
 The three new drag-feedback snapshots and seven changed baselines were reviewed.
 Four palette-form changes are confined to the selected 20x20 swatch, two menu
@@ -1566,7 +1612,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented is missing; native child windows and native clipboard verification remain pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented remains; native fonts, full gesture coverage and native workflows are pending |
-| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export and internal Drag and Drop implemented. The meta128 acknowledgment is implemented; legacy import, external file drops, native storage/placement and native Print/clipboard parity remain pending |
+| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export, internal Drag and Drop and positioned external-drop routing implemented. The meta128 acknowledgment is implemented; legacy import, native file-drop acceptance, storage/placement and Print/clipboard parity remain pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |

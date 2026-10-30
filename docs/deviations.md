@@ -427,3 +427,24 @@ macOS uses NSWindow alphaValue as the native equivalent of upstream's X11 path.
 The current Wayland integration reports that whole-window opacity is unsupported;
 this is an incomplete parity item, not an approved permanent omission. Pixel
 alpha or a faded egui panel is not substituted for whole-window opacity.
+## External transfer bounds and OLE correctness
+
+The native file-drop adapters limit one transfer to 4 MiB and 4,096 paths, and
+the GUI queue retains at most 16 completed transfers per viewport. Wayland
+receives at most 64 KiB per event dispatch and cancels a stalled receive after
+ten seconds. These limits keep external input from blocking the UI or growing
+memory indefinitely; ordinary map-file drops retain upstream's first-file rule.
+
+The Windows adapter corrects winit's handwritten OLE POINTL argument from a
+pointer to the documented by-value ABI, implements its previously unimplemented
+IUnknown query, and uses ReleaseStgMedium on both hover and drop. This avoids a
+coordinate dereference crash and respects the data provider's release ownership.
+See Microsoft's [Drop ABI](https://learn.microsoft.com/en-us/windows/win32/api/oleidl/nf-oleidl-idroptarget-drop)
+and [storage-medium contract](https://learn.microsoft.com/en-us/windows/win32/api/ole2/nf-ole2-releasestgmedium).
+
+Unix URI lists are split before decoding, retaining escaped newlines within one
+filename and preserving non-UTF-8 path bytes. Remote/non-file URLs and malformed
+escapes are rejected; the adapter never downloads or silently repairs them.
+X11 waits for the drop's matching selection response instead of losing a fast
+drop while hover data is still in flight. Native desktop acceptance is still
+open in [M3](roadmap.md).

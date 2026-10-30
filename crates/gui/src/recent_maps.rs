@@ -104,6 +104,11 @@ impl Editor {
         let Some(path) = self.recent_maps.0.get(index).cloned() else {
             return;
         };
+        self.request_open_path(path);
+    }
+
+    /// Shared native-file-drop and recent-file entry to guarded Open.
+    pub(super) fn request_open_path(&mut self, path: PathBuf) {
         self.pending_close = false;
         self.pending_exit = false;
         self.pending_new = false;

@@ -1,0 +1,1342 @@
+--- a/winit-0.30.13/src/event.rs
++++ b/winit-0.30.13/src/event.rs
+@@ -178,6 +178,21 @@
+     /// When the user drops multiple files at once, this event will be emitted for each file
+     /// separately.
+     DroppedFile(PathBuf),
++
++    /// One complete native file transfer, with ordered paths and the transfer's
++    /// final position in physical client coordinates (upper-left origin).
++    ///
++    /// Polished Map NG extension. Legacy `DroppedFile` events follow this event.
++    /// The identifier is unique for the lifetime of this process. Cancellation
++    /// never produces this event; ordinary pointer motion is not used.
++    FilesDropped {
++        /// Unique completed transfer identifier.
++        transfer_id: u64,
++        /// Paths in the native transfer's order.
++        paths: Vec<PathBuf>,
++        /// The position reported by the native transfer.
++        position: PhysicalPosition<f64>,
++    },
+ 
+     /// A file is being hovered over the window.
+     ///
+--- a/winit-0.30.13/src/file_drop.rs
++++ b/winit-0.30.13/src/file_drop.rs
+@@ -0,0 +1,139 @@
++//! Polished Map NG native-transfer extension (Apache-2.0, like winit).
++use std::path::PathBuf;
++use std::sync::atomic::{AtomicU64, Ordering};
++
++use crate::dpi::PhysicalPosition;
++use crate::event::WindowEvent;
++
++pub(crate) const MAX_FILES: usize = 4096;
++pub(crate) const MAX_BYTES: usize = 4 * 1024 * 1024;
++
++pub(crate) fn completed(
++    paths: Vec<PathBuf>,
++    position: PhysicalPosition<f64>,
++) -> Option<WindowEvent> {
++    static NEXT_TRANSFER: AtomicU64 = AtomicU64::new(1);
++    if paths.is_empty()
++        || paths.len() > MAX_FILES
++        || !position.x.is_finite()
++        || !position.y.is_finite()
++    {
++        return None;
++    }
++    Some(WindowEvent::FilesDropped {
++        transfer_id: NEXT_TRANSFER.fetch_add(1, Ordering::Relaxed),
++        paths,
++        position,
++    })
++}
++
++/// Decode each URI separately so escaped newlines cannot create extra files.
++/// Preserve Unix filename bytes; never canonicalize or fetch remote URLs.
++#[cfg(unix)]
++#[cfg_attr(target_os = "macos", allow(dead_code))]
++pub(crate) fn uri_list(bytes: &[u8]) -> Option<Vec<PathBuf>> {
++    use std::ffi::OsString;
++    use std::os::unix::ffi::OsStringExt;
++    if bytes.len() > MAX_BYTES {
++        return None;
++    }
++    let mut paths = Vec::new();
++    for line in bytes.split(|b| *b == b'\n') {
++        let line = line.strip_suffix(b"\r").unwrap_or(line);
++        if line.is_empty() || line.starts_with(b"#") {
++            continue;
++        }
++        let rest = line.strip_prefix(b"file://")?;
++        let path = if rest.starts_with(b"/") {
++            rest
++        } else {
++            rest.strip_prefix(b"localhost")?
++        };
++        if !path.starts_with(b"/") || path.contains(&b'?') || path.contains(&b'#') {
++            return None;
++        }
++        let mut decoded = Vec::with_capacity(path.len());
++        let mut i = 0;
++        while i < path.len() {
++            let byte = if path[i] == b'%' {
++                let hex = |b: u8| (b as char).to_digit(16).map(|n| n as u8);
++                let byte = hex(*path.get(i + 1)?)? * 16 + hex(*path.get(i + 2)?)?;
++                i += 3;
++                byte
++            } else {
++                let byte = path[i];
++                i += 1;
++                byte
++            };
++            if byte == 0 {
++                return None;
++            }
++            decoded.push(byte);
++        }
++        paths.push(PathBuf::from(OsString::from_vec(decoded)));
++        if paths.len() > MAX_FILES {
++            return None;
++        }
++    }
++    (!paths.is_empty()).then_some(paths)
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn complete_drop_has_unique_identity_and_rejects_invalid_records() {
++        let paths = vec![PathBuf::from("first.blk"), PathBuf::from("second.blk")];
++        let position = PhysicalPosition::new(-200.0, 900.25);
++        let Some(WindowEvent::FilesDropped {
++            transfer_id: first,
++            paths: returned,
++            position: got,
++        }) = completed(paths.clone(), position)
++        else {
++            panic!("missing complete drop")
++        };
++        assert_eq!(got, position);
++        assert_eq!(returned, paths);
++        let Some(WindowEvent::FilesDropped {
++            transfer_id: second,
++            ..
++        }) = completed(paths.clone(), position)
++        else {
++            panic!("missing second drop")
++        };
++        assert_ne!(first, second);
++        assert!(completed(Vec::new(), position).is_none());
++        assert!(completed(vec![PathBuf::new(); MAX_FILES + 1], position).is_none());
++        assert!(completed(paths, PhysicalPosition::new(f64::NAN, 0.0)).is_none());
++        assert_eq!(MAX_BYTES, 4 * 1024 * 1024);
++    }
++
++    #[cfg(unix)]
++    #[test]
++    fn uri_list_preserves_native_bytes_and_transfer_order() {
++        use std::os::unix::ffi::OsStrExt;
++        let paths =
++            uri_list(b"#comment\r\nfile:///tmp/a%20b.blk\r\nfile://localhost/tmp/%FF%0Anext.blk\n")
++                .unwrap();
++        assert_eq!(paths.len(), 2);
++        assert_eq!(paths[0].as_os_str().as_bytes(), b"/tmp/a b.blk");
++        assert_eq!(paths[1].as_os_str().as_bytes(), b"/tmp/\xff\nnext.blk");
++        // A valid first file must not allow a later unsupported URL through.
++        for bytes in [
++            b"https://example.com/map.blk".as_slice(),
++            b"file://remote/tmp/map.blk",
++            b"file:///tmp/%00.blk",
++            b"file:///tmp/a%2",
++            b"file:///tmp/a%zz",
++            b"file:///tmp/ok\nhttp://bad",
++            b"file:///tmp/a?query",
++            b"#nothing\n",
++        ] {
++            assert!(uri_list(bytes).is_none(), "{bytes:?}");
++        }
++        assert!(uri_list(&vec![b'a'; MAX_BYTES + 1]).is_none());
++        assert!(uri_list(&b"file:///a\n".repeat(MAX_FILES + 1)).is_none());
++    }
++}
+--- a/winit-0.30.13/src/lib.rs
++++ b/winit-0.30.13/src/lib.rs
+@@ -212,6 +212,8 @@
+ pub mod monitor;
+ mod platform_impl;
+ mod utils;
++#[cfg(any(windows_platform, macos_platform, x11_platform, wayland_platform))]
++mod file_drop;
+ pub mod window;
+ 
+ pub mod platform;
+--- a/winit-0.30.13/src/platform_impl/linux/wayland/seat/file_drop.rs
++++ b/winit-0.30.13/src/platform_impl/linux/wayland/seat/file_drop.rs
+@@ -0,0 +1,274 @@
++//! Receive-only file drops on winit's own Wayland connection and event queue.
++//! Polished Map NG extension, Apache-2.0. Clipboard selections remain with egui's adapter.
++use std::fs::File;
++use std::io::{ErrorKind, Read};
++use std::os::fd::{AsRawFd, OwnedFd};
++use std::time::Duration;
++
++use crate::dpi::{LogicalPosition, PhysicalPosition};
++use crate::event::WindowEvent;
++use crate::platform_impl::wayland::{make_wid, state::WinitState, WindowId};
++use calloop::{
++    generic::Generic,
++    timer::{TimeoutAction, Timer},
++    Interest, Mode, PostAction, RegistrationToken,
++};
++use sctk::data_device_manager::{
++    data_device::{DataDeviceData, DataDeviceHandler},
++    data_offer::{DataOfferData, DataOfferHandler, DragOffer},
++    DataDeviceManagerState,
++};
++use sctk::globals::GlobalData;
++use sctk::reexports::client::protocol::{
++    wl_data_device::WlDataDevice,
++    wl_data_device_manager::{DndAction, WlDataDeviceManager},
++    wl_data_offer::WlDataOffer,
++    wl_surface::WlSurface,
++};
++use sctk::reexports::client::{
++    backend::ObjectId, delegate_dispatch, Connection, Proxy, QueueHandle,
++};
++
++const MIME: &str = "text/uri-list";
++
++#[derive(Debug)]
++pub(super) struct PendingDrop {
++    offer: DragOffer,
++    window: WindowId,
++    position: PhysicalPosition<f64>,
++    bytes: Vec<u8>,
++    source: Option<RegistrationToken>,
++    timeout: Option<RegistrationToken>,
++}
++
++impl WinitState {
++    pub(super) fn cancel_file_drop(&mut self, seat: &ObjectId) {
++        if let Some(pending) = self
++            .seats
++            .get_mut(seat)
++            .and_then(|seat| seat.pending_drop.take())
++        {
++            if let Some(token) = pending.source {
++                self.loop_handle.remove(token);
++            }
++            if let Some(token) = pending.timeout {
++                self.loop_handle.remove(token);
++            }
++            pending.offer.destroy();
++        }
++    }
++
++    fn finish_file_drop(&mut self, seat: &ObjectId, success: bool) {
++        if let Some(pending) = self
++            .seats
++            .get_mut(seat)
++            .and_then(|seat| seat.pending_drop.take())
++        {
++            if let Some(token) = pending.timeout {
++                self.loop_handle.remove(token);
++            }
++            if success && self.windows.borrow().contains_key(&pending.window) {
++                if let Some(paths) = crate::file_drop::uri_list(&pending.bytes) {
++                    if let Some(event) =
++                        crate::file_drop::completed(paths.clone(), pending.position)
++                    {
++                        self.events_sink.push_window_event(event, pending.window);
++                        for path in paths {
++                            self.events_sink
++                                .push_window_event(WindowEvent::DroppedFile(path), pending.window);
++                        }
++                        self.dispatched_events = true;
++                        pending.offer.finish();
++                    }
++                }
++            }
++            pending.offer.destroy();
++        }
++    }
++}
++
++impl DataDeviceHandler for WinitState {
++    fn enter(
++        &mut self,
++        _: &Connection,
++        _: &QueueHandle<Self>,
++        device: &WlDataDevice,
++        _: f64,
++        _: f64,
++        surface: &WlSurface,
++    ) {
++        let Some(offer) = device
++            .data::<DataDeviceData>()
++            .and_then(|data| data.drag_offer())
++        else {
++            return;
++        };
++        // Only the actual content surface, not its decoration subsurfaces.
++        let supported = self.windows.borrow().contains_key(&make_wid(surface))
++            && offer.with_mime_types(|types| types.iter().any(|mime| mime == MIME));
++        offer.accept_mime_type(offer.serial, supported.then(|| MIME.to_owned()));
++        offer.set_actions(
++            if supported {
++                DndAction::Copy
++            } else {
++                DndAction::empty()
++            },
++            if supported {
++                DndAction::Copy
++            } else {
++                DndAction::empty()
++            },
++        );
++    }
++
++    // SCTK tracks enter/motion coordinates per offer. Leave destroys undropped
++    // offers; a completed drop's asynchronous read survives the following leave.
++    fn motion(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &WlDataDevice, _: f64, _: f64) {}
++    fn leave(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &WlDataDevice) {}
++    fn selection(&mut self, _: &Connection, _: &QueueHandle<Self>, _: &WlDataDevice) {}
++
++    fn drop_performed(&mut self, _: &Connection, _: &QueueHandle<Self>, device: &WlDataDevice) {
++        let Some(data) = device.data::<DataDeviceData>() else {
++            return;
++        };
++        let seat = data.seat().id();
++        let Some(offer) = data.drag_offer() else {
++            return;
++        };
++        let window = make_wid(&offer.surface);
++        let position = self.windows.borrow().get(&window).map(|window| {
++            LogicalPosition::new(offer.x, offer.y)
++                .to_physical(window.lock().unwrap().scale_factor())
++        });
++        let allowed_action =
++            offer.inner().version() < 3 || offer.selected_action == DndAction::Copy;
++        if position.is_none()
++            || !allowed_action
++            || !offer.with_mime_types(|types| types.iter().any(|mime| mime == MIME))
++        {
++            offer.destroy();
++            return;
++        }
++        self.cancel_file_drop(&seat);
++        let Ok(pipe) = offer.receive(MIME.to_owned()) else {
++            offer.destroy();
++            return;
++        };
++        let file = File::from(OwnedFd::from(pipe));
++        // SAFETY: fcntl only sets status flags on this owned live descriptor.
++        let flags = unsafe { libc::fcntl(file.as_raw_fd(), libc::F_GETFL) };
++        if flags < 0
++            || unsafe { libc::fcntl(file.as_raw_fd(), libc::F_SETFL, flags | libc::O_NONBLOCK) } < 0
++        {
++            offer.destroy();
++            return;
++        }
++        let Some(seat_state) = self.seats.get_mut(&seat) else {
++            offer.destroy();
++            return;
++        };
++        seat_state.pending_drop = Some(PendingDrop {
++            offer,
++            window,
++            position: position.unwrap(),
++            bytes: Vec::new(),
++            source: None,
++            timeout: None,
++        });
++        let read_seat = seat.clone();
++        let source = self.loop_handle.insert_source(
++            Generic::new(file, Interest::READ, Mode::Level),
++            move |_, file, state| {
++                let Some(pending) = state
++                    .seats
++                    .get_mut(&read_seat)
++                    .and_then(|seat| seat.pending_drop.as_mut())
++                else {
++                    return Ok(PostAction::Remove);
++                };
++                let mut file: &File = file;
++                let mut buffer = [0u8; 8192];
++                // Bound work per dispatch as well as total bytes. Never block winit.
++                for _ in 0..8 {
++                    match file.read(&mut buffer) {
++                        Ok(0) => {
++                            state.finish_file_drop(&read_seat, true);
++                            return Ok(PostAction::Remove);
++                        }
++                        Ok(n) if pending.bytes.len() + n <= crate::file_drop::MAX_BYTES => {
++                            pending.bytes.extend_from_slice(&buffer[..n])
++                        }
++                        Err(error) if error.kind() == ErrorKind::WouldBlock => break,
++                        Err(error) if error.kind() == ErrorKind::Interrupted => continue,
++                        _ => {
++                            state.finish_file_drop(&read_seat, false);
++                            return Ok(PostAction::Remove);
++                        }
++                    }
++                }
++                Ok(PostAction::Continue)
++            },
++        );
++        let Ok(source) = source else {
++            self.cancel_file_drop(&seat);
++            return;
++        };
++        self.seats
++            .get_mut(&seat)
++            .unwrap()
++            .pending_drop
++            .as_mut()
++            .unwrap()
++            .source = Some(source);
++        let timeout_seat = seat.clone();
++        let timeout = self.loop_handle.insert_source(
++            Timer::from_duration(Duration::from_secs(10)),
++            move |_, _, state| {
++                if let Some(pending) = state
++                    .seats
++                    .get_mut(&timeout_seat)
++                    .and_then(|seat| seat.pending_drop.as_mut())
++                {
++                    pending.timeout = None;
++                }
++                state.cancel_file_drop(&timeout_seat);
++                TimeoutAction::Drop
++            },
++        );
++        match timeout {
++            Ok(token) => {
++                self.seats
++                    .get_mut(&seat)
++                    .unwrap()
++                    .pending_drop
++                    .as_mut()
++                    .unwrap()
++                    .timeout = Some(token)
++            }
++            Err(_) => self.cancel_file_drop(&seat),
++        }
++    }
++}
++
++impl DataOfferHandler for WinitState {
++    fn source_actions(
++        &mut self,
++        _: &Connection,
++        _: &QueueHandle<Self>,
++        _: &mut DragOffer,
++        _: DndAction,
++    ) {
++    }
++    fn selected_action(
++        &mut self,
++        _: &Connection,
++        _: &QueueHandle<Self>,
++        _: &mut DragOffer,
++        _: DndAction,
++    ) {
++    }
++}
++
++delegate_dispatch!(WinitState: [WlDataDeviceManager: GlobalData] => DataDeviceManagerState);
++delegate_dispatch!(WinitState: [WlDataDevice: DataDeviceData] => DataDeviceManagerState);
++delegate_dispatch!(WinitState: [WlDataOffer: DataOfferData] => DataDeviceManagerState);
+--- a/winit-0.30.13/src/platform_impl/linux/wayland/seat/mod.rs
++++ b/winit-0.30.13/src/platform_impl/linux/wayland/seat/mod.rs
+@@ -20,6 +20,7 @@
+ use crate::platform_impl::wayland::state::WinitState;
+ 
+ mod keyboard;
++mod file_drop;
+ mod pointer;
+ mod text_input;
+ mod touch;
+@@ -34,6 +35,8 @@
+ 
+ #[derive(Debug, Default)]
+ pub struct WinitSeatState {
++    pub(super) data_device: Option<sctk::data_device_manager::data_device::DataDevice>,
++    pending_drop: Option<file_drop::PendingDrop>,
+     /// The pointer bound on the seat.
+     pointer: Option<Arc<ThemedPointer<WinitPointerData>>>,
+ 
+@@ -202,10 +205,12 @@
+     fn new_seat(
+         &mut self,
+         _connection: &Connection,
+-        _queue_handle: &QueueHandle<Self>,
+-        seat: WlSeat,
+-    ) {
+-        self.seats.insert(seat.id(), WinitSeatState::new());
++        queue_handle: &QueueHandle<Self>,
++        seat: WlSeat,
++    ) {
++        let mut state = WinitSeatState::new();
++        state.data_device = self.data_device_manager.as_ref().map(|manager| manager.get_data_device(queue_handle, &seat));
++        self.seats.insert(seat.id(), state);
+     }
+ 
+     fn remove_seat(
+@@ -214,6 +219,7 @@
+         _queue_handle: &QueueHandle<Self>,
+         seat: WlSeat,
+     ) {
++        self.cancel_file_drop(&seat.id());
+         let _ = self.seats.remove(&seat.id());
+         self.on_keyboard_destroy(&seat.id());
+     }
+--- a/winit-0.30.13/src/platform_impl/linux/wayland/state.rs
++++ b/winit-0.30.13/src/platform_impl/linux/wayland/state.rs
+@@ -53,6 +53,7 @@
+ 
+     /// The seat state responsible for all sorts of input.
+     pub seat_state: SeatState,
++    pub data_device_manager: Option<sctk::data_device_manager::DataDeviceManagerState>,
+ 
+     /// The shm for software buffers, such as cursors.
+     pub shm: Shm,
+@@ -142,10 +143,13 @@
+         let monitors = output_state.outputs().map(MonitorHandle::new).collect();
+ 
+         let seat_state = SeatState::new(globals, queue_handle);
++        let data_device_manager = sctk::data_device_manager::DataDeviceManagerState::bind(globals, queue_handle).ok();
+ 
+         let mut seats = AHashMap::default();
+         for seat in seat_state.seats() {
+-            seats.insert(seat.id(), WinitSeatState::new());
++            let mut state = WinitSeatState::new();
++            state.data_device = data_device_manager.as_ref().map(|manager| manager.get_data_device(queue_handle, &seat));
++            seats.insert(seat.id(), state);
+         }
+ 
+         let (viewporter_state, fractional_scaling_manager) =
+@@ -164,6 +168,7 @@
+             subcompositor_state: subcompositor_state.map(Arc::new),
+             output_state,
+             seat_state,
++            data_device_manager,
+             shm,
+             custom_cursor_pool,
+ 
+--- a/winit-0.30.13/src/platform_impl/linux/x11/atoms.rs
++++ b/winit-0.30.13/src/platform_impl/linux/x11/atoms.rs
+@@ -85,7 +85,8 @@
+     XdndDrop,
+     XdndPosition,
+     XdndStatus,
+-    XdndActionPrivate,
++    XdndActionCopy,
++    INCR,
+     XdndSelection,
+     XdndFinished,
+     XdndTypeList,
+--- a/winit-0.30.13/src/platform_impl/linux/x11/dnd.rs
++++ b/winit-0.30.13/src/platform_impl/linux/x11/dnd.rs
+@@ -1,15 +1,9 @@
+-use std::io;
+-use std::os::raw::*;
+-use std::path::{Path, PathBuf};
+-use std::str::Utf8Error;
+-use std::sync::Arc;
+-
+-use percent_encoding::percent_decode;
+-use x11rb::protocol::xproto::{self, ConnectionExt};
+-
+ use super::atoms::AtomName::None as DndNone;
+ use super::atoms::*;
+ use super::{util, CookieResultExt, X11Error, XConnection};
++use std::os::raw::*;
++use std::sync::Arc;
++use x11rb::protocol::xproto::{self, ConnectionExt};
+ 
+ #[derive(Debug, Clone, Copy)]
+ pub enum DndState {
+@@ -17,25 +11,9 @@
+     Rejected,
+ }
+ 
+-#[derive(Debug)]
+-pub enum DndDataParseError {
+-    EmptyData,
+-    InvalidUtf8(#[allow(dead_code)] Utf8Error),
+-    HostnameSpecified(#[allow(dead_code)] String),
+-    UnexpectedProtocol(#[allow(dead_code)] String),
+-    UnresolvablePath(#[allow(dead_code)] io::Error),
+-}
+-
+-impl From<Utf8Error> for DndDataParseError {
+-    fn from(e: Utf8Error) -> Self {
+-        DndDataParseError::InvalidUtf8(e)
+-    }
+-}
+-
+-impl From<io::Error> for DndDataParseError {
+-    fn from(e: io::Error) -> Self {
+-        DndDataParseError::UnresolvablePath(e)
+-    }
++pub enum SelectionData {
++    Bytes(Vec<u8>),
++    Incremental,
+ }
+ 
+ pub struct Dnd {
+@@ -45,20 +23,34 @@
+     pub type_list: Option<Vec<xproto::Atom>>,
+     // Populated by XdndPosition event handler
+     pub source_window: Option<xproto::Window>,
+-    // Populated by SelectionNotify event handler (triggered by XdndPosition event handler)
+-    pub result: Option<Result<Vec<PathBuf>, DndDataParseError>>,
++    pub target_window: Option<xproto::Window>,
++    pub position: Option<crate::dpi::PhysicalPosition<f64>>,
++    pub pending_time: Option<xproto::Timestamp>,
++    pub incremental: Option<Vec<u8>>,
+ }
+ 
+ impl Dnd {
+     pub fn new(xconn: Arc<XConnection>) -> Result<Self, X11Error> {
+-        Ok(Dnd { xconn, version: None, type_list: None, source_window: None, result: None })
++        Ok(Dnd {
++            xconn,
++            version: None,
++            type_list: None,
++            source_window: None,
++            target_window: None,
++            position: None,
++            pending_time: None,
++            incremental: None,
++        })
+     }
+ 
+     pub fn reset(&mut self) {
+         self.version = None;
+         self.type_list = None;
+         self.source_window = None;
+-        self.result = None;
++        self.target_window = None;
++        self.position = None;
++        self.pending_time = None;
++        self.incremental = None;
+     }
+ 
+     pub unsafe fn send_status(
+@@ -69,17 +61,17 @@
+     ) -> Result<(), X11Error> {
+         let atoms = self.xconn.atoms();
+         let (accepted, action) = match state {
+-            DndState::Accepted => (1, atoms[XdndActionPrivate]),
++            DndState::Accepted => (1, atoms[XdndActionCopy]),
+             DndState::Rejected => (0, atoms[DndNone]),
+         };
+         self.xconn
+-            .send_client_msg(target_window, target_window, atoms[XdndStatus] as _, None, [
+-                this_window,
+-                accepted,
+-                0,
+-                0,
+-                action as _,
+-            ])?
++            .send_client_msg(
++                target_window,
++                target_window,
++                atoms[XdndStatus] as _,
++                None,
++                [this_window, accepted | 2, 0, 0, action as _],
++            )?
+             .ignore_error();
+ 
+         Ok(())
+@@ -93,17 +85,17 @@
+     ) -> Result<(), X11Error> {
+         let atoms = self.xconn.atoms();
+         let (accepted, action) = match state {
+-            DndState::Accepted => (1, atoms[XdndActionPrivate]),
++            DndState::Accepted => (1, atoms[XdndActionCopy]),
+             DndState::Rejected => (0, atoms[DndNone]),
+         };
+         self.xconn
+-            .send_client_msg(target_window, target_window, atoms[XdndFinished] as _, None, [
+-                this_window,
+-                accepted,
+-                action as _,
+-                0,
+-                0,
+-            ])?
++            .send_client_msg(
++                target_window,
++                target_window,
++                atoms[XdndFinished] as _,
++                None,
++                [this_window, accepted, action as _, 0, 0],
++            )?
+             .ignore_error();
+ 
+         Ok(())
+@@ -135,40 +127,34 @@
+             .expect_then_ignore_error("Failed to send XdndSelection event")
+     }
+ 
+-    pub unsafe fn read_data(
+-        &self,
+-        window: xproto::Window,
+-    ) -> Result<Vec<c_uchar>, util::GetPropertyError> {
++    pub fn read_data(&self, window: xproto::Window) -> Option<SelectionData> {
+         let atoms = self.xconn.atoms();
+-        self.xconn.get_property(window, atoms[XdndSelection], atoms[TextUriList])
+-    }
+-
+-    pub fn parse_data(&self, data: &mut [c_uchar]) -> Result<Vec<PathBuf>, DndDataParseError> {
+-        if !data.is_empty() {
+-            let mut path_list = Vec::new();
+-            let decoded = percent_decode(data).decode_utf8()?.into_owned();
+-            for uri in decoded.split("\r\n").filter(|u| !u.is_empty()) {
+-                // The format is specified as protocol://host/path
+-                // However, it's typically simply protocol:///path
+-                let path_str = if uri.starts_with("file://") {
+-                    let path_str = uri.replace("file://", "");
+-                    if !path_str.starts_with('/') {
+-                        // A hostname is specified
+-                        // Supporting this case is beyond the scope of my mental health
+-                        return Err(DndDataParseError::HostnameSpecified(path_str));
+-                    }
+-                    path_str
+-                } else {
+-                    // Only the file protocol is supported
+-                    return Err(DndDataParseError::UnexpectedProtocol(uri.to_owned()));
+-                };
+-
+-                let path = Path::new(&path_str).canonicalize()?;
+-                path_list.push(path);
+-            }
+-            Ok(path_list)
+-        } else {
+-            Err(DndDataParseError::EmptyData)
++        let reply = self
++            .xconn
++            .xcb_connection()
++            .get_property(
++                true,
++                window,
++                atoms[XdndSelection],
++                xproto::AtomEnum::ANY,
++                0,
++                (crate::file_drop::MAX_BYTES / 4 + 1) as u32,
++            )
++            .ok()?
++            .reply()
++            .ok()?;
++        if reply.bytes_after != 0 || reply.value.len() > crate::file_drop::MAX_BYTES {
++            let _ = self
++                .xconn
++                .xcb_connection()
++                .delete_property(window, atoms[XdndSelection]);
++            return None;
+         }
++        if reply.type_ == atoms[INCR] && reply.format == 32 && self.incremental.is_none() {
++            return (reply.value32()?.next()? as usize <= crate::file_drop::MAX_BYTES)
++                .then_some(SelectionData::Incremental);
++        }
++        (reply.format == 8 && reply.type_ == atoms[TextUriList])
++            .then_some(SelectionData::Bytes(reply.value))
+     }
+ }
+--- a/winit-0.30.13/src/platform_impl/linux/x11/event_processor.rs
++++ b/winit-0.30.13/src/platform_impl/linux/x11/event_processor.rs
+@@ -452,159 +452,102 @@
+         }
+ 
+         if xev.message_type == atoms[XdndEnter] as c_ulong {
+-            let source_window = xev.data.get_long(0) as xproto::Window;
++            if self.dnd.pending_time.is_some() {
++                if let (Some(source), Some(target)) = (self.dnd.source_window, self.dnd.target_window) {
++                    unsafe { let _ = self.dnd.send_finished(target, source, DndState::Rejected); }
++                }
++            }
++            self.dnd.reset();
++            let source = xev.data.get_long(0) as xproto::Window;
++            self.dnd.source_window = Some(source);
++            self.dnd.target_window = Some(window);
+             let flags = xev.data.get_long(1);
+-            let version = flags >> 24;
+-            self.dnd.version = Some(version);
+-            let has_more_types = flags - (flags & (c_long::MAX - 1)) == 1;
+-            if !has_more_types {
+-                let type_list = vec![
+-                    xev.data.get_long(2) as xproto::Atom,
+-                    xev.data.get_long(3) as xproto::Atom,
+-                    xev.data.get_long(4) as xproto::Atom,
+-                ];
+-                self.dnd.type_list = Some(type_list);
+-            } else if let Ok(more_types) = unsafe { self.dnd.get_type_list(source_window) } {
+-                self.dnd.type_list = Some(more_types);
+-            }
++            self.dnd.version = Some(flags >> 24);
++            self.dnd.type_list = if flags & 1 != 0 {
++                unsafe { self.dnd.get_type_list(source) }.ok()
++            } else {
++                Some((2..5).map(|index| xev.data.get_long(index) as xproto::Atom).collect())
++            };
+             return;
+         }
+ 
++        let source = xev.data.get_long(0) as xproto::Window;
++        if self.dnd.source_window != Some(source) || self.dnd.target_window != Some(window) {
++            return;
++        }
+         if xev.message_type == atoms[XdndPosition] as c_ulong {
+-            // This event occurs every time the mouse moves while a file's being dragged
+-            // over our window. We emit HoveredFile in response; while the macOS backend
+-            // does that upon a drag entering, XDND doesn't have access to the actual drop
+-            // data until this event. For parity with other platforms, we only emit
+-            // `HoveredFile` the first time, though if winit's API is later extended to
+-            // supply position updates with `HoveredFile` or another event, implementing
+-            // that here would be trivial.
+-
+-            let source_window = xev.data.get_long(0) as xproto::Window;
+-
+-            // Equivalent to `(x << shift) | y`
+-            // where `shift = mem::size_of::<c_short>() * 8`
+-            // Note that coordinates are in "desktop space", not "window space"
+-            // (in X11 parlance, they're root window coordinates)
+-            // let packed_coordinates = xev.data.get_long(2);
+-            // let shift = mem::size_of::<libc::c_short>() * 8;
+-            // let x = packed_coordinates >> shift;
+-            // let y = packed_coordinates & !(x << shift);
+-
+-            // By our own state flow, `version` should never be `None` at this point.
+-            let version = self.dnd.version.unwrap_or(5);
+-
+-            // Action is specified in versions 2 and up, though we don't need it anyway.
+-            // let action = xev.data.get_long(4);
+-
+-            let accepted = if let Some(ref type_list) = self.dnd.type_list {
+-                type_list.contains(&atoms[TextUriList])
++            let packed = xev.data.get_long(2) as u32;
++            // XDND packs signed 16-bit root coordinates. Translate against the
++            // destination's root, including windows on a different X screen.
++            let position = (|| {
++                let root = wt.xconn.xcb_connection().get_geometry(window).ok()?.reply().ok()?.root;
++                let reply = wt.xconn.xcb_connection().translate_coordinates(
++                    root, window, (packed >> 16) as i16, packed as i16,
++                ).ok()?.reply().ok()?;
++                reply.same_screen.then_some(PhysicalPosition::new(reply.dst_x as f64, reply.dst_y as f64))
++            })();
++            let accepted = self.dnd.pending_time.is_none() && position.is_some()
++                && self.dnd.type_list.as_ref().is_some_and(|types| types.contains(&atoms[TextUriList]));
++            self.dnd.position = if accepted { position } else { None };
++            let state = if accepted { DndState::Accepted } else { DndState::Rejected };
++            unsafe { let _ = self.dnd.send_status(window, source, state); }
++            return;
++        }
++        if xev.message_type == atoms[XdndDrop] as c_ulong {
++            if self.dnd.position.is_some() && self.dnd.pending_time.is_none() {
++                // Fetch only on drop. A hover response cannot be mistaken for
++                // a later transfer, and a fast drop waits for its actual data.
++                let time = xev.data.get_long(2) as xproto::Timestamp;
++                self.dnd.pending_time = Some(time);
++                unsafe { self.dnd.convert_selection(window, time); }
+             } else {
+-                false
+-            };
+-
+-            if !accepted {
+-                unsafe {
+-                    self.dnd
+-                        .send_status(window, source_window, DndState::Rejected)
+-                        .expect("Failed to send `XdndStatus` message.");
+-                }
++                unsafe { let _ = self.dnd.send_finished(window, source, DndState::Rejected); }
+                 self.dnd.reset();
+-                return;
+-            }
+-
+-            self.dnd.source_window = Some(source_window);
+-            if self.dnd.result.is_none() {
+-                let time = if version >= 1 {
+-                    xev.data.get_long(3) as xproto::Timestamp
+-                } else {
+-                    // In version 0, time isn't specified
+-                    x11rb::CURRENT_TIME
+-                };
+-
+-                // Log this timestamp.
+-                wt.xconn.set_timestamp(time);
+-
+-                // This results in the `SelectionNotify` event below
+-                unsafe {
+-                    self.dnd.convert_selection(window, time);
+-                }
+-            }
+-
+-            unsafe {
+-                self.dnd
+-                    .send_status(window, source_window, DndState::Accepted)
+-                    .expect("Failed to send `XdndStatus` message.");
+             }
+             return;
+         }
+-
+-        if xev.message_type == atoms[XdndDrop] as c_ulong {
+-            let (source_window, state) = if let Some(source_window) = self.dnd.source_window {
+-                if let Some(Ok(ref path_list)) = self.dnd.result {
+-                    for path in path_list {
+-                        let event = Event::WindowEvent {
+-                            window_id,
+-                            event: WindowEvent::DroppedFile(path.clone()),
+-                        };
+-                        callback(&self.target, event);
+-                    }
+-                }
+-                (source_window, DndState::Accepted)
+-            } else {
+-                // `source_window` won't be part of our DND state if we already rejected the drop in
+-                // our `XdndPosition` handler.
+-                let source_window = xev.data.get_long(0) as xproto::Window;
+-                (source_window, DndState::Rejected)
+-            };
+-
+-            unsafe {
+-                self.dnd
+-                    .send_finished(window, source_window, state)
+-                    .expect("Failed to send `XdndFinished` message.");
+-            }
+-
+-            self.dnd.reset();
+-            return;
+-        }
+-
+         if xev.message_type == atoms[XdndLeave] as c_ulong {
+             self.dnd.reset();
+-            let event = Event::WindowEvent { window_id, event: WindowEvent::HoveredFileCancelled };
+-            callback(&self.target, event);
++            callback(&self.target, Event::WindowEvent { window_id, event: WindowEvent::HoveredFileCancelled });
+         }
+     }
+ 
+     fn selection_notify<T: 'static, F>(&mut self, xev: &XSelectionEvent, mut callback: F)
+-    where
+-        F: FnMut(&RootAEL, Event<T>),
++    where F: FnMut(&RootAEL, Event<T>),
+     {
+         let wt = Self::window_target(&self.target);
+         let atoms = wt.xconn.atoms();
+-
+         let window = xev.requestor as xproto::Window;
+-        let window_id = mkwid(window);
+-
+-        // Set the timestamp.
+-        wt.xconn.set_timestamp(xev.time as xproto::Timestamp);
+-
+-        if xev.property != atoms[XdndSelection] as c_ulong {
++        if xev.selection != atoms[XdndSelection] as c_ulong
++            || xev.target != atoms[TextUriList] as c_ulong
++            || self.dnd.target_window != Some(window)
++            || self.dnd.pending_time != Some(xev.time as xproto::Timestamp) {
+             return;
+         }
+-
+-        // This is where we receive data from drag and drop
+-        self.dnd.result = None;
+-        if let Ok(mut data) = unsafe { self.dnd.read_data(window) } {
+-            let parse_result = self.dnd.parse_data(&mut data);
+-            if let Ok(ref path_list) = parse_result {
+-                for path in path_list {
+-                    let event = Event::WindowEvent {
+-                        window_id,
+-                        event: WindowEvent::HoveredFile(path.clone()),
+-                    };
+-                    callback(&self.target, event);
+-                }
+-            }
+-            self.dnd.result = Some(parse_result);
++        let data = (xev.property == atoms[XdndSelection] as c_ulong)
++            .then(|| self.dnd.read_data(window)).flatten();
++        match data {
++            Some(super::dnd::SelectionData::Incremental) => self.dnd.incremental = Some(Vec::new()),
++            Some(super::dnd::SelectionData::Bytes(bytes)) => self.finish_dnd(crate::file_drop::uri_list(&bytes), &mut callback),
++            None => self.finish_dnd(None, &mut callback),
++        }
++    }
++
++    fn finish_dnd<T: 'static, F>(&mut self, paths: Option<Vec<std::path::PathBuf>>, mut callback: F)
++    where F: FnMut(&RootAEL, Event<T>),
++    {
++        let (Some(window), Some(source)) = (self.dnd.target_window, self.dnd.source_window) else { self.dnd.reset(); return; };
++        let complete = paths.zip(self.dnd.position).and_then(|(paths, position)| {
++            crate::file_drop::completed(paths.clone(), position).map(|event| (event, paths))
++        });
++        let result = if complete.is_some() { DndState::Accepted } else { DndState::Rejected };
++        unsafe { let _ = self.dnd.send_finished(window, source, result); }
++        self.dnd.reset();
++        if let Some((event, paths)) = complete {
++            callback(&self.target, Event::WindowEvent { window_id: mkwid(window), event });
++            for path in paths {
++                callback(&self.target, Event::WindowEvent { window_id: mkwid(window), event: WindowEvent::DroppedFile(path) });
++            }
+         }
+     }
+ 
+@@ -821,10 +764,11 @@
+         callback(&self.target, event);
+     }
+ 
+-    fn destroy_notify<T: 'static, F>(&self, xev: &XDestroyWindowEvent, mut callback: F)
++    fn destroy_notify<T: 'static, F>(&mut self, xev: &XDestroyWindowEvent, mut callback: F)
+     where
+         F: FnMut(&RootAEL, Event<T>),
+     {
++        if self.dnd.target_window == Some(xev.window as xproto::Window) { self.dnd.reset(); }
+         let wt = Self::window_target(&self.target);
+ 
+         let window = xev.window as xproto::Window;
+@@ -852,6 +796,24 @@
+         let wt = Self::window_target(&self.target);
+         let atoms = wt.x_connection().atoms();
+         let atom = xev.atom as xproto::Atom;
++
++        if atom == atoms[XdndSelection] && xev.state == xlib::PropertyNewValue
++            && self.dnd.target_window == Some(xev.window as xproto::Window)
++            && self.dnd.incremental.is_some() {
++            match self.dnd.read_data(xev.window as xproto::Window) {
++                Some(super::dnd::SelectionData::Bytes(bytes)) => {
++                    let pending = self.dnd.incremental.as_mut().unwrap();
++                    if bytes.is_empty() {
++                        let paths = crate::file_drop::uri_list(pending);
++                        self.finish_dnd(paths, &mut callback);
++                    } else if pending.len() + bytes.len() <= crate::file_drop::MAX_BYTES {
++                        pending.extend_from_slice(&bytes);
++                    } else { self.finish_dnd(None, &mut callback); }
++                }
++                _ => self.finish_dnd(None, &mut callback),
++            }
++            return;
++        }
+ 
+         if atom == xproto::Atom::from(xproto::AtomEnum::RESOURCE_MANAGER)
+             || atom == atoms[_XSETTINGS_SETTINGS]
+--- a/winit-0.30.13/src/platform_impl/macos/window_delegate.rs
++++ b/winit-0.30.13/src/platform_impl/macos/window_delegate.rs
+@@ -408,10 +408,17 @@
+             };
+             let filenames: Retained<NSArray<NSString>> = unsafe { Retained::cast(filenames) };
+ 
+-            filenames.into_iter().for_each(|file| {
+-                let path = PathBuf::from(file.to_string());
+-                self.queue_event(WindowEvent::DroppedFile(path));
+-            });
++            if filenames.len() > crate::file_drop::MAX_FILES { return false.into(); }
++            let paths: Vec<_> = filenames.into_iter().map(|file| PathBuf::from(file.to_string())).collect();
++            if paths.iter().map(|path| path.as_os_str().len()).sum::<usize>() > crate::file_drop::MAX_BYTES { return false.into(); }
++            // WinitView is flipped: conversion gives the content's top-left origin.
++            let window_point: NSPoint = unsafe { objc2::msg_send![sender, draggingLocation] };
++            let point = self.view().convertPoint_fromView(window_point, None);
++            let position = LogicalPosition::new(point.x, point.y).to_physical(self.scale_factor());
++            if let Some(event) = crate::file_drop::completed(paths.clone(), position) {
++                self.queue_event(event);
++            }
++            for path in paths { self.queue_event(WindowEvent::DroppedFile(path)); }
+ 
+             true
+         }
+--- a/winit-0.30.13/src/platform_impl/windows/definitions.rs
++++ b/winit-0.30.13/src/platform_impl/windows/definitions.rs
+@@ -72,13 +72,13 @@
+         This: *mut IDropTarget,
+         pDataObj: *const IDataObject,
+         grfKeyState: u32,
+-        pt: *const POINTL,
++        pt: POINTL,
+         pdwEffect: *mut u32,
+     ) -> HRESULT,
+     pub DragOver: unsafe extern "system" fn(
+         This: *mut IDropTarget,
+         grfKeyState: u32,
+-        pt: *const POINTL,
++        pt: POINTL,
+         pdwEffect: *mut u32,
+     ) -> HRESULT,
+     pub DragLeave: unsafe extern "system" fn(This: *mut IDropTarget) -> HRESULT,
+@@ -86,7 +86,7 @@
+         This: *mut IDropTarget,
+         pDataObj: *const IDataObject,
+         grfKeyState: u32,
+-        pt: *const POINTL,
++        pt: POINTL,
+         pdwEffect: *mut u32,
+     ) -> HRESULT,
+ }
+--- a/winit-0.30.13/src/platform_impl/windows/drop_handler.rs
++++ b/winit-0.30.13/src/platform_impl/windows/drop_handler.rs
+@@ -5,10 +5,15 @@
+ use std::sync::atomic::{AtomicUsize, Ordering};
+ 
+ use windows_sys::core::{IUnknown, GUID, HRESULT};
+-use windows_sys::Win32::Foundation::{DV_E_FORMATETC, HWND, POINTL, S_OK};
++use windows_sys::Win32::Foundation::{
++    DV_E_FORMATETC, E_NOINTERFACE, E_POINTER, HWND, POINT, POINTL, S_OK,
++};
++use windows_sys::Win32::Graphics::Gdi::ScreenToClient;
+ use windows_sys::Win32::System::Com::{IDataObject, DVASPECT_CONTENT, FORMATETC, TYMED_HGLOBAL};
+-use windows_sys::Win32::System::Ole::{CF_HDROP, DROPEFFECT_COPY, DROPEFFECT_NONE};
+-use windows_sys::Win32::UI::Shell::{DragFinish, DragQueryFileW, HDROP};
++use windows_sys::Win32::System::Ole::{
++    ReleaseStgMedium, CF_HDROP, DROPEFFECT_COPY, DROPEFFECT_NONE,
++};
++use windows_sys::Win32::UI::Shell::{DragQueryFileW, HDROP};
+ 
+ use tracing::debug;
+ 
+@@ -39,25 +44,47 @@
+ impl FileDropHandler {
+     pub fn new(window: HWND, send_event: Box<dyn Fn(Event<()>)>) -> FileDropHandler {
+         let data = Box::new(FileDropHandlerData {
+-            interface: IDropTarget { lpVtbl: &DROP_TARGET_VTBL as *const IDropTargetVtbl },
++            interface: IDropTarget {
++                lpVtbl: &DROP_TARGET_VTBL as *const IDropTargetVtbl,
++            },
+             refcount: AtomicUsize::new(1),
+             window,
+             send_event,
+             cursor_effect: DROPEFFECT_NONE,
+             hovered_is_valid: false,
+         });
+-        FileDropHandler { data: Box::into_raw(data) }
++        FileDropHandler {
++            data: Box::into_raw(data),
++        }
+     }
+ 
+     // Implement IUnknown
+     pub unsafe extern "system" fn QueryInterface(
+-        _this: *mut IUnknown,
+-        _riid: *const GUID,
+-        _ppvObject: *mut *mut c_void,
++        this: *mut IUnknown,
++        riid: *const GUID,
++        ppvObject: *mut *mut c_void,
+     ) -> HRESULT {
+-        // This function doesn't appear to be required for an `IDropTarget`.
+-        // An implementation would be nice however.
+-        unimplemented!();
++        if riid.is_null() || ppvObject.is_null() {
++            return E_POINTER;
++        }
++        unsafe {
++            *ppvObject = ptr::null_mut();
++        }
++        let iid = unsafe { &*riid };
++        // IUnknown and IDropTarget share this object's single COM identity.
++        if matches!(iid.data1, 0 | 0x122)
++            && iid.data2 == 0
++            && iid.data3 == 0
++            && iid.data4 == [0xc0, 0, 0, 0, 0, 0, 0, 0x46]
++        {
++            unsafe {
++                Self::AddRef(this);
++                *ppvObject = this.cast();
++            }
++            S_OK
++        } else {
++            E_NOINTERFACE
++        }
+     }
+ 
+     pub unsafe extern "system" fn AddRef(this: *mut IUnknown) -> u32 {
+@@ -80,12 +107,12 @@
+         this: *mut IDropTarget,
+         pDataObj: *const IDataObject,
+         _grfKeyState: u32,
+-        _pt: *const POINTL,
++        _pt: POINTL,
+         pdwEffect: *mut u32,
+     ) -> HRESULT {
+         use crate::event::WindowEvent::HoveredFile;
+         let drop_handler = unsafe { Self::from_interface(this) };
+-        let hdrop = unsafe {
++        let valid = unsafe {
+             Self::iterate_filenames(pDataObj, |filename| {
+                 drop_handler.send_event(Event::WindowEvent {
+                     window_id: RootWindowId(WindowId(drop_handler.window)),
+@@ -93,9 +120,12 @@
+                 });
+             })
+         };
+-        drop_handler.hovered_is_valid = hdrop.is_some();
+-        drop_handler.cursor_effect =
+-            if drop_handler.hovered_is_valid { DROPEFFECT_COPY } else { DROPEFFECT_NONE };
++        drop_handler.hovered_is_valid = valid;
++        drop_handler.cursor_effect = if drop_handler.hovered_is_valid {
++            DROPEFFECT_COPY
++        } else {
++            DROPEFFECT_NONE
++        };
+         unsafe {
+             *pdwEffect = drop_handler.cursor_effect;
+         }
+@@ -106,7 +136,7 @@
+     pub unsafe extern "system" fn DragOver(
+         this: *mut IDropTarget,
+         _grfKeyState: u32,
+-        _pt: *const POINTL,
++        _pt: POINTL,
+         pdwEffect: *mut u32,
+     ) -> HRESULT {
+         let drop_handler = unsafe { Self::from_interface(this) };
+@@ -126,6 +156,7 @@
+                 event: HoveredFileCancelled,
+             });
+         }
++        drop_handler.hovered_is_valid = false;
+ 
+         S_OK
+     }
+@@ -134,21 +165,46 @@
+         this: *mut IDropTarget,
+         pDataObj: *const IDataObject,
+         _grfKeyState: u32,
+-        _pt: *const POINTL,
+-        _pdwEffect: *mut u32,
++        pt: POINTL,
++        pdwEffect: *mut u32,
+     ) -> HRESULT {
+         use crate::event::WindowEvent::DroppedFile;
+         let drop_handler = unsafe { Self::from_interface(this) };
+-        let hdrop = unsafe {
+-            Self::iterate_filenames(pDataObj, |filename| {
++        let mut paths = Vec::new();
++        let valid = unsafe { Self::iterate_filenames(pDataObj, |path| paths.push(path)) };
++        let mut delivered = false;
++        if valid {
++            // OLE supplies screen coordinates for THIS drop. Never use GetCursorPos.
++            let mut point = POINT { x: pt.x, y: pt.y };
++            let event = (unsafe { ScreenToClient(drop_handler.window, &mut point) } != 0)
++                .then(|| {
++                    crate::file_drop::completed(
++                        paths.clone(),
++                        crate::dpi::PhysicalPosition::new(point.x as f64, point.y as f64),
++                    )
++                })
++                .flatten();
++            if let Some(event) = event {
+                 drop_handler.send_event(Event::WindowEvent {
+                     window_id: RootWindowId(WindowId(drop_handler.window)),
+-                    event: DroppedFile(filename),
++                    event,
+                 });
+-            })
+-        };
+-        if let Some(hdrop) = hdrop {
+-            unsafe { DragFinish(hdrop) };
++                delivered = true;
++            }
++            for path in paths {
++                drop_handler.send_event(Event::WindowEvent {
++                    window_id: RootWindowId(WindowId(drop_handler.window)),
++                    event: DroppedFile(path),
++                });
++            }
++        }
++        drop_handler.hovered_is_valid = false;
++        unsafe {
++            *pdwEffect = if delivered {
++                DROPEFFECT_COPY
++            } else {
++                DROPEFFECT_NONE
++            };
+         }
+ 
+         S_OK
+@@ -158,9 +214,9 @@
+         unsafe { &mut *(this as *mut _) }
+     }
+ 
+-    unsafe fn iterate_filenames<F>(data_obj: *const IDataObject, callback: F) -> Option<HDROP>
++    unsafe fn iterate_filenames<F>(data_obj: *const IDataObject, mut callback: F) -> bool
+     where
+-        F: Fn(PathBuf),
++        F: FnMut(PathBuf),
+     {
+         let drop_format = FORMATETC {
+             cfFormat: CF_HDROP,
+@@ -174,38 +230,59 @@
+         let get_data_fn = unsafe { (*(*data_obj).cast::<IDataObjectVtbl>()).GetData };
+         let get_data_result = unsafe { get_data_fn(data_obj as *mut _, &drop_format, &mut medium) };
+         if get_data_result >= 0 {
++            if medium.tymed != TYMED_HGLOBAL as u32 {
++                unsafe { ReleaseStgMedium(&mut medium) };
++                return false;
++            }
+             let hdrop = unsafe { medium.u.hGlobal as HDROP };
+ 
+             // The second parameter (0xFFFFFFFF) instructs the function to return the item count
+             let item_count = unsafe { DragQueryFileW(hdrop, 0xffffffff, ptr::null_mut(), 0) };
+-
+-            for i in 0..item_count {
++            let mut total = 0usize;
++            let mut paths = Vec::new();
++            let mut valid = item_count > 0 && item_count as usize <= crate::file_drop::MAX_FILES;
++
++            for i in 0..if valid { item_count } else { 0 } {
+                 // Get the length of the path string NOT including the terminating null character.
+                 // Previously, this was using a fixed size array of MAX_PATH length, but the
+                 // Windows API allows longer paths under certain circumstances.
+                 let character_count =
+                     unsafe { DragQueryFileW(hdrop, i, ptr::null_mut(), 0) as usize };
+                 let str_len = character_count + 1;
++                total = total.saturating_add(str_len.saturating_mul(2));
++                if total > crate::file_drop::MAX_BYTES {
++                    valid = false;
++                    break;
++                }
+ 
+                 // Fill path_buf with the null-terminated file name
+-                let mut path_buf = Vec::with_capacity(str_len);
+-                unsafe {
+-                    DragQueryFileW(hdrop, i, path_buf.as_mut_ptr(), str_len as u32);
+-                    path_buf.set_len(str_len);
++                let mut path_buf = vec![0; str_len];
++                let copied =
++                    unsafe { DragQueryFileW(hdrop, i, path_buf.as_mut_ptr(), str_len as u32) };
++                if copied as usize != character_count {
++                    valid = false;
++                    break;
+                 }
+ 
+-                callback(OsString::from_wide(&path_buf[0..character_count]).into());
+-            }
+-
+-            Some(hdrop)
++                paths.push(OsString::from_wide(&path_buf[0..character_count]).into());
++            }
++            // GetData transfers an STGMEDIUM, not a WM_DROPFILES handle. Honor
++            // pUnkForRelease and free both hover and drop media exactly once.
++            unsafe { ReleaseStgMedium(&mut medium) };
++            if valid {
++                for path in paths {
++                    callback(path);
++                }
++            }
++            valid
+         } else if get_data_result == DV_E_FORMATETC {
+             // If the dropped item is not a file this error will occur.
+             // In this case it is OK to return without taking further action.
+             debug!("Error occurred while processing dropped/hovered item: item is not a file.");
+-            None
++            false
+         } else {
+             debug!("Unexpected error occurred while processing dropped/hovered item.");
+-            None
++            false
+         }
+     }
+ }

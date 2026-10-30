@@ -13,6 +13,7 @@ mod event_label_tests;
 #[cfg(test)]
 mod event_workflow_tests;
 mod event_workflows;
+mod external_drop;
 mod file_workflows;
 mod fonts;
 mod fullscreen;
@@ -1766,28 +1767,8 @@ impl Editor {
         }
     }
 
-    pub fn show(&mut self, ui: &mut egui::Ui) {
-        let ctx = ui.ctx().clone();
-        self.poll_workers(&ctx);
-        self.poll_event_scripts();
-        self.advance_save();
-        if ctx.input(|i| i.viewport().close_requested())
-            && (self.save_ui.busy()
-                || self.about.is_some()
-                || self.print_form.is_some()
-                || self.print_success.is_some()
-                || self.print_request.is_some()
-                || self.print_worker.is_some())
-        {
-            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
-        } else if ctx.input(|i| i.viewport().close_requested())
-            && self.is_modified()
-            && !self.exit_approved
-        {
-            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
-            self.request_exit(&ctx);
-        }
-        let blocked = self.save_ui.busy()
+    fn interaction_blocked(&self) -> bool {
+        self.save_ui.busy()
             || self.about.is_some()
             || self.print_form.is_some()
             || self.print_success.is_some()
@@ -1814,7 +1795,33 @@ impl Editor {
             || self.error.is_some()
             || self.loading.is_some()
             || self.pending_open.is_some()
-            || self.open_palette_warning.is_some();
+            || self.open_palette_warning.is_some()
+            || self.pending_map_warning.is_some()
+    }
+
+    pub fn show(&mut self, ui: &mut egui::Ui) {
+        let ctx = ui.ctx().clone();
+        self.poll_workers(&ctx);
+        self.poll_event_scripts();
+        self.advance_save();
+        if ctx.input(|i| i.viewport().close_requested())
+            && (self.save_ui.busy()
+                || self.about.is_some()
+                || self.print_form.is_some()
+                || self.print_success.is_some()
+                || self.print_request.is_some()
+                || self.print_worker.is_some())
+        {
+            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+        } else if ctx.input(|i| i.viewport().close_requested())
+            && self.is_modified()
+            && !self.exit_approved
+        {
+            ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
+            self.request_exit(&ctx);
+        }
+        self.external_file_drops(&ctx, ui.max_rect());
+        let blocked = self.interaction_blocked();
         if !blocked && !ctx.egui_wants_keyboard_input() {
             self.block_hotkey_input(&ctx);
             if ctx.input_mut(|i| {

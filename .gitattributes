@@ -16,3 +16,5 @@
 crates/gui/assets/help/master-help.html.inc -text
 # Retain the hash-verified upstream license, including its original trailing space.
 LICENSES/egui-fonts/NotoSansSymbols2-OFL.txt whitespace=-blank-at-eol
+# Preserve audited third-party crate bytes; their original formatting is retained.
+vendor/** -text whitespace=-blank-at-eol,-blank-at-eof,-space-before-tab

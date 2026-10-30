@@ -120,3 +120,17 @@ notices are retained. Native/system fonts are not copied into the repository.
 
 Duplicate dependency versions are reported as warnings. Do not use broad ignore
 rules or disable accessibility merely to obtain a green dependency check.
+
+## Pinned native adapter patches
+
+The workspace patches winit 0.30.13 and egui-winit 0.37.0 from local, audited
+source trees. This supplies complete file transfers without migrating eframe
+to an incompatible prerelease windowing API. The GUI's direct egui-winit
+dependency disables defaults and shares the features already selected by eframe.
+The platform's Windows-only test dependencies reuse winit's locked Windows ABI
+and tracing versions; they do not affect the production platform graph.
+
+See [vendor maintenance](../vendor/README.md), [source hashes](../vendor/sources.json)
+and [license/modification notices](../vendor/NOTICE.md). CI verifies these trees
+and runs the shared transfer tests. Native file-manager acceptance remains a
+separate gate in [architecture](architecture.md#native-external-file-drop-integration-gate).

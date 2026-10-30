@@ -228,6 +228,12 @@ replace independent underlying third-party rights. Reference checkouts are not s
 
 Rust dependencies retain their own licenses. Dependency notices must accompany
 binary releases. This notice does not relicense third-party assets.
+
+The native file-drop implementation includes modified winit 0.30.13
+(Apache-2.0) and egui-winit 0.37.0 (MIT OR Apache-2.0) source. Original archive
+checksums, modifications and full license texts are retained under `vendor/`;
+see [vendor/NOTICE.md](vendor/NOTICE.md). Include those patched sources and
+notices with corresponding binary/source distributions.
 Print font enumeration uses Fontique, and CPU outline processing/rasterization
 uses Skrifa and Vello CPU, under their retained MIT/Apache-2.0 terms. Installed
 OS fonts are read locally and are not included in project assets or releases.

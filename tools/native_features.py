@@ -46,6 +46,12 @@ def main():
         required["arboard"].add("wayland-data-control")
         required["smithay-clipboard"] = set()
     errors = []
+    for name, version in {"winit": "0.30.13", "egui-winit": "0.37.0"}.items():
+        entries = [line.split("|", 1)[0] for line in graph.splitlines() if line.startswith(name + " ")]
+        if not entries or any(not entry.startswith(f"{name} v{version} ")
+                              or f"/vendor/{name}-{version}" not in entry.replace("\\", "/")
+                              for entry in entries):
+            errors.append(f"{name} must use the audited local {version} native adapter")
     for name, features in required.items():
         if name not in packages:
             errors.append(f"Missing production dependency: {name}")
@@ -53,7 +59,7 @@ def main():
             errors.append(f"{name} missing features: {', '.join(sorted(missing))}")
     if errors:
         raise SystemExit(f"Native adapter graph failed for {target}:\n" + "\n".join(errors))
-    print(f"Verified production clipboard/image/browser adapters for {target}")
+    print(f"Verified production clipboard/image/browser and pinned file-drop adapters for {target}")
 
 
 if __name__ == "__main__":

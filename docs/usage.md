@@ -7,6 +7,12 @@ remaining work and [compatibility evidence](compatibility.md) for verification.
 
 ## Opening projects
 
+Dropping files in the map workspace uses the normal Open options and unsaved
+changes guard. Only the first file is opened; drops over other controls or an
+active modal are ignored. This is independent of the internal Drag and Drop
+editing option. Native adapter implementation and remaining desktop verification
+are recorded in [compatibility](compatibility.md#native-external-file-drops).
+
 The editor opens binary maps using project metadata, explicit dimensions,
 or names such as `Map.20x18.johto.blk`. It finds the nearest Makefile and recognizes
 master map constants/headers and numbered tileset aliases. The GUI prefills these

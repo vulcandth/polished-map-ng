@@ -182,7 +182,7 @@ Research on 2026-10-28 found a concrete adapter gap. Pinned master attaches
 `Main_Window::drag_and_drop_cb` rejects another modal, asks the usual unsaved
 warning and opens the first path. The internal Drag and Drop option is unrelated.
 
-The locked winit 0.30.13 Windows `drop_handler.rs` ignores the OLE position
+The original registry winit 0.30.13 Windows `drop_handler.rs` ignores the OLE position
 argument; its macOS `window_delegate.rs` forwards filenames without positions;
 X11 `event_processor.rs` notes that position updates are not exposed. Its Wayland
 backend does not implement the file-drop events. Egui-winit 0.37 forwards these
@@ -196,11 +196,13 @@ redesigns native data transfer and drag coordinates. As of this research,
 Its evolving API must be inspected at a pinned revision, not inferred from old
 beta migration notes or the moving master documentation.
 
-Before implementing the native route:
+Implementation and remaining acceptance:
 
-1. Evaluate an eframe/egui-winit integration with that data-transfer API, including
-   Wayland clipboard ownership. If no compatible release is available, evaluate
-   a reproducible adapter patch with its own license/source notices and CI.
+1. The selected route is a pinned winit/egui-winit source patch, retaining the
+   existing eframe and renderer versions. Its original Cargo archive hashes,
+   modifications, license texts and maintenance checks are in
+   [vendor](../vendor/README.md). Wayland receiving uses the existing native
+   window connection/event queue and never sets the clipboard selection.
 2. Preserve a transfer identity, ordered native paths, viewport identity and
    the final position for that transfer. Convert physical pixels to logical
    coordinates once, and clear state on leave/cancel. Never infer the location
@@ -216,8 +218,23 @@ Before implementing the native route:
    off-window cancellation and clipboard coexistence. Synthetic drops alone
    cannot satisfy this gate.
 
-External file dropping remains unimplemented until this integration is in place;
-the existing File/Open and headless path APIs remain available.
+The adapters and guarded workspace route are implemented. The editor consumes
+only complete positioned transfers, never `RawInput.dropped_files` or cached
+ordinary pointer state. Windows uses the by-value OLE drop point; macOS converts
+the dragging location through its flipped content view; X11 uses the last
+position belonging to the source/target transfer and waits for its URI response;
+Wayland uses the offer's surface-local position. The bridge converts physical
+pixels to egui points once using native scale × egui zoom.
+
+Payloads are limited to 4 MiB and 4,096 paths; the bridge queues at most 16
+transfers per viewport. Unix URI decoding preserves path bytes and rejects
+non-file/remote URLs, malformed escapes and NULs. Wayland reads are nonblocking,
+limited per dispatch, and time out after ten seconds; removing a seat cancels
+its receive source. These defensive limits are recorded in
+[deviations](deviations.md#external-transfer-bounds-and-ole-correctness).
+Native file-manager delivery, cancellation, mixed-DPI placement and clipboard
+coexistence still require the desktop checks in item 4. See
+[current evidence](compatibility.md#native-external-file-drops).
 
 ## Native window-opacity boundary
 

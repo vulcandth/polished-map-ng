@@ -13,6 +13,7 @@ visual-tests = ["egui_kittest/wgpu", "egui_kittest/snapshot"]
 polished-map-core.workspace = true
 polished-map-project.workspace = true
 eframe.workspace = true
+egui-winit = { version = "=0.37.0", default-features = false }
 serde.workspace = true
 serde_json.workspace = true
 rfd.workspace = true
