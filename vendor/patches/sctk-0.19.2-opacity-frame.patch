@@ -1,0 +1,160 @@
+--- a/smithay-client-toolkit-0.19.2/src/shell/xdg/fallback_frame.rs
++++ b/winit-0.30.13/src/platform_impl/linux/wayland/types/opacity_frame.rs
+@@ -1,3 +1,8 @@
++// Adapted from smithay-client-toolkit 0.19.2 fallback_frame.rs (MIT).
++// Copyright (c) 2018 Victor Berger.
++// See vendor/adaptations.json and vendor/licenses/SCTK-MIT.txt for provenance.
++// Polished Map NG changes: alpha-modifier resources for all frame subsurfaces,
++// synchronized commits, and destruction before their owning surfaces.
+ //! The default fallback frame which is intended to show some very basic derocations.
+ 
+ use std::mem;
+@@ -5,15 +10,15 @@
+ use std::time::Duration;
+ use std::{error::Error, num::NonZeroU32};
+ 
+-use crate::reexports::client::{
++use sctk::reexports::client::{
+     protocol::{wl_shm, wl_subsurface::WlSubsurface, wl_surface::WlSurface},
+     Dispatch, Proxy, QueueHandle,
+ };
+-use crate::reexports::csd_frame::{
++use sctk::reexports::csd_frame::{
+     DecorationsFrame, FrameAction, FrameClick, ResizeEdge, WindowManagerCapabilities, WindowState,
+ };
+ 
+-use crate::{
++use sctk::{
+     compositor::SurfaceData,
+     seat::pointer::CursorIcon,
+     shell::WaylandSurface,
+@@ -22,6 +27,9 @@
+ };
+ 
+ use wayland_backend::client::ObjectId;
++use wayland_protocols::wp::alpha_modifier::v1::client::{
++    wp_alpha_modifier_surface_v1::WpAlphaModifierSurfaceV1, wp_alpha_modifier_v1::WpAlphaModifierV1,
++};
+ 
+ /// The size of the header bar.
+ const HEADER_SIZE: u32 = 24;
+@@ -46,6 +54,7 @@
+ pub struct FallbackFrame<State> {
+     /// The parent surface.
+     parent: WlSurface,
++    alpha_modifier: Option<(WpAlphaModifierV1, u32)>,
+ 
+     /// The latest window state.
+     state: WindowState,
+@@ -91,7 +100,10 @@
+ 
+ impl<State> FallbackFrame<State>
+ where
+-    State: Dispatch<WlSurface, SurfaceData> + Dispatch<WlSubsurface, SubsurfaceData> + 'static,
++    State: Dispatch<WlSurface, SurfaceData>
++        + Dispatch<WlSubsurface, SubsurfaceData>
++        + Dispatch<WpAlphaModifierSurfaceV1, ()>
++        + 'static,
+ {
+     pub fn new(
+         parent: &impl WaylandSurface,
+@@ -109,6 +121,7 @@
+             resizable: true,
+             state: WindowState::empty(),
+             wm_capabilities,
++            alpha_modifier: None,
+             dirty: true,
+             scale_factor: 1.,
+             pool,
+@@ -120,6 +133,26 @@
+             mouse_coords: (0, 0),
+             buttons: Self::supported_buttons(wm_capabilities),
+         })
++    }
++
++    /// Keep the frame's buffer, input, size and pixels unchanged; multiply the
++    /// entire native subsurfaces at the compositor, in sync with the parent.
++    pub fn set_alpha_modifier(&mut self, manager: &WpAlphaModifierV1, multiplier: u32) {
++        self.alpha_modifier = Some((manager.clone(), multiplier));
++        if let Some(render_data) = &mut self.render_data {
++            for part in &mut render_data.parts {
++                let alpha = part.alpha.get_or_insert_with(|| {
++                    manager.get_surface(&part.surface, &self.queue_handle, ())
++                });
++                alpha.set_multiplier(multiplier);
++                part.subsurface.set_sync();
++                // Commit the existing buffer's alpha without reallocating it.
++                // Synchronization defers every part to the next parent commit.
++                part.surface.commit();
++            }
++        }
++        self.should_sync = true;
++        self.dirty = true;
+     }
+ 
+     fn supported_buttons(wm_capabilities: WindowManagerCapabilities) -> [Option<UIButton>; 3] {
+@@ -327,7 +360,10 @@
+ 
+ impl<State> DecorationsFrame for FallbackFrame<State>
+ where
+-    State: Dispatch<WlSurface, SurfaceData> + Dispatch<WlSubsurface, SubsurfaceData> + 'static,
++    State: Dispatch<WlSurface, SurfaceData>
++        + Dispatch<WlSubsurface, SubsurfaceData>
++        + Dispatch<WpAlphaModifierSurfaceV1, ()>
++        + 'static,
+ {
+     fn set_scaling_factor(&mut self, scale_factor: f64) {
+         self.scale_factor = scale_factor;
+@@ -524,6 +560,15 @@
+             None => return false,
+         };
+ 
++        if let Some((manager, multiplier)) = &self.alpha_modifier {
++            for part in &mut render_data.parts {
++                let alpha = part.alpha.get_or_insert_with(|| {
++                    manager.get_surface(&part.surface, &self.queue_handle, ())
++                });
++                alpha.set_multiplier(*multiplier);
++            }
++        }
++
+         // Reset the dirty bit and sync option.
+         self.dirty = false;
+         let should_sync = mem::take(&mut self.should_sync);
+@@ -621,7 +666,10 @@
+         queue_handle: &QueueHandle<State>,
+     ) -> Self
+     where
+-        State: Dispatch<WlSurface, SurfaceData> + Dispatch<WlSubsurface, SubsurfaceData> + 'static,
++        State: Dispatch<WlSurface, SurfaceData>
++            + Dispatch<WlSubsurface, SubsurfaceData>
++            + Dispatch<WpAlphaModifierSurfaceV1, ()>
++            + 'static,
+     {
+         let parts = [
+             // Header.
+@@ -667,6 +715,7 @@
+ 
+ #[derive(Debug)]
+ struct FramePart {
++    alpha: Option<WpAlphaModifierSurfaceV1>,
+     /// The surface used for the frame part.
+     subsurface: WlSubsurface,
+ 
+@@ -688,12 +737,15 @@
+         let (subsurface, surface) = surfaces;
+         // XXX sync subsurfaces with the main surface.
+         subsurface.set_sync();
+-        Self { surface, subsurface, width, height, pos }
++        Self { surface, subsurface, width, height, pos, alpha: None }
+     }
+ }
+ 
+ impl Drop for FramePart {
+     fn drop(&mut self) {
++        if let Some(alpha) = self.alpha.take() {
++            alpha.destroy();
++        }
+         self.subsurface.destroy();
+         self.surface.destroy();
+     }

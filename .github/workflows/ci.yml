@@ -28,6 +28,9 @@ jobs:
       - name: Verify native X11 opacity property
         if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum cargo test -p polished-map-platform --locked native_x11_opacity -- --ignored --test-threads=1
+      - name: Verify native Wayland opacity protocol
+        if: runner.os == 'Linux'
+        run: python3 tools/wayland_opacity_probe.py
       - run: cargo test -p polished-map-project --locked --lib installed_bold_faces -- --ignored --nocapture
       - run: cargo test -p polished-map-project --locked --lib installed_native_font -- --ignored --nocapture
       - run: cargo test -p polished-map-gui --locked --lib installed_native_fonts -- --ignored --nocapture

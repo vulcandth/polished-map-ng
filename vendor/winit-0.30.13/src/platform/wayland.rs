@@ -81,9 +81,23 @@ impl<T> EventLoopBuilderExtWayland for EventLoopBuilder<T> {
 pub trait WindowExtWayland {
     /// Returns `xdg_toplevel` of the window or [`None`] if the window is X11 window.
     fn xdg_toplevel(&self) -> Option<NonNull<c_void>>;
+
+    /// Queue a whole-window alpha multiplier, including client-side decorations.
+    /// `u32::MAX` is opaque. Fails if the compositor lacks the alpha protocol or
+    /// owns a visible frame that this client cannot modify. A successful request
+    /// takes effect on surface commit; it is not pixel-level compositor proof.
+    fn set_whole_window_opacity(&self, multiplier: u32) -> Result<(), &'static str>;
 }
 
 impl WindowExtWayland for Window {
+    fn set_whole_window_opacity(&self, multiplier: u32) -> Result<(), &'static str> {
+        match &self.window {
+            #[cfg(x11_platform)]
+            crate::platform_impl::Window::X(_) => Err("Wayland opacity requires a Wayland window"),
+            #[cfg(wayland_platform)]
+            crate::platform_impl::Window::Wayland(window) => window.set_whole_window_opacity(multiplier),
+        }
+    }
     #[inline]
     fn xdg_toplevel(&self) -> Option<NonNull<c_void>> {
         #[allow(clippy::single_match)]

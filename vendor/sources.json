@@ -9,7 +9,7 @@
       "archive_sha256": "a6755fa58a9f8350bd1e472d4c3fcc25f824ec358933bba33306d0b63df5978d",
       "archive_url": "https://static.crates.io/crates/winit/winit-0.30.13.crate",
       "patch": "patches/winit-0.30.13.patch",
-      "patch_sha256": "8818ff3629f98750fd3f3320d0b80a6e0a07f6d50dcfab2f6a6a96eb1d1eefac",
+      "patch_sha256": "701be0096253db324b0ad4b2185c89105e7afc2c3c9edd475c952fad09e41c52",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "b8b2549c91dbf3dc4087197a6be89ab5acb5511c2d1eadc7349c249f646047bb",
@@ -224,7 +224,7 @@
           "original_sha256": "549f95a2afff4435eed400c580b7d512229c7958df19258c0ce2ac30474f121d"
         },
         "src/event.rs": {
-          "sha256": "82dc9f057ff2dce57dadd96207929d70acb75167dccff730685468c87da0c472",
+          "sha256": "690580b7fa12eba9ab4708ebc5d768f502b59825e45fd6c0212ab61efbadcd3c",
           "original_sha256": "ff5c577343a725173a539c797e243fa8f6150c02181d904bddb9d82581a7a61e"
         },
         "src/event_loop.rs": {
@@ -292,7 +292,7 @@
           "original_sha256": "c2b3ba714649268109ab48ef5cc7dddd7dab0198518987f8735c174fe6b2c5b8"
         },
         "src/platform/wayland.rs": {
-          "sha256": "4fd4601c7733275031f14c40d33caca8e493197c40bc721fdd055297f9690d00",
+          "sha256": "a584b606ac14012d40355af563c3e2a347e7349e878cad050180c257a704ff28",
           "original_sha256": "4fd4601c7733275031f14c40d33caca8e493197c40bc721fdd055297f9690d00"
         },
         "src/platform/web.rs": {
@@ -420,8 +420,12 @@
           "original_sha256": "dd16a75607cab3ba5723ad6b7a2ad6dd09fa2a63fffa57622367f137ea5d3987"
         },
         "src/platform_impl/linux/wayland/state.rs": {
-          "sha256": "27536b70eabb2baa362d952f51cba7dcbe407a2d6cc7c9cc3c7820bd7f7a5408",
+          "sha256": "cf01a4417380fbaff8f16e205f52f34cb7c8904d49bd942c138d2b90a61ddc55",
           "original_sha256": "18beef206a1d0a1cf72ac65b1cefb4984bc204ca0638ecbbe2cb2c8d316422c9"
+        },
+        "src/platform_impl/linux/wayland/types/alpha_modifier.rs": {
+          "sha256": "f588e9a3f1f20e1c586db96e440adbc66ae96de2a7a7723b48c43b8fc94d46f9",
+          "original_sha256": null
         },
         "src/platform_impl/linux/wayland/types/cursor.rs": {
           "sha256": "b513bb85d34e3df1d5bc765e2f88a468e80f43d50464336d5dbaf54332fdf8e7",
@@ -432,8 +436,12 @@
           "original_sha256": "6cbb4ce3e2484a01bacfa24a55ea3c1659503b18fc48e8f41f341d437f291ea4"
         },
         "src/platform_impl/linux/wayland/types/mod.rs": {
-          "sha256": "84e32b36a90e15747ce5beae9318f1475d15925a45248147a5b7e9920e74f4c8",
+          "sha256": "a4e998122b8454278c201bcf1eb42ec3ee56feb469bcd2d965646c641d80e1ac",
           "original_sha256": "84e32b36a90e15747ce5beae9318f1475d15925a45248147a5b7e9920e74f4c8"
+        },
+        "src/platform_impl/linux/wayland/types/opacity_frame.rs": {
+          "sha256": "430701c4ed8ca74f2ff028c4c04fe9abc4719236e5f818fc7e94f481bff90233",
+          "original_sha256": null
         },
         "src/platform_impl/linux/wayland/types/wp_fractional_scaling.rs": {
           "sha256": "c0897ffeee6f631aac024e9a737b90c18b807a775cf898e64b45fcca84ca97c7",
@@ -448,11 +456,11 @@
           "original_sha256": "8d0fd39c97c6eb19b8231df20624777feca1aa45bb38692ab498e37e42aa5bab"
         },
         "src/platform_impl/linux/wayland/window/mod.rs": {
-          "sha256": "30b6c00aa143046e4b1d7277e5fd08ae7ef7f7f084b0c0e62c89e0dda8a5c6c2",
+          "sha256": "afeb252b359f01e3e1fb5f03bdbb994f94f629d81c066fa25619b277db36774e",
           "original_sha256": "30b6c00aa143046e4b1d7277e5fd08ae7ef7f7f084b0c0e62c89e0dda8a5c6c2"
         },
         "src/platform_impl/linux/wayland/window/state.rs": {
-          "sha256": "d09f9c19235a36d0a0068eb82428a27e3a4f318f31925368e573310ae791030a",
+          "sha256": "55d96e87690cc1805fcd6b6f2a50b1153081739639d8c0dd2ec24d069207c302",
           "original_sha256": "d09f9c19235a36d0a0068eb82428a27e3a4f318f31925368e573310ae791030a"
         },
         "src/platform_impl/linux/x11/activation.rs": {
@@ -897,7 +905,7 @@
       "archive_sha256": "e4e449f4c4a2a60c7ccb4ba7fa4078417bfe1f9ddc03b5e05ce75748e33a70de",
       "archive_url": "https://static.crates.io/crates/egui-winit/egui-winit-0.37.0.crate",
       "patch": "patches/egui-winit-0.37.0.patch",
-      "patch_sha256": "c1eae2a3534b9573f42ef0f4308f4d1fb374ca50d14b625e917a3ba7a8bd4b53",
+      "patch_sha256": "e8d4e1908b7f0127c08f708e66b6303d85131d4f595a062e05032ab627186e19",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "3eb2f5f41008d97f2800b00c5245f906e3f70c1c6258714d4e9d89d6f31a8b33",
@@ -940,7 +948,7 @@
           "original_sha256": null
         },
         "src/lib.rs": {
-          "sha256": "8ef0f24f34991c12418e1b84bd3d4552e832a72063168465db3a8538c573c636",
+          "sha256": "eeb7f3ed48dc6cb1434c99aee80361dc639becafe405ff5748136f8ac59f3d9d",
           "original_sha256": "d742b0d35e6b1248329f11fdc6d267c3f04cb93f1729fbe7b7ac074172d91c45"
         },
         "src/macos_scroll_momentum.rs": {
@@ -950,6 +958,10 @@
         "src/safe_area.rs": {
           "sha256": "7d6efc7d283814d6dcb5e0938225bea19a479a452aa85377092b33e8bd11bb8b",
           "original_sha256": "7d6efc7d283814d6dcb5e0938225bea19a479a452aa85377092b33e8bd11bb8b"
+        },
+        "src/window_opacity.rs": {
+          "sha256": "09f9da5bd37f8fff7c8d5f9d491c966aa2e199514651ecce6ecc3b4c8f9d974d",
+          "original_sha256": null
         },
         "src/window_settings.rs": {
           "sha256": "08ee88b3a25425fc31c6ec57f60f1747408968174fda6ea86af905618b621751",

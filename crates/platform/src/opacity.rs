@@ -40,6 +40,10 @@ impl WindowOpacity {
 
 #[derive(Debug, thiserror::Error)]
 pub enum OpacityError {
+    #[error(
+        "Wayland opacity must be dispatched through the window's native connection and event queue"
+    )]
+    WaylandProtocolRequired,
     #[error("Native window handle unavailable: {0}")]
     Handle(#[from] raw_window_handle::HandleError),
     #[error("{0}")]

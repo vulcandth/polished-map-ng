@@ -47,7 +47,7 @@ use crate::platform_impl::wayland::state::{WindowCompositorUpdate, WinitState};
 #[cfg(feature = "sctk-adwaita")]
 pub type WinitFrame = sctk_adwaita::AdwaitaFrame<WinitState>;
 #[cfg(not(feature = "sctk-adwaita"))]
-pub type WinitFrame = sctk::shell::xdg::fallback_frame::FallbackFrame<WinitState>;
+pub type WinitFrame = super::super::types::opacity_frame::FallbackFrame<WinitState>;
 
 // Minimum window inner size.
 const MIN_WINDOW_SIZE: LogicalSize<u32> = LogicalSize::new(2, 1);
@@ -145,6 +145,10 @@ pub struct WindowState {
     fractional_scale: Option<WpFractionalScaleV1>,
     blur: Option<OrgKdeKwinBlur>,
     blur_manager: Option<KWinBlurManager>,
+    alpha_modifier: Option<wayland_protocols::wp::alpha_modifier::v1::client::wp_alpha_modifier_v1::WpAlphaModifierV1>,
+    alpha_surface: Option<super::super::types::alpha_modifier::AlphaSurface>,
+    alpha_multiplier: u32,
+    opacity_lost: Option<&'static str>,
 
     /// Whether the client side decorations have pending move operations.
     ///
@@ -186,6 +190,10 @@ impl WindowState {
         Self {
             blur: None,
             blur_manager: winit_state.kwin_blur_manager.clone(),
+            alpha_modifier: winit_state.alpha_modifier.clone(),
+            alpha_surface: None,
+            alpha_multiplier: u32::MAX,
+            opacity_lost: None,
             compositor,
             connection,
             csd_fails: false,
@@ -295,6 +303,12 @@ impl WindowState {
                     frame.set_scaling_factor(self.scale_factor);
                     // Hide the frame if we were asked to not decorate.
                     frame.set_hidden(!self.decorate);
+                    #[cfg(not(feature = "sctk-adwaita"))]
+                    if self.alpha_multiplier != u32::MAX {
+                        if let Some(manager) = &self.alpha_modifier {
+                            frame.set_alpha_modifier(manager, self.alpha_multiplier);
+                        }
+                    }
                     self.frame = Some(frame);
                 },
                 Err(err) => {
@@ -393,6 +407,12 @@ impl WindowState {
 
         // NOTE: Set the configure before doing a resize, since we query it during it.
         self.last_configure = Some(configure);
+        if self.alpha_multiplier != u32::MAX {
+            if let Err(reason) = self.opacity_support() {
+                self.apply_opacity(u32::MAX);
+                self.opacity_lost = Some(reason);
+            }
+        }
 
         if state_change_requires_resize || new_size != self.inner_size() {
             self.resize(new_size);
@@ -1094,6 +1114,41 @@ impl WindowState {
         }
     }
 
+    fn opacity_support(&self) -> Result<(), &'static str> {
+        if self.alpha_modifier.is_none() {
+            return Err("This Wayland compositor does not support the alpha-modifier protocol");
+        }
+        let configure = self.last_configure.as_ref().ok_or("The Wayland window is not configured yet")?;
+        if !self.decorate || configure.is_fullscreen() { return Ok(()); }
+        if configure.decoration_mode != DecorationMode::Client {
+            return Err("Whole-window opacity is unavailable with a compositor-owned Wayland title bar");
+        }
+        if self.frame.is_none() { return Err("The Wayland client frame is unavailable"); }
+        #[cfg(feature = "sctk-adwaita")]
+        { Err("Whole-window opacity is unavailable with this Wayland decoration adapter") }
+        #[cfg(not(feature = "sctk-adwaita"))]
+        { Ok(()) }
+    }
+
+    fn apply_opacity(&mut self, multiplier: u32) {
+        if let Some(manager) = &self.alpha_modifier {
+            let alpha = self.alpha_surface.get_or_insert_with(||
+                super::super::types::alpha_modifier::AlphaSurface(manager.get_surface(self.window.wl_surface(), &self.queue_handle, ())));
+            alpha.0.set_multiplier(multiplier);
+            #[cfg(not(feature = "sctk-adwaita"))]
+            if let Some(frame) = &mut self.frame { frame.set_alpha_modifier(manager, multiplier); }
+        }
+        self.alpha_multiplier = multiplier;
+    }
+
+    pub fn set_whole_window_opacity(&mut self, multiplier: u32) -> Result<(), &'static str> {
+        if multiplier != u32::MAX { self.opacity_support()?; }
+        self.apply_opacity(multiplier);
+        Ok(())
+    }
+
+    pub fn take_opacity_lost(&mut self) -> Option<&'static str> { self.opacity_lost.take() }
+
     /// Set the window title to a new value.
     ///
     /// This will automatically truncate the title to something meaningful.
@@ -1149,6 +1204,7 @@ impl WindowState {
 
 impl Drop for WindowState {
     fn drop(&mut self) {
+        self.alpha_surface.take();
         if let Some(blur) = self.blur.take() {
             blur.release();
         }

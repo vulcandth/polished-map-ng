@@ -98,9 +98,7 @@ pub(super) fn apply(
 
     let handle = owner.window_handle()?;
     if matches!(handle.as_raw(), RawWindowHandle::Wayland(_)) {
-        return Err(OpacityError::Unsupported(
-            "Whole-window opacity is not yet supported by this Wayland integration",
-        ));
+        return Err(OpacityError::WaylandProtocolRequired);
     }
     let display_handle = owner.display_handle()?;
     let (RawWindowHandle::Xlib(window), RawDisplayHandle::Xlib(display)) =

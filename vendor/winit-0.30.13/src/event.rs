@@ -206,6 +206,14 @@ pub enum WindowEvent {
     /// hovered.
     HoveredFileCancelled,
 
+    /// A previously accepted whole-window opacity request can no longer cover
+    /// all surfaces after a native frame change. The window has returned opaque.
+    /// Polished Map NG extension, currently emitted by Wayland.
+    WindowOpacityUnavailable {
+        /// Native capability/lifecycle reason; not a rendering confirmation.
+        reason: &'static str,
+    },
+
     /// The window gained or lost focus.
     ///
     /// The parameter is true if the window has gained focus, and false if it has lost focus.

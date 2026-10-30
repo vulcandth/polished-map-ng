@@ -1,0 +1,19 @@
+{
+  "format": 1,
+  "sources": [
+    {
+      "archive": "smithay-client-toolkit-0.19.2.crate",
+      "archive_sha256": "3457dea1f0eb631b4034d61d4d8c32074caa6cd1ab2d59f2327bd8461e2c0016",
+      "upstream": "https://github.com/Smithay/client-toolkit",
+      "original_path": "smithay-client-toolkit-0.19.2/src/shell/xdg/fallback_frame.rs",
+      "original_sha256": "3ed0b4fd3fde29519d5716cba7f1a68d2fb3eb912d26db919cfc117b56380461",
+      "path": "winit-0.30.13/src/platform_impl/linux/wayland/types/opacity_frame.rs",
+      "sha256": "430701c4ed8ca74f2ff028c4c04fe9abc4719236e5f818fc7e94f481bff90233",
+      "original_license_path": "smithay-client-toolkit-0.19.2/LICENSE.txt",
+      "license_path": "licenses/SCTK-MIT.txt",
+      "license_sha256": "13c0147abe1c7607fde840e2dffcde75bf925aea504b2845b7be4869a5af2afc",
+      "patch": "patches/sctk-0.19.2-opacity-frame.patch",
+      "patch_sha256": "91fa3df16a2989007bac60b50bfd19087a1655fa488f941f4226baa754b195ae"
+    }
+  ]
+}

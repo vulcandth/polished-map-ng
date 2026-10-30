@@ -23,10 +23,30 @@ Modified for Polished Map NG on 2026-10-29, under Apache-2.0:
 - Wayland: bind receive-only data devices on the existing connection/queue,
   retain each offer's surface/coordinates, and read URI data through bounded
   nonblocking calloop sources with a timeout and seat-removal cleanup.
+- Wayland opacity: bind alpha-modifier on that same connection/queue, multiply
+  the root and all client-frame surfaces, reject unsupported/server-frame cases,
+  and restore opaque state with a capability-loss event on frame transitions.
 
 The complete file-level modifications are in
 [the winit patch](patches/winit-0.30.13.patch). New transfer helpers and tests are
-part of that patch. It does not yet implement Wayland whole-window opacity.
+part of that patch. The frame adaptation below retains its separate MIT license.
+
+## Smithay client toolkit 0.19.2 frame adaptation
+
+The Wayland fallback frame in `winit-0.30.13/src/platform_impl/linux/wayland/types/opacity_frame.rs`
+adapts `src/shell/xdg/fallback_frame.rs` from the immutable Cargo archive of
+[Smithay client toolkit](https://github.com/Smithay/client-toolkit), copyright
+(c) 2018 Victor Berger, under [MIT](licenses/SCTK-MIT.txt). Its complete original
+license is retained verbatim. [adaptations.json](adaptations.json) records the
+archive checksum, original/adapted file hashes and license hash; the
+[separate frame patch](patches/sctk-0.19.2-opacity-frame.patch) isolates NG's changes.
+
+Modified for Polished Map NG on 2026-10-29: externalize toolkit imports; attach
+one alpha-modifier resource per frame surface; synchronize opacity commits with
+the parent; restore resources when frame parts are recreated; destroy alpha
+resources before surfaces. Original drawing, input and geometry remain intact.
+The production graph uses this fallback frame. The optional Adwaita frame is
+not adapted and explicitly rejects opacity while visible.
 
 ## egui-winit 0.37.0
 
@@ -48,8 +68,10 @@ Modified for Polished Map NG on 2026-10-29, under MIT OR Apache-2.0: translate
 complete drop events into a bounded, viewport-specific egui Context queue,
 converting physical coordinates using native scale × egui zoom exactly once.
 The editor consumes this queue independently of path-only RawInput events.
+The same patch adds a single outstanding opacity request/reply per viewport,
+dispatches it through the live owned Wayland window, and reports capability loss.
 See [the egui-winit patch](patches/egui-winit-0.37.0.patch).
 
 These dependencies retain their own licenses; the application's LGPL-3.0-only
 license does not replace them. Binary source bundles must include these patched
-trees, both patches, source manifest and all retained license/notice files.
+trees, all patches, both manifests and all retained license/notice files.

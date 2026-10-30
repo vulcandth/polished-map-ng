@@ -54,6 +54,7 @@ pub struct WinitState {
     /// The seat state responsible for all sorts of input.
     pub seat_state: SeatState,
     pub data_device_manager: Option<sctk::data_device_manager::DataDeviceManagerState>,
+    pub alpha_modifier: Option<wayland_protocols::wp::alpha_modifier::v1::client::wp_alpha_modifier_v1::WpAlphaModifierV1>,
 
     /// The shm for software buffers, such as cursors.
     pub shm: Shm,
@@ -169,6 +170,7 @@ impl WinitState {
             output_state,
             seat_state,
             data_device_manager,
+            alpha_modifier: super::types::alpha_modifier::bind(globals, queue_handle),
             shm,
             custom_cursor_pool,
 
@@ -296,6 +298,11 @@ impl WindowHandler for WinitState {
             .lock()
             .unwrap()
             .configure(configure, &self.shm, &self.subcompositor_state);
+        let opacity_lost = self.windows.get_mut().get_mut(&window_id).unwrap()
+            .lock().unwrap().take_opacity_lost();
+        if let Some(reason) = opacity_lost {
+            self.events_sink.push_window_event(crate::event::WindowEvent::WindowOpacityUnavailable { reason }, window_id);
+        }
 
         // NOTE: configure demands wl_surface::commit, however winit doesn't commit on behalf of the
         // users, since it can break a lot of things, thus it'll ask users to redraw instead.

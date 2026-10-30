@@ -23,6 +23,11 @@ objc2-app-kit = { version = "0.3", default-features = false, features = ["std", 
 [dev-dependencies]
 tempfile.workspace = true
 
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+# Drive the actual window adapter against an isolated protocol peer, without a GPU.
+winit = { version = "=0.30.13", default-features = false, features = ["wayland", "wayland-dlopen", "rwh_06"] }
+wayland-sys = { version = "0.31", features = ["client", "dlopen"] }
+
 [target.'cfg(windows)'.dev-dependencies]
 # Test the exact vendored OLE callback against its original Windows ABI types.
 windows-sys-legacy = { package = "windows-sys", version = "0.52", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_System_Com", "Win32_System_Com_StructuredStorage", "Win32_System_Ole", "Win32_System_Memory", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }

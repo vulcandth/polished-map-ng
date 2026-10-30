@@ -113,8 +113,10 @@ The legacy FLTK user store and executable-adjacent `.prefs` files are not import
 or modified. The `meta128` workflow and record roundtrip are implemented; native
 restart/shutdown verification remains M5/M6 in the [roadmap](roadmap.md).
 Startup theme/placement policy and native theme variants still need their menu/persistence
-work. Transparency's Wayland integration and native compositor/GPU appearance
-remain open; its menu and saved-intent workflow are implemented.
+work. Transparency's Wayland protocol integration, menu and saved-intent workflow
+are implemented; native compositor/GPU appearance and restart verification remain
+open. Unsupported protocol/frame configurations preserve saved intent and show
+an explicit error without claiming that transparency was applied.
 
 Tests inject an in-memory eframe Storage into the real app constructor and use
 its save callback. They cover restoration of all implemented settings, 270

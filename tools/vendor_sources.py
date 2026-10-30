@@ -64,7 +64,37 @@ def main():
             count += 1
     if args.refresh:
         (VENDOR / "sources.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8", newline="\n")
+    adaptations_path = VENDOR / "adaptations.json"
+    adaptations = json.loads(adaptations_path.read_text(encoding="utf-8"))
+    assert adaptations["format"] == 1
+    for source in adaptations["sources"]:
+        data = (VENDOR / source["path"]).read_bytes()
+        license_data = (VENDOR / source["license_path"]).read_bytes()
+        patch_path = VENDOR / source["patch"]
+        if args.archives:
+            archive = args.archives / source["archive"]
+            assert digest(archive.read_bytes()) == source["archive_sha256"]
+            with tarfile.open(archive, "r:gz") as tar:
+                before = tar.extractfile(source["original_path"]).read()
+                license_before = tar.extractfile(source["original_license_path"]).read()
+            assert digest(before) == source["original_sha256"]
+            assert license_data == license_before, "Original license must be retained verbatim"
+            patch = "".join(difflib.unified_diff(before.decode("utf-8").splitlines(keepends=True),
+                data.decode("utf-8").splitlines(keepends=True),
+                fromfile="a/" + source["original_path"], tofile="b/" + source["path"])).encode("utf-8")
+            if args.refresh:
+                source["sha256"] = digest(data)
+                source["patch_sha256"] = digest(patch)
+                patch_path.write_bytes(patch)
+            else:
+                assert patch == patch_path.read_bytes(), "Adaptation patch differs from original source"
+        assert digest(data) == source["sha256"]
+        assert digest(license_data) == source["license_sha256"]
+        assert digest(patch_path.read_bytes()) == source["patch_sha256"]
+    if args.refresh:
+        adaptations_path.write_text(json.dumps(adaptations, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"Verified {len(manifest['crates'])} pinned native adapters, {count} files and their patches")
+    print(f"Verified {len(adaptations['sources'])} separately licensed source adaptations")
 
 
 if __name__ == "__main__":

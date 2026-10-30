@@ -294,17 +294,19 @@
 +}
 --- a/egui-winit-0.37.0/src/lib.rs
 +++ b/egui-winit-0.37.0/src/lib.rs
-@@ -33,6 +33,9 @@
+@@ -33,6 +33,11 @@
  pub use window_settings::{WindowGeometry, WindowSettings};
  
  use raw_window_handle::HasDisplayHandle;
 +
 +/// Positioned file transfers supplied by Polished Map NG's pinned winit adapter.
 +pub mod file_drop;
++/// Whole-window opacity requests requiring the live native Wayland window.
++pub mod window_opacity;
  
  #[cfg(not(target_arch = "wasm32"))]
  use dropped_file::NativeFile;
-@@ -509,6 +512,12 @@
+@@ -509,6 +514,16 @@
                      repaint: true,
                      consumed: false,
                  }
@@ -314,14 +316,133 @@
 +                    paths.clone(), [position.x, position.y], pixels_per_point(&self.egui_ctx, window));
 +                self.egui_input.hovered_files.clear();
 +                EventResponse { repaint: true, consumed: false }
++            }
++            WindowEvent::WindowOpacityUnavailable { reason } => {
++                window_opacity::unavailable(&self.egui_ctx, self.viewport_id, reason);
++                EventResponse { repaint: true, consumed: false }
              }
              WindowEvent::HoveredFile(path) => {
                  self.egui_input.hovered_files.push(egui::HoveredFile {
-@@ -2652,6 +2661,7 @@
+@@ -1223,6 +1238,15 @@
+         platform_output: egui::PlatformOutput,
+     ) {
+         profiling::function_scope!();
++        window_opacity::dispatch_with(&self.egui_ctx, self.viewport_id, |multiplier| {
++            #[cfg(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android")), feature = "wayland"))]
++            {
++                use winit::platform::wayland::WindowExtWayland;
++                window.set_whole_window_opacity(multiplier)
++            }
++            #[cfg(not(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android")), feature = "wayland")))]
++            { let _ = multiplier; Err("This native adapter is not using Wayland") }
++        });
+ 
+         let egui::PlatformOutput {
+             commands,
+@@ -2652,6 +2676,8 @@
          WindowEvent::CloseRequested => "WindowEvent::CloseRequested",
          WindowEvent::Destroyed => "WindowEvent::Destroyed",
          WindowEvent::DroppedFile { .. } => "WindowEvent::DroppedFile",
 +        WindowEvent::FilesDropped { .. } => "WindowEvent::FilesDropped",
++        WindowEvent::WindowOpacityUnavailable { .. } => "WindowEvent::WindowOpacityUnavailable",
          WindowEvent::HoveredFile { .. } => "WindowEvent::HoveredFile",
          WindowEvent::HoveredFileCancelled => "WindowEvent::HoveredFileCancelled",
          WindowEvent::Focused { .. } => "WindowEvent::Focused",
+--- a/egui-winit-0.37.0/src/window_opacity.rs
++++ b/egui-winit-0.37.0/src/window_opacity.rs
+@@ -0,0 +1,95 @@
++//! Polished Map NG native output bridge (MIT OR Apache-2.0).
++//! Only a successful native dispatch is an accepted request. Rendering and
++//! compositor behavior still require separate native verification.
++#[derive(Clone, Default)]
++struct State {
++    next_id: u64,
++    active: Option<u64>,
++    queued: Option<(u64, u32)>,
++    reply: Option<(u64, Result<(), &'static str>)>,
++    unavailable: Option<&'static str>,
++}
++
++fn key(viewport: egui::ViewportId) -> egui::Id {
++    egui::Id::unique(("polished-map-native-window-opacity-v1", viewport))
++}
++
++/// Queue one native request on the UI thread. Do not overwrite a pending reply.
++pub fn request(
++    ctx: &egui::Context,
++    viewport: egui::ViewportId,
++    multiplier: u32,
++) -> Result<u64, &'static str> {
++    let id = ctx.data_mut(|data| {
++        let state = data.get_temp_mut_or_default::<State>(key(viewport));
++        if state.active.is_some() {
++            return Err("A native opacity request is already pending");
++        }
++        state.next_id = state.next_id.wrapping_add(1);
++        let id = state.next_id;
++        state.active = Some(id);
++        state.queued = Some((id, multiplier));
++        Ok(id)
++    })?;
++    ctx.request_repaint_of(viewport);
++    Ok(id)
++}
++
++/// Dispatch the queued output once, outside Context's data lock. Exposed for
++/// headless integration tests; real dispatch receives the owned winit Window.
++pub fn dispatch_with(
++    ctx: &egui::Context,
++    viewport: egui::ViewportId,
++    apply: impl FnOnce(u32) -> Result<(), &'static str>,
++) {
++    let queued = ctx.data_mut(|data| {
++        data.get_temp_mut_or_default::<State>(key(viewport))
++            .queued
++            .take()
++    });
++    if let Some((id, multiplier)) = queued {
++        let result = apply(multiplier);
++        ctx.data_mut(|data| {
++            data.get_temp_mut_or_default::<State>(key(viewport)).reply = Some((id, result))
++        });
++        ctx.request_repaint_of(viewport);
++    }
++}
++
++/// Take only the reply for this caller's request and viewport.
++pub fn take_reply(
++    ctx: &egui::Context,
++    viewport: egui::ViewportId,
++    id: u64,
++) -> Option<Result<(), &'static str>> {
++    ctx.data_mut(|data| {
++        let state = data.get_temp_mut_or_default::<State>(key(viewport));
++        if state
++            .reply
++            .as_ref()
++            .is_some_and(|(reply_id, _)| *reply_id == id)
++        {
++            state.active = None;
++            state.reply.take().map(|(_, result)| result)
++        } else {
++            None
++        }
++    })
++}
++
++/// Record a native frame transition that restored opacity after capability loss.
++pub fn unavailable(ctx: &egui::Context, viewport: egui::ViewportId, reason: &'static str) {
++    ctx.data_mut(|data| {
++        data.get_temp_mut_or_default::<State>(key(viewport))
++            .unavailable = Some(reason)
++    });
++    ctx.request_repaint_of(viewport);
++}
++
++pub fn take_unavailable(ctx: &egui::Context, viewport: egui::ViewportId) -> Option<&'static str> {
++    ctx.data_mut(|data| {
++        data.get_temp_mut_or_default::<State>(key(viewport))
++            .unavailable
++            .take()
++    })
++}

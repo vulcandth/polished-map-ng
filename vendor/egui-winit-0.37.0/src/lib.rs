@@ -36,6 +36,8 @@ use raw_window_handle::HasDisplayHandle;
 
 /// Positioned file transfers supplied by Polished Map NG's pinned winit adapter.
 pub mod file_drop;
+/// Whole-window opacity requests requiring the live native Wayland window.
+pub mod window_opacity;
 
 #[cfg(not(target_arch = "wasm32"))]
 use dropped_file::NativeFile;
@@ -517,6 +519,10 @@ impl State {
                 file_drop::enqueue(&self.egui_ctx, self.viewport_id, *transfer_id,
                     paths.clone(), [position.x, position.y], pixels_per_point(&self.egui_ctx, window));
                 self.egui_input.hovered_files.clear();
+                EventResponse { repaint: true, consumed: false }
+            }
+            WindowEvent::WindowOpacityUnavailable { reason } => {
+                window_opacity::unavailable(&self.egui_ctx, self.viewport_id, reason);
                 EventResponse { repaint: true, consumed: false }
             }
             WindowEvent::HoveredFile(path) => {
@@ -1232,6 +1238,15 @@ impl State {
         platform_output: egui::PlatformOutput,
     ) {
         profiling::function_scope!();
+        window_opacity::dispatch_with(&self.egui_ctx, self.viewport_id, |multiplier| {
+            #[cfg(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android")), feature = "wayland"))]
+            {
+                use winit::platform::wayland::WindowExtWayland;
+                window.set_whole_window_opacity(multiplier)
+            }
+            #[cfg(not(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android")), feature = "wayland")))]
+            { let _ = multiplier; Err("This native adapter is not using Wayland") }
+        });
 
         let egui::PlatformOutput {
             commands,
@@ -2662,6 +2677,7 @@ pub fn short_window_event_description(event: &winit::event::WindowEvent) -> &'st
         WindowEvent::Destroyed => "WindowEvent::Destroyed",
         WindowEvent::DroppedFile { .. } => "WindowEvent::DroppedFile",
         WindowEvent::FilesDropped { .. } => "WindowEvent::FilesDropped",
+        WindowEvent::WindowOpacityUnavailable { .. } => "WindowEvent::WindowOpacityUnavailable",
         WindowEvent::HoveredFile { .. } => "WindowEvent::HoveredFile",
         WindowEvent::HoveredFileCancelled => "WindowEvent::HoveredFileCancelled",
         WindowEvent::Focused { .. } => "WindowEvent::Focused",

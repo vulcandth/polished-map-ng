@@ -1086,7 +1086,7 @@ appearance or macOS native opacity behavior.
 View/Transparent and F10 now follow pinned master's `Main_Window::initialize`,
 `transparent_cb`, `apply_transparency`, `exit_cb` and `main.cpp` startup rule.
 The native boundary requests 75% opacity on the root window: Win32 alpha 191,
-X11 `0xBFFFFFFF`, and AppKit alpha 0.75; opaque values restore 255/`UINT32_MAX`/1.0.
+X11/Wayland `0xBFFFFFFF`, and AppKit alpha 0.75; opaque values restore 255/`UINT32_MAX`/1.0.
 This does not change client paint colors, palette data, map rendering or exports.
 Native handles are borrowed only for the call; unsafe operations are confined
 to the platform crate. Core/project remain independent of window APIs.
@@ -1105,8 +1105,26 @@ Mac caption and Unix dark 2× views. No icons or external artwork were imported.
 No computer-use session was resumed. The hidden Win32 API test is not evidence
 of wgpu/DWM visual correctness, frame appearance or actual F10 delivery. X11
 still needs compositor verification; macOS needs native runtime verification.
-Wayland currently returns an explicit unsupported-integration error and remains
-an open parity gate. Saved intent survives a failed startup application.
+Wayland binds alpha-modifier on the actual winit connection/queue. It applies
+the multiplier to the root and all five client-frame subsurfaces, synchronized
+with the renderer's root commit. The copied SCTK fallback frame retains its
+original drawing/input/geometry and MIT provenance; see [vendor notices](../vendor/NOTICE.md).
+Missing protocol support or a visible compositor-owned frame returns an explicit
+capability error. A configure transition to an unsupported frame restores opaque
+state and notifies the GUI. Saved intent survives a failed startup application
+or capability loss; the menu changes only after the matching native reply.
+GUI tests cover deferred success/failure, duplicate/stale request prevention,
+viewport isolation and one-shot capability-loss notification.
+
+The [Linux protocol probe](../tools/wayland_opacity_probe.py) drives the actual
+patched winit adapter against an isolated socket peer using the locked protocol
+XML. It checks matching root/frame multipliers at commit, all six resources,
+unsupported-frame/missing-protocol rejection, server-frame transition rollback,
+and alpha-before-surface destruction. It needs no GPU or running desktop.
+Local Windows workspace tests and Linux cross-target compilation/Clippy pass;
+execution of this new Linux probe is pending CI. Protocol evidence cannot prove
+compositor blending, wgpu output, fullscreen behavior or native preference
+restoration. Those remain M3/M5/M6 acceptance requirements.
 
 Local formatting, warnings-as-errors Clippy, workspace tests, documentation,
 dependency audit and the production adapter graph check pass. The full visual
@@ -1452,7 +1470,8 @@ Still required: actual file-manager delivery, off-window cancellation,
 multiple-monitor/mixed-DPI placement, clipboard coexistence, seat/window teardown
 and compositor behavior on Windows, macOS, X11 and Wayland. In particular, the
 Wayland receive timeout/leave lifecycle and X11 asynchronous selection flow need
-native protocol acceptance. Whole-window Wayland opacity is still unimplemented.
+native protocol acceptance. Whole-window opacity implementation and its remaining
+native gates are tracked in [transparency evidence](#whole-window-transparency).
 These are M3 gates; no complete desktop parity claim follows from these tests.
 
 ## Internal drag-and-drop option and palette transfers

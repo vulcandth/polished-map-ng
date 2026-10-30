@@ -2051,7 +2051,7 @@ impl eframe::App for Editor {
         {
             self.dispatch_event_script(ui.ctx(), polished_map_platform::ScriptOpenRequest::open);
             self.dispatch_print(ui.ctx(), printing::choose_export, printing::run);
-            self.dispatch_transparency(|opacity| {
+            self.dispatch_native_transparency(ui.ctx(), |opacity| {
                 polished_map_platform::set_window_opacity(_frame, opacity)
             });
         }

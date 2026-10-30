@@ -10,6 +10,7 @@ pub(super) struct Transparency {
     preferred: bool,
     applied: bool,
     pending: Option<bool>,
+    in_flight: Option<(u64, bool)>,
 }
 
 impl Transparency {
@@ -24,27 +25,66 @@ impl Transparency {
     }
 
     pub(super) fn toggle(&mut self) {
-        if self.pending.is_none() {
+        if !self.busy() {
             self.pending = Some(!self.applied);
         }
     }
 
     pub(super) fn menu(&mut self, ui: &mut egui::Ui) {
         let mut enabled = self.applied;
-        if menu_popup::checkbox(ui, self.pending.is_none(), &mut enabled, "Transparent")
+        if menu_popup::checkbox(ui, !self.busy(), &mut enabled, "Transparent")
             .on_hover_text("Whole-window opacity: 75% (F10). Requires native desktop support.")
             .changed()
         {
             self.toggle();
         }
     }
+
+    fn busy(&self) -> bool {
+        self.pending.is_some() || self.in_flight.is_some()
+    }
 }
 
 impl Editor {
+    #[cfg(test)]
     pub(super) fn dispatch_transparency(
         &mut self,
         apply: impl FnOnce(WindowOpacity) -> Result<(), OpacityError>,
     ) {
+        self.dispatch_transparency_inner(None, apply);
+    }
+
+    pub(super) fn dispatch_native_transparency(
+        &mut self,
+        ctx: &egui::Context,
+        apply: impl FnOnce(WindowOpacity) -> Result<(), OpacityError>,
+    ) {
+        self.dispatch_transparency_inner(Some(ctx), apply);
+    }
+
+    fn dispatch_transparency_inner(
+        &mut self,
+        ctx: Option<&egui::Context>,
+        apply: impl FnOnce(WindowOpacity) -> Result<(), OpacityError>,
+    ) {
+        if let Some(ctx) = ctx {
+            let viewport = ctx.viewport_id();
+            if let Some((id, enabled)) = self.transparency.in_flight
+                && let Some(result) = egui_winit::window_opacity::take_reply(ctx, viewport, id)
+            {
+                self.transparency.in_flight = None;
+                self.complete_transparency(enabled, result.map_err(OpacityError::Unsupported));
+            }
+            if let Some(reason) = egui_winit::window_opacity::take_unavailable(ctx, viewport) {
+                // The native adapter reset the root AND frame to opaque. Retain
+                // startup intent, but never leave the menu claiming transparency.
+                self.transparency.applied = false;
+                self.error = Some(reason.to_owned());
+            }
+        }
+        if self.transparency.in_flight.is_some() {
+            return;
+        }
         let Some(enabled) = self.transparency.pending.take() else {
             return;
         };
@@ -53,7 +93,21 @@ impl Editor {
         } else {
             WindowOpacity::Opaque
         };
-        match apply(opacity) {
+        let result = apply(opacity);
+        if matches!(result, Err(OpacityError::WaylandProtocolRequired))
+            && let Some(ctx) = ctx
+        {
+            match egui_winit::window_opacity::request(ctx, ctx.viewport_id(), opacity.alpha32()) {
+                Ok(id) => self.transparency.in_flight = Some((id, enabled)),
+                Err(reason) => self.error = Some(reason.to_owned()),
+            }
+            return;
+        }
+        self.complete_transparency(enabled, result);
+    }
+
+    fn complete_transparency(&mut self, enabled: bool, result: Result<(), OpacityError>) {
+        match result {
             Ok(()) => {
                 self.transparency.applied = enabled;
                 self.transparency.preferred = enabled;
@@ -140,6 +194,93 @@ mod tests {
         editor.transparency.toggle();
         editor.dispatch_transparency(|_| Err(OpacityError::Native("failure".into())));
         assert!(editor.transparency.preferred() && editor.transparency.applied);
+    }
+
+    #[test]
+    fn wayland_transparency_waits_for_native_reply_and_preserves_intent_on_capability_loss() {
+        let ctx = egui::Context::default();
+        let mut editor = Editor::default();
+        editor.transparency.restore(true);
+        editor.dispatch_native_transparency(&ctx, |_| Err(OpacityError::WaylandProtocolRequired));
+        assert!(!editor.transparency.applied);
+        assert!(editor.transparency.preferred());
+        assert!(editor.transparency.busy());
+        editor.transparency.toggle();
+        assert!(
+            editor.transparency.pending.is_none(),
+            "no duplicate request while awaiting native output"
+        );
+        editor.dispatch_native_transparency(&ctx, |_| panic!("must await reply"));
+        egui_winit::window_opacity::dispatch_with(&ctx, egui::ViewportId::ROOT, |factor| {
+            assert_eq!(factor, 0xbfff_ffff);
+            Ok(())
+        });
+        assert!(
+            !editor.transparency.applied,
+            "queueing output does not update the editor itself"
+        );
+        editor.dispatch_native_transparency(&ctx, |_| panic!("must not replay native request"));
+        assert!(editor.transparency.applied && !editor.transparency.busy());
+        egui_winit::window_opacity::unavailable(
+            &ctx,
+            egui::ViewportId::ROOT,
+            "Compositor took ownership of the frame",
+        );
+        editor.dispatch_native_transparency(&ctx, |_| {
+            panic!("must not automatically retry after capability loss")
+        });
+        assert!(!editor.transparency.applied);
+        assert!(editor.transparency.preferred());
+        assert_eq!(
+            editor.error.as_deref(),
+            Some("Compositor took ownership of the frame")
+        );
+        editor.error = None;
+        editor.dispatch_native_transparency(&ctx, |_| panic!("idle after dismissal"));
+        assert!(editor.error.is_none());
+        editor.transparency.toggle();
+        editor.dispatch_native_transparency(&ctx, |_| Err(OpacityError::WaylandProtocolRequired));
+        egui_winit::window_opacity::dispatch_with(&ctx, egui::ViewportId::ROOT, |_| {
+            Err("No alpha-modifier protocol")
+        });
+        editor.dispatch_native_transparency(&ctx, |_| panic!("failure must resolve without retry"));
+        assert!(!editor.transparency.applied && !editor.transparency.busy());
+        assert!(editor.transparency.preferred());
+        assert_eq!(editor.error.as_deref(), Some("No alpha-modifier protocol"));
+    }
+
+    #[test]
+    fn native_opacity_output_is_scoped_and_consumed_once_including_failures() {
+        use egui_winit::window_opacity as bridge;
+        let ctx = egui::Context::default();
+        let root = egui::ViewportId::ROOT;
+        let child = egui::ViewportId::from_hash_of("child");
+        let first = bridge::request(&ctx, root, 0xbfff_ffff).unwrap();
+        let other = bridge::request(&ctx, child, u32::MAX).unwrap();
+        assert!(bridge::request(&ctx, root, u32::MAX).is_err());
+        assert!(bridge::take_reply(&ctx, root, first).is_none());
+        bridge::dispatch_with(&ctx, child, |factor| {
+            assert_eq!(factor, u32::MAX);
+            Ok(())
+        });
+        assert!(bridge::take_reply(&ctx, root, first).is_none());
+        assert_eq!(bridge::take_reply(&ctx, child, other), Some(Ok(())));
+        bridge::dispatch_with(&ctx, root, |_| Err("Unsupported frame"));
+        bridge::dispatch_with(&ctx, root, |_| panic!("request replayed"));
+        assert!(bridge::take_reply(&ctx, root, first.wrapping_add(1)).is_none());
+        assert!(
+            bridge::request(&ctx, root, u32::MAX).is_err(),
+            "unread reply cannot be overwritten"
+        );
+        assert_eq!(
+            bridge::take_reply(&ctx, root, first),
+            Some(Err("Unsupported frame"))
+        );
+        assert!(bridge::take_reply(&ctx, root, first).is_none());
+        let second = bridge::request(&ctx, root, u32::MAX).unwrap();
+        assert_ne!(first, second);
+        bridge::dispatch_with(&ctx, root, |_| Ok(()));
+        assert_eq!(bridge::take_reply(&ctx, root, second), Some(Ok(())));
     }
 
     #[test]

@@ -9,11 +9,14 @@ previous registry lockfile, every pristine/bundled file hash and each complete
 patch. [patches](patches) contains the readable differences from those archives.
 No source file from either archive has been removed. Cargo's local extraction
 marker is not distributed. Original examples/docs are retained as source, not
-installed as application assets.
+installed as application assets. The separately licensed SCTK frame adaptation
+is tracked by [adaptations.json](adaptations.json), its own readable patch and
+the original MIT license; see [NOTICE](NOTICE.md).
 
 Run `python tools/vendor_sources.py` from the repository root. To verify the
 pristine inputs too, supply `--archives` pointing to a directory containing the
-two original `.crate` files. After deliberately editing a patch, use
+two original `.crate` files plus `smithay-client-toolkit-0.19.2.crate`.
+After deliberately editing a patch, use
 `--refresh --archives DIR`, review the regenerated patch and manifest, then run
 the ordinary verification and workspace checks. Do not refresh automatically in
 CI. Check native adapters on every supported OS; Windows alone cannot type-check
@@ -25,6 +28,11 @@ vtable sources, creates an unseen window, supplies real CF_HDROP media, and chec
 native coordinate translation, path bytes and release ownership. Unix tests
 exercise the exact URI-list parser. These tests do not replace file-manager,
 compositor, clipboard and DPI acceptance on real desktops.
+On Linux, `python tools/wayland_opacity_probe.py` runs the real native adapter
+against a private socket peer, checking six surface multipliers, synchronized
+commits, capability rejection/loss and destruction order. It uses protocol XML
+from locked registry packages and requires no desktop/GPU. This is protocol
+acceptance, not compositor pixel verification.
 
 Keep this patch focused on native transfer/opacity integration. Re-evaluate it
 when a compatible egui/winit release supplies these capabilities; remove it only

@@ -12,6 +12,16 @@ All unsafe opacity code remains isolated in the platform crate, using borrowed
 handles on the UI thread. CI adds Xvfb/xauth only to run the Linux property test;
 they are not application/runtime dependencies.
 
+Wayland opacity uses the already-locked `wayland-protocols` 0.32.13 alpha-modifier
+bindings through the pinned winit/egui-winit adapters. No production package
+version was added or changed. The client-frame implementation adapts the
+already-locked SCTK 0.19.2 fallback frame under its original MIT license; its
+separate source/patch/license records are in [vendor notices](../vendor/NOTICE.md).
+The Linux protocol test directly uses already-locked winit and wayland-sys as
+dev dependencies only, plus Python's standard library. It binds a private socket,
+uses the real adapter and borrowed native handles, and never connects to the
+user's desktop. Preserve both vendor manifests and the SCTK license in releases.
+
 eframe 0.37 now explicitly enables `clipboard` and `links` alongside the existing
 selected features. Disabling defaults without these features left egui's image
 copy and URL output commands without native adapters; a direct GUI dependency on

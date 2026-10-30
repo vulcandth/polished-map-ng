@@ -416,6 +416,14 @@ impl Window {
         self.window_state.lock().unwrap().set_blur(blur);
     }
 
+    pub fn set_whole_window_opacity(&self, multiplier: u32) -> Result<(), &'static str> {
+        self.window_state.lock().unwrap().set_whole_window_opacity(multiplier)?;
+        // The renderer owns root commits. Wake it instead of committing a
+        // surface behind wgpu's back; frame subsurfaces are synchronized with it.
+        self.request_redraw();
+        Ok(())
+    }
+
     #[inline]
     pub fn set_decorations(&self, decorate: bool) {
         self.window_state.lock().unwrap().set_decorate(decorate)

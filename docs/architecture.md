@@ -258,9 +258,22 @@ Remaining acceptance: real root-window pixels/frame at both settings with wgpu,
 F10/menu delivery, fullscreen transitions, normal child-window behavior, restart
 and error recovery on Windows, macOS and composited X11. Hidden-window API and
 Xvfb property tests cover dispatch/encoding, not those visual requirements.
-Wayland needs a supported alpha-modifier protocol bound to the same window
-connection/surface and event queue, with compositor capability detection and
-surface lifecycle handling. Winit 0.30.13's boolean `set_transparent` controls
-buffer transparency and is not this whole-surface multiplier. Integrate at the
-windowing layer; do not manufacture an unrelated connection or paint only egui
-widgets with reduced alpha. Wayland remains explicitly incomplete meanwhile.
+Wayland's raw-handle adapter returns a typed request for window-layer dispatch.
+The GUI queues one request in the pinned egui-winit bridge and waits for its
+matching reply before changing the checkbox. Winit binds alpha-modifier v1 on
+the window's existing connection/event queue. The root and the fallback frame's
+five subsurfaces receive the same multiplier; synchronized child commits take
+effect with the renderer's root commit. Frame reconstruction restores resources,
+and every alpha object is destroyed before its owning surface. The narrowly
+adapted SCTK fallback frame retains its MIT source/license records under `vendor/`.
+
+Missing protocol support, an unavailable client frame or a compositor-owned
+visible title bar returns an explicit capability error before changing opacity.
+The optional Adwaita frame is also explicitly unsupported; production uses the
+adapted fallback frame. Undecorated/fullscreen windows can use root opacity;
+configure transitions that acquire an unsupported visible frame restore opaque
+state and notify the GUI. Saved intent survives failure/capability loss without
+an automatic retry loop. The protocol does not offer compositor-pixel feedback.
+The isolated Linux protocol probe checks actual requests and resource lifetime;
+compositor/GPU appearance, fullscreen and native preference acceptance remain
+open. Winit's boolean buffer transparency is not used as a substitute.
