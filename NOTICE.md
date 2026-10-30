@@ -31,6 +31,12 @@ LGPL-3.0-only. The reference harness compiles unchanged snippets with inert widg
 storage and standard streams for synthetic ASCII paths. Generated source and
 snippet hashes remain in ignored storage; no project/game assets are distributed.
 
+The asset-path reference harness extracts unchanged master `Config` graphics,
+block, collision, palette, roof, event and constants-path functions, plus
+`remove_suffix`, `before_suffix` and `after_suffix`, under LGPL-3.0-only. Its
+standard-filesystem adapter uses synthetic readable ASCII fixtures; generated
+source and snippet hashes remain in ignored storage.
+
 PNG decoding adapts master `Tiled_Image::read_png_graphics`, `Color::mono_hue`,
 FLTK 1.4.5 `Fl_PNG_Image::load_png_`, `Fl_RGB_Image::desaturate` and
 `Fl_WinAPI_System_Driver::png_extra_rgba_processing`. FLTK attribution, license

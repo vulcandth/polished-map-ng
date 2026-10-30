@@ -5,6 +5,8 @@ use std::{fs, process::Command};
 
 #[path = "reference/assembly.rs"]
 mod assembly;
+#[path = "reference/asset_paths.rs"]
+mod asset_paths;
 #[path = "reference/discovery.rs"]
 mod discovery;
 #[path = "reference/lz.rs"]

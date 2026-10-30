@@ -23,10 +23,10 @@ closes only when its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M1e, verify legacy asset-path discovery against the pinned source.
-Then finish the M1f coverage inventory, M2–M6 and M7 acceptance. If a task is
-externally blocked, record the blocker and advance another unchecked master task. Do not advance to
-plusplus merely because one feature or test suite is complete.
+**Next:** M1f, reconcile the complete master feature inventory. Then finish
+M2–M6 and M7 acceptance. If a task is externally blocked, record the blocker and
+advance another unchecked master task. Do not advance to plusplus merely because
+one feature or test suite is complete.
 
 ## Foundation — bootstrap complete
 
@@ -63,6 +63,10 @@ adding improvements. Each completed group below still participates in M7.
 - [x] **M1d — Binary-map metadata rules:** supported dimension/header macros,
   path precedence, filename overrides, group-byte behavior and shared-file
   non-inference are compared with original source. Evidence: [metadata discovery](compatibility.md#binary-map-metadata-discovery).
+- [x] **M1e — Legacy asset-path discovery:** graphics/compound sources and PNG
+  destinations, block/collision/palette fallbacks, roofs, events, constants and
+  saved/unsaved-map palette selection match source fixtures. Evidence:
+  [asset paths](compatibility.md#legacy-asset-path-selection).
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
   anchors, zero fill and source-compatible history boundaries.
 - [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
@@ -87,17 +91,10 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 ### Remaining work, in execution order
 
 - [ ] **M1 — Close the master coverage inventory and project-discovery gaps.**
-  In progress: M1a–M1d are implemented above; M1e–M1f remain below. Close M1 only
-  when both remaining steps pass. Native window/widget fidelity and focus
-  delivery remain separate M4/M6 requirements.
-- [ ] **M1e — Verify legacy asset-path discovery (next).**
-  Inventory the pinned `Config` path rules for graphics, compound tilesets,
-  metatiles, collisions, palettes, roofs and event scripts. Compare supported
-  layouts, extension/fallback precedence, missing files and ambiguous candidates
-  against source behavior. Done when each path rule has a fixture and any
-  discovered mismatch is fixed or explicitly recorded as remaining work before
-  M1 can close. Keep detailed results in [compatibility evidence](compatibility.md).
-- [ ] **M1f — Reconcile the complete master feature inventory.**
+  In progress: M1a–M1e are implemented above; M1f remains below. Close M1 only
+  when M1f passes and any newly discovered discovery gaps are resolved. Native
+  window/widget fidelity and focus delivery remain separate M4/M6 requirements.
+- [ ] **M1f — Reconcile the complete master feature inventory (next).**
   Classify every original menu, dialog, gesture, preference and format as
   implemented with evidence, an explicit remaining task, or an approved
   deviation. Add uncovered work here with a completion condition, including

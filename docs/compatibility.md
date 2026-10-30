@@ -37,8 +37,36 @@ The GUI offers explicit choices; strict headless opening requires dimensions.
 
 This establishes the listed binary-map metadata rules, not complete support for
 every legacy project's asset layout or arbitrary assembly expressions. Source
-allocation/error safety rules remain in force. Full native filesystem behavior,
-legacy asset-path coverage and application save/reopen acceptance remain open.
+allocation/error safety rules remain in force. Full native filesystem behavior and
+application save/reopen acceptance remain open. Asset-path fixtures are covered below.
+
+## Legacy asset-path selection
+
+`tools/asset_paths_oracle.py` compiles unchanged pinned master `Config` path
+functions and `remove_suffix`/`before_suffix`/`after_suffix`, recording source
+hashes. The four reference tests in `tests/reference/asset_paths.rs` observe
+public Rust loaders, their source files and proposed output paths. Fixture
+ladders begin with competing candidates and remove them in precedence order;
+every stage is compared with the original functions, including absent inputs.
+
+| Source rules | Verified observations |
+|---|---|
+| `gfx_tileset_dir`, `tileset_path`, before/after and PNG paths | `MAPDATA` wins even when empty; PNG → 2bpp → CHR → LZ precedence; plain, before-only, after-only, combined and dotted companion names; missing companions; no main-graphics fallback to the base name; original PNG destinations |
+| Metatile, collision and palette-map paths | All full-name candidates precede all trimmed-base candidates; modern, SECTION-split, pokered, Red++ and old-layout alternatives; binary/ASM collision selection; absent collisions; missing palette-map monochrome fallback |
+| Roof paths and PNG destination | Roofs remain under `gfx/tilesets/roofs` with either project graphics directory; extension precedence and PNG output; selected LZ roofs retain the original padded-length rejection |
+| Event-script and tileset-constants paths | All four event locations and the final missing-script fallback; all three constants files via numbered dropdown labels; absent constants leave undecorated labels |
+| Background, roof-color and special palettes | Modern/old default paths; map → landmark → full tileset → base tileset special precedence; absent imports; unsaved maps and missing landmarks do not invent filename/landmark palettes |
+
+All four differential tests pass locally. This audit required no production
+path-selection changes. The harness uses standard filesystem existence checks
+for readable ASCII files/directories and an adapter for the tested filename
+extension replacement; it does not prove native permissions, Unicode/case or
+symlink behavior. Its `Config::monochrome` is false; explicit monochrome import
+behavior is covered separately by palette/graphics tests. Windows canonical
+prefixes are normalized only at the test boundary. The CI reference job repeats
+the comparisons on Linux. Full application interoperability and native platform
+acceptance remain M6/M7 requirements; synthetic layout names do not certify
+complete compatibility with every historical game project.
 
 ## Open map-size selection
 
@@ -70,7 +98,7 @@ fallback/New controls, and retain edits on cancellation. Existing oversized,
 short-input and palette-warning flows remain covered.
 
 This establishes size-choice behavior, not complete Open/New parity:
-full asset-profile coverage and native dialog delivery remain M1/M4 work.
+the complete feature inventory and native dialog delivery remain M1/M4 work.
 Client geometry is covered below; no native GUI validation is claimed here.
 
 ## Open/New asset selectors
@@ -1316,7 +1344,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; GUI resize stages map/event shifts; full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Compiled-source comparisons cover all 65,536 bitplane pairs, 12,390 LZ cases, 151 assembly/CHR cases and 90 PNG cases including Adam7 and both platform policies; empty-image composition and edit/save/reopen pass. Full-application interoperability remains pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
-| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Binary-map metadata rules match compiled source across supported macros, paths, precedence and shared-file non-inference; Open size choices match every representable area; Open/New asset dropdowns, numeric ordering and measured client layout are implemented. Full legacy asset-profile coverage and native dialog fidelity remain incomplete |
+| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Binary-map metadata and legacy asset-path selection match compiled-source fixtures, including precedence and missing inputs; Open size choices match every representable area; Open/New asset dropdowns, numeric ordering and measured client layout are implemented. Complete source inventory, native filesystem/dialog fidelity and full-project acceptance remain incomplete |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts, normal-size digit pixels and CPU Print event overlays tested; native fonts, full gesture coverage and native workflows pending |
