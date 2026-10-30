@@ -20,6 +20,7 @@ mod map_buttons;
 mod map_labels;
 #[cfg(test)]
 mod map_open_tests;
+mod map_options;
 mod menu_popup;
 mod menus;
 mod message_dialog;
@@ -105,6 +106,10 @@ struct OpenForm {
     tilesets: Vec<polished_map_project::TilesetChoice>,
     roofs: Vec<String>,
     choices_root: String,
+    #[cfg(test)]
+    client_bounds: Option<Rect>,
+    #[cfg(test)]
+    client_layout: Option<map_options::Layout>,
 }
 
 impl OpenForm {
@@ -957,104 +962,7 @@ impl Editor {
                 self.resize_form = Some(form);
             }
         }
-        if let Some(mut form) = self.open_form.take() {
-            let mut accept = false;
-            let mut cancel = false;
-            egui::Modal::new(egui::Id::unique("open-options")).show(ctx, |ui| {
-                ui.heading(if form.new_map { "New Map" } else { "Open Map" });
-                if !form.new_map {
-                    ui.label(form.path.display().to_string());
-                }
-                let label = ui.label("Project folder");
-                ui.text_edit_singleline(&mut form.root)
-                    .labelled_by(label.id);
-                if form.root != form.choices_root
-                    && ui.button("Reload project options").clicked()
-                    && let Err(error) = form.refresh_choices()
-                {
-                    self.error = Some(error.to_string());
-                }
-                let tileset_label = form
-                    .tilesets
-                    .iter()
-                    .find(|c| c.name == form.tileset)
-                    .map_or("(none)", |c| c.label.as_str());
-                ui.add_enabled_ui(!form.tilesets.is_empty(), |ui| {
-                    egui::ComboBox::from_label("Tileset")
-                        .selected_text(tileset_label)
-                        .show_ui(ui, |ui| {
-                            for choice in &form.tilesets {
-                                ui.selectable_value(
-                                    &mut form.tileset,
-                                    choice.name.clone(),
-                                    &choice.label,
-                                );
-                            }
-                        });
-                });
-                ui.add_enabled_ui(!form.roofs.is_empty(), |ui| {
-                    egui::ComboBox::from_label("Roof")
-                        .selected_text(if form.roof.is_empty() {
-                            "(none)"
-                        } else {
-                            &form.roof
-                        })
-                        .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut form.roof, String::new(), "(none)");
-                            for name in &form.roofs {
-                                ui.selectable_value(&mut form.roof, name.clone(), name);
-                            }
-                        });
-                });
-                if let Some(sizes) = form.sizes.as_ref().filter(|s| !s.choices().is_empty()) {
-                    let mut dimensions = (form.width, form.height);
-                    egui::ComboBox::from_label("Size")
-                        .selected_text(format!("{} x {}", form.width, form.height))
-                        .show_ui(ui, |ui| {
-                            for &(width, height) in sizes.choices() {
-                                ui.selectable_value(
-                                    &mut dimensions,
-                                    (width, height),
-                                    format!("{width} x {height}"),
-                                );
-                            }
-                        });
-                    (form.width, form.height) = dimensions;
-                } else {
-                    ui.horizontal(|ui| {
-                        let label = ui.label("Width");
-                        ui.add(egui::DragValue::new(&mut form.width).range(1..=255))
-                            .labelled_by(label.id);
-                        let label = ui.label("Height");
-                        ui.add(egui::DragValue::new(&mut form.height).range(1..=255))
-                            .labelled_by(label.id);
-                    });
-                }
-                if let Some(sizes) = &form.sizes {
-                    ui.label(format!("({} B)", sizes.block_count()));
-                }
-                ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
-                ui.horizontal(|ui| {
-                    accept = ui
-                        .add_enabled(
-                            form.root == form.choices_root
-                                && form.tilesets.iter().any(|c| c.name == form.tileset),
-                            egui::Button::new(if form.new_map {
-                                "Create map"
-                            } else {
-                                "Open map"
-                            }),
-                        )
-                        .clicked();
-                    cancel = ui.button("Cancel").clicked();
-                });
-            });
-            if accept {
-                self.start_load(form, ctx);
-            } else if !cancel {
-                self.open_form = Some(form);
-            }
-        }
+        self.map_options_dialog(ctx);
     }
 
     fn continue_after_discard(&mut self, ctx: &egui::Context) {

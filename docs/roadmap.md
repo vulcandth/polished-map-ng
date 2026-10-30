@@ -57,6 +57,9 @@ adding improvements. Each completed group below still participates in M7.
 - [x] **M1b — Open/New asset selectors:** tileset/roof dropdowns, numbered
   labels, full-filename numeric ordering, compound/duplicate selection and
   project-folder refresh are implemented. Evidence: [asset selectors](compatibility.md#opennew-asset-selectors).
+- [x] **M1c — Open/New client geometry and dismissal:** measured source rows,
+  control bounds, font sizes, platform button order and guarded Enter/Escape
+  handling are implemented. Evidence: [dialog layout](compatibility.md#opennew-client-layout-and-keyboard-actions).
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
   anchors, zero fill and source-compatible history boundaries.
 - [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
@@ -83,8 +86,9 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 - [ ] **M1 — Close the master coverage inventory and project-discovery gaps.**
   Reconcile every original menu, dialog, gesture, preference and format with a
   test or explicit remaining item. Finish shared-map attribution, legacy/numbered
-  project-profile coverage and complete Open/New layout. Size and asset selector
-  behavior is completed as M1a/M1b above; complete native dialog parity is not.
+  project-profile coverage and inventory reconciliation. Size/asset selection
+  and client layout are completed as M1a–M1c above; native window/widget fidelity
+  and focus delivery remain M4/M6 requirements.
   Add any uncovered block/event gestures as tasks here. Done when the inventory
   has no unclassified source feature and discovery fixtures cover each supported
   original profile and ambiguous-input path. Start from [menus](menus.md) and

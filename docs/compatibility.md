@@ -36,8 +36,8 @@ fallback/New controls, and retain edits on cancellation. Existing oversized,
 short-input and palette-warning flows remain covered.
 
 This establishes size-choice behavior, not complete Open/New parity:
-project-profile attribution, original control geometry and native
-dialog delivery remain M1/M4 work. No new native GUI validation is claimed.
+project-profile attribution and native dialog delivery remain M1/M4 work.
+Client geometry is covered below; no native GUI validation is claimed here.
 
 ## Open/New asset selectors
 
@@ -69,7 +69,39 @@ see [deviations](deviations.md). This does not assert native directory-enumerati
 order for ties. Project fixtures verify selector membership/order, labels,
 duplicate/default/compound selection and root precedence. GUI input tests select
 tilesets/roofs, clear roofs, refresh roots, guard stale/empty choices and check
-New defaults. Full source layout and native chooser/window behavior remain open.
+New defaults. Source client layout is covered below; native chooser/window
+behavior remains open.
+
+## Open/New client layout and keyboard actions
+
+`map_options::Layout` follows pinned master `Option_Dialog::refresh` and
+`Map_Options_Dialog::refresh_content`. The source client is 300×158 logical
+points. Header, dimensions, tileset and roof occupy 22-point rows at y=10, 36,
+62 and 88. Controls use the maximum measured Size/Width and Tileset label width,
+plus four points from `text_width(..., 2)` and the ten-point window margin.
+Spinner width measures `999`; the size selector measures `9999 x 9999`, each
+with four padding points and a 22-point control allowance. Asset widths use
+the widest label plus twelve padding points and the same control allowance.
+Height placement, decoded-byte label bounds and the three-point outside-label
+gap follow the original and FLTK `Fl_Group::draw_outside_label` calculations.
+
+OK and Cancel are 80×22 at y=126; Windows places OK at x=116 and Cancel at
+x=210, while Unix reverses them. Measurements use the platform's 12/13-point
+UI font. The caption is Map Options; the first row is the filename or New Map
+with a colon. The visible OK button keeps descriptive Open/Create accessibility
+labels. NG's project folder and tile-limit overrides live in a separate,
+initially collapsed Project options section outside this measured client.
+The embedded caption and that section are not part of the upstream 300×158
+window-size claim; native frame/widget styling and focus remain M4/M6 work.
+
+Independent metric vectors assert every source rectangle for both size-control
+branches and platform button orders. Rendered tests check actual spinner,
+selector and button bounds against those rectangles at 1×/2× with both platform
+font sizes. Four inspected snapshots cover Open/New, light/dark and both scales.
+Enter accepts valid choices once; Escape cancels. An open dropdown consumes its
+own Escape before the dialog can close. Root changes are revalidated after the
+advanced controls so Enter cannot submit a stale inventory. Existing Open/New,
+dirty-state, cancellation, warning and initial-scroll tests cover integration.
 
 ## Error, warning and success message dialogs
 
@@ -1250,7 +1282,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Paint, fill, replace, swap, history | master main-window.cpp, map.cpp | Core and GUI drag→undo→redo→save tests; all nine resize anchors, zero fill, truncation and history clearing tested; GUI resize stages map/event shifts; full gesture matrix pending |
 | 2bpp / LZ / CHR / PNG | master tiled-image.cpp, parse-asm.cpp | Compiled-source comparisons cover all 65,536 bitplane pairs, 12,390 LZ cases, 151 assembly/CHR cases and 90 PNG cases including Adam7 and both platform policies; empty-image composition and edit/save/reopen pass. Full-application interoperability remains pending |
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
-| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; Open size choices match compiled source across every representable area; Open/New asset dropdowns and numeric ordering are implemented. Full profile/shared-map attribution coverage and original option layout remain incomplete |
+| Project discovery / metadata | master config.cpp, option-dialogs.cpp | Makefile root, dimensions/header precedence, legacy macro ordering, numbered aliases and compound companion paths tested; Open size choices match compiled source across every representable area; Open/New asset dropdowns, numeric ordering and measured client layout are implemented. Full profile/shared-map attribution coverage and native dialog fidelity remain incomplete |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Block, tileset, roof and palette drafts, pixel gestures, palette/priority attributes and display, clipboard operations, drag/copy, block count, loaded-tileset/roof switching and persistence implemented; native child windows and native clipboard verification pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, GUI overlays/options/dragging/warp navigation, automatic loading, save lifecycle, resize, editor dispatch, mode shortcuts, normal-size digit pixels and CPU Print event overlays tested; native fonts, full gesture coverage and native workflows pending |

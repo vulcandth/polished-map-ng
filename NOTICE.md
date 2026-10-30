@@ -52,6 +52,12 @@ Copyright 1998-2018 Bill Spitzak and others, under the retained FLTK terms below
 The reference harness extracts unchanged numeric comparison and UTF-8 decoding
 functions, recording snippet hashes; generated source stays in ignored storage.
 
+Open/New client geometry and modal actions adapt master
+`Option_Dialog::{refresh,initialize}` and `Map_Options_Dialog::refresh_content`
+under LGPL-3.0-only. Outside-label positioning follows FLTK 1.4.5
+`Fl_Group::draw_outside_label` under the retained FLTK terms. NG keeps its
+project overrides outside the source client rectangle.
+
 Installed GUI font preferences adapt master `themes.cpp::use_native_fonts`;
 Consolas-specific text sizes adapt `ruler.cpp` and `event.cpp`, under
 LGPL-3.0-only. Backend default names follow pinned FLTK 1.4.5's GDI, Quartz and
