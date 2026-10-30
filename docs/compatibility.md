@@ -45,7 +45,7 @@ application acceptance; native interactions additionally need M6.
 | `modal-dialog.cpp`: errors, warnings, success, unsaved confirmations and About | [Message dialog tests](../crates/gui/src/message_dialog/tests.rs), [About](../crates/gui/src/about.rs), individual workflow tests | M4 source widget painting and native child-window fidelity |
 | `help-window.cpp`: full help text, scrolling, external links, resizable nonmodal window and dismissal | [Help implementation](../crates/gui/src/help.rs), [Help tests](../crates/gui/src/help/tests.rs) | M4 native resize/focus/link dispatch |
 | `themes.cpp`, icon/resource/version headers: Greybird/Dark, fonts, inactive colors, application identity and imagery | [Fonts](../crates/gui/src/fonts.rs), [menu marks](../crates/gui/src/menu_popup/marks.rs), [asset audit](assets.md), [notices](../NOTICE.md) | M4 native fonts/widget drawing; I3 other themes |
-| `preferences.cpp`, startup/exit callbacks: settings, recent files, geometry, legacy stores and `meta128` acknowledgment | [Preferences](preferences.md), [preference tests](../crates/gui/src/preferences.rs), [recent paths](../crates/gui/src/recent_maps.rs) | M5 legacy import, startup policy and native persistence |
+| `preferences.cpp`, startup/exit callbacks: settings, recent files, geometry, legacy stores and `meta128` acknowledgment | [Preferences](preferences.md), [preference tests](../crates/gui/src/preferences.rs), [recent paths](../crates/gui/src/recent_maps.rs) | Legacy import implemented; M5 native storage/restart/placement acceptance |
 | `directory-chooser.cpp`, native file/clipboard/browser/editor calls | [Platform adapters](../crates/platform/src/lib.rs), [native adapter evidence](#native-clipboardbrowser-adapter-wiring), workflow tests | M4/M6 actual OS delivery; P1/P2 packaging/clean-machine checks |
 
 The reconciliation exposed three gaps previously hidden by broad feature labels:
@@ -1838,7 +1838,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
 | Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented; native hosting is implemented; integrated window/clipboard verification remains pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented; native fonts, full gesture coverage and native workflows are pending |
-| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export, internal Drag and Drop and positioned external-drop routing implemented. The meta128 acknowledgment is implemented; legacy import, native file-drop acceptance, storage/placement and Print/clipboard parity remain pending |
+| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export, internal Drag and Drop and positioned external-drop routing implemented. The meta128 acknowledgment and read-only legacy import are implemented; native file-drop acceptance, storage/restart/placement and Print/clipboard parity remain pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |
@@ -1847,6 +1847,45 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 New tests must distinguish synthetic vectors, source-derived expectations, and
 actual C++ differential observations. A source-derived vector is not a run of
 the original application. Unverified assets never become redistributable fixtures.
+
+## Legacy preferences and normal-window geometry
+
+The [read-only project reader](../crates/project/src/legacy_preferences.rs) adapts
+master `preferences.cpp`, with keys/defaults from `Main_Window` construction,
+`exit_cb` and `main.cpp`. FLTK's pinned `Fl_Preferences.cxx` supplies root-group,
+continuation, duplicate-entry, integer-prefix and escaped-string behavior.
+Platform root selection follows `Fl_Unix_System_Driver::preference_user_rootnode`,
+`Fl_Darwin_System_Driver::preference_rootnode` and the WinAPI shell-folder lookup.
+The full policy, mapping scope and remaining gates belong to
+[preferences](preferences.md#legacy-import); safety deviations are recorded
+[separately](deviations.md#legacy-preference-import-safety).
+
+[GUI migration tests](../crates/gui/src/preferences/legacy/tests.rs) verify all
+master keys, 270 palette/roof/anchor combinations, theme fallback, import/save,
+NG precedence, error retention and one-time fullscreen/maximize startup requests.
+[Parser/discovery tests](../crates/project/src/legacy_preferences/tests.rs) cover
+both executable names, OS user roots, Linux vendor-directory precedence, CRLF,
+continuations, duplicate keys, all 256 octal bytes and invalid bounded input.
+Original test stores are compared byte-for-byte after import. Unix additionally
+checks non-UTF-8 paths. No original project graphics or real user settings are used.
+
+Source inspection found eframe 0.37 updated its normal-geometry cache only at
+construction/save. With NG's exit-only preference saving, resize → maximize →
+exit could therefore restore the startup size. The adapter now records normal
+root geometry on native move/resize/scale events, ignores child/maximized/
+fullscreen/minimized states and rejects zero sizes. Saving while minimized also
+retains the cached normal size. [Regression tests](../crates/gui/tests/normal_geometry.rs)
+compile the exact tracking helper and exercise transition/capture isolation.
+They do not simulate a compositor's ordering or establish real restart behavior;
+those remain M5/M6. Patches, source hashes and dependency licenses are retained in
+[the vendor records](../vendor/NOTICE.md).
+
+Verification on 2026-10-30: Windows workspace format, Clippy with warnings denied,
+tests and rustdoc passed, as did the production native dependency graph, vendor
+source manifests and documentation checks. The five parser/discovery, four GUI
+migration and two geometry-tracker tests passed on WSL Ubuntu 22.04.5. The full
+workspace cross-compiled for `aarch64-apple-darwin`; that is compilation evidence,
+not Mac runtime verification. No desktop automation was used.
 
 ## Historical implementation evidence (2026-10-28)
 

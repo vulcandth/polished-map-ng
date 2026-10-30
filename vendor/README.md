@@ -53,7 +53,8 @@ requests on a private socket, including compositors without xdg-dialog. Windows
 and macOS run the example on the main thread with every window hidden. These
 checks do not establish integrated desktop placement, focus or DPI behavior.
 
-Keep these patches focused on native transfer/opacity/modal integration. Re-evaluate it
-when a compatible egui/winit release supplies these capabilities; remove it only
+Keep these patches focused on native transfer/opacity/modal integration and
+window-lifecycle correctness. Re-evaluate them
+when a compatible egui/winit release supplies these capabilities; remove them only
 after the same behavioral gates pass. Preserve upstream copyrights and license
 texts when updating or distributing the patched sources.

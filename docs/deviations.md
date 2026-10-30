@@ -111,7 +111,8 @@ malformed-PNG diagnostic text need not match libpng. See the PNG differential in
   Palette choices and malformed-file failures are staged before publishing the
   new map, so a failed required import retains the previous map and colors.
   Optional roof-color failures warn and continue without changing those colors.
-  Persistent preferences and native dialog workflows remain pending.
+  Persistent preferences and native dialog hosting are implemented; integrated
+  restart/focus/placement acceptance remains M5/M6.
 
 ## Tileset editing and export safety
 
@@ -482,3 +483,20 @@ None (zero), rather than an atom interned with the name "None", as required by t
 [XDND protocol](https://wiki.freedesktop.org/www/Specifications/XDND/).
 Native desktop acceptance is still
 open in [M3](roadmap.md).
+
+## Legacy preference import safety
+
+Legacy FLTK files are imported only when NG has no settings file, and are never
+modified. NG retains its separate versioned application record and window store.
+Unlike FLTK's permissive reader/`atoi`, migration rejects unsupported headers,
+malformed escapes, integer overflow, files above 4 MiB, invalid physical lines
+and out-of-range enum/size values. It reports failure and disables application
+preference writes for the session instead of partially importing settings.
+
+The existing initial-theme scope maps original themes other than Greybird/Dark
+to Greybird, with a visible status message. Invalid/off-screen coordinates and
+impractical window sizes are bounded or repositioned; Wayland delegates absolute
+placement to its compositor. Rust OS home discovery is used; the original Mac
+fallback for an explicitly set nonexistent HOME remains a documented limitation.
+Read-only migration, retry behavior and native acceptance limits are specified in
+[preferences](preferences.md#legacy-import).

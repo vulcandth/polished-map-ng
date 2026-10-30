@@ -42,6 +42,7 @@ mod palette_session;
 #[cfg(test)]
 mod palette_session_tests;
 mod preferences;
+pub use preferences::legacy::NativeStartup;
 mod printing;
 mod priority;
 mod recent_maps;
@@ -216,6 +217,7 @@ pub struct Editor {
     allow_priority: bool,
     show_priority: bool,
     preferences_writable: bool,
+    startup_window_state: Option<preferences::legacy::StartupWindowState>,
     recent_maps: recent_maps::RecentMaps,
     pending_recent: Option<PathBuf>,
     #[cfg(windows)]
@@ -310,6 +312,7 @@ impl Default for Editor {
             allow_priority: false,
             show_priority: true,
             preferences_writable: true,
+            startup_window_state: None,
             recent_maps: recent_maps::RecentMaps::default(),
             pending_recent: None,
             #[cfg(windows)]
@@ -2031,6 +2034,7 @@ impl eframe::App for Editor {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        self.apply_startup_window_state(ui.ctx());
         self.show(ui);
         #[cfg(not(test))]
         {

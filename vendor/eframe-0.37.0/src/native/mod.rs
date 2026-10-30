@@ -1,5 +1,7 @@
 mod app_icon;
 mod epi_integration;
+#[cfg(feature = "persistence")]
+mod normal_geometry;
 mod event_loop_context;
 pub mod run;
 

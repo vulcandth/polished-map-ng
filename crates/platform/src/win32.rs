@@ -5,6 +5,28 @@ use windows_sys::Win32::UI::Controls::Dialogs::{
     CC_FULLOPEN, CC_RGBINIT, CHOOSECOLORW, ChooseColorW, CommDlgExtendedError,
 };
 
+pub(super) fn legacy_roaming_appdata() -> Option<std::path::PathBuf> {
+    use std::os::windows::ffi::OsStringExt;
+    use windows_sys::Win32::UI::Shell::{CSIDL_APPDATA, SHGFP_TYPE_CURRENT, SHGetFolderPathW};
+    let mut buffer = [0u16; 260];
+    // SAFETY: writable MAX_PATH buffer for this synchronous query; null handles
+    // select the current user. No CSIDL_FLAG_CREATE, so this cannot create data.
+    let result = unsafe {
+        SHGetFolderPathW(
+            std::ptr::null_mut(),
+            CSIDL_APPDATA as i32,
+            std::ptr::null_mut(),
+            SHGFP_TYPE_CURRENT as u32,
+            buffer.as_mut_ptr(),
+        )
+    };
+    if result != 0 {
+        return None;
+    }
+    let end = buffer.iter().position(|&c| c == 0)?;
+    (end > 0).then(|| std::ffi::OsString::from_wide(&buffer[..end]).into())
+}
+
 pub(super) fn message_font_family() -> Option<String> {
     use windows_sys::Win32::UI::WindowsAndMessaging::{
         NONCLIENTMETRICSW, SPI_GETNONCLIENTMETRICS, SystemParametersInfoW,

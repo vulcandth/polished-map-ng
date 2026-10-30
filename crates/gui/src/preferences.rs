@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 const KEY: &str = "polished-map-ng.preferences";
 const MAX_BYTES: usize = 4 * 1024 * 1024;
+pub(super) mod legacy;
 
 /// Versioned app settings, deliberately excluding documents, colors and UI drafts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -153,7 +154,7 @@ mod tests {
     use std::collections::BTreeMap;
 
     #[derive(Default)]
-    struct MemoryStorage {
+    pub(super) struct MemoryStorage {
         values: BTreeMap<String, String>,
         writes: usize,
     }

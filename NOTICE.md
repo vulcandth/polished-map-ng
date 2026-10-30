@@ -215,6 +215,13 @@ adapt master `main-window.cpp::{save_cb,save_map,save_metatileset,save_tileset,
 save_roof,save_event_script,export_palettes}` and `preferences.cpp`. The Rust
 continuation state machine retains NG's staged-write and conflict protections.
 
+Read-only legacy preference migration adapts master `preferences.cpp`,
+`main.cpp` and `Main_Window` construction/exit settings, under LGPL-3.0-only.
+Its parser and path precedence adapt pinned FLTK 1.4.5 `Fl_Preferences.cxx`,
+`Fl_Unix_System_Driver.cxx`, `Fl_cocoa.mm` and `Fl_WinAPI_System_Driver.cxx`,
+Copyright 1998-2024 Bill Spitzak and others, under the retained FLTK license and
+version-selection terms above. No original preference files are distributed.
+
 ## Assets and fixtures
 
 No project game graphics, example maps or native font files are redistributed.
@@ -236,7 +243,7 @@ replace independent underlying third-party rights. Reference checkouts are not s
 Rust dependencies retain their own licenses. Dependency notices must accompany
 binary releases. This notice does not relicense third-party assets.
 
-The native transfer, opacity and modal implementations include modified winit 0.30.13
+The native transfer, opacity, modal and geometry-tracking implementations include modified winit 0.30.13
 (Apache-2.0), egui-winit 0.37.0 and eframe 0.37.0 (MIT OR Apache-2.0) source. Original archive
 checksums, modifications and full license texts are retained under `vendor/`;
 see [vendor/NOTICE.md](vendor/NOTICE.md). Include those patched sources and

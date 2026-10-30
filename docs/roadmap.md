@@ -25,8 +25,9 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M5, finish legacy preference import and window lifecycle compatibility,
-then M6 and M7 functional acceptance. The remaining M4 aesthetic matching is
+**Next:** M5, verify native settings storage, restart and shutdown after the
+implemented legacy import and geometry-tracking fix, then M6 and M7 functional
+acceptance. The remaining M4 aesthetic matching is
 **deferred by user direction (2026-10-30)** after the palette-slider work;
 resume M4 only to fix a functional issue. Exact original fonts are also deferred
 to later manual review. See the [approved scope exception](deviations.md#remaining-m4-aesthetics-deferred).
@@ -155,11 +156,13 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   placement, keyboard/dismissal, clipboard, scrolling and resize acceptance
   remain part of M6. Do not resume aesthetic matching before M5–M7.
 - [ ] **M5 — Finish preference and window lifecycle compatibility (in progress).**
-  Resolve legacy FLTK user/executable-adjacent preference import, remaining
-  inventory differences and native storage/restart/shutdown behavior. Verify
-  placement, fullscreen restoration, transparency startup and canceled exits
-  without losing edits. Done when [preferences](preferences.md) has evidence for
-  each applicable source setting and supported platform.
+  Read-only legacy FLTK user/executable-adjacent import is implemented for all
+  master settings, with NG precedence and malformed-input protection. Root normal
+  geometry now tracks moves/resizes independently of autosave. Remaining: verify
+  native storage/restart/shutdown, placement, fullscreen/maximize restoration,
+  transparency startup and canceled exits without losing edits across platforms.
+  Done when [preferences](preferences.md) has evidence for each applicable source
+  setting and supported platform. Headless import/tracker tests do not close this gate.
 - [ ] **M6 — Verify complete user workflows on native platforms.**
   Exercise map/block/tileset/roof/palette/event edits, Print overlays/Copy/Export,
   dialogs and clipboard with the integrated application. Cover Windows, macOS,

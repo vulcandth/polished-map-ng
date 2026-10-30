@@ -63,9 +63,12 @@ maximized state and fullscreen use eframe's separate built-in persistence,
 including its monitor-bound checks. Full Screen defaults off on a fresh launch.
 The View menu and F11 send viewport requests; the menu reads the reported native
 state. No duplicate fullscreen value is stored in the application JSON record.
-Eframe retains normal geometry while fullscreen/maximized, then restores that
-geometry before applying the stored native state. This is verified by dependency
-source inspection; actual exit/restart behavior remains a native acceptance gate.
+The patched adapter tracks normal root-window geometry on move, resize and scale
+changes, independently of periodic saves. Child windows and minimized/fullscreen/
+maximized geometry do not replace it. Shutdown while minimized also retains the
+normal geometry. It is restored before applying the saved native state. Tracker
+regressions are automated; actual compositor transitions and exit/restart behavior
+remain a native acceptance gate.
 
 ## Format and location
 
@@ -107,22 +110,66 @@ errors follow its logged, best-effort behavior; this is not a power-loss-safe
 transaction or recovery journal. To reset settings, close the app and back up
 or rename its `app.ron` before relaunching.
 
+## Legacy import
+
+When no NG `app.ron` exists, startup imports the first selected original store,
+read-only. An existing NG file takes precedence even if malformed or from a newer
+version. There is no merging and no write to a legacy file or directory.
+
+1. `polishedmap.prefs` beside the NG executable.
+2. `Polished Map.prefs` beside that executable.
+3. The original user's `Rangi/Polished Map.prefs` store below.
+
+| Platform | Original user-store root |
+|---|---|
+| Windows | Current redirected roaming AppData, queried through the shell |
+| macOS | `~/Library/Preferences` |
+| Linux | `$XDG_CONFIG_HOME`, otherwise `~/.config`; falls back to `~/.fltk` only if the modern `Rangi` directory does not exist and the old one does |
+
+On Linux the **vendor directory**, not the preference file, decides the modern/
+old precedence. XDG `~/`, `${HOME}` and `$HOME/` expansion follows pinned FLTK.
+Home discovery uses Rust's OS home-directory lookup. The original Mac fallback
+through `NSHomeDirectory` when an explicitly configured HOME is nonexistent is
+not reproduced; unusual account/home configurations remain a native check.
+To import an executable-adjacent store from an older installation, copy it beside
+the NG executable before first launch. NG does not search other installations.
+
+The reader supports FLTK 1.0 root groups, repeated keys, continuation lines,
+CRLF, escaped backslashes/newlines/octal bytes and source integer-prefix parsing.
+Recent paths retain Unix bytes or valid UTF-8 on Windows. All settings in the
+above table, ten recent paths, normal window geometry, fullscreen and maximized
+state are mapped. Themes other than Greybird/Dark fall back to Greybird with a
+startup message, consistent with the initial two-theme scope.
+
+Normal geometry is created first; fullscreen (preferred over maximized) is
+requested after the first paint and native visibility. Removed-monitor placement
+is corrected where absolute positioning is available; Wayland placement belongs
+to the compositor. Size is bounded and the adapter clamps it to monitor limits.
+Mixed-DPI coordinates and real window-manager restoration still need M6 evidence.
+
+Invalid headers, oversized files, malformed escapes, integer overflow and
+out-of-range settings reject the entire import. Defaults are used, an error is
+reported, and writes to NG's application preference key are disabled for that
+session. Legacy bytes remain untouched. Eframe may still create its own window
+record, so retrying an import requires closing NG and backing up/renaming its
+`app.ron` after correcting the source. This is an explicit first-launch migration,
+not a continuous synchronization mechanism. See [intentional safety differences](deviations.md#legacy-preference-import-safety).
+
 ## Remaining parity and verification
 
-The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
-or modified. The `meta128` workflow and record roundtrip are implemented; native
-restart/shutdown verification remains M5/M6 in the [roadmap](roadmap.md).
-Startup theme/placement policy and native theme variants still need their menu/persistence
-work. Transparency's Wayland protocol integration, menu and saved-intent workflow
-are implemented; native compositor/GPU appearance and restart verification remain
-open. Unsupported protocol/frame configurations preserve saved intent and show
-an explicit error without claiming that transparency was applied.
+Legacy discovery/import, the `meta128` workflow and application-record roundtrip
+are implemented. M5 remains in progress for native storage/restart/shutdown,
+placement and restored fullscreen/maximization/transparency; M6 supplies the
+integrated platform evidence. Remaining theme/font aesthetics are deferred by
+user direction and are not a functional acceptance requirement.
 
 Tests inject an in-memory eframe Storage into the real app constructor and use
-its save callback. They cover restoration of all implemented settings, 270
-palette/layout/anchor combinations, defaults, malformed/future-record retention,
-and exclusion of edited documents/colors. Menu tests exercise all four special/
-roof auto-load combinations and prove disabled imports skip malformed files.
-Actual filesystem persistence, window restoration and shutdown delivery still
-require native checks on Windows, Linux and macOS. Headless tests do not prove
-those platform behaviors.
+its save callback. They cover all implemented settings, 270 palette/layout/anchor
+combinations, defaults, malformed/future-record retention, exclusion of edited
+documents/colors, first-launch precedence and byte-preserving legacy reads.
+Parser tests cover source selection, continuations, duplicate keys, escaped
+paths and malformed input; Unix adds non-UTF-8 paths. The exact vendored geometry
+tracker is tested for resize/move followed by maximize/fullscreen/minimize,
+child-window isolation and invalid-size rejection without an intervening save.
+These tests do not establish native filesystem shutdown delivery, compositor
+placement or integrated restart behavior on Windows, Linux and macOS.

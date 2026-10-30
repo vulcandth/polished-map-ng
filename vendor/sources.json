@@ -913,7 +913,7 @@
       "archive_sha256": "e4e449f4c4a2a60c7ccb4ba7fa4078417bfe1f9ddc03b5e05ce75748e33a70de",
       "archive_url": "https://static.crates.io/crates/egui-winit/egui-winit-0.37.0.crate",
       "patch": "patches/egui-winit-0.37.0.patch",
-      "patch_sha256": "8d53412c18aa45c270c670ac6895699787fac8c384be95da9cab02ae1cde478f",
+      "patch_sha256": "431b783beed309230015c304e066f097f889069b7f9ca096fde24570fc3535bd",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "3eb2f5f41008d97f2800b00c5245f906e3f70c1c6258714d4e9d89d6f31a8b33",
@@ -976,7 +976,7 @@
           "original_sha256": null
         },
         "src/window_settings.rs": {
-          "sha256": "08ee88b3a25425fc31c6ec57f60f1747408968174fda6ea86af905618b621751",
+          "sha256": "dc68a4b1f0fc26e2e177cc1eb9b4adcfb6f888d23c8d4c14e425245a5c08491a",
           "original_sha256": "08ee88b3a25425fc31c6ec57f60f1747408968174fda6ea86af905618b621751"
         }
       }
@@ -989,7 +989,7 @@
       "archive_sha256": "9c5642501a65ca657d05f00c643a5c14ff2346cb3818032bfe23d58e1f8e5f84",
       "archive_url": "https://static.crates.io/crates/eframe/eframe-0.37.0.crate",
       "patch": "patches/eframe-0.37.0.patch",
-      "patch_sha256": "88a940eea93bdafe16f3562dc29b9257c66c126655305ab4496e5ba354339269",
+      "patch_sha256": "c4318993bd1fea71e29245c6c8d5fd0cc3c3d82ead78d81a6fd453e1e9211725",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "6b52daea212c1b9ede504ecd06ca5bb992e586c82eecaf4c94e4c9135094a084",
@@ -1040,7 +1040,7 @@
           "original_sha256": "564497fe78a187e7c01e0b3a00648df5667f5798a38f054714dd2cd6fc7daa76"
         },
         "src/native/epi_integration.rs": {
-          "sha256": "d4d6d19ee8fb9f92cdb0e8ae6702924f360e4ddc40598d25e5bc6afcb42c2bb1",
+          "sha256": "000d9e4c57eabffc62de87803b5371054ca8b9964eda23a6e8b44d086f8af352",
           "original_sha256": "d4d6d19ee8fb9f92cdb0e8ae6702924f360e4ddc40598d25e5bc6afcb42c2bb1"
         },
         "src/native/event_loop_context.rs": {
@@ -1060,8 +1060,12 @@
           "original_sha256": "95a32ddd36cf282d96b358860cce1ff45eb48351c7be72970576d4dd8c92918b"
         },
         "src/native/mod.rs": {
-          "sha256": "299b8240c7e04c8caa9d5f70338da773bbc2d50aa9274d56a153617c7916d491",
+          "sha256": "da5c65af61675a5b0973920423d872371ef2fa48c62aca7c5ce10624f64d8595",
           "original_sha256": "299b8240c7e04c8caa9d5f70338da773bbc2d50aa9274d56a153617c7916d491"
+        },
+        "src/native/normal_geometry.rs": {
+          "sha256": "8693560af701b9f07dcc67fa0952d347bfbf341d26321e070b0b8236d9702fe4",
+          "original_sha256": null
         },
         "src/native/run.rs": {
           "sha256": "c3ac2c5096efccfc7bfad8f3984161002aca61cb28a0cdcb3a6683b8db0185f5",

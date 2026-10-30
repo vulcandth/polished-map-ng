@@ -91,6 +91,9 @@ windows. Renderer-state destruction releases the leases before windows die;
 replacement registrations reject stale teardown. Parent input is filtered without
 discarding lifecycle events, and native calls run outside egui's data lock.
 
+A further 2026-10-30 change retains cached normal geometry when saving a
+minimized window, preventing iconified dimensions from replacing its restore size.
+
 ## eframe 0.37.0
 
 Source: <https://github.com/emilk/egui> and the Cargo archive identified in
@@ -105,6 +108,11 @@ Modified on 2026-10-30, under MIT OR Apache-2.0: three registration calls in the
 WGPU/Glow native integrations associate renderer-owned window Arcs with their
 egui-winit State. No renderer or public App API is replaced. See the complete
 [eframe patch](patches/eframe-0.37.0.patch).
+
+Additional modifications on 2026-10-30, under MIT OR Apache-2.0: update the normal
+root-window geometry cache on native move, resize and scale events, independent
+of autosave. Ignore child windows, fullscreen/maximized/minimized states and
+zero sizes. The application tests compile the exact tracker for regressions.
 
 These dependencies retain their own licenses; the application's LGPL-3.0-only
 license does not replace them. Binary source bundles must include these patched

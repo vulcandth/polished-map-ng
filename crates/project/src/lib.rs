@@ -10,6 +10,7 @@ mod discovery;
 mod document;
 mod events;
 mod graphics;
+mod legacy_preferences;
 mod map_palette_plan;
 mod map_sizes;
 mod native_fonts;
@@ -36,6 +37,9 @@ pub use document::{
 pub use events::{EventDocument, EventScript, EventScriptError, event_script_path};
 pub use graphics::{
     load_master_graphics, load_master_map_graphics, write_new_png, write_png, write_png_export,
+};
+pub use legacy_preferences::{
+    LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_preferences,
 };
 pub use map_palette_plan::MapPalettePlan;
 pub use map_sizes::{MapSizeOptions, inspect_map_sizes};

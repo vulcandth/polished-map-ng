@@ -23,3 +23,16 @@ pub fn message_font_family() -> Option<String> {
         None
     }
 }
+
+/// Current Windows roaming profile, using the same redirected-folder lookup as
+/// pinned FLTK. Read-only; does not create folders. Other platforms return None.
+pub fn legacy_roaming_appdata() -> Option<std::path::PathBuf> {
+    #[cfg(windows)]
+    {
+        win32::legacy_roaming_appdata()
+    }
+    #[cfg(not(windows))]
+    {
+        None
+    }
+}

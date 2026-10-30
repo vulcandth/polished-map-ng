@@ -199,7 +199,7 @@ pub struct EpiIntegration {
     /// Settings the root window was restored with, for the parts applied when it is first shown.
     restored_window_settings: Option<WindowSettings>,
 
-    /// Normal (non-maximized) geometry of the root window, as last saved.
+    /// Latest normal geometry of the root window, independent of autosave.
     #[cfg(feature = "persistence")]
     normal_geometry: Option<egui_winit::WindowGeometry>,
 
@@ -319,6 +319,25 @@ impl EpiIntegration {
         {
             self.can_drag_window = true;
         }
+
+        #[cfg(feature = "persistence")]
+        super::normal_geometry::remember(
+            &mut self.normal_geometry,
+            event,
+            self.frame
+                .window
+                .as_ref()
+                .is_some_and(|root| root.id() == window.id()),
+            !window.is_maximized()
+                && window.fullscreen().is_none()
+                && window.is_minimized() != Some(true),
+            || {
+                let size = window.inner_size();
+                (size.width > 0 && size.height > 0).then(|| {
+                    egui_winit::WindowGeometry::from_window(self.egui_ctx.zoom_factor(), window)
+                })
+            },
+        );
 
         egui_winit.on_window_event(window, event)
     }

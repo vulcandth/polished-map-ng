@@ -230,6 +230,43 @@
 +OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
 +IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 +DEALINGS IN THE SOFTWARE.
+--- a/eframe-0.37.0/src/native/epi_integration.rs
++++ b/eframe-0.37.0/src/native/epi_integration.rs
+@@ -199,7 +199,7 @@
+     /// Settings the root window was restored with, for the parts applied when it is first shown.
+     restored_window_settings: Option<WindowSettings>,
+ 
+-    /// Normal (non-maximized) geometry of the root window, as last saved.
++    /// Latest normal geometry of the root window, independent of autosave.
+     #[cfg(feature = "persistence")]
+     normal_geometry: Option<egui_winit::WindowGeometry>,
+ 
+@@ -320,6 +320,25 @@
+             self.can_drag_window = true;
+         }
+ 
++        #[cfg(feature = "persistence")]
++        super::normal_geometry::remember(
++            &mut self.normal_geometry,
++            event,
++            self.frame
++                .window
++                .as_ref()
++                .is_some_and(|root| root.id() == window.id()),
++            !window.is_maximized()
++                && window.fullscreen().is_none()
++                && window.is_minimized() != Some(true),
++            || {
++                let size = window.inner_size();
++                (size.width > 0 && size.height > 0).then(|| {
++                    egui_winit::WindowGeometry::from_window(self.egui_ctx.zoom_factor(), window)
++                })
++            },
++        );
++
+         egui_winit.on_window_event(window, event)
+     }
+ 
 --- a/eframe-0.37.0/src/native/glow_integration.rs
 +++ b/eframe-0.37.0/src/native/glow_integration.rs
 @@ -1403,6 +1403,7 @@
@@ -240,6 +277,78 @@
              egui_winit.set_clipboard_shortcuts(self.clipboard_shortcuts);
              egui_winit
          });
+--- a/eframe-0.37.0/src/native/mod.rs
++++ b/eframe-0.37.0/src/native/mod.rs
+@@ -1,5 +1,7 @@
+ mod app_icon;
+ mod epi_integration;
++#[cfg(feature = "persistence")]
++mod normal_geometry;
+ mod event_loop_context;
+ pub mod run;
+ 
+--- a/eframe-0.37.0/src/native/normal_geometry.rs
++++ b/eframe-0.37.0/src/native/normal_geometry.rs
+@@ -0,0 +1,59 @@
++//! Keep restore geometry current even when an app disables periodic saves.
++//! Polished Map NG modification, 2026-10-30; MIT OR Apache-2.0.
++use winit::event::WindowEvent;
++
++pub(super) fn remember<T>(
++    geometry: &mut Option<T>,
++    event: &WindowEvent,
++    is_root: bool,
++    is_normal: bool,
++    capture: impl FnOnce() -> Option<T>,
++) {
++    if is_root
++        && is_normal
++        && matches!(
++            event,
++            WindowEvent::Moved(_)
++                | WindowEvent::Resized(_)
++                | WindowEvent::ScaleFactorChanged { .. }
++        )
++        && let Some(current) = capture()
++    {
++        *geometry = Some(current);
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use winit::dpi::{PhysicalPosition, PhysicalSize};
++
++    #[test]
++    fn resize_then_maximize_retains_latest_normal_geometry_without_a_save() {
++        let mut normal = Some((48, 800));
++        let resized = WindowEvent::Resized(PhysicalSize::new(960, 720));
++        remember(&mut normal, &resized, true, true, || Some((48, 960)));
++        let moved = WindowEvent::Moved(PhysicalPosition::new(-120, 90));
++        remember(&mut normal, &moved, true, true, || Some((-120, 960)));
++        // Maximized, fullscreen and minimized events must not overwrite it.
++        for _ in 0..3 {
++            remember(&mut normal, &resized, true, false, || panic!("capture"));
++        }
++        assert_eq!(normal, Some((-120, 960)));
++        // Restoring and resizing updates it again, independently of storage.
++        remember(&mut normal, &resized, true, true, || Some((-120, 1000)));
++        assert_eq!(normal, Some((-120, 1000)));
++    }
++
++    #[test]
++    fn child_windows_unrelated_events_and_invalid_sizes_leave_root_unchanged() {
++        let mut normal = Some(800);
++        let resized = WindowEvent::Resized(PhysicalSize::new(0, 0));
++        remember(&mut normal, &resized, false, true, || panic!("child"));
++        remember(&mut normal, &WindowEvent::Focused(true), true, true, || {
++            panic!("focus")
++        });
++        remember(&mut normal, &resized, true, true, || None);
++        assert_eq!(normal, Some(800));
++    }
++}
 --- a/eframe-0.37.0/src/native/wgpu_integration.rs
 +++ b/eframe-0.37.0/src/native/wgpu_integration.rs
 @@ -314,6 +314,7 @@

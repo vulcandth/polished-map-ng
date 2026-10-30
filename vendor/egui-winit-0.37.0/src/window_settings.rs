@@ -57,7 +57,7 @@ pub struct WindowSettings {
 }
 
 impl WindowSettings {
-    /// While maximized or fullscreen, keeps `last_normal_geometry`, so the window restores to it.
+    /// While maximized, fullscreen or minimized, keeps the last normal restore geometry.
     pub fn from_window(
         egui_zoom_factor: f32,
         window: &winit::window::Window,
@@ -66,7 +66,7 @@ impl WindowSettings {
         let fullscreen = window.fullscreen().is_some();
         let maximized = window.is_maximized();
         let normal_geometry = last_normal_geometry
-            .filter(|_| fullscreen || maximized)
+            .filter(|_| fullscreen || maximized || window.is_minimized() == Some(true))
             .unwrap_or_else(|| WindowGeometry::from_window(egui_zoom_factor, window));
         Self {
             normal_geometry,
