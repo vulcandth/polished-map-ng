@@ -10,7 +10,7 @@ and design decisions in [architecture](architecture.md).
 | Milestone | Status | What that means |
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
-| 1. Master parity | **In progress — active milestone** | Most editing domains are implemented; source coverage, artwork, native integration and acceptance remain unfinished. |
+| 1. Master parity | **In progress — active milestone** | Source inventory and discovery work are complete; artwork, native integration and full application acceptance remain unfinished. |
 | 2. Plusplus parity | Not started | Expanded-profile port and compatible Polished Crystal acceptance remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
@@ -25,9 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M1h, restore save feedback and the block-limit warning. Shared-control
-input behavior is implemented as M1g. Follow with M2–M6 and M7
-acceptance. If a task is externally blocked, record the blocker and
+**Next:** M2, finish artwork provenance and porting. M1 inventory/discovery and
+save feedback are complete. Follow with M3–M6 and M7 acceptance. If a task is externally blocked, record the blocker and
 advance another unchecked master task. Do not advance to plusplus merely because
 one feature or test suite is complete.
 
@@ -73,7 +72,7 @@ adding improvements. Each completed group below still participates in M7.
 - [x] **M1f — Master feature inventory reconciliation:** source feature families,
   implementation/tests and remaining owners are mapped in the
   [source inventory](compatibility.md#master-source-inventory). Newly identified
-  gaps were control behavior (M1g, now complete) and save feedback (M1h);
+  gaps were control behavior (M1g) and save feedback (M1h), both now complete;
   classification is not parity acceptance.
 - [x] **M1g1 — Middle-click defaults:** Resize Map/Blockset, Overworld Map Size,
   event coordinates, binary collisions and palette spinners/sliders restore
@@ -84,6 +83,14 @@ adding improvements. Each completed group below still participates in M7.
   modes/Enter handling are implemented and tested across affected forms.
   Evidence: [shared controls](compatibility.md#shared-numeric-and-event-options-controls).
   Source widget painting and native verification remain M4/M6.
+- [x] **M1h — Save feedback and the 128-block warning:** source success messages,
+  ordered Save continuations, cancellation/conflict guards and persisted warning
+  acknowledgment are implemented across all save/export domains. Evidence:
+  [save feedback](compatibility.md#save-feedback-and-block-limit-acknowledgment).
+- [x] **M1 — Master coverage inventory and project-discovery gaps:** M1a–M1h
+  are complete and the [source inventory](compatibility.md#master-source-inventory)
+  is reconciled. Native window/widget fidelity, lifecycle and full project
+  acceptance remain explicitly owned by M4–M7.
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
   anchors, zero fill and source-compatible history boundaries.
 - [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
@@ -107,15 +114,6 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 
 ### Remaining work, in execution order
 
-- [ ] **M1 — Close the master coverage inventory and project-discovery gaps (in progress).**
-  M1a–M1g are completed above. Close M1 when M1h is resolved and the inventory
-  remains reconciled.
-  Native window/widget fidelity and focus delivery remain M4/M6 requirements.
-- [ ] **M1h — Restore save feedback and the 128-block warning (next).**
-  Restore source success dialogs and warning acknowledgment through guarded
-  Save/Save As/Save All and export flows. Done when all affected domains have
-  ordering, failure/conflict and persisted-warning tests. Source routes and
-  thresholds are recorded in the [source inventory](compatibility.md#master-source-inventory).
 - [ ] **M2 — Finish icon and application-artwork provenance and porting (in progress).**
   Resolve the ten toolbar placeholders, application/About image and message
   shields. Import only cleared assets, preserve notices, and verify decoded

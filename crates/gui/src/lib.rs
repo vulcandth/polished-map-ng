@@ -44,6 +44,7 @@ mod roof_colors;
 mod roof_workflow_tests;
 mod roof_workflows;
 mod rulers;
+mod save_feedback;
 mod status_bar;
 mod tileset_editor;
 #[cfg(test)]
@@ -181,6 +182,8 @@ pub struct Editor {
     overworld_form: Option<overworld::OverworldForm>,
     overworld_map_size: u16,
     overworld_warning: Option<String>,
+    save_ui: save_feedback::SaveUi,
+    meta128: bool,
     block_form: Option<BlockForm>,
     tileset_form: Option<tileset_editor::TilesetForm>,
     palette_form: Option<palette_editor::PaletteForm>,
@@ -273,6 +276,8 @@ impl Default for Editor {
             overworld_form: None,
             overworld_map_size: 1300,
             overworld_warning: None,
+            save_ui: Default::default(),
+            meta128: false,
             block_form: None,
             tileset_form: None,
             palette_form: None,
@@ -608,6 +613,9 @@ impl Editor {
     }
 
     fn save(&mut self) {
+        if self.save_ui.busy() || self.error.is_some() {
+            return;
+        }
         let Some(loaded) = &self.loaded else {
             return;
         };
@@ -628,45 +636,20 @@ impl Editor {
             .events
             .as_ref()
             .is_some_and(|e| e.script().events().is_modified());
-        // Main_Window::save_cb: independent domains first; a clean map need not
-        // be written when only another domain changed. Stop on failure/cancel.
-        if tiles {
-            self.save_tileset();
+        use save_feedback::SaveStep;
+        let map = loaded.document.map().is_modified() || !(tiles || roof || blocks || events);
+        for (needed, step) in [
+            (tiles, SaveStep::Tileset),
+            (roof, SaveStep::Roof),
+            (blocks, SaveStep::Blocks),
+            (events, SaveStep::Events),
+            (map, SaveStep::Map),
+        ] {
+            if needed {
+                self.save_ui.steps.push_back(step);
+            }
         }
-        if self.error.is_some() {
-            return;
-        }
-        if roof {
-            self.save_roof();
-        }
-        if self.error.is_some() {
-            return;
-        }
-        if blocks {
-            self.save_blockset();
-        }
-        if self.error.is_some()
-            || self
-                .loaded
-                .as_ref()
-                .and_then(|l| l.blockset.as_ref())
-                .is_some_and(|b| b.blockset().is_modified())
-        {
-            return;
-        }
-        if events {
-            self.save_events();
-        }
-        if self.error.is_some() {
-            return;
-        }
-        let Some(loaded) = &self.loaded else {
-            return;
-        };
-        if (tiles || roof || blocks || events) && !loaded.document.map().is_modified() {
-            return;
-        }
-        self.save_map();
+        self.advance_save();
     }
 
     fn save_map(&mut self) {
@@ -688,13 +671,17 @@ impl Editor {
             // master save_map(false): acknowledging an oversized input does
             // not dirty the map. A clean Save Map must not truncate its source.
             if !modified {
+                let name = save_feedback::basename(loaded.document.path());
                 self.status = "Map saved".into();
+                self.saved_message(name);
                 return;
             }
             match loaded.document.save() {
                 Ok(()) => {
+                    let name = save_feedback::basename(loaded.document.path());
                     self.status = "Map saved".into();
                     self.check_overworld_buffer();
+                    self.saved_message(name);
                 }
                 Err(e) => self.error = Some(e.to_string()),
             }
@@ -706,10 +693,11 @@ impl Editor {
             return;
         };
         if !doc.blockset().is_modified() {
+            self.blockset_saved_message();
             return;
         }
-        let result = if doc.needs_save_as() {
-            let Some(path) = rfd::FileDialog::new()
+        if doc.needs_save_as() {
+            let path = rfd::FileDialog::new()
                 .add_filter("Binary blockset", &["bin", "bst"])
                 .set_file_name(
                     doc.path()
@@ -718,30 +706,51 @@ impl Editor {
                         .unwrap_or_default()
                         .to_string_lossy(),
                 )
-                .save_file()
-            else {
-                return;
-            };
-            if let Some(collision) = doc.collision_path() {
-                let Some(collision_path) = rfd::FileDialog::new()
-                    .set_title("Save Collision Copy")
-                    .set_file_name(collision.file_name().unwrap_or_default().to_string_lossy())
-                    .save_file()
-                else {
-                    return;
-                };
-                prepare_blockset_save_as(&path).and_then(|target| {
-                    prepare_collision_save_as(&collision_path, doc.binary_collisions())
-                        .and_then(|collision| doc.save_as_pair(&target, &collision))
-                })
-            } else {
-                prepare_blockset_save_as(&path).and_then(|target| doc.save_as(&target))
-            }
-        } else {
-            doc.save()
+                .save_file();
+            let choice = path.and_then(|path| {
+                if let Some(collision) = doc.collision_path() {
+                    rfd::FileDialog::new()
+                        .set_title("Save Collision Copy")
+                        .set_file_name(collision.file_name().unwrap_or_default().to_string_lossy())
+                        .save_file()
+                        .map(|collision| (path, Some(collision)))
+                } else {
+                    Some((path, None))
+                }
+            });
+            self.save_blockset_choice(choice);
+            return;
+        }
+        let result = doc.save();
+        self.finish_blockset_save(result);
+    }
+
+    /// Both native destinations must be chosen before preparing or writing either file.
+    fn save_blockset_choice(&mut self, choice: Option<(PathBuf, Option<PathBuf>)>) {
+        let Some((path, collision)) = choice else {
+            self.save_ui.steps.clear();
+            return;
         };
+        let Some(doc) = self.loaded.as_mut().and_then(|l| l.blockset.as_mut()) else {
+            return;
+        };
+        let result = prepare_blockset_save_as(&path).and_then(|target| {
+            if let Some(collision) = collision {
+                prepare_collision_save_as(&collision, doc.binary_collisions())
+                    .and_then(|collision| doc.save_as_pair(&target, &collision))
+            } else {
+                doc.save_as(&target)
+            }
+        });
+        self.finish_blockset_save(result);
+    }
+
+    fn finish_blockset_save(&mut self, result: Result<(), polished_map_project::ProjectError>) {
         match result {
-            Ok(()) => self.status = "Blockset saved".into(),
+            Ok(()) => {
+                self.status = "Blockset saved".into();
+                self.blockset_saved_message();
+            }
             Err(e) => self.error = Some(e.to_string()),
         }
     }
@@ -752,17 +761,22 @@ impl Editor {
         };
         let source = loaded.document.path();
         let name = source.with_extension("blk");
-        let Some(path) = rfd::FileDialog::new()
+        let path = rfd::FileDialog::new()
             .add_filter("Map blocks", &["blk"])
             .set_directory(source.parent().unwrap_or(source))
             .set_file_name(name.file_name().unwrap_or_default().to_string_lossy())
-            .save_file()
-        else {
-            return;
-        };
+            .save_file();
         // The native Save dialog supplies the overwrite decision. Observe the target
         // immediately after it returns, then recheck before atomic replacement.
-        self.save_as_path(path);
+        self.save_map_choice(path);
+    }
+
+    fn save_map_choice(&mut self, path: Option<PathBuf>) {
+        if let Some(path) = path {
+            self.save_as_path(path);
+        } else {
+            self.save_ui.steps.clear();
+        }
     }
 
     fn save_as_path(&mut self, path: PathBuf) {
@@ -781,6 +795,9 @@ impl Editor {
                 self.recent_maps.remember(recent_path);
                 self.status = format!("Saved {}", path.display());
                 self.check_overworld_buffer();
+                self.saved_message(save_feedback::basename(
+                    self.loaded.as_ref().unwrap().document.path(),
+                ));
             }
             Err(error) => self.error = Some(error.to_string()),
         }
@@ -826,6 +843,10 @@ impl Editor {
         }
         if self.overworld_warning.is_some() || self.overworld_form.is_some() {
             self.overworld_dialog(ctx);
+            return;
+        }
+        if !self.save_ui.messages.is_empty() {
+            self.save_feedback_dialog(ctx);
             return;
         }
         if self.confirm_discard {
@@ -1742,8 +1763,10 @@ impl Editor {
         let ctx = ui.ctx().clone();
         self.poll_workers(&ctx);
         self.poll_event_scripts();
+        self.advance_save();
         if ctx.input(|i| i.viewport().close_requested())
-            && (self.about.is_some()
+            && (self.save_ui.busy()
+                || self.about.is_some()
                 || self.print_form.is_some()
                 || self.print_success.is_some()
                 || self.print_request.is_some()
@@ -1757,7 +1780,8 @@ impl Editor {
             ctx.send_viewport_cmd(egui::ViewportCommand::CancelClose);
             self.request_exit(&ctx);
         }
-        let blocked = self.about.is_some()
+        let blocked = self.save_ui.busy()
+            || self.about.is_some()
             || self.print_form.is_some()
             || self.print_success.is_some()
             || self.print_worker.is_some()

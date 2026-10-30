@@ -202,6 +202,11 @@ Map/sidebar grids and shared map/event/editor selection rings adapt
 `map-buttons.cpp::draw_map_button/draw_selection_border`. The portable grid colors
 come from the Greybird and Dark inactive colors in master `themes.cpp`.
 
+Save-success messages, domain order and the collision-blockset `meta128` warning
+adapt master `main-window.cpp::{save_cb,save_map,save_metatileset,save_tileset,
+save_roof,save_event_script,export_palettes}` and `preferences.cpp`. The Rust
+continuation state machine retains NG's staged-write and conflict protections.
+
 ## Assets and fixtures
 
 No upstream game graphics, example maps or native font files are redistributed.

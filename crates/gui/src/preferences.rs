@@ -34,6 +34,7 @@ struct Preferences {
     allow_256: bool,
     drag_and_drop: bool,
     overworld_map_size: u16,
+    meta128: bool,
     show_priority: bool,
     print_options: polished_map_core::PrintOptions,
     resize_anchor: ResizeAnchor,
@@ -71,6 +72,7 @@ impl Preferences {
             allow_256: editor.allow_256,
             drag_and_drop: editor.drag_and_drop,
             overworld_map_size: editor.overworld_map_size,
+            meta128: editor.meta128,
             show_priority: editor.show_priority,
             print_options: editor.print_options,
             resize_anchor: editor.resize_anchor,
@@ -100,6 +102,7 @@ impl Preferences {
         editor.allow_256 = self.allow_256;
         editor.drag_and_drop = self.drag_and_drop;
         editor.overworld_map_size = self.overworld_map_size;
+        editor.meta128 = self.meta128;
         editor.show_priority = self.show_priority;
         editor.print_options = self.print_options;
         editor.resize_anchor = self.resize_anchor;
@@ -308,7 +311,7 @@ mod tests {
                 "allow_priority": true,
                 "monochrome": true, "allow_256": true,
                 "drag_and_drop": false,
-                "overworld_map_size": 4096,
+                "overworld_map_size": 4096, "meta128": false,
                 "show_priority": false,
                 "print_options": {"grid":true,"ids":true,"priority":true,"events":true,"warp_ids":true},
                 "resize_anchor": "bottom_right",

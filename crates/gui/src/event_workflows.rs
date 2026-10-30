@@ -549,8 +549,17 @@ impl Editor {
     }
     pub(super) fn save_events(&mut self) {
         if let Some(doc) = self.loaded.as_mut().and_then(|l| l.events.as_mut()) {
-            match doc.save() {
-                Ok(()) => self.status = "Event script saved".into(),
+            let name = save_feedback::basename(doc.source().path());
+            let result = if doc.script().events().is_modified() {
+                doc.save()
+            } else {
+                Ok(())
+            };
+            match result {
+                Ok(()) => {
+                    self.status = "Event script saved".into();
+                    self.saved_message(name);
+                }
                 Err(e) => self.error = Some(e.to_string()),
             }
         }

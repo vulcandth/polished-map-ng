@@ -295,6 +295,10 @@ impl Editor {
             .unwrap_or(&mut self.unloaded_palettes);
         doc.export(target, mono).map_err(|e| e.to_string())?;
         self.status = format!("Exported palettes to {}", target.path().display());
+        self.save_ui.messages.push_back(save_feedback::Message {
+            text: format!("Exported {}!", save_feedback::basename(target.path())),
+            acknowledge_meta128: false,
+        });
         Ok(())
     }
     pub(super) fn export_palettes(&mut self) {

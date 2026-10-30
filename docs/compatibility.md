@@ -20,44 +20,94 @@ application acceptance; native interactions additionally need M6.
 | Original source / feature family | Current implementation and evidence | Remaining owner |
 |---|---|---|
 | `main.cpp`: first path argument, startup theme/position/fullscreen/maximize | [GUI entry point](../crates/gui/src/main.rs), [preferences](preferences.md), [window title](../crates/gui/src/window_title.rs) | M5 startup/native restoration; additional themes remain I3 |
-| `main-window.cpp`: New/Open/Recent/Clear/Close, Save/Save As and each domain save, Exit | [File workflows](../crates/gui/src/file_workflows.rs), [map-open tests](../crates/gui/src/map_open_tests.rs), [recent paths](../crates/gui/src/recent_maps.rs), [persistence tests](../crates/project/tests/persistence.rs) | M1h save feedback and block-limit warning; M4/M5 close/focus/lifecycle |
+| `main-window.cpp`: New/Open/Recent/Clear/Close, Save/Save As and each domain save, Exit | [File workflows](../crates/gui/src/file_workflows.rs), [map-open tests](../crates/gui/src/map_open_tests.rs), [recent paths](../crates/gui/src/recent_maps.rs), [persistence tests](../crates/project/tests/persistence.rs) | M4/M5 close/focus/lifecycle |
 | `main-window.cpp`: all eight menu groups, 27 toolbar positions, availability, shortcuts and mode changes | [Menus and tests](../crates/gui/src/menus.rs), [toolbar tests](../crates/gui/src/toolbar_tests.rs), [menu inventory](menus.md) | M2 artwork; M4 popup traversal/mnemonics/placement; I3 deferred theme commands |
 | `main-window.cpp`, `map.cpp`: map paint, fill, replace, swap, drag history, Undo/Redo, resize and event translation | [Map model](../crates/core/src/map.rs), [editing](../crates/core/tests/editing.rs), [resize](../crates/core/tests/resize.rs), [event workflows](../crates/gui/src/event_workflow_tests.rs) | M4 resize client/widget fidelity |
 | `map-buttons.cpp`, `widgets.cpp`: sidebar selection/right-release editing, map/tile/pixel picking and painting, internal swap/Control-copy drags, enabled Drag and Drop | [Block gestures](../crates/gui/src/block_workflow_tests.rs), [tile gestures](../crates/gui/src/tileset_editor_tests.rs), [drag tests](../crates/gui/src/drag_tests.rs), [palette tests](../crates/gui/src/palette_editor_tests.rs) | M4 native input delivery and widget visuals |
 | `main-window.cpp`, `widgets.cpp`: external URI/file drops and workspace eligibility | [File workflows](../crates/gui/src/file_workflows.rs), [external-drop gate](architecture.md#native-external-file-drop-integration-gate) | M3 coordinate/path delivery and Wayland integration |
 | `main-window.cpp`, `ruler.cpp`, `gameboy-screen.cpp`: rulers, grids, IDs/hex, priority, event/warp overlays, status, zoom, pan, hover guide and numeric hotkeys | [Rulers](../crates/gui/src/rulers.rs), [status](../crates/gui/src/status_bar.rs), [hotkeys](../crates/gui/src/block_hotkeys.rs), [event hover tests](../crates/gui/src/event_workflow_tests.rs), [zoom tests](../crates/gui/src/zoom_tests.rs) | M4 fonts and native scrolling/resize/DPI; M3 window opacity |
-| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/block_editor.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) | M1h save acknowledgments/128-block warning; M4 child window |
-| `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/tileset_editor.rs), [editor tests](../crates/gui/src/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/project/tests/tileset.rs) | M4 child window/native clipboard; M1h save feedback |
-| `roof-window.cpp`: nine-tile selection, pixel tools, internal/image clipboard, reversed roof display and independent save | [Roof editor tests](../crates/gui/src/roof_editor_tests.rs), [roof workflows](../crates/gui/src/roof_workflow_tests.rs), [project roof tests](../crates/project/tests/roof.rs) | M4 child window/native clipboard; M1h save feedback |
+| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/block_editor.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) | M4 child window |
+| `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/tileset_editor.rs), [editor tests](../crates/gui/src/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/project/tests/tileset.rs) | M4 child window/native clipboard |
+| `roof-window.cpp`: nine-tile selection, pixel tools, internal/image clipboard, reversed roof display and independent save | [Roof editor tests](../crates/gui/src/roof_editor_tests.rs), [roof workflows](../crates/gui/src/roof_workflow_tests.rs), [project roof tests](../crates/project/tests/roof.rs) | M4 child window/native clipboard |
 | `palette-window.cpp`, `colors.cpp`: color/monochrome grids, RGB5 sliders/spinners, RGB8 hex, Windows chooser, color copy/paste/live swap/drag, six palette sets and export | [Palette editor](../crates/gui/src/palette_editor.rs), [palette editor tests](../crates/gui/src/palette_editor_tests.rs), [palette model tests](../crates/core/tests/palette_edit.rs) | M4 native chooser; I2 shared graphical picker |
 | `option-dialogs.cpp`: Open/New size, tileset, roof and metadata choices | [M1a–M1e evidence](#open-map-size-selection), [Map Options tests](../crates/gui/src/map_options/tests.rs) | M4 native dialog/widget fidelity |
 | `option-dialogs.cpp`: Resize dimensions/nine anchors, Add/Sub block count, Overworld Map Size | [Resize tests](../crates/core/tests/resize.rs), [block workflows](../crates/gui/src/block_workflow_tests.rs), [overworld dialog/tests](../crates/gui/src/overworld.rs) | M4 client measurements and native windows |
 | `option-dialogs.cpp`: Change Tileset and Change Roof, selection/defaults, cancel and dirty guards | [Tileset workflows](../crates/gui/src/tileset_workflow_tests.rs), [roof workflows](../crates/gui/src/roof_workflow_tests.rs) | M4 font-size/label-width/widget and native fidelity |
-| `event.cpp`, `map-events.cpp`, Event Options: 22 macros, coordinates/prefix/suffix, hover, drag, options, double-click script dispatch, Shift-click warp, load/save/view/reload/unload | [Parser/model tests](../crates/project/tests/events.rs), [GUI workflows](../crates/gui/src/event_workflow_tests.rs), [source differential](../crates/project/tests/reference.rs) | M4 native editor/window; M1h save feedback |
+| `event.cpp`, `map-events.cpp`, Event Options: 22 macros, coordinates/prefix/suffix, hover, drag, options, double-click script dispatch, Shift-click warp, load/save/view/reload/unload | [Parser/model tests](../crates/project/tests/events.rs), [GUI workflows](../crates/gui/src/event_workflow_tests.rs), [source differential](../crates/project/tests/reference.rs) | M4 native editor/window |
 | Print Options, `image.cpp`, `main-window.cpp`: five independent flags, Cancel/Copy/Export, image composition and PNG output | [Print dialog/tests](../crates/gui/src/printing.rs), [source comparisons](../crates/project/tests/reference/printing.rs), [real-project Print](../crates/project/tests/real_print.rs), [PNG export](../crates/project/tests/png_export.rs) | M4 fonts/native clipboard/chooser; M6 integrated workflows |
 | `tiled-image.cpp`, `parse-asm.cpp`: 2bpp, padded LZ, CHR/ASM, PNG depths/interlacing/platform alpha, bounded errors | [Codec tests](../crates/project/tests/codecs.rs), [reference suites](../crates/project/tests/reference.rs), [PNG imports](../crates/project/tests/png_import.rs) | M7 application interoperability; safety differences in [deviations](deviations.md) |
 | `palette-map.cpp`, `colors.cpp`, `tileset.cpp`: tilepal/priority, defaults, special/roof colors, compound graphics, 192/256 slots, trimmed PNG/ASM exports | [Graphics tests](../crates/project/tests/graphics.rs), [palettes](../crates/project/tests/palettes.rs), [tileset export tests](../crates/project/tests/tileset.rs) | M7 complete project save/reopen; widget painting remains M4 |
 | `config.cpp`, `utils.cpp`: project root, filename conventions, path precedence, constants/metadata, dimensions, compound suffixes and numeric ordering | [Discovery](#binary-map-metadata-discovery), [asset paths](#legacy-asset-path-selection), [asset ordering](#opennew-asset-selectors), [discovery tests](../crates/project/tests/discovery.rs) | M6 native Unicode/case/permission behavior; safety differences in [deviations](deviations.md) |
 | `widgets.cpp`, `hex-spinner.cpp`: defaults, numeric input, step/repeat/wrap/clamp, middle reset, labels, buttons, dropdowns, scrollbars and help HTML | Specialized GUI modules above and [popup tests](../crates/gui/src/menu_popup/tests.rs) provide partial coverage | M4 source widget rendering/focus; standard egui widgets are not evidence of FLTK parity |
-| `modal-dialog.cpp`: errors, warnings, success, unsaved confirmations and About | [Message dialog tests](../crates/gui/src/message_dialog/tests.rs), [About](../crates/gui/src/about.rs), individual workflow tests | M1h missing save routes/order; M2 shields/application art; M4 two-button/client/native fidelity |
+| `modal-dialog.cpp`: errors, warnings, success, unsaved confirmations and About | [Message dialog tests](../crates/gui/src/message_dialog/tests.rs), [About](../crates/gui/src/about.rs), individual workflow tests | M2 shields/application art; M4 two-button/client/native fidelity |
 | `help-window.cpp`: full help text, scrolling, external links, resizable nonmodal window and dismissal | [Help implementation](../crates/gui/src/help.rs), [Help tests](../crates/gui/src/help/tests.rs) | M4 native resize/focus/link dispatch |
 | `themes.cpp`, icon/resource/version headers: Greybird/Dark, fonts, inactive colors, application identity and imagery | [Fonts](../crates/gui/src/fonts.rs), [menu marks](../crates/gui/src/menu_popup/marks.rs), [asset audit](assets.md), [notices](../NOTICE.md) | M2 remaining artwork; M4 native fonts/widget drawing; I3 other themes |
-| `preferences.cpp`, startup/exit callbacks: settings, recent files, geometry, legacy stores and `meta128` acknowledgment | [Preferences](preferences.md), [preference tests](../crates/gui/src/preferences.rs), [recent paths](../crates/gui/src/recent_maps.rs) | M1h missing `meta128`; M5 legacy import, startup policy and native persistence |
+| `preferences.cpp`, startup/exit callbacks: settings, recent files, geometry, legacy stores and `meta128` acknowledgment | [Preferences](preferences.md), [preference tests](../crates/gui/src/preferences.rs), [recent paths](../crates/gui/src/recent_maps.rs) | M5 legacy import, startup policy and native persistence |
 | `directory-chooser.cpp`, native file/clipboard/browser/editor calls | [Platform adapters](../crates/platform/src/lib.rs), [native adapter evidence](#native-clipboardbrowser-adapter-wiring), workflow tests | M4/M6 actual OS delivery; P1/P2 packaging/clean-machine checks |
 
 The reconciliation exposed three gaps previously hidden by broad feature labels:
 middle-click defaults and numeric-widget behavior; Event Options' input-mode
 and default-button behavior; and save-success/128-block-warning routes.
-The control work is covered by the two sections below; save feedback remains
-M1h implementation work, not an approved deviation or merely manual testing.
+These gaps are implemented in M1g/M1h and covered by the evidence below.
+The inventory is reconciled; the remaining owners in the table still apply.
 Source `Default_Spinner`/`Default_Hex_Spinner` reset
 on middle release, `Hex_Spinner` arrows wrap at bounds while typed values clamp,
 and palette defaults are refreshed when a swatch is selected rather than after
 every channel edit. Event prefix/suffix fields switch between normal and wrapped
 multiline input based on their measured height. Source `save_metatileset` shows
 success, then the warning when collisions exist, count exceeds 128 and `meta128`
-is false; acknowledgment stores that preference. Existing NG status text and
-successful writes do not implement those modal routes.
+is false; acknowledgment stores that preference. NG now implements these modal
+routes in addition to its status tooltip.
+
+## Save feedback and block-limit acknowledgment
+
+[Save feedback](../crates/gui/src/save_feedback.rs) adapts pinned master
+`Main_Window::{save_cb,save_map,save_metatileset,save_tileset,save_roof,
+save_event_script,export_palettes}`. The existing
+[message dialog](../crates/gui/src/message_dialog.rs) supplies source-derived
+client dimensions and Enter/Escape/OK dismissal. M2 shield artwork and M4 native
+child-window/font fidelity remain separate requirements.
+
+- Save processes dirty tileset, roof, blockset/collisions, events and map in that
+  order. A clean map is skipped when another domain is dirty; an entirely clean
+  Save acknowledges the map. Each modal must close before the next domain runs.
+- Map and Save As report the committed basename. A written map's overworld
+  capacity warning precedes success; a clean ordinary save does not repeat it.
+- Blocksets report both filenames when collisions exist. Success precedes the
+  source 128-block warning, which requires collisions, count greater than 128
+  and an unset `meta128`. Display alone does not acknowledge it; OK, Enter or
+  Escape does. The acknowledgment survives map Close and the preference
+  save/restore cycle. Older v1 records missing it default to false.
+- Dirty tilesets acknowledge the full main PNG name (including compound suffix)
+  and then the palette map in color mode. Clean tileset/roof messages use the
+  extensionless source name. Dirty roofs and event scripts use the saved basename;
+  palette exports report `Exported <basename>!`.
+- Parent editing, Save/Close shortcuts and native root-window close requests
+  are blocked while feedback or a continuation is pending. A dismissed error
+  cannot resume queued writes. Cancellation and failure preserve dirty state
+  and emit no success/warning for the failed domain.
+
+NG retains staged multi-file writes and stops subsequent domains after failure
+or chooser cancellation. Source `save_cb` instead calls the subsequent domains
+after a callback returns, including after failure. Within a tileset save, NG
+finishes the staged domain write before either acknowledgment, whereas source
+acknowledges PNG success before attempting the palette-map write. These safety
+differences are recorded in [deviations](deviations.md); Save is not a transaction
+across every domain, and earlier successful domains remain saved.
+
+[Workflow tests](../crates/gui/src/save_feedback/tests.rs) exercise all five dirty
+domains through successive keyboard acknowledgments, clean saves, event no-op
+behavior with an externally changed file, compound/color/monochrome names,
+map warning order, committed Save As names, cancellation result handlers, invalid
+paired destinations and conflict interruption. Counts 128/129/256 with and
+without collisions cover the warning threshold; dirty saves/conflicts and
+in-memory eframe persistence cover acknowledgment lifetime. Existing editor tests
+now dismiss actual success dialogs before further editing. Reviewed
+[success](../crates/gui/tests/snapshots/save-map-success.png) and
+[block-limit warning](../crates/gui/tests/snapshots/save-block-limit-warning.png)
+snapshots preserve the measured message layout; shield artwork remains M2. Native chooser UI,
+on-disk restart persistence and complete original-application save/reopen remain
+M5–M7 acceptance work; these are synthetic/headless tests.
 
 ## Shared numeric and Event Options controls
 
@@ -1475,9 +1525,9 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Binary-map metadata and legacy asset-path selection match compiled-source fixtures, including precedence and missing inputs; Open size choices match every representable area; Open/New asset dropdowns, numeric ordering and measured client layout are implemented. Source inventory is reconciled above; native filesystem/dialog fidelity and full-project acceptance remain incomplete |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented; M1h save feedback is missing; native child windows and native clipboard verification remain pending |
-| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented; M1h save feedback remains; native fonts, full gesture coverage and native workflows are pending |
-| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-seven implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export and internal Drag and Drop implemented. Missing meta128 acknowledgment is M1h; legacy import, external file drops, native storage/placement and native Print/clipboard parity remain pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented is missing; native child windows and native clipboard verification remain pending |
+| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented remains; native fonts, full gesture coverage and native workflows are pending |
+| Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export and internal Drag and Drop implemented. The meta128 acknowledgment is implemented; legacy import, external file drops, native storage/placement and native Print/clipboard parity remain pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |

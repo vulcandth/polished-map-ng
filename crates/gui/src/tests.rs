@@ -126,7 +126,7 @@ fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
     harness.get_by_label("File").click();
     harness.run();
     harness.get_by_label("Save Blockset").click();
-    harness.run();
+    crate::save_feedback::tests::dismiss(&mut harness);
     assert!(!harness.state().is_modified());
     assert_eq!(std::fs::read(&blocks).unwrap()[0], 1);
     assert_eq!(

@@ -33,6 +33,17 @@ malformed-PNG diagnostic text need not match libpng. See the PNG differential in
 
 ## Safety corrections already implemented
 
+- GUI Save stops remaining domains after an error or canceled Save As. The
+  original `save_cb` continues when a domain callback returns, even on failure.
+  This preserves NG's existing guarded-save behavior and prevents unrelated
+  writes after a canceled destination choice. Earlier successful domains remain
+  saved; this is not a transaction across the whole project. Tileset PNG parts
+  and palette-map output complete their staged domain write before success
+  dialogs are queued; upstream acknowledges PNG success before attempting the
+  palette-map write. No success message is emitted for a failed domain.
+  Evidence: [save workflow tests](../crates/gui/src/save_feedback/tests.rs).
+
+
 - New PNG exports stage the full image and use an atomic no-clobber install.
   A destination created after the initial chooser/CLI check is preserved, with
   a conflict returned. Invalid RGB dimensions/data fail without leaving a

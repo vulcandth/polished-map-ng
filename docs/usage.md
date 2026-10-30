@@ -59,6 +59,19 @@ File → Print offers Grid, IDs, Priority, Events and Warp IDs independently of
 the editor view settings, with Copy and PNG Export actions. Native clipboard,
 font and chooser behavior still require platform acceptance testing.
 
+## Saving
+
+Save (Ctrl/Cmd+S) saves changed tilesets, roofs, blocksets/collisions, event scripts
+and maps in that order. Acknowledge each success dialog to continue. A failure or
+canceled destination chooser stops the sequence; earlier successful saves remain
+saved. Individual File menu save commands affect only their named domain.
+
+An oversized map-buffer warning appears before map success. A collision blockset
+with more than 128 blocks shows the source engine-limit warning after success;
+acknowledging it suppresses subsequent instances and is remembered at shutdown.
+Neither warning changes your project's engine limits. Save As messages name the
+committed destination; canceling the chooser preserves the current document.
+
 ## Tileset and roof editing
 
 Tools → Edit Tileset (Ctrl/Cmd+T) opens a draft. Click/drag to paint; Shift fills,

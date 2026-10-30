@@ -132,7 +132,7 @@ fn tileset_draft_cancel_accept_preview_save_and_conflict_preserve_map_history() 
     h.get_by_label("File").click();
     h.run();
     h.get_by_label("Save Tileset").click();
-    h.run();
+    crate::save_feedback::tests::dismiss(&mut h);
     assert!(h.state().error.is_none(), "{:?}", h.state().error);
     assert!(!h.state().is_modified());
     let reopened = MasterTilesetDocument::open_in_project(

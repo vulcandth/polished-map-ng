@@ -537,7 +537,7 @@ fn real_new_bark_town_auto_events_edit_and_save_on_temporary_script() {
     h.get_by_label("OK").click();
     h.run();
     h.state_mut().save_events();
-    h.run();
+    crate::save_feedback::tests::dismiss(&mut h);
     assert!(h.state().error.is_none());
     assert!(!h.state().is_modified());
     assert_eq!(
@@ -598,7 +598,7 @@ fn event_draft_cancel_accept_reload_unload_and_save_are_independent() {
     h.run();
     assert!(h.state().is_modified());
     h.state_mut().save_events();
-    h.run();
+    crate::save_feedback::tests::dismiss(&mut h);
     assert!(!h.state().is_modified());
     assert!(
         std::fs::read_to_string(&path)
@@ -782,7 +782,7 @@ fn resize_and_save_integrate_event_state_without_touching_unrelated_scripts() {
     assert_eq!(h.state().loaded.as_ref().unwrap().document.map().width(), 4);
     h.state_mut().error = None;
     h.state_mut().save();
-    h.run();
+    crate::save_feedback::tests::dismiss(&mut h);
     assert!(!h.state().is_modified());
     assert_eq!(
         std::fs::read_to_string(&path).unwrap(),
@@ -796,7 +796,7 @@ fn resize_and_save_integrate_event_state_without_touching_unrelated_scripts() {
     h.state_mut().event_action(EventAction::Move(0, 5, 5), &ctx);
     std::fs::write(dir.path().join("Map.2x1.blk"), [99]).unwrap();
     h.state_mut().save();
-    h.run(); // event-only save does not overwrite the clean map
+    crate::save_feedback::tests::dismiss(&mut h); // event-only save does not overwrite the clean map
     assert!(h.state().error.is_none());
     assert!(!h.state().is_modified());
     assert_eq!(std::fs::read(dir.path().join("Map.2x1.blk")).unwrap(), [99]);

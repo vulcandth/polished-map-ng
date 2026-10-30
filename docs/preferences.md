@@ -23,6 +23,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Monochrome, 256 Tiles | Off; missing palette maps enable Monochrome |
 | Show Priority | On; control enabled only while Tile Priority is on |
 | Recent maps | Empty; at most ten paths |
+| 128-block warning acknowledged (`meta128`) | Off; set only when its warning is dismissed |
 | Overworld Map Size | 1300 bytes; accepted range 1–4096 |
 | Drag and Drop | On; internal block, tile, roof and palette transfers |
 | Print Grid, IDs, Priority, Events, Warp IDs | All off; independent of editor view flags |
@@ -43,6 +44,13 @@ exceeds the configured WRAM capacity. Changing it does not resize the map, edit
 WRAM source or immediately warn. Cancel retains the previous value; Close keeps
 the accepted value. Out-of-range persisted values preserve the original settings
 record and restore defaults, like other invalid preferences.
+
+Saving a blockset with collisions and more than 128 blocks shows the source
+warning after success, until acknowledged. OK, Enter and Escape all acknowledge
+it. The `meta128` setting is retained across maps and saved at normal shutdown,
+matching the source preference flush lifecycle; merely displaying the warning
+does not change it. Older records without the field default to false. Save
+continuations and their dialogs are transient and never restored.
 
 Documents, unsaved colors, palette dirty state, undo history, clipboard contents,
 selection, scroll positions and open dialogs are not serialized. The selected
@@ -102,9 +110,8 @@ or rename its `app.ron` before relaunching.
 ## Remaining parity and verification
 
 The legacy FLTK user store and executable-adjacent `.prefs` files are not imported
-or modified. Source `meta128` (default false), the one-time acknowledgment after
-saving a collision blockset with more than 128 blocks, is not yet implemented.
-The warning and its persistence are explicit M1h work in the [roadmap](roadmap.md).
+or modified. The `meta128` workflow and record roundtrip are implemented; native
+restart/shutdown verification remains M5/M6 in the [roadmap](roadmap.md).
 Startup theme/placement policy and native theme variants still need their menu/persistence
 work. Transparency's Wayland integration and native compositor/GPU appearance
 remain open; its menu and saved-intent workflow are implemented.

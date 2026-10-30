@@ -45,6 +45,7 @@ impl Editor {
     }
 
     pub(super) fn close_map(&mut self) {
+        self.save_ui = Default::default();
         // Upstream colors and selected set are global, outside Tileset::clear.
         self.unloaded_palettes = self.palette_document().clone();
         self.loaded = None;

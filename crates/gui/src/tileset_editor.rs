@@ -368,13 +368,32 @@ impl Editor {
             return;
         };
         if !doc.tileset().is_modified() {
+            let name = doc.name().to_owned();
+            self.saved_message(name);
             return;
         }
+        // The source acknowledges the main PNG once, even for compound sheets,
+        // followed by its palette map. Use observed destinations, not new path discovery.
+        let expected = format!("{}.png", doc.name());
+        let outputs = doc.outputs();
+        let graphics = outputs
+            .iter()
+            .find(|t| t.path().file_name() == Some(std::ffi::OsStr::new(&expected)))
+            .map_or(expected, |t| save_feedback::basename(t.path()));
+        let palette = (!doc.monochrome())
+            .then(|| outputs.last().map(|t| save_feedback::basename(t.path())))
+            .flatten();
         match blocks
             .verify_unchanged()
             .and_then(|()| doc.save(blocks.blockset()))
         {
-            Ok(()) => self.status = "Tileset saved".into(),
+            Ok(()) => {
+                self.status = "Tileset saved".into();
+                self.saved_message(graphics);
+                if let Some(palette) = palette {
+                    self.saved_message(palette);
+                }
+            }
             Err(e) => self.error = Some(e.to_string()),
         }
     }
@@ -389,10 +408,16 @@ impl Editor {
             return;
         };
         if !roof.roof().tileset().is_modified() {
+            let name = roof.name().to_owned();
+            self.saved_message(name);
             return;
         }
+        let name = save_feedback::basename(roof.output().path());
         match roof.save() {
-            Ok(()) => self.status = "Roof saved".into(),
+            Ok(()) => {
+                self.status = "Roof saved".into();
+                self.saved_message(name);
+            }
             Err(e) => self.error = Some(e.to_string()),
         }
     }

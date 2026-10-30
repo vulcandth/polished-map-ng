@@ -108,7 +108,7 @@ fn roof_draft_accept_save_conflict_and_dirty_guard_leave_base_and_map_unchanged(
     let base = fs::read(dir.path().join("gfx/tilesets/demo.2bpp")).unwrap();
     let palette = fs::read(dir.path().join("gfx/tilesets/demo_palette_map.asm")).unwrap();
     h.state_mut().save();
-    h.run();
+    crate::save_feedback::tests::dismiss(&mut h);
     assert!(h.state().error.is_none(), "{:?}", h.state().error);
     assert!(!h.state().is_modified());
     assert!(!dir.path().join("gfx/tilesets/demo.png").exists());

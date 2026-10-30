@@ -318,7 +318,7 @@ fn palette_draft_accept_cancel_export_and_load_preserve_map_and_tile_state() {
     }
     let target = prepare_palette_export(&dir.path().join("colors.pal")).unwrap();
     h.state_mut().export_palette_target(&target).unwrap();
-    h.run();
+    crate::save_feedback::tests::dismiss(&mut h);
     assert!(!h.state().palette_document().is_modified());
     let text = fs::read_to_string(target.path()).unwrap();
     assert_eq!(text.lines().count(), 54);

@@ -271,10 +271,12 @@ mod tests {
                 h.run();
                 assert!(h.state().overworld_warning.is_none());
             }
+            crate::save_feedback::tests::dismiss(&mut h);
             // A clean ordinary Save does not trigger the warning again.
             h.state_mut().overworld_map_size = 1;
             h.state_mut().save_map();
             assert!(h.state().overworld_warning.is_none());
+            crate::save_feedback::tests::dismiss(&mut h);
             // Save As always writes, even for a clean map.
             let copy = dir.path().join("Copy.blk");
             h.state_mut().save_as_path(copy.clone());
@@ -284,6 +286,7 @@ mod tests {
             h.key_press(egui::Key::Enter);
             h.run();
             assert!(h.state().overworld_warning.is_none());
+            crate::save_feedback::tests::dismiss(&mut h);
             h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::Z);
             h.run();
             assert_eq!(
@@ -313,6 +316,7 @@ mod tests {
         h.state_mut().save();
         assert!(h.state().error.is_none() && h.state().overworld_warning.is_none());
         assert!(!h.state().is_modified());
+        crate::save_feedback::tests::dismiss(&mut h);
         h.state_mut().apply(Command::Paint {
             points: vec![Point { x: 0, y: 0 }],
             block: 1,
