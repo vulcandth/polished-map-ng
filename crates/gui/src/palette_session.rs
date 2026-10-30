@@ -149,20 +149,14 @@ impl Editor {
             return;
         };
         let name = path.file_name().unwrap_or_default().to_string_lossy();
-        let mut load = false;
-        let mut skip = false;
-        egui::Modal::new(egui::Id::unique("open-map-palettes")).show(ctx, |ui| {
-            ui.heading("Edited palette colors");
-            ui.label(format!(
-                "The palettes have been edited!\n\nLoad {name} anyway?"
-            ));
-            ui.label("Skip keeps these colors and continues opening the map.");
-            ui.horizontal(|ui| {
-                load = ui.button("Load").clicked();
-                skip = ui.button("Skip").clicked();
-            });
-            skip |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
-        });
+        let message = format!("The palettes have been edited!\n\nLoad {name} anyway?");
+        let (load, skip) = message_dialog::confirm(
+            ctx,
+            "open-map-palettes",
+            &message,
+            self.discard_windows_buttons,
+            ["Load", "Skip"],
+        );
         if load || skip {
             let pending = self.pending_open.as_mut().expect("dialog has pending map");
             let result = advance_import(

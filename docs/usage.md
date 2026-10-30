@@ -149,7 +149,8 @@ for the improvement phase after parity.
 Opening or creating a map carries the current palette session forward, including
 colors edited before any map was loaded. Default and special palette files only
 replace the sets they contain. Each automatic import prompts while colors are
-edited: **Skip** (or Escape) keeps those colors and continues opening the map.
+edited: **Cancel** (or Escape) keeps those colors and continues opening the map;
+**OK** accepts that import. Cancel affects this palette import, not the map open.
 Metadata selects a set after these imports; an active Custom set stays selected.
 Roof colors have their own prompt and retain the palette edited flag. As in
 upstream, accepting a missing default palette file clears that flag without

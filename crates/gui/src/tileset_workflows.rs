@@ -156,17 +156,17 @@ impl Editor {
 
     pub(super) fn tileset_choice_dialog(&mut self, ctx: &egui::Context) {
         if self.confirm_tileset_change {
-            let mut proceed = false;
-            let mut cancel = false;
-            egui::Modal::new(egui::Id::unique("replace-tileset")).show(ctx, |ui| {
-                ui.heading("Unsaved tileset changes");
-                ui.label("The blockset, tileset or roof has unsaved changes!\n\nChange the tileset anyway?");
-                ui.horizontal(|ui| {
-                    proceed = ui.button("Change Tileset").clicked();
-                    cancel = ui.button("Cancel").clicked();
-                });
-                cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
-            });
+            let message = format!(
+                "{} has unsaved changes!\n\nChange the tileset anyway?",
+                self.modified_filename(),
+            );
+            let (proceed, cancel) = message_dialog::confirm(
+                ctx,
+                "replace-tileset",
+                &message,
+                self.discard_windows_buttons,
+                ["Change Tileset", "Cancel"],
+            );
             if cancel || proceed {
                 self.confirm_tileset_change = false;
             }
@@ -198,12 +198,14 @@ impl Editor {
             }
             let rect =
                 |x, y, w, h| Rect::from_min_size(area.min + Vec2::new(x, y), Vec2::new(w, h));
-            let font = egui::FontId::proportional(13.0);
+            let font = egui::FontId::proportional(if form.windows_buttons { 12.0 } else { 13.0 });
+            ui.style_mut().override_font_id = Some(font.clone());
             let width = |s: &str| {
                 ui.painter()
                     .layout_no_wrap(s.into(), font.clone(), ui.visuals().text_color())
                     .size()
                     .x
+                    .ceil()
             };
             let offset = 10.0 + width("Tileset:") + 4.0;
             let combo_width = (form
@@ -214,10 +216,7 @@ impl Editor {
                 + 12.0
                 + 22.0)
                 .min(270.0 - offset);
-            ui.put(
-                rect(10.0, 10.0, offset - 14.0, 22.0),
-                egui::Label::new("Tileset:"),
-            );
+            map_options::label(ui, rect(11.0, 10.0, offset - 14.0, 22.0), "Tileset:");
             let current = &form.choices[form.selected].label;
             ui.scope_builder(
                 egui::UiBuilder::new().max_rect(rect(offset, 10.0, combo_width, 22.0)),

@@ -164,7 +164,11 @@ impl<T: egui::emath::Numeric> Widget for IntegerInput<'_, T> {
     fn ui(self, ui: &mut Ui) -> Response {
         let old = self.value.to_f64() as i32;
         let mut value = old;
-        let font = egui::TextStyle::Body.resolve(ui.style());
+        let font = ui
+            .style()
+            .override_font_id
+            .clone()
+            .unwrap_or_else(|| egui::TextStyle::Body.resolve(ui.style()));
         // ui.put supplies the measured source width; flowing forms retain their
         // existing minimum sizing until their client geometry is ported.
         let minimum = ui.spacing().interact_size.x + 2.0 * ui.spacing().button_padding.x;

@@ -59,7 +59,7 @@ impl Layout {
     }
 }
 
-fn label(ui: &mut egui::Ui, rect: Rect, text: &str) -> egui::Response {
+pub(super) fn label(ui: &mut egui::Ui, rect: Rect, text: &str) -> egui::Response {
     let mut child = ui.new_child(
         egui::UiBuilder::new()
             .max_rect(rect)

@@ -105,8 +105,9 @@ malformed-PNG diagnostic text need not match libpng. See the PNG differential in
 - Headless opens start from a fresh palette bank unless the caller explicitly
   uses `begin_for_map` with a session and resolves its `MapPalettePlan`. GUI
   Open/New carries colors forward and prompts separately for default, special
-  and roof imports when edited, matching upstream. Skip replaces the ambiguous
-  Cancel label for these prompts: it skips that import and still opens the map.
+  and roof imports when edited, matching upstream. The original OK/Cancel labels
+  are retained: Cancel skips that import and still opens the map. Its tooltip
+  and accessible name explain that continuation.
   Palette choices and malformed-file failures are staged before publishing the
   new map, so a failed required import retains the previous map and colors.
   Optional roof-color failures warn and continue without changing those colors.

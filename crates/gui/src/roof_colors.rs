@@ -93,29 +93,13 @@ impl Editor {
         };
         let name = path.file_name().unwrap_or_default().to_string_lossy();
         let message = format!("The palettes have been edited!\n\nLoad {name} anyway?");
-        let mut accept = false;
-        let mut cancel = false;
-        egui::Modal::new(egui::Id::unique("roof-color-confirm")).show(ctx, |ui| {
-            ui.heading("Warning");
-            ui.label(message);
-            ui.horizontal(|ui| {
-                for label in if self.discard_windows_buttons {
-                    ["OK", "Cancel"]
-                } else {
-                    ["Cancel", "OK"]
-                } {
-                    if ui.button(label).clicked() {
-                        if label == "OK" {
-                            accept = true;
-                        } else {
-                            cancel = true;
-                        }
-                    }
-                }
-            });
-            accept |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
-            cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
-        });
+        let (accept, cancel) = message_dialog::confirm(
+            ctx,
+            "roof-color-confirm",
+            &message,
+            self.discard_windows_buttons,
+            ["OK", "Cancel"],
+        );
         if cancel {
             self.pending_roof_colors = None;
         } else if accept {

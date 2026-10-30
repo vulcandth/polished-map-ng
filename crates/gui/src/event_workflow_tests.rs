@@ -24,6 +24,48 @@ fn event_options_measurement_uses_source_word_boundaries_and_integer_threshold()
 }
 
 #[test]
+fn event_multiline_client_height_uses_the_source_theme_input_border() {
+    let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+    let path = dir.path().join("Map.asm");
+    std::fs::write(
+        &path,
+        format!(
+            "\tperson_event {}, $00, $00, {}\n",
+            "SPRITE_RED + ".repeat(15),
+            "FLAG + ".repeat(30)
+        ),
+    )
+    .unwrap();
+    h.state_mut().request_event_change(EventChange::Load(path));
+    let ctx = h.ctx.clone();
+    let mut heights = Vec::new();
+    for dark in [false, true] {
+        h.state_mut().dark = dark;
+        h.ctx.set_theme(if dark {
+            egui::Theme::Dark
+        } else {
+            egui::Theme::Light
+        });
+        h.state_mut().event_action(EventAction::Options(0), &ctx);
+        h.run();
+        let prefix = h.get_by_label("Event prefix").rect().height();
+        let suffix = h.get_by_label("Event suffix").rect().height();
+        assert!(prefix > 22.0 && suffix > 22.0);
+        heights.push((
+            prefix,
+            suffix,
+            h.state().event_ui.form.as_ref().unwrap().bounds.height(),
+        ));
+        h.get_by_label("Cancel").click();
+        h.run();
+    }
+    assert_eq!(heights[0].0 - heights[1].0, 2.0);
+    assert_eq!(heights[0].1 - heights[1].1, 2.0);
+    assert_eq!(heights[0].2 - heights[1].2, 4.0);
+    assert!(!h.state().is_modified());
+}
+
+#[test]
 fn event_options_enter_dispatch_and_field_mode_are_fixed_until_reopen() {
     for (label, long) in [
         ("Event prefix", false),

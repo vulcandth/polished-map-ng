@@ -685,18 +685,30 @@ impl Editor {
     }
 
     pub(super) fn event_dialog(&mut self, ctx: &egui::Context) {
-        if self.event_ui.change.is_some() {
-            let mut accept = false;
-            let mut cancel = false;
-            egui::Modal::new(egui::Id::unique("replace-events")).show(ctx, |ui| {
-                ui.heading("Unsaved event changes");
-                ui.label("The events have been edited. Discard those edits and continue?");
-                ui.horizontal(|ui| {
-                    accept = ui.button("Discard Event Changes").clicked();
-                    cancel = ui.button("Cancel").clicked();
-                });
-                cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
-            });
+        if let Some(change) = &self.event_ui.change {
+            let (action, path) = match change {
+                EventChange::Load(path) => ("Load", Some(path.as_path())),
+                EventChange::Reload | EventChange::Unload => (
+                    if matches!(change, EventChange::Reload) {
+                        "Reload"
+                    } else {
+                        "Unload"
+                    },
+                    self.loaded
+                        .as_ref()
+                        .and_then(|l| l.events.as_ref())
+                        .map(|d| d.source().path()),
+                ),
+            };
+            let name = path.map(save_feedback::basename).unwrap_or_default();
+            let message = format!("The events have been edited!\n\n{action} {name} anyway?");
+            let (accept, cancel) = message_dialog::confirm(
+                ctx,
+                "replace-events",
+                &message,
+                self.discard_windows_buttons,
+                ["Discard Event Changes", "Cancel"],
+            );
             if cancel {
                 self.event_ui.change = None;
             } else if accept && let Some(change) = self.event_ui.change.take() {
@@ -711,12 +723,14 @@ impl Editor {
         let mut cancel = false;
         egui::Modal::new(egui::Id::unique("edit-event")).show(ctx, |ui| {
             ui.heading("Event Options");
-            let font = egui::FontId::proportional(13.0);
+            let font = egui::FontId::proportional(if form.windows_buttons { 12.0 } else { 13.0 });
+            ui.style_mut().override_font_id = Some(font.clone());
             let measure = |s: &str| {
                 ui.painter()
                     .layout_no_wrap(s.into(), font.clone(), ui.visuals().text_color())
                     .size()
                     .x
+                    .ceil()
             };
             let mut offset = measure("X:") + 4.0;
             if form.definition.prefix.is_some() {
@@ -727,6 +741,9 @@ impl Editor {
             }
             offset += 10.0;
             let field_width = 290.0 - offset;
+            // themes.cpp: Fl::box_dh(OS_INPUT_THIN_DOWN_BOX) is six for
+            // Greybird and four for Dark, independently of the OS font size.
+            let input_border_height = if ui.visuals().dark_mode { 4.0 } else { 6.0 };
             let height = |s: &Option<String>| {
                 s.as_ref().map_or(0.0, |s| {
                     let line_height = ui
@@ -735,7 +752,8 @@ impl Editor {
                         .size()
                         .y
                         .ceil();
-                    (measured_field_lines(s, field_width, measure) as f32 * line_height + 4.0)
+                    (measured_field_lines(s, field_width, measure) as f32 * line_height
+                        + input_border_height)
                         .max(22.0)
                 })
             };
@@ -767,20 +785,11 @@ impl Editor {
             }
             let rect =
                 |x, y, w, h| Rect::from_min_size(area.min + Vec2::new(x, y), Vec2::new(w, h));
-            ui.put(
-                rect(10.0, 10.0, 280.0 - line_width, 22.0),
-                egui::Label::new(&form.title),
-            );
-            ui.put(
-                rect(290.0 - line_width, 10.0, line_width, 22.0),
-                egui::Label::new(line),
-            );
+            map_options::label(ui, rect(10.0, 10.0, 280.0 - line_width, 22.0), &form.title);
+            map_options::label(ui, rect(290.0 - line_width, 10.0, line_width, 22.0), &line);
             let mut y = 36.0;
             if let Some(field) = &mut form.definition.prefix {
-                ui.put(
-                    rect(10.0, y, offset - 14.0, 22.0),
-                    egui::Label::new("Prefix:"),
-                );
+                outside_field_label(ui, rect(offset, y, field_width, ph), "Prefix:", &font);
                 let response = event_field(ui, rect(offset, y, field_width, ph), field, "prefix");
                 response.widget_info(|| {
                     egui::WidgetInfo::labeled(egui::Role::TextInput, true, "Event prefix")
@@ -805,7 +814,7 @@ impl Editor {
                 // FLTK places the coordinate label outside the control. Do not
                 // wrap X into the slightly narrower measured Y-label width.
                 ui.painter().text(
-                    area.min + Vec2::new(x - 4.0, y + 11.0),
+                    area.min + Vec2::new(x - 3.0, y + 11.0),
                     egui::Align2::RIGHT_CENTER,
                     label,
                     font.clone(),
@@ -827,10 +836,7 @@ impl Editor {
             }
             y += 26.0;
             if let Some(field) = &mut form.definition.suffix {
-                ui.put(
-                    rect(10.0, y, offset - 14.0, 22.0),
-                    egui::Label::new("Suffix:"),
-                );
+                outside_field_label(ui, rect(offset, y, field_width, sh), "Suffix:", &font);
                 let response = event_field(ui, rect(offset, y, field_width, sh), field, "suffix");
                 response.widget_info(|| {
                     egui::WidgetInfo::labeled(egui::Role::TextInput, true, "Event suffix")
@@ -882,6 +888,23 @@ impl Editor {
             self.event_ui.form = Some(form);
         }
     }
+}
+
+fn outside_field_label(ui: &egui::Ui, control: Rect, text: &str, font: &egui::FontId) {
+    // Fl_Group::draw_outside_label leaves three pixels. Multiline inputs use
+    // FL_ALIGN_LEFT_TOP; single-line labels are vertically centered.
+    let (y, align) = if control.height() > 22.0 {
+        (control.top(), egui::Align2::RIGHT_TOP)
+    } else {
+        (control.center().y, egui::Align2::RIGHT_CENTER)
+    };
+    ui.painter().text(
+        Pos2::new(control.left() - 3.0, y),
+        align,
+        text,
+        font.clone(),
+        ui.visuals().text_color(),
+    );
 }
 
 /// FLTK fl_measure/expand_text_ with draw_symbols=false: wrap at ASCII spaces,

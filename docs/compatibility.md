@@ -32,14 +32,14 @@ application acceptance; native interactions additionally need M6.
 | `palette-window.cpp`, `colors.cpp`: color/monochrome grids, RGB5 sliders/spinners, RGB8 hex, Windows chooser, color copy/paste/live swap/drag, six palette sets and export | [Palette editor](../crates/gui/src/palette_editor.rs), [palette editor tests](../crates/gui/src/palette_editor_tests.rs), [palette model tests](../crates/core/tests/palette_edit.rs) | M4 native chooser; I2 shared graphical picker |
 | `option-dialogs.cpp`: Open/New size, tileset, roof and metadata choices | [M1a–M1e evidence](#open-map-size-selection), [Map Options tests](../crates/gui/src/map_options/tests.rs) | M4 native dialog/widget fidelity |
 | `option-dialogs.cpp`: Resize dimensions/nine anchors, Add/Sub block count, Overworld Map Size | [Resize tests](../crates/core/tests/resize.rs), [block workflows](../crates/gui/src/block_workflow_tests.rs), [overworld dialog/tests](../crates/gui/src/overworld.rs) | M4 client measurements and native windows |
-| `option-dialogs.cpp`: Change Tileset and Change Roof, selection/defaults, cancel and dirty guards | [Tileset workflows](../crates/gui/src/tileset_workflow_tests.rs), [roof workflows](../crates/gui/src/roof_workflow_tests.rs) | M4 font-size/label-width/widget and native fidelity |
+| `option-dialogs.cpp`: Change Tileset and Change Roof, selection/defaults, cancel and dirty guards | [Tileset workflows](../crates/gui/src/tileset_workflow_tests.rs), [roof workflows](../crates/gui/src/roof_workflow_tests.rs), [dialog metrics](#remaining-option-dialog-client-metrics) | M4 source widget painting and native fidelity |
 | `event.cpp`, `map-events.cpp`, Event Options: 22 macros, coordinates/prefix/suffix, hover, drag, options, double-click script dispatch, Shift-click warp, load/save/view/reload/unload | [Parser/model tests](../crates/project/tests/events.rs), [GUI workflows](../crates/gui/src/event_workflow_tests.rs), [source differential](../crates/project/tests/reference.rs) | M4 native editor/window |
 | Print Options, `image.cpp`, `main-window.cpp`: five independent flags, Cancel/Copy/Export, image composition and PNG output | [Print dialog/tests](../crates/gui/src/printing.rs), [source comparisons](../crates/project/tests/reference/printing.rs), [real-project Print](../crates/project/tests/real_print.rs), [PNG export](../crates/project/tests/png_export.rs) | M4 fonts/native clipboard/chooser; M6 integrated workflows |
 | `tiled-image.cpp`, `parse-asm.cpp`: 2bpp, padded LZ, CHR/ASM, PNG depths/interlacing/platform alpha, bounded errors | [Codec tests](../crates/project/tests/codecs.rs), [reference suites](../crates/project/tests/reference.rs), [PNG imports](../crates/project/tests/png_import.rs) | M7 application interoperability; safety differences in [deviations](deviations.md) |
 | `palette-map.cpp`, `colors.cpp`, `tileset.cpp`: tilepal/priority, defaults, special/roof colors, compound graphics, 192/256 slots, trimmed PNG/ASM exports | [Graphics tests](../crates/project/tests/graphics.rs), [palettes](../crates/project/tests/palettes.rs), [tileset export tests](../crates/project/tests/tileset.rs) | M7 complete project save/reopen; widget painting remains M4 |
 | `config.cpp`, `utils.cpp`: project root, filename conventions, path precedence, constants/metadata, dimensions, compound suffixes and numeric ordering | [Discovery](#binary-map-metadata-discovery), [asset paths](#legacy-asset-path-selection), [asset ordering](#opennew-asset-selectors), [discovery tests](../crates/project/tests/discovery.rs) | M6 native Unicode/case/permission behavior; safety differences in [deviations](deviations.md) |
 | `widgets.cpp`, `hex-spinner.cpp`: defaults, numeric input, step/repeat/wrap/clamp, middle reset, labels, buttons, dropdowns, scrollbars and help HTML | Specialized GUI modules above and [popup tests](../crates/gui/src/menu_popup/tests.rs) provide partial coverage | M4 source widget rendering/focus; standard egui widgets are not evidence of FLTK parity |
-| `modal-dialog.cpp`: errors, warnings, success, unsaved confirmations and About | [Message dialog tests](../crates/gui/src/message_dialog/tests.rs), [About](../crates/gui/src/about.rs), individual workflow tests | M4 two-button/client/native fidelity |
+| `modal-dialog.cpp`: errors, warnings, success, unsaved confirmations and About | [Message dialog tests](../crates/gui/src/message_dialog/tests.rs), [About](../crates/gui/src/about.rs), individual workflow tests | M4 source widget painting and native child-window fidelity |
 | `help-window.cpp`: full help text, scrolling, external links, resizable nonmodal window and dismissal | [Help implementation](../crates/gui/src/help.rs), [Help tests](../crates/gui/src/help/tests.rs) | M4 native resize/focus/link dispatch |
 | `themes.cpp`, icon/resource/version headers: Greybird/Dark, fonts, inactive colors, application identity and imagery | [Fonts](../crates/gui/src/fonts.rs), [menu marks](../crates/gui/src/menu_popup/marks.rs), [asset audit](assets.md), [notices](../NOTICE.md) | M4 native fonts/widget drawing; I3 other themes |
 | `preferences.cpp`, startup/exit callbacks: settings, recent files, geometry, legacy stores and `meta128` acknowledgment | [Preferences](preferences.md), [preference tests](../crates/gui/src/preferences.rs), [recent paths](../crates/gui/src/recent_maps.rs) | M5 legacy import, startup policy and native persistence |
@@ -344,6 +344,36 @@ own Escape before the dialog can close. Root changes are revalidated after the
 advanced controls so Enter cannot submit a stale inventory. Existing Open/New,
 dirty-state, cancellation, warning and initial-scroll tests cover integration.
 
+## Remaining option dialog client metrics
+
+The [Resize Map client](../crates/gui/src/resize_dialog.rs) follows
+`Resize_Dialog::refresh_content` and `Option_Dialog::refresh`: 220×132 points,
+width/height controls at y=10/36, 22-point control height, and a 3×3 anchor grid
+of 24-point buttons with two-point gaps. The source reports 74 points of content
+height even though the anchors occupy 76; the port retains that arithmetic.
+OK/Cancel are 80×22 at y=100, x=36/130 with platform order. The first-show default
+focus goes to OK. Resizing consequences are in its tooltip rather than extra
+rows that enlarge the original client. All nine anchors preserve draft-only
+selection until acceptance, and Escape discards the form.
+
+Resize Blockset, Change Tileset, Change Roof and Event Options now measure and
+draw with the same source font size: 12 on Windows, 13 on Linux/macOS. Integer
+text measurements include both padding edges (`text_width(s, 2)` adds four).
+Resize Blockset's previously two-point allowance is corrected. Shared integer
+inputs honor the dialog font override. Event headings align left inside their
+source rectangles; coordinate and prefix/suffix labels sit three points outside
+the controls, with top alignment for multiline fields. Existing long-selector
+clipping remains the separately recorded [difference](deviations.md).
+Multiline field heights include the original theme's input border: six points
+for Greybird, four for Dark, measured once at opening. A two-theme test verifies
+both field heights and the resulting total client height without editing data.
+
+[Resize tests](../crates/gui/src/resize_dialog/tests.rs) check independent formula
+vectors, both platform button orders at 1×/2×, actual text font sizes, all anchor
+hit regions and cancellation. Existing event/asset/blockset workflow tests retain
+edit, keyboard, default-value and persistence coverage. Native window hosting,
+source widget painting and native font rasterization remain M4/M6 work.
+
 ## Error, warning and success message dialogs
 
 The six one-button message routes now share the pinned master's
@@ -377,6 +407,28 @@ differences in the four existing images are confined to their dialog regions.
 This is client-layout/input evidence, not native child-window/frame or font
 rasterization parity. Captions remain inside an egui modal. Warning/error/success images now fill their original space; see the
 [completed artwork port](#original-toolbar-message-and-application-artwork). Error details can retain the port's structured diagnostics.
+
+Two-button confirmations now use that same measured body and original warning
+artwork. This covers unsaved map/close/exit, tileset/roof replacement, event-script
+load/reload/unload, manual palette/roof-color import and each staged Open/New
+palette import. The buttons have a 14-point gap: on Windows OK is left and
+Cancel right; Linux/macOS reverse them. Both draw the original OK/Cancel labels;
+descriptive accessible names preserve the action or palette-skip meaning.
+Enter accepts and Escape cancels, with cancellation winning simultaneous input.
+The palette Cancel continues the map open while retaining colors, matching the
+original. Event and tileset warnings identify their source filenames/actions.
+[Confirmation tests](../crates/gui/src/message_dialog/tests.rs) cover actual
+rectangles, labels and keyboard outcomes at both platform metrics and 1×/2×.
+The workflow tests additionally cover dirty-state preservation and sequential
+import decisions. These remain embedded clients, not native modal acceptance.
+
+Verification for the option/confirmation client updates: Windows workspace
+format, warnings-as-errors Clippy, tests and rustdoc pass. The Ubuntu 22.04.5
+LTS/WSL2 offscreen Vulkan suite passes 236 tests with four existing ignored
+native/reference checks; its visual-feature Clippy check also passes. Fifteen
+changed baselines and four new confirmation baselines were reviewed. Material
+pixel changes in existing images are confined to the affected dialog regions.
+No desktop interaction was used for these client checks.
 
 ## PNG decoding, interlacing and platform transparency
 
@@ -1669,8 +1721,8 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Binary-map metadata and legacy asset-path selection match compiled-source fixtures, including precedence and missing inputs; Open size choices match every representable area; Open/New asset dropdowns, numeric ordering and measured client layout are implemented. Source inventory is reconciled above; native filesystem/dialog fidelity and full-project acceptance remain incomplete |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented is missing; native child windows and native clipboard verification remain pending |
-| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented remains; native fonts, full gesture coverage and native workflows are pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented; native child windows and native clipboard verification remain pending |
+| Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented; native fonts, full gesture coverage and native workflows are pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export, internal Drag and Drop and positioned external-drop routing implemented. The meta128 acknowledgment is implemented; legacy import, native file-drop acceptance, storage/placement and Print/clipboard parity remain pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
 | Unified profile detection | both config.cpp variants | Pending |
@@ -1966,8 +2018,8 @@ matrix above and [preferences](preferences.md) for present coverage.
   The local ignored New Bark Town GUI integration auto-loads the pinned real
   project's events, compares them to a direct backend load, edits through Event
   Options and saves/reopens a temporary script copy, leaving the real project
-  unchanged. It is not a native platform test. Existing snapshot changes are
-  confined to the resize dialog's now-correct event help text and resulting width.
+  unchanged. It is not a native platform test. Resize consequences are available in the source-sized dialog's OK tooltip;
+  see the current [client metrics](#remaining-option-dialog-client-metrics).
 
 - `MapPalettePlan` orders default and special imports, metadata selection and
   roof colors without global mutable state. `begin_for_map` takes an explicit

@@ -140,10 +140,13 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   Done when the gates in [architecture](architecture.md) pass;
   stale pointer coordinates or widget alpha are not substitutes.
 - [ ] **M4 — Complete source-derived GUI and native-window fidelity (in progress).**
+  Resize/asset/Event dialog client metrics and shared original-artwork
+  confirmations are implemented; evidence: [option dialog metrics](compatibility.md#remaining-option-dialog-client-metrics)
+  and [message clients](compatibility.md#error-warning-and-success-message-dialogs).
   Finish editor/modal child-window behavior, font fallback/Windows bold synthesis,
   popup placement/arrows/mnemonics/screen-edge behavior, focus and dismissal.
   Include the remaining source spinner/slider/dropdown/scrollbar rendering and
-  measured Resize/Change Tileset/Change Roof/Event/confirmation dialog details;
+  remaining dialog default-focus and native placement details;
   stock egui controls do not by themselves establish that fidelity.
   Verify source geometry at 1×/2× before targeted native checks of dialogs,
   clipboard, external editor/browser dispatch, shortcuts, scrolling and resizing.

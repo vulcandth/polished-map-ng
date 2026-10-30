@@ -266,16 +266,18 @@ impl Editor {
         }
     }
     pub(super) fn palette_load_dialog(&mut self, ctx: &egui::Context) {
-        let mut load = false;
-        let mut cancel = false;
-        egui::Modal::new(egui::Id::unique("replace-palettes")).show(ctx, |ui| {
-            ui.heading("Palettes have been edited");
-            ui.label("Load the selected palette file anyway?");
-            ui.horizontal(|ui| {
-                load = ui.button("Load").clicked();
-                cancel = ui.button("Cancel").clicked();
-            });
-        });
+        let Some(path) = self.pending_palette_load.as_ref() else {
+            return;
+        };
+        let name = path.file_name().unwrap_or_default().to_string_lossy();
+        let message = format!("The palettes have been edited!\n\nLoad {name} anyway?");
+        let (load, cancel) = message_dialog::confirm(
+            ctx,
+            "replace-palettes",
+            &message,
+            self.discard_windows_buttons,
+            ["Load", "Cancel"],
+        );
         if load {
             let path = self.pending_palette_load.take().unwrap();
             if let Err(e) = self.load_palette_path(ctx, &path) {

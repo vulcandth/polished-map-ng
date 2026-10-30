@@ -5,6 +5,68 @@ use egui_kittest::{
 };
 
 #[test]
+fn confirmation_source_geometry_keyboard_and_platform_order() {
+    #[cfg(feature = "visual-tests")]
+    let mut snapshots = egui_kittest::SnapshotResults::new();
+    for windows in [false, true] {
+        for scale in [1.0, 2.0] {
+            for key in [egui::Key::Enter, egui::Key::Escape] {
+                let mut h = Harness::builder()
+                    .with_size(Vec2::new(800.0, 600.0))
+                    .with_pixels_per_point(scale)
+                    .build_ui_state(
+                        |ui, state: &mut (bool, bool)| {
+                            if !state.0 && !state.1 {
+                                *state = confirm(
+                                    ui.ctx(),
+                                    "confirmation-test",
+                                    "Synthetic.blk has unsaved changes!\n\nExit anyway?",
+                                    windows,
+                                    ["Proceed", "Keep editing"],
+                                );
+                            }
+                        },
+                        (false, false),
+                    );
+                h.run();
+                let ok = h.get_by_label("Proceed").rect();
+                let cancel = h.get_by_label("Keep editing").rect();
+                assert_eq!(ok.size(), Vec2::new(80.0, 22.0));
+                assert_eq!(cancel.size(), ok.size());
+                assert_eq!(ok.top(), cancel.top());
+                assert_eq!((ok.left() - cancel.left()).abs(), 94.0);
+                assert_eq!(ok.left() < cancel.left(), windows);
+                // Both labels are visually the source OK/Cancel; descriptive
+                // accessibility names must not force larger client controls.
+                for text in ["OK", "Cancel"] {
+                    assert!(h.output().shapes.iter().any(
+                        |s| matches!(&s.shape, egui::Shape::Text(t) if t.galley.text() == text)
+                    ));
+                }
+                #[cfg(feature = "visual-tests")]
+                if key == egui::Key::Enter {
+                    h.remove_cursor();
+                    h.run();
+                    snapshots.add(h.try_snapshot(format!(
+                        "confirmation-{}-{}x",
+                        if windows { "windows" } else { "unix" },
+                        scale
+                    )));
+                }
+                h.key_press(key);
+                h.run();
+                assert_eq!(
+                    *h.state(),
+                    (key == egui::Key::Enter, key == egui::Key::Escape)
+                );
+            }
+        }
+    }
+    #[cfg(feature = "visual-tests")]
+    snapshots.unwrap();
+}
+
+#[test]
 fn source_client_geometry_preserves_icon_gap_minimum_size_and_button_anchor() {
     for (body, font, size, button) in [
         (

@@ -204,20 +204,23 @@ impl Editor {
             let (area, _) = ui.allocate_exact_size(Vec2::new(194.0, 80.0), Sense::hover());
             let rect =
                 |x, y, w, h| Rect::from_min_size(area.min + Vec2::new(x, y), Vec2::new(w, h));
-            let font = egui::FontId::proportional(13.0);
+            let font = egui::FontId::proportional(if self.block_count_windows_buttons {
+                12.0
+            } else {
+                13.0
+            });
+            ui.style_mut().override_font_id = Some(font.clone());
             let text = ui.visuals().text_color();
             let width = |s: &str| {
                 ui.painter()
                     .layout_no_wrap(s.into(), font.clone(), text)
                     .size()
                     .x
+                    .ceil()
             };
-            let offset = 10.0 + width("Blocks:") + 2.0;
-            let spinner_width = width("999") + 2.0 + 22.0;
-            ui.put(
-                rect(10.0, 10.0, offset - 12.0, 22.0),
-                egui::Label::new("Blocks:"),
-            );
+            let offset = 10.0 + width("Blocks:") + 4.0;
+            let spinner_width = width("999") + 4.0 + 22.0;
+            map_options::label(ui, rect(11.0, 10.0, offset - 14.0, 22.0), "Blocks:");
             let response = ui.put(
                 rect(offset, 10.0, spinner_width, 22.0),
                 numeric_input::IntegerInput::new(&mut count, 1..=256),

@@ -78,7 +78,7 @@ impl Editor {
         self.status = "Map closed".into();
     }
 
-    fn modified_filename(&self) -> String {
+    pub(super) fn modified_filename(&self) -> String {
         let Some(loaded) = &self.loaded else {
             return "New Map".into();
         };
@@ -128,29 +128,13 @@ impl Editor {
             "{} has unsaved changes!\n\n{question}",
             self.modified_filename()
         );
-        let mut accept = false;
-        let mut cancel = false;
-        egui::Modal::new(egui::Id::unique("unsaved")).show(ctx, |ui| {
-            ui.heading("Warning");
-            ui.label(message);
-            ui.horizontal(|ui| {
-                for label in if self.discard_windows_buttons {
-                    ["OK", "Cancel"]
-                } else {
-                    ["Cancel", "OK"]
-                } {
-                    if ui.button(label).clicked() {
-                        if label == "OK" {
-                            accept = true;
-                        } else {
-                            cancel = true;
-                        }
-                    }
-                }
-            });
-            accept |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
-            cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
-        });
+        let (accept, cancel) = message_dialog::confirm(
+            ctx,
+            "unsaved",
+            &message,
+            self.discard_windows_buttons,
+            ["OK", "Cancel"],
+        );
         if cancel {
             self.pending_recent = None;
             self.confirm_discard = false;

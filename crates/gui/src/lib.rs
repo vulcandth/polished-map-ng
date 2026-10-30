@@ -42,6 +42,7 @@ mod preferences;
 mod printing;
 mod priority;
 mod recent_maps;
+mod resize_dialog;
 mod roof_colors;
 #[cfg(test)]
 mod roof_workflow_tests;
@@ -160,6 +161,10 @@ struct ResizeForm {
     height: u16,
     defaults: [default_value::DefaultValue<u16>; 2],
     anchor: ResizeAnchor,
+    windows_buttons: bool,
+    opened: bool,
+    #[cfg(test)]
+    bounds: Rect,
 }
 
 pub struct Editor {
@@ -817,6 +822,10 @@ impl Editor {
                 ]
                 .map(|n| default_value::DefaultValue::new(u16::from(n))),
                 anchor: self.resize_anchor,
+                windows_buttons: cfg!(windows),
+                opened: false,
+                #[cfg(test)]
+                bounds: Rect::NOTHING,
             });
         }
     }
@@ -905,108 +914,7 @@ impl Editor {
             self.block_count_dialog(ctx);
             return;
         }
-        if let Some(mut form) = self.resize_form.take() {
-            let mut accept = false;
-            let mut cancel = false;
-            egui::Modal::new(egui::Id::unique("resize-map")).show(ctx, |ui| {
-                ui.heading("Resize Map");
-                ui.horizontal(|ui| {
-                    ui.vertical(|ui| {
-                        for ((label, value), default) in
-                            [("Width", &mut form.width), ("Height", &mut form.height)]
-                                .into_iter()
-                                .zip(&mut form.defaults)
-                        {
-                            ui.horizontal(|ui| {
-                                let label = ui.label(label);
-                                let response = ui
-                                    .add(numeric_input::IntegerInput::new(&mut *value, 1..=255))
-                                    .labelled_by(label.id);
-                                default.restore(ui, &response, value);
-                            });
-                        }
-                    });
-                    ui.add_space(20.0);
-                    // Original Resize_Dialog: nine 24×24 buttons separated by 2 px.
-                    egui::Grid::new("resize-anchor")
-                        .spacing(Vec2::splat(2.0))
-                        .show(ui, |ui| {
-                            let labels = [
-                                "Top left",
-                                "Top center",
-                                "Top right",
-                                "Middle left",
-                                "Center",
-                                "Middle right",
-                                "Bottom left",
-                                "Bottom center",
-                                "Bottom right",
-                            ];
-                            for (i, anchor) in ResizeAnchor::ALL.into_iter().enumerate() {
-                                let selected = anchor == form.anchor;
-                                let response = ui.add_sized(
-                                    [24.0, 24.0],
-                                    egui::Button::new("").selected(selected),
-                                );
-                                response.widget_info(|| {
-                                    egui::WidgetInfo::labeled(egui::Role::Button, true, labels[i])
-                                });
-                                let active = ResizeAnchor::ALL
-                                    .iter()
-                                    .position(|&a| a == form.anchor)
-                                    .unwrap_or(4);
-                                let direction = Vec2::new(
-                                    (i % 3) as f32 - (active % 3) as f32,
-                                    (i / 3) as f32 - (active / 3) as f32,
-                                );
-                                let color = ui.visuals().text_color();
-                                if selected {
-                                    ui.painter().rect_filled(
-                                        Rect::from_center_size(
-                                            response.rect.center(),
-                                            Vec2::splat(6.0),
-                                        ),
-                                        0.0,
-                                        color,
-                                    );
-                                } else if direction.x.abs() <= 1.0 && direction.y.abs() <= 1.0 {
-                                    let direction = direction.normalized() * 8.0;
-                                    ui.painter().arrow(
-                                        response.rect.center() - direction * 0.5,
-                                        direction,
-                                        egui::Stroke::new(1.0, color),
-                                    );
-                                }
-                                if response.on_hover_text(labels[i]).clicked() {
-                                    form.anchor = anchor;
-                                }
-                                if i % 3 == 2 {
-                                    ui.end_row();
-                                }
-                            }
-                        });
-                });
-                ui.label("New cells use block 0. Resizing clears undo history.");
-                ui.label("Map constants are not updated. Loaded events move with the map.");
-                ui.horizontal(|ui| {
-                    accept = ui.button("Resize").clicked();
-                    cancel = ui.button("Cancel").clicked();
-                });
-                accept |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
-                cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
-            });
-            if accept && !cancel {
-                self.resize_anchor = form.anchor;
-                self.stroke.clear();
-                self.apply(Command::Resize {
-                    width: form.width,
-                    height: form.height,
-                    anchor: form.anchor,
-                });
-            } else if !cancel {
-                self.resize_form = Some(form);
-            }
-        }
+        self.resize_dialog(ctx);
         self.map_options_dialog(ctx);
     }
 

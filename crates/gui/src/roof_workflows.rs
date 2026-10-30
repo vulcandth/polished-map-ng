@@ -107,25 +107,20 @@ impl Editor {
 
     pub(super) fn roof_choice_dialog(&mut self, ctx: &egui::Context) {
         if self.confirm_roof_change {
-            let mut proceed = false;
-            let mut cancel = false;
-            egui::Modal::new(egui::Id::unique("replace-roof")).show(ctx, |ui| {
-                ui.heading("Unsaved roof changes");
-                let name = self
-                    .loaded
-                    .as_ref()
-                    .and_then(|l| l.tileset.as_ref())
-                    .and_then(|t| t.roof())
-                    .map_or("Roof", |r| r.name());
-                ui.label(format!(
-                    "{name}.png has unsaved changes!\n\nChange the roof anyway?"
-                ));
-                ui.horizontal(|ui| {
-                    proceed = ui.button("Change Roof").clicked();
-                    cancel = ui.button("Cancel").clicked();
-                });
-                cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
-            });
+            let name = self
+                .loaded
+                .as_ref()
+                .and_then(|l| l.tileset.as_ref())
+                .and_then(|t| t.roof())
+                .map_or("Roof", |r| r.name());
+            let message = format!("{name}.png has unsaved changes!\n\nChange the roof anyway?");
+            let (proceed, cancel) = message_dialog::confirm(
+                ctx,
+                "replace-roof",
+                &message,
+                self.discard_windows_buttons,
+                ["Change Roof", "Cancel"],
+            );
             if cancel || proceed {
                 self.confirm_roof_change = false;
             }
@@ -149,12 +144,14 @@ impl Editor {
             }
             let rect =
                 |x, y, w, h| Rect::from_min_size(area.min + Vec2::new(x, y), Vec2::new(w, h));
-            let font = egui::FontId::proportional(13.0);
+            let font = egui::FontId::proportional(if form.windows_buttons { 12.0 } else { 13.0 });
+            ui.style_mut().override_font_id = Some(font.clone());
             let width = |s: &str| {
                 ui.painter()
                     .layout_no_wrap(s.into(), font.clone(), ui.visuals().text_color())
                     .size()
                     .x
+                    .ceil()
             };
             // text_width(label, pad) in utils.cpp adds two times the padding.
             let offset = 10.0 + width("Roof:") + 4.0;
@@ -165,10 +162,7 @@ impl Editor {
                 .fold(width("(none)"), f32::max)
                 + 12.0
                 + 22.0;
-            ui.put(
-                rect(10.0, 10.0, offset - 14.0, 22.0),
-                egui::Label::new("Roof:"),
-            );
+            map_options::label(ui, rect(11.0, 10.0, offset - 14.0, 22.0), "Roof:");
             // Keep long names within the fixed original client width. Full labels
             // remain available in the dropdown and hover text.
             let combo_width = combo_width.min(270.0 - offset);

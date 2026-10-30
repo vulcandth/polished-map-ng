@@ -1,5 +1,5 @@
 //! master Modal_Dialog::{initialize,refresh,show} with an empty subject and one
-//! button. LGPL-3.0-only. Original artwork attribution: assets/artwork/NOTICE.md.
+//! or two buttons. LGPL-3.0-only. Original artwork: assets/artwork/NOTICE.md.
 use super::*;
 
 #[derive(Clone, Copy, Debug)]
@@ -8,6 +8,7 @@ struct Layout {
     icon: Rect,
     body: Rect,
     ok: Rect,
+    cancel: Option<Rect>,
 }
 
 impl Layout {
@@ -24,7 +25,17 @@ impl Layout {
                 Vec2::new(width - 80.0, body.y.ceil()),
             ),
             ok: Rect::from_min_size(Pos2::new(width - 90.0, button_y), Vec2::new(80.0, 22.0)),
+            cancel: None,
         }
+    }
+
+    fn confirmation(mut self, windows: bool) -> Self {
+        let left = self.ok.translate(Vec2::new(-94.0, 0.0));
+        self.cancel = Some(if windows { self.ok } else { left });
+        if windows {
+            self.ok = left;
+        }
+        self
     }
 }
 
@@ -55,6 +66,26 @@ pub(super) fn show(ctx: &egui::Context, id: &'static str, kind: Kind, message: &
     show_with_font(ctx, id, kind, message, font_size(ctx)).0
 }
 
+/// Source OK/Cancel artwork, measurement and platform order. Descriptive
+/// accessibility names identify what OK does without widening the source buttons.
+pub(super) fn confirm(
+    ctx: &egui::Context,
+    id: &'static str,
+    message: &str,
+    windows: bool,
+    actions: [&str; 2],
+) -> (bool, bool) {
+    let (accept, cancel, _) = render(
+        ctx,
+        id,
+        Kind::Warning,
+        message,
+        if windows { 12.0 } else { 13.0 },
+        Some((windows, actions)),
+    );
+    (accept && !cancel, cancel)
+}
+
 fn font_size(_ctx: &egui::Context) -> f32 {
     #[cfg(test)]
     if let Some(size) = _ctx.data(|d| d.get_temp::<f32>(egui::Id::unique("test-message-font-size")))
@@ -76,7 +107,20 @@ fn show_with_font(
     message: &str,
     font_size: f32,
 ) -> (bool, Rect) {
+    let (accept, cancel, bounds) = render(ctx, id, kind, message, font_size, None);
+    (accept || cancel, bounds)
+}
+
+fn render(
+    ctx: &egui::Context,
+    id: &'static str,
+    kind: Kind,
+    message: &str,
+    font_size: f32,
+    confirmation: Option<(bool, [&str; 2])>,
+) -> (bool, bool, Rect) {
     let mut done = false;
+    let mut canceled = false;
     let mut bounds = Rect::NOTHING;
     egui::Modal::new(egui::Id::unique(id)).show(ctx, |ui| {
         // Caption stands in for native chrome; the allocated client rectangle
@@ -89,7 +133,10 @@ fn show_with_font(
             ui.visuals().text_color(),
             620.0,
         );
-        let layout = Layout::measured(body.size(), font_size);
+        let mut layout = Layout::measured(body.size(), font_size);
+        if let Some((windows, _)) = confirmation {
+            layout = layout.confirmation(windows);
+        }
         bounds = ui.allocate_exact_size(layout.size, Sense::hover()).0;
         let rect = |r: Rect| r.translate(bounds.min.to_vec2());
         ui.allocate_rect(rect(layout.icon), Sense::hover());
@@ -108,22 +155,34 @@ fn show_with_font(
                 );
             },
         );
-        done = ui
+        let ok = ui
             .put(
                 rect(layout.ok),
                 egui::Button::new(egui::RichText::new("OK").size(font_size)),
             )
-            .on_hover_text("OK (Enter)")
-            .clicked();
+            .on_hover_text("OK (Enter)");
+        done = ok.clicked();
+        if let Some((_, actions)) = confirmation {
+            ok.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, actions[0]));
+            let cancel = ui
+                .put(
+                    rect(layout.cancel.expect("confirmation has Cancel")),
+                    egui::Button::new(egui::RichText::new("Cancel").size(font_size)),
+                )
+                .on_hover_text(if actions[1] == "Skip" {
+                    "Keep these colors and continue opening the map (Esc)"
+                } else {
+                    "Cancel (Esc)"
+                });
+            cancel.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Button, true, actions[1]));
+            canceled = cancel.clicked();
+        }
         // Default_Button binds Enter. FLTK routes unhandled Escape to the
         // modal window's cancel callback even when it has no Cancel button.
-        done |= ui.input_mut(|i| {
-            let enter = i.consume_key(egui::Modifiers::NONE, egui::Key::Enter);
-            let escape = i.consume_key(egui::Modifiers::NONE, egui::Key::Escape);
-            enter || escape
-        });
+        done |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
+        canceled |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
     });
-    (done, bounds)
+    (done, canceled, bounds)
 }
 
 #[cfg(test)]
