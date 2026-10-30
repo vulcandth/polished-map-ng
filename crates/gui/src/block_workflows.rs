@@ -123,6 +123,9 @@ impl Editor {
             .as_ref()
             .and_then(|l| l.blockset.as_ref())
             .map(|b| b.blockset().blocks().len() as u16);
+        if let Some(count) = self.block_count_form {
+            self.block_count_default = default_value::DefaultValue::new(count);
+        }
     }
 
     pub(super) fn block_shortcuts(&mut self, ctx: &egui::Context) {
@@ -215,11 +218,14 @@ impl Editor {
                 rect(10.0, 10.0, offset - 12.0, 22.0),
                 egui::Label::new("Blocks:"),
             );
-            ui.put(
+            let response = ui.put(
                 rect(offset, 10.0, spinner_width, 22.0),
                 egui::DragValue::new(&mut count).range(1..=256),
-            )
-            .widget_info(|| egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "Block count"));
+            );
+            response.widget_info(|| {
+                egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "Block count")
+            });
+            self.block_count_default.restore(ui, &response, &mut count);
             let (ok, no) = if self.block_count_windows_buttons {
                 (10.0, 104.0)
             } else {

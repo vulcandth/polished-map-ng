@@ -33,6 +33,12 @@ use the shared backend in both the GUI and CLI.
 
 ## Map editing
 
+Middle-click a Resize Map/Blockset value, Overworld Map Size, event coordinate or
+binary collision value to restore its value from when that dialog opened.
+In the palette editor, middle-click a channel spinner or slider to restore that
+channel's value from when you selected the swatch. Reset happens on release;
+Cancel still discards the draft.
+
 Tools → Resize Map supports all nine anchors. Resizing fills new cells with
 block zero and clears undo history,
 matching upstream. Loaded events move by twice the resize anchor's block offset,

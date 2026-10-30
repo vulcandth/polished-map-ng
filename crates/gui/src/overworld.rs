@@ -10,6 +10,7 @@ Its default size is 1300 bytes, so every map requires that\n\
 
 pub(super) struct OverworldForm {
     size: u16,
+    default: default_value::DefaultValue<u16>,
     windows_buttons: bool,
     #[cfg(test)]
     bounds: Rect,
@@ -19,6 +20,7 @@ impl Editor {
     pub(super) fn prepare_overworld(&mut self) {
         self.overworld_form = Some(OverworldForm {
             size: self.overworld_map_size,
+            default: default_value::DefaultValue::new(self.overworld_map_size),
             windows_buttons: cfg!(target_os = "windows"),
             #[cfg(test)]
             bounds: Rect::NOTHING,
@@ -107,13 +109,14 @@ has at least {bytes} bytes.",
                 rect(10.0, spinner_y, label_width, 22.0),
                 egui::Label::new(egui::RichText::new("ds:").font(label_font)),
             );
-            ui.put(
+            let response = ui.put(
                 rect(10.0 + label_width, spinner_y, spinner_width, 22.0),
                 egui::DragValue::new(&mut form.size).range(1..=4096),
-            )
-            .widget_info(|| {
+            );
+            response.widget_info(|| {
                 egui::WidgetInfo::labeled(egui::Role::SpinButton, true, "Overworld map buffer size")
             });
+            form.default.restore(ui, &response, &mut form.size);
             let (ok, no) = if form.windows_buttons {
                 (196.0, 290.0)
             } else {

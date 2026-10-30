@@ -6,6 +6,7 @@ pub(super) struct BlockForm {
     id: u8,
     tiles: [u8; 16],
     collision: Option<CollisionRow>,
+    defaults: [default_value::DefaultValue<u8>; 4],
     selected: u8,
     textures: Vec<egui::TextureHandle>,
     allow_256: bool,
@@ -41,6 +42,15 @@ impl Editor {
                 self.block_form = Some(BlockForm {
                     id: self.selected,
                     tiles: *tiles,
+                    defaults: match doc
+                        .blockset()
+                        .collisions()
+                        .map(|rows| &rows[usize::from(self.selected)])
+                    {
+                        Some(CollisionRow::Binary(values)) => *values,
+                        _ => [0; 4],
+                    }
+                    .map(default_value::DefaultValue::new),
                     collision: doc
                         .blockset()
                         .collisions()
@@ -207,15 +217,16 @@ impl Editor {
                         let x = 300.0 + (i % 2) as f32 * (32.0 + width);
                         let y = 144.0 + (i / 2) as f32 * 26.0;
                         quadrant_icon(ui, rect(x, y, width, 22.0), i, true);
-                        ui.put(
+                        let response = ui.put(
                             rect(x, y, width, 22.0),
-                            egui::DragValue::new(value)
+                            egui::DragValue::new(&mut *value)
                                 .range(0..=255)
                                 .hexadecimal(2, false, true),
-                        )
-                        .widget_info(|| {
+                        );
+                        response.widget_info(|| {
                             egui::WidgetInfo::labeled(egui::Role::SpinButton, true, labels[i])
                         });
+                        form.defaults[i].restore(ui, &response, value);
                     }
                 }
                 values => {

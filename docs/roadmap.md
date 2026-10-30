@@ -23,7 +23,8 @@ closes only when its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M1g, restore the remaining shared-control input behavior; then M1h,
+**Next:** M1g, finish numeric stepping/wrapping and Event Options input behavior;
+middle-click resets are complete as M1g1. Then M1h,
 save feedback and the one-time block-limit warning. Follow with M2–M6 and M7
 acceptance. If a task is externally blocked, record the blocker and
 advance another unchecked master task. Do not advance to plusplus merely because
@@ -72,6 +73,10 @@ adding improvements. Each completed group below still participates in M7.
   implementation/tests and remaining owners are mapped in the
   [source inventory](compatibility.md#master-source-inventory). Newly identified
   implementation gaps are M1g/M1h below; classification is not parity acceptance.
+- [x] **M1g1 — Middle-click defaults:** Resize Map/Blockset, Overworld Map Size,
+  event coordinates, binary collisions and palette spinners/sliders restore
+  source defaults on middle release, including palette selection/transfer
+  capture boundaries. Evidence: [control defaults](compatibility.md#middle-click-control-defaults).
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
   anchors, zero fill and source-compatible history boundaries.
 - [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
@@ -100,9 +105,7 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   Close M1 when those gaps are resolved and the inventory remains reconciled.
   Native window/widget fidelity and focus delivery remain M4/M6 requirements.
 - [ ] **M1g — Restore shared-control input behavior (next).**
-  Implement source middle-release resets for Resize Map, Resize Blockset,
-  Overworld Map Size, event coordinates, binary collisions and palette RGB5
-  spinners/sliders. Preserve each control's original default-capture boundary.
+  Middle-release resets and default-capture boundaries are complete in M1g1.
   Reconcile numeric step/repeat/wrap/clamp, signed hex input and Event Options'
   measured single-/multiline fields and Enter delivery. Done when source-derived
   input tests cover each affected control, bounds, cancellation, focus/disabled

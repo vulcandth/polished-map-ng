@@ -31,6 +31,12 @@ LGPL-3.0-only. The reference harness compiles unchanged snippets with inert widg
 storage and standard streams for synthetic ASCII paths. Generated source and
 snippet hashes remain in ignored storage; no project/game assets are distributed.
 
+Middle-click defaults adapt master `widgets.cpp::Default_Spinner`,
+`Default_Hex_Spinner` and `Default_Slider`, and the control default-capture calls
+in `option-dialogs`, `block-window` and `palette-window`, under LGPL-3.0-only.
+The Rust adapter keeps capture with the editing session and abandons interrupted
+gestures; palette channel/hex/chooser edits retain the selected swatch baseline.
+
 The asset-path reference harness extracts unchanged master `Config` graphics,
 block, collision, palette, roof, event and constants-path functions, plus
 `remove_suffix`, `before_suffix` and `after_suffix`, under LGPL-3.0-only. Its

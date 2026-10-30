@@ -67,6 +67,7 @@ pub(super) enum EventAction {
 pub(super) struct EventForm {
     index: usize,
     definition: EventDefinition,
+    defaults: [default_value::DefaultValue<i16>; 2],
     title: String,
     pub windows_buttons: bool,
     #[cfg(test)]
@@ -479,6 +480,7 @@ impl Editor {
                     self.event_ui.form = Some(EventForm {
                         index,
                         title: format!("{}{suffix}:", d.kind.macro_name()),
+                        defaults: [d.x, d.y].map(default_value::DefaultValue::new),
                         definition: d,
                         windows_buttons: cfg!(windows),
                         #[cfg(test)]
@@ -773,14 +775,17 @@ impl Editor {
                 });
                 y += ph + 4.0;
             }
-            for (label, value, x) in [
+            for ((label, value, x), default) in [
                 ("X:", &mut form.definition.x, offset),
                 (
                     "Y:",
                     &mut form.definition.y,
                     offset + number_width + y_offset,
                 ),
-            ] {
+            ]
+            .into_iter()
+            .zip(&mut form.defaults)
+            {
                 // FLTK places the coordinate label outside the control. Do not
                 // wrap X into the slightly narrower measured Y-label width.
                 ui.painter().text(
@@ -790,7 +795,7 @@ impl Editor {
                     font.clone(),
                     ui.visuals().text_color(),
                 );
-                let mut spinner = egui::DragValue::new(value).range(-6..=249).speed(1.0);
+                let mut spinner = egui::DragValue::new(&mut *value).range(-6..=249).speed(1.0);
                 if form.definition.hex_coordinates {
                     spinner = spinner
                         .custom_formatter(|n, _| format!("{:02X}", n as i32 as u32))
@@ -801,14 +806,15 @@ impl Editor {
                                 .map(|n| f64::from(n as i32))
                         });
                 }
-                ui.put(rect(x, y, number_width, 22.0), spinner)
-                    .widget_info(|| {
-                        egui::WidgetInfo::labeled(
-                            egui::Role::SpinButton,
-                            true,
-                            if label == "X:" { "Event X" } else { "Event Y" },
-                        )
-                    });
+                let response = ui.put(rect(x, y, number_width, 22.0), spinner);
+                response.widget_info(|| {
+                    egui::WidgetInfo::labeled(
+                        egui::Role::SpinButton,
+                        true,
+                        if label == "X:" { "Event X" } else { "Event Y" },
+                    )
+                });
+                default.restore(ui, &response, value);
             }
             y += 26.0;
             if let Some(field) = &mut form.definition.suffix {

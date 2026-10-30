@@ -24,6 +24,7 @@ pub(super) struct PaletteForm {
     monochrome: bool,
     selected: ColorSlot,
     hex: String,
+    defaults: [[default_value::DefaultValue<u8>; 2]; 3],
     clipboard: Option<(ColorSlot, [u8; 3])>,
     drag: Option<ColorSlot>,
     paste_handled: bool,
@@ -35,10 +36,24 @@ pub(super) struct PaletteForm {
 impl PaletteForm {
     fn select(&mut self, slot: ColorSlot) {
         self.selected = slot;
-        let [r, g, b] = self
+        let rgb = self
             .draft
             .bank()
             .color(slot)
+            .expect("validated color button");
+        self.defaults = rgb.map(|c| {
+            [
+                default_value::DefaultValue::new(c / 8),
+                default_value::DefaultValue::slider(c / 8),
+            ]
+        });
+        self.refresh_hex();
+    }
+    fn refresh_hex(&mut self) {
+        let [r, g, b] = self
+            .draft
+            .bank()
+            .color(self.selected)
             .expect("validated color button");
         self.hex = format!("{r:02X}{g:02X}{b:02X}");
     }
@@ -46,7 +61,9 @@ impl PaletteForm {
         self.draft
             .apply_batch(&[command])
             .map_err(|e| e.to_string())?;
-        self.select(self.selected);
+        // Channel/hex/native-chooser edits preserve the values captured when
+        // the swatch was selected. Clipboard and drag operations reselect below.
+        self.refresh_hex();
         Ok(())
     }
     fn copy(&mut self) {
@@ -64,6 +81,7 @@ impl PaletteForm {
                 slot: self.selected,
                 rgb,
             })?;
+            self.select(self.selected);
         }
         Ok(())
     }
@@ -73,6 +91,7 @@ impl PaletteForm {
                 a: source,
                 b: self.selected,
             })?;
+            self.select(self.selected);
         }
         Ok(())
     }
@@ -166,6 +185,9 @@ impl Editor {
             monochrome,
             selected,
             hex: String::new(),
+            defaults: std::array::from_fn(|_| {
+                std::array::from_fn(|_| default_value::DefaultValue::new(0))
+            }),
             clipboard: None,
             drag: None,
             paste_handled: false,
@@ -367,6 +389,7 @@ impl Editor {
             self.error = Some(e);
         }
         let mut command = None;
+        let mut reselect_after_command = false;
         let mut accept = false;
         let mut cancel = false;
         let mut hex_enter = false;
@@ -495,6 +518,7 @@ impl Editor {
                             } else {
                                 PaletteCommand::Swap { a: from, b: slot }
                             });
+                            reselect_after_command = true;
                         }
                         form.select(slot);
                     }
@@ -532,7 +556,9 @@ impl Editor {
                 slider.widget_info(|| {
                     egui::WidgetInfo::labeled(egui::Role::Slider, true, format!("{name} slider"))
                 });
-                if spin.changed() || slider.changed() {
+                let reset_spin = form.defaults[channel][0].restore(ui, &spin, &mut value);
+                let reset_slider = form.defaults[channel][1].restore(ui, &slider, &mut value);
+                if spin.changed() || slider.changed() || reset_spin || reset_slider {
                     command = Some(PaletteCommand::Channel {
                         slot: form.selected,
                         channel: channel as u8,
@@ -576,7 +602,7 @@ impl Editor {
                     self.native_color_request = Some(form.selected);
                 }
                 #[cfg(not(windows))]
-                form.select(form.selected);
+                form.refresh_hex();
             }
             let (ok, no) = if form.windows_buttons {
                 (bx, bx + 94.0)
@@ -603,6 +629,8 @@ impl Editor {
         {
             self.error = Some(e);
             accept = false;
+        } else if reselect_after_command {
+            form.select(form.selected);
         }
         if accept && !cancel {
             form.draft.mark_modified();

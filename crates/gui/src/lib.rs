@@ -3,6 +3,7 @@ mod about;
 mod block_editor;
 mod block_hotkeys;
 mod block_workflows;
+mod default_value;
 #[cfg(test)]
 mod drag_tests;
 #[cfg(all(test, feature = "visual-tests"))]
@@ -152,6 +153,7 @@ impl OpenForm {
 struct ResizeForm {
     width: u16,
     height: u16,
+    defaults: [default_value::DefaultValue<u16>; 2],
     anchor: ResizeAnchor,
 }
 
@@ -206,6 +208,7 @@ pub struct Editor {
     #[cfg(windows)]
     native_color_picker: polished_map_platform::ColorPicker,
     block_count_form: Option<u16>,
+    block_count_default: default_value::DefaultValue<u16>,
     block_count_windows_buttons: bool,
     block_clipboard: Option<block_workflows::BlockClipboard>,
     paste_shortcut_handled: bool,
@@ -297,6 +300,7 @@ impl Default for Editor {
             #[cfg(windows)]
             native_color_picker: polished_map_platform::ColorPicker::default(),
             block_count_form: None,
+            block_count_default: default_value::DefaultValue::new(1),
             block_count_windows_buttons: cfg!(target_os = "windows"),
             block_clipboard: None,
             paste_shortcut_handled: false,
@@ -786,6 +790,11 @@ impl Editor {
             self.resize_form = Some(ResizeForm {
                 width: u16::from(loaded.document.map().width()),
                 height: u16::from(loaded.document.map().height()),
+                defaults: [
+                    loaded.document.map().width(),
+                    loaded.document.map().height(),
+                ]
+                .map(|n| default_value::DefaultValue::new(u16::from(n))),
                 anchor: self.resize_anchor,
             });
         }
@@ -873,13 +882,17 @@ impl Editor {
                 ui.heading("Resize Map");
                 ui.horizontal(|ui| {
                     ui.vertical(|ui| {
-                        for (label, value) in
+                        for ((label, value), default) in
                             [("Width", &mut form.width), ("Height", &mut form.height)]
+                                .into_iter()
+                                .zip(&mut form.defaults)
                         {
                             ui.horizontal(|ui| {
                                 let label = ui.label(label);
-                                ui.add(egui::DragValue::new(value).range(1..=255))
+                                let response = ui
+                                    .add(egui::DragValue::new(&mut *value).range(1..=255))
                                     .labelled_by(label.id);
+                                default.restore(ui, &response, value);
                             });
                         }
                     });

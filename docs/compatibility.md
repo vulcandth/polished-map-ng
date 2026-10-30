@@ -26,14 +26,14 @@ application acceptance; native interactions additionally need M6.
 | `map-buttons.cpp`, `widgets.cpp`: sidebar selection/right-release editing, map/tile/pixel picking and painting, internal swap/Control-copy drags, enabled Drag and Drop | [Block gestures](../crates/gui/src/block_workflow_tests.rs), [tile gestures](../crates/gui/src/tileset_editor_tests.rs), [drag tests](../crates/gui/src/drag_tests.rs), [palette tests](../crates/gui/src/palette_editor_tests.rs) | M4 native input delivery and widget visuals |
 | `main-window.cpp`, `widgets.cpp`: external URI/file drops and workspace eligibility | [File workflows](../crates/gui/src/file_workflows.rs), [external-drop gate](architecture.md#native-external-file-drop-integration-gate) | M3 coordinate/path delivery and Wayland integration |
 | `main-window.cpp`, `ruler.cpp`, `gameboy-screen.cpp`: rulers, grids, IDs/hex, priority, event/warp overlays, status, zoom, pan, hover guide and numeric hotkeys | [Rulers](../crates/gui/src/rulers.rs), [status](../crates/gui/src/status_bar.rs), [hotkeys](../crates/gui/src/block_hotkeys.rs), [event hover tests](../crates/gui/src/event_workflow_tests.rs), [zoom tests](../crates/gui/src/zoom_tests.rs) | M4 fonts and native scrolling/resize/DPI; M3 window opacity |
-| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/block_editor.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) | M1g middle-reset and hex spinner behavior; M1h save acknowledgments/128-block warning; M4 child window |
+| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/block_editor.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) | M1g hex spinner behavior; middle resets covered below; M1h save acknowledgments/128-block warning; M4 child window |
 | `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/tileset_editor.rs), [editor tests](../crates/gui/src/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/project/tests/tileset.rs) | M1g shared control behavior; M4 child window/native clipboard; M1h save feedback |
 | `roof-window.cpp`: nine-tile selection, pixel tools, internal/image clipboard, reversed roof display and independent save | [Roof editor tests](../crates/gui/src/roof_editor_tests.rs), [roof workflows](../crates/gui/src/roof_workflow_tests.rs), [project roof tests](../crates/project/tests/roof.rs) | M4 child window/native clipboard; M1h save feedback |
-| `palette-window.cpp`, `colors.cpp`: color/monochrome grids, RGB5 sliders/spinners, RGB8 hex, Windows chooser, color copy/paste/live swap/drag, six palette sets and export | [Palette editor](../crates/gui/src/palette_editor.rs), [palette editor tests](../crates/gui/src/palette_editor_tests.rs), [palette model tests](../crates/core/tests/palette_edit.rs) | M1g reset baselines and slider/spinner input; M4 native chooser; I2 shared graphical picker |
+| `palette-window.cpp`, `colors.cpp`: color/monochrome grids, RGB5 sliders/spinners, RGB8 hex, Windows chooser, color copy/paste/live swap/drag, six palette sets and export | [Palette editor](../crates/gui/src/palette_editor.rs), [palette editor tests](../crates/gui/src/palette_editor_tests.rs), [palette model tests](../crates/core/tests/palette_edit.rs) | M1g remaining slider/spinner input; reset baselines covered below; M4 native chooser; I2 shared graphical picker |
 | `option-dialogs.cpp`: Open/New size, tileset, roof and metadata choices | [M1a–M1e evidence](#open-map-size-selection), [Map Options tests](../crates/gui/src/map_options/tests.rs) | M4 native dialog/widget fidelity |
-| `option-dialogs.cpp`: Resize dimensions/nine anchors, Add/Sub block count, Overworld Map Size | [Resize tests](../crates/core/tests/resize.rs), [block workflows](../crates/gui/src/block_workflow_tests.rs), [overworld dialog/tests](../crates/gui/src/overworld.rs) | M1g reset/input behavior; M4 client measurements and native windows |
+| `option-dialogs.cpp`: Resize dimensions/nine anchors, Add/Sub block count, Overworld Map Size | [Resize tests](../crates/core/tests/resize.rs), [block workflows](../crates/gui/src/block_workflow_tests.rs), [overworld dialog/tests](../crates/gui/src/overworld.rs) | M1g remaining numeric input; middle resets covered below; M4 client measurements and native windows |
 | `option-dialogs.cpp`: Change Tileset and Change Roof, selection/defaults, cancel and dirty guards | [Tileset workflows](../crates/gui/src/tileset_workflow_tests.rs), [roof workflows](../crates/gui/src/roof_workflow_tests.rs) | M4 font-size/label-width/widget and native fidelity |
-| `event.cpp`, `map-events.cpp`, Event Options: 22 macros, coordinates/prefix/suffix, hover, drag, options, double-click script dispatch, Shift-click warp, load/save/view/reload/unload | [Parser/model tests](../crates/project/tests/events.rs), [GUI workflows](../crates/gui/src/event_workflow_tests.rs), [source differential](../crates/project/tests/reference.rs) | M1g numeric resets, single-/multiline fields and default-button delivery; M4 native editor/window; M1h save feedback |
+| `event.cpp`, `map-events.cpp`, Event Options: 22 macros, coordinates/prefix/suffix, hover, drag, options, double-click script dispatch, Shift-click warp, load/save/view/reload/unload | [Parser/model tests](../crates/project/tests/events.rs), [GUI workflows](../crates/gui/src/event_workflow_tests.rs), [source differential](../crates/project/tests/reference.rs) | M1g remaining numeric input, single-/multiline fields and default-button delivery; M4 native editor/window; M1h save feedback |
 | Print Options, `image.cpp`, `main-window.cpp`: five independent flags, Cancel/Copy/Export, image composition and PNG output | [Print dialog/tests](../crates/gui/src/printing.rs), [source comparisons](../crates/project/tests/reference/printing.rs), [real-project Print](../crates/project/tests/real_print.rs), [PNG export](../crates/project/tests/png_export.rs) | M4 fonts/native clipboard/chooser; M6 integrated workflows |
 | `tiled-image.cpp`, `parse-asm.cpp`: 2bpp, padded LZ, CHR/ASM, PNG depths/interlacing/platform alpha, bounded errors | [Codec tests](../crates/project/tests/codecs.rs), [reference suites](../crates/project/tests/reference.rs), [PNG imports](../crates/project/tests/png_import.rs) | M7 application interoperability; safety differences in [deviations](deviations.md) |
 | `palette-map.cpp`, `colors.cpp`, `tileset.cpp`: tilepal/priority, defaults, special/roof colors, compound graphics, 192/256 slots, trimmed PNG/ASM exports | [Graphics tests](../crates/project/tests/graphics.rs), [palettes](../crates/project/tests/palettes.rs), [tileset export tests](../crates/project/tests/tileset.rs) | M7 complete project save/reopen; shared widget gaps are M1g |
@@ -48,8 +48,9 @@ application acceptance; native interactions additionally need M6.
 The reconciliation exposed three gaps previously hidden by broad feature labels:
 middle-click defaults and numeric-widget behavior; Event Options' input-mode
 and default-button behavior; and save-success/128-block-warning routes. These
-are implementation work in **M1g/M1h**, not approved deviations or merely manual
-testing tasks. In particular, source `Default_Spinner`/`Default_Hex_Spinner` reset
+are tracked in **M1g/M1h**, not approved deviations or merely manual testing
+tasks. Middle-release reset implementation is now covered below; numeric and
+Event Options behavior and save feedback remain open. Source `Default_Spinner`/`Default_Hex_Spinner` reset
 on middle release, `Hex_Spinner` arrows wrap at bounds while typed values clamp,
 and palette defaults are refreshed when a swatch is selected rather than after
 every channel edit. Event prefix/suffix fields switch between normal and wrapped
@@ -57,6 +58,41 @@ multiline input based on their measured height. Source `save_metatileset` shows
 success, then the warning when collisions exist, count exceeds 128 and `meta128`
 is false; acknowledgment stores that preference. Existing NG status text and
 successful writes do not implement those modal routes.
+
+## Middle-click control defaults
+
+The shared `default_value::DefaultValue` adapter follows pinned master
+`Default_Spinner::handle`, `Default_Hex_Spinner::handle` and
+`Default_Slider::handle` in `widgets.cpp`. Middle press captures a control;
+release restores its stored value once, even after dragging outside it. Slider
+presses also request focus. Disabled/obscured controls cannot capture; pointer
+loss, lost focus and abandoned forms cannot leave a later release armed.
+
+| Controls | Value captured for reset |
+|---|---|
+| Resize Map width/height | Map dimensions when the form opens |
+| Resize Blockset count | Current block count when the form opens |
+| Overworld Map Size | Current configured capacity when the form opens, not an unconditional 1300 |
+| Event X/Y, decimal or hex | Coordinates when Event Options opens |
+| Binary collision quadrants | Each loaded collision byte when Edit Block opens |
+| Palette RGB5 spinners/sliders | Selected color's RGB8 channels divided by eight when a swatch is selected or a clipboard/drag transfer reselects it |
+
+Palette channel, hex and native chooser updates refresh the current value/hex
+display without changing that selection baseline. Paste, swap and drag transfers
+capture the resulting selected color, rather than the old destination color.
+Only the reset channel is quantized back through source `RGB5C`; the other
+channels retain their exact RGB8 values. Cancel discards draft resets normally.
+There are no resets on Open/New's ordinary `OS_Spinner` controls: source uses
+default-capable spinners only in the rows above.
+
+Eight [input tests](../crates/gui/src/default_value/tests.rs) exercise actual
+egui pointer delivery, drag-away release, one callback per release, disabled/
+focus/pointer-loss cancellation, interrupted/reopened dialogs, text-input cache
+behavior, every control family, palette selection/clipboard/drag baselines and
+unchanged source files/unrelated map state. This completes M1g1, not M1g: arrow
+stepping/repeat/wrap, numeric parsing/clamping, Event Options input modes and
+default-button delivery still need reconciliation. Source control painting and
+native event delivery remain M4/M6 gates.
 
 ## Binary-map metadata discovery
 
@@ -1398,7 +1434,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Binary-map metadata and legacy asset-path selection match compiled-source fixtures, including precedence and missing inputs; Open size choices match every representable area; Open/New asset dropdowns, numeric ordering and measured client layout are implemented. Source inventory is reconciled above; native filesystem/dialog fidelity and full-project acceptance remain incomplete |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. M1g numeric/reset behavior and M1h save feedback are missing; native child windows and native clipboard verification remain pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults are implemented; remaining M1g numeric behavior and M1h save feedback are missing; native child windows and native clipboard verification remain pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. M1g field/default-button behavior and M1h save feedback remain; native fonts, full gesture coverage and native workflows are pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-seven implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export and internal Drag and Drop implemented. Missing meta128 acknowledgment is M1h; legacy import, external file drops, native storage/placement and native Print/clipboard parity remain pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
