@@ -229,8 +229,8 @@ replace independent underlying third-party rights. Reference checkouts are not s
 Rust dependencies retain their own licenses. Dependency notices must accompany
 binary releases. This notice does not relicense third-party assets.
 
-The native file-drop and Wayland opacity implementations include modified winit 0.30.13
-(Apache-2.0) and egui-winit 0.37.0 (MIT OR Apache-2.0) source. Original archive
+The native transfer, opacity and modal implementations include modified winit 0.30.13
+(Apache-2.0), egui-winit 0.37.0 and eframe 0.37.0 (MIT OR Apache-2.0) source. Original archive
 checksums, modifications and full license texts are retained under `vendor/`;
 see [vendor/NOTICE.md](vendor/NOTICE.md). Include those patched sources and
 notices with corresponding binary/source distributions.

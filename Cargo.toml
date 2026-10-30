@@ -1,9 +1,10 @@
 [workspace]
 members = ["crates/core", "crates/project", "crates/gui", "crates/cli", "crates/platform"]
 resolver = "3"
-exclude = ["vendor/winit-0.30.13", "vendor/egui-winit-0.37.0"]
+exclude = ["vendor/winit-0.30.13", "vendor/egui-winit-0.37.0", "vendor/eframe-0.37.0"]
 
 [patch.crates-io]
+eframe = { path = "vendor/eframe-0.37.0" }
 winit = { path = "vendor/winit-0.30.13" }
 egui-winit = { path = "vendor/egui-winit-0.37.0" }
 

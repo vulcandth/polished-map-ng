@@ -145,7 +145,9 @@ impl HelpWindow {
                 }
                 self.content(ui);
             });
-            self.open &= open;
+            if enabled {
+                self.open &= open;
+            }
         } else {
             ctx.show_viewport_immediate(viewport_id(), self.builder(parent), |ui, _class| {
                 if !enabled {
@@ -156,7 +158,12 @@ impl HelpWindow {
                 // client size when eframe recreates our closed child viewport.
                 self.native_size = ui.max_rect().size();
                 if ui.input(|i| i.viewport().close_requested()) {
-                    self.open = false;
+                    if enabled {
+                        self.open = false;
+                    } else {
+                        ui.ctx()
+                            .send_viewport_cmd(egui::ViewportCommand::CancelClose);
+                    }
                 }
             });
         }

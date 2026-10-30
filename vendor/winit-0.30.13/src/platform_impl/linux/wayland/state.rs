@@ -54,6 +54,7 @@ pub struct WinitState {
     /// The seat state responsible for all sorts of input.
     pub seat_state: SeatState,
     pub data_device_manager: Option<sctk::data_device_manager::DataDeviceManagerState>,
+    pub dialog_manager: Option<super::types::dialog::XdgWmDialogV1>,
     pub alpha_modifier: Option<wayland_protocols::wp::alpha_modifier::v1::client::wp_alpha_modifier_v1::WpAlphaModifierV1>,
 
     /// The shm for software buffers, such as cursors.
@@ -170,6 +171,7 @@ impl WinitState {
             output_state,
             seat_state,
             data_device_manager,
+            dialog_manager: super::types::dialog::bind(globals, queue_handle),
             alpha_modifier: super::types::alpha_modifier::bind(globals, queue_handle),
             shm,
             custom_cursor_pool,

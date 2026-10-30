@@ -103,8 +103,8 @@ impl Editor {
             .data(|d| d.get_temp::<bool>(egui::Id::unique("test-map-options-windows")))
             .unwrap_or(windows);
         let font_size = if windows { 12.0 } else { 13.0 };
-        egui::Modal::new(egui::Id::unique("open-options")).show(ctx, |ui| {
-            ui.heading("Map Options");
+        dialog_host::client(ctx, egui::Id::unique("open-options"), |ui| {
+            dialog_host::heading(ui, "Map Options");
             let font = egui::FontId::proportional(font_size);
             let painter = ui.painter().clone();
             let color = ui.visuals().text_color();

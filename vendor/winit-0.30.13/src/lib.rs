@@ -215,5 +215,7 @@ mod utils;
 #[cfg(any(windows_platform, macos_platform, x11_platform, wayland_platform))]
 mod file_drop;
 pub mod window;
+/// Scoped native dialog ownership for the Polished Map NG adapter.
+pub mod modal;
 
 pub mod platform;

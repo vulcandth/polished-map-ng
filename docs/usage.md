@@ -88,8 +88,9 @@ tiles to swap; Ctrl-drag copies. The image buttons and Ctrl/Cmd+Shift+C/V use th
 system image clipboard, with grayscale export and bounded RGB import. OK commits
 the draft and marks the tileset dirty even if unchanged; Cancel discards it.
 Tile edits have no map undo entries. File → Save Tileset saves PNG/palette files;
-Save also processes the map and blockset. Native clipboard transport and child
-window behavior remain unverified; the current dialog is embedded.
+Save also processes the map and blockset. Desktop editors now use separate native
+windows; closing one cancels its draft. Native clipboard transport and integrated
+window/DPI acceptance remain unfinished; see [compatibility](compatibility.md#native-dialog-hosting-and-ownership).
 
 With a roof loaded, Tools → Edit Roof (Ctrl/Cmd+F) opens its nine-tile draft.
 It shares pixel gestures and clipboard commands, with the original reversed

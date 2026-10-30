@@ -135,8 +135,8 @@ impl Editor {
         let mut accept = false;
         let mut cancel = false;
         let choosing = egui::Popup::is_any_open(ctx);
-        egui::Modal::new(egui::Id::unique("change-roof")).show(ctx, |ui| {
-            ui.heading("Change Roof");
+        dialog_host::client(ctx, egui::Id::unique("change-roof"), |ui| {
+            dialog_host::heading(ui, "Change Roof");
             let (area, _) = ui.allocate_exact_size(Vec2::new(280.0, 80.0), Sense::hover());
             #[cfg(test)]
             {

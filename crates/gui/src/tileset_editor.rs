@@ -437,12 +437,15 @@ impl Editor {
         let mut cancel = false;
         let mut command = None;
         let mut paste_image = false;
-        let modal = egui::Modal::new(egui::Id::unique("edit-tileset")).show(ctx, |ui| {
-            ui.heading(if form.roof {
-                "Edit Roof"
-            } else {
-                "Edit Tileset"
-            });
+        let modal = dialog_host::client(ctx, egui::Id::unique("edit-tileset"), |ui| {
+            dialog_host::heading(
+                ui,
+                if form.roof {
+                    "Edit Roof"
+                } else {
+                    "Edit Tileset"
+                },
+            );
             let size = if form.roof {
                 Vec2::new(226.0, 228.0)
             } else {

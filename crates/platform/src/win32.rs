@@ -61,7 +61,8 @@ impl ColorPicker {
         // SAFETY: options has the correct ABI and size; the borrowed owner handle
         // and exclusively borrowed writable 16-COLORREF array remain valid during
         // this synchronous call. No hook/template flags or pointers are enabled.
-        // The GUI invokes this on eframe's UI thread with its current Frame.
+        // The GUI invokes this on its UI thread with a live palette-window owner
+        // (or eframe's root Frame for the embedded fallback).
         if unsafe { ChooseColorW(&mut options) } != 0 {
             let c = options.rgbResult;
             Ok(Some([c as u8, (c >> 8) as u8, (c >> 16) as u8]))

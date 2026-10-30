@@ -62,3 +62,22 @@ Additional reference, real-project, visual, native-adapter and license checks ar
 defined in [CI](.github/workflows/ci.yml). Their fixtures and prerequisites differ
 from the normal suite; see [compatibility evidence](docs/compatibility.md).
 Redistribution must also satisfy the [release requirements](docs/releases.md).
+
+Native modal lifetime checks create hidden windows and do not operate the desktop.
+On Windows PowerShell run:
+
+```powershell
+$env:POLISHED_MAP_NATIVE_MODAL_PROBE = '1'
+cargo run -p polished-map-platform --locked --example native_modals
+```
+
+On macOS use `POLISHED_MAP_NATIVE_MODAL_PROBE=1 cargo run -p polished-map-platform --locked --example native_modals`.
+Linux uses isolated display/protocol peers:
+
+```sh
+xvfb-run --auto-servernum env POLISHED_MAP_NATIVE_MODAL_PROBE=1 cargo run -p polished-map-platform --locked --example native_modals
+python3 tools/wayland_modal_probe.py
+```
+
+These check ownership/lifetime and wire behavior. Integrated native desktop
+acceptance remains a separate roadmap gate.

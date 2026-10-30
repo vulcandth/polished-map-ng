@@ -137,7 +137,7 @@ impl PaletteForm {
 
 impl Editor {
     #[cfg(windows)]
-    pub(super) fn choose_palette_color(&mut self, frame: &eframe::Frame) {
+    pub(super) fn choose_palette_color(&mut self, ctx: &egui::Context, frame: &eframe::Frame) {
         let Some(slot) = self.native_color_request.take() else {
             return;
         };
@@ -149,7 +149,13 @@ impl Editor {
             .bank()
             .color(slot)
             .expect("validated color button");
-        match self.native_color_picker.choose(frame, rgb) {
+        let result = egui_winit::modal_windows::with_window(
+            ctx,
+            dialog_host::main_id("palette"),
+            |window| self.native_color_picker.choose(window, rgb),
+        )
+        .unwrap_or_else(|| self.native_color_picker.choose(frame, rgb));
+        match result {
             Ok(Some(rgb)) => {
                 if let Err(e) = form.apply(PaletteCommand::SetRgb { slot, rgb }) {
                     self.error = Some(e);
@@ -399,8 +405,8 @@ impl Editor {
         let mut accept = false;
         let mut cancel = false;
         let mut hex_enter = false;
-        let _modal = egui::Modal::new(egui::Id::unique("edit-palettes")).show(ctx, |ui| {
-            ui.heading("Edit Current Palettes");
+        let _modal = dialog_host::client(ctx, egui::Id::unique("edit-palettes"), |ui| {
+            dialog_host::heading(ui, "Edit Current Palettes");
             let font = egui::FontId::proportional(13.0);
             let text = ui.visuals().text_color();
             let measure = |s: &str, pad: f32, font: egui::FontId| {

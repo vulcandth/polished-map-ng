@@ -25,6 +25,17 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked
+      - name: Verify hidden native modal windows
+        if: runner.os != 'Linux'
+        run: cargo run -p polished-map-platform --locked --example native_modals
+        env:
+          POLISHED_MAP_NATIVE_MODAL_PROBE: '1'
+      - name: Verify isolated X11 modal windows
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum env POLISHED_MAP_NATIVE_MODAL_PROBE=1 cargo run -p polished-map-platform --locked --example native_modals
+      - name: Verify native Wayland modal protocol
+        if: runner.os == 'Linux'
+        run: python3 tools/wayland_modal_probe.py
       - name: Verify native X11 opacity property
         if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum cargo test -p polished-map-platform --locked native_x11_opacity -- --ignored --test-threads=1

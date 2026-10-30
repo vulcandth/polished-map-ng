@@ -198,8 +198,8 @@ impl Editor {
         };
         let mut accept = false;
         let mut cancel = false;
-        egui::Modal::new(egui::Id::unique("resize-blockset")).show(ctx, |ui| {
-            ui.heading("Resize Blockset");
+        dialog_host::client(ctx, egui::Id::unique("resize-blockset"), |ui| {
+            dialog_host::heading(ui, "Resize Blockset");
             // Original client area is 194 × (10 + 22 + 16 + 22 + 10) = 194 × 80.
             let (area, _) = ui.allocate_exact_size(Vec2::new(194.0, 80.0), Sense::hover());
             let rect =

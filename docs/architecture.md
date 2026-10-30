@@ -11,7 +11,8 @@ their differences. Public interfaces are experimental until objective four.
 `polished-map-platform` isolates desktop color dialogs and external script opening.
 Core, project, GUI and CLI retain the workspace `unsafe_code = forbid` rule.
 The adapter denies unsafe generally and allows it only in documented Win32
-modules. The color chooser borrows eframe's live owner handle during its modal call.
+modules. The color chooser borrows the registered palette window during its modal call;
+the embedded fallback uses eframe's root owner.
 Custom color storage belongs to the adapter instance, not a mutable global.
 Its two unsafe calls follow Microsoft's
 [CHOOSECOLORW contract](https://learn.microsoft.com/en-us/windows/win32/api/commdlg/ns-commdlg-choosecolorw).
@@ -33,6 +34,32 @@ command string. These are desktop adapters only; core/project and CLI operations
 remain independent of display servers and external editors.
 
 ## ADR 2: Geometry derived from FLTK
+
+Desktop option/editor/message clients run in immediate native viewports. Their
+source-derived client rectangle starts at (0,0); native chrome supplies the title.
+The embedded fallback retains egui modals for deterministic client tests.
+Measured client size drives the fixed native size; initial position is
+`parent_inner.center - client_size/2 - child_decoration_offset`. Wayland ignores
+absolute positioning, so its compositor decides placement. Reopening recenters;
+ordinary repaints preserve a user's moved window.
+
+A small eframe patch registers weak references to renderer-owned winit windows.
+Egui-winit validates a modal ownership tree, retains live windows only through
+scoped leases, and filters input for inactive parents. The lease restores native
+input before releasing its child; renderer-state replacement and destruction
+cannot operate on a recycled raw handle. No native call holds egui's data lock.
+Windows supplies ownership and input disabling, AppKit floating child ordering,
+X11 transient/modal hints, and Wayland parent/optional xdg-dialog hints. This
+matches the separate-window model rather than introducing macOS sheets.
+
+The whole form callback executes in its viewport, including clipboard shortcuts
+and post-render keys. Title-bar Close follows Cancel; root Close is refused while
+a draft/modal is active. An error keeps its editor visible and inactive under a
+nested message window. Accepted Exit explicitly targets ROOT. Help close/input
+is also blocked while an application modal is active. Native ownership/protocol
+checks and remaining integrated acceptance are recorded in
+[compatibility](compatibility.md#native-dialog-hosting-and-ownership).
+
 
 Help is a nonmodal immediate child viewport, retaining the source's initial
 700×500 client size, parent offset, body margins and anchored OK button. Its

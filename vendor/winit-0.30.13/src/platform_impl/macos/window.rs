@@ -23,6 +23,24 @@ impl Drop for Window {
 }
 
 impl Window {
+    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
+        self.window.get_on_main(|window| {
+            // SAFETY: both retained NSWindows are accessed on the AppKit thread.
+            // This is a floating child dialog, not a sheet (matching FLTK).
+            unsafe {
+                if let Some(old) = window.parentWindow() {
+                    old.removeChildWindow(window);
+                }
+                if let Some(parent) = parent {
+                    let mtm = MainThreadMarker::new().expect("AppKit main thread");
+                    parent.window.get(mtm).addChildWindow_ordered(
+                        window, objc2_app_kit::NSWindowOrderingMode::NSWindowAbove);
+                }
+            }
+        });
+        Ok(())
+    }
+
     pub(crate) fn new(
         window_target: &ActiveEventLoop,
         attributes: WindowAttributes,

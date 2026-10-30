@@ -37,6 +37,13 @@ The complete file-level modifications are in
 [the winit patch](patches/winit-0.30.13.patch). New transfer helpers and tests are
 part of that patch. The frame adaptation below retains its separate MIT license.
 
+Additional modifications on 2026-10-30, under Apache-2.0: scoped modal ownership
+retains live parent/child windows; Windows restores the owner's prior enabled
+state before child destruction; AppKit attaches/detaches floating child windows;
+X11 supplies transient/modal hints; Wayland uses the existing connection for
+xdg_toplevel parent relationships and optional xdg-dialog hints. Protocol objects
+are released before their toplevels. Application input filtering remains required.
+
 ## Smithay client toolkit 0.19.2 frame adaptation
 
 The Wayland fallback frame in `winit-0.30.13/src/platform_impl/linux/wayland/types/opacity_frame.rs`
@@ -77,6 +84,27 @@ The editor consumes this queue independently of path-only RawInput events.
 The same patch adds a single outstanding opacity request/reply per viewport,
 dispatches it through the live owned Wayland window, and reports capability loss.
 See [the egui-winit patch](patches/egui-winit-0.37.0.patch).
+
+Additional modifications on 2026-10-30, under MIT OR Apache-2.0: a context-local
+weak window registry and scoped modal leases connect viewport IDs to live winit
+windows. Renderer-state destruction releases the leases before windows die;
+replacement registrations reject stale teardown. Parent input is filtered without
+discarding lifecycle events, and native calls run outside egui's data lock.
+
+## eframe 0.37.0
+
+Source: <https://github.com/emilk/egui> and the Cargo archive identified in
+[sources.json](sources.json). The archive records VCS revision
+`3c6eb8261c3293ad9c7ea1ed58487e038860ebef`; the verified archive checksum is the
+source identity. All original files are retained. Like egui-winit, this archive
+omits repository-root license texts; [LICENSE-MIT](eframe-0.37.0/LICENSE-MIT) and
+[LICENSE-APACHE](eframe-0.37.0/LICENSE-APACHE) reproduce the same immutable upstream
+license texts identified above, with original copyrights intact.
+
+Modified on 2026-10-30, under MIT OR Apache-2.0: three registration calls in the
+WGPU/Glow native integrations associate renderer-owned window Arcs with their
+egui-winit State. No renderer or public App API is replaced. See the complete
+[eframe patch](patches/eframe-0.37.0.patch).
 
 These dependencies retain their own licenses; the application's LGPL-3.0-only
 license does not replace them. Binary source bundles must include these patched

@@ -40,6 +40,7 @@ atom_manager! {
     WM_DELETE_WINDOW,
     WM_PROTOCOLS,
     WM_STATE,
+    WM_TRANSIENT_FOR,
     XIM_SERVERS,
 
     // Assorted ICCCM Atoms
@@ -49,6 +50,7 @@ atom_manager! {
     _NET_WM_PID,
     _NET_WM_PING,
     _NET_WM_STATE,
+    _NET_WM_STATE_MODAL,
     _NET_WM_STATE_ABOVE,
     _NET_WM_STATE_BELOW,
     _NET_WM_STATE_FULLSCREEN,

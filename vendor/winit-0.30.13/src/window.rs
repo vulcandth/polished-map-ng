@@ -483,6 +483,13 @@ impl WindowAttributes {
 
 /// Base Window functions.
 impl Window {
+    /// Attach a transient modal to a live parent on the same event loop.
+    /// Prefer `modal::ModalWindow`, which retains both windows and restores input.
+    #[cfg(any(windows_platform, macos_platform, x11_platform, wayland_platform))]
+    pub(crate) fn set_modal_parent(&self, parent: Option<&Window>) -> Result<(), &'static str> {
+        self.window.set_modal_parent(parent.map(|p| &p.window))
+    }
+
     /// Create a new [`WindowAttributes`] which allows modifying the window's attributes before
     /// creation.
     #[inline]

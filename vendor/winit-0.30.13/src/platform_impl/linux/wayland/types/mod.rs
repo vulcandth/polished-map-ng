@@ -1,6 +1,7 @@
 //! Wayland protocol implementation boilerplate.
 
 pub mod cursor;
+pub mod dialog;
 pub mod alpha_modifier;
 #[cfg(not(feature = "sctk-adwaita"))]
 pub mod opacity_frame;

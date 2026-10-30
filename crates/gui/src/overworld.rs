@@ -64,8 +64,8 @@ has at least {bytes} bytes.",
             return;
         };
         let (mut accept, mut cancel) = (false, false);
-        egui::Modal::new(egui::Id::unique("overworld-map-size")).show(ctx, |ui| {
-            ui.heading("Overworld Map Size");
+        dialog_host::client(ctx, egui::Id::unique("overworld-map-size"), |ui| {
+            dialog_host::heading(ui, "Overworld Map Size");
             let font = egui::FontId::proportional(13.0);
             let color = ui.visuals().text_color();
             let measured = ui

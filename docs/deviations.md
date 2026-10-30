@@ -181,8 +181,8 @@ edited flag with no roof to save. Other document domains stay untouched.
 The selector refreshes discovered roofs when opened rather than copying the last
 Open Map dialog's cached list. Its fixed 280px client width is retained; unusually
 long names are truncated in the closed control and available in full in its
-dropdown/tooltip, instead of overflowing the client area. The selector is an
-embedded modal pending the native child-window parity work.
+dropdown/tooltip, instead of overflowing the client area. Desktop selectors now
+use native modal windows; integrated window-manager acceptance remains open.
 
 ## Loaded-tileset replacement safety
 
@@ -269,7 +269,8 @@ options geometry are implemented; desktop event letters and zoomed ID text now
 request installed Helvetica Bold/monospace roles. Unavailable faces retain
 bundled fallbacks; native glyph rendering and synthetic bold remain open. Normal
 warp ID pixels now match the original digit sheet. Event
-Options is an embedded modal, and auto-load/show preferences are session-only.
+Options now uses a native modal viewport; auto-load/show preferences are stored
+in the versioned NG settings record (legacy FLTK import remains separate).
 Event export overlays and native event GUI checks remain explicit parity gaps.
 
 External script opening now follows the original Windows association/known-editor
@@ -387,17 +388,18 @@ nonmodal interaction but is not evidence of native window behavior.
 About identifies the Rust port's own name/version/source alongside the original
 Polished Map/Rangi copyright and Fugue attribution. Its APP_ICON geometry now paints the original
 48×48 image centered in the 50×50 slot. Upstream attribution and the unresolved
-underlying-origin record are retained in the asset notices. It uses a centered egui
-modal with a heading in place of native window chrome; its text follows source
+underlying-origin record are retained in the asset notices. Desktop About now uses
+a centered native window; only the embedded fallback adds an egui heading. Its text follows source
 12/16-point Windows and 13/17-point Unix sizes. Desktop startup supplies the
 installed UI font; deterministic test fixtures retain bundled faces. Native
 font rasterization and frame matching remain unverified.
 
 The shared dirty-document warning now restores upstream OK/Cancel semantics,
 including the first modified filename and action-specific question. It replaces
-the earlier development-only Save/Discard/Cancel prompt. Its egui heading,
-layout and frame remain temporary; upstream's native warning title, 50×50 shield
-and text-measured client geometry still require porting and asset review.
+the earlier development-only Save/Discard/Cancel prompt. The original 50×50 shield
+slot, measured client geometry and native warning title are now implemented.
+Original artwork follows the user's recorded choice and provenance notices;
+integrated native placement, focus and DPI acceptance remain open.
 Close retains palette-only edits exactly as the original session does; Exit
 does not warn for palette-only changes, matching the commented-out upstream
 palette warning. Remaining preference/native checks are listed in `preferences.md`.
@@ -406,8 +408,8 @@ Manual roof-color loading now uses the source table lookup, layout choices,
 consent and success wording. It stages parsing and preview creation so failure
 cannot partially replace the live palette bank. Errors expose the actual path
 and parse/I/O reason instead of upstream's generic "Could not read" message.
-Warning/success shields, native modal geometry and native restart verification
-remain pending. The five layout choices are included in the settings record below.
+Original warning/success artwork and measured native clients are implemented;
+integrated native modal and restart verification remain pending. The five layout choices are included in the settings record below.
 
 Implemented settings now use eframe's platform data store under the separate
 `polished-map-ng` app ID. This does not import or modify upstream FLTK or portable

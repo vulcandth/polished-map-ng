@@ -54,8 +54,8 @@ impl Editor {
         };
         let mut accept = false;
         let mut cancel = false;
-        egui::Modal::new(egui::Id::unique("resize-map")).show(ctx, |ui| {
-            ui.heading("Resize Map");
+        dialog_host::client(ctx, egui::Id::unique("resize-map"), |ui| {
+            dialog_host::heading(ui, "Resize Map");
             let font = egui::FontId::proportional(if form.windows_buttons { 12.0 } else { 13.0 });
             ui.style_mut().override_font_id = Some(font.clone());
             let layout = Layout::measured(form.windows_buttons, |s| {

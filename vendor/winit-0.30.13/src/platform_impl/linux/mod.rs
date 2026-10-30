@@ -287,6 +287,21 @@ impl VideoModeHandle {
 }
 
 impl Window {
+    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
+        match (self, parent) {
+            #[cfg(x11_platform)]
+            (Self::X(child), Some(Self::X(parent))) => child.set_modal_parent(Some(parent)),
+            #[cfg(x11_platform)]
+            (Self::X(child), None) => child.set_modal_parent(None),
+            #[cfg(wayland_platform)]
+            (Self::Wayland(child), Some(Self::Wayland(parent))) => child.set_modal_parent(Some(parent)),
+            #[cfg(wayland_platform)]
+            (Self::Wayland(child), None) => child.set_modal_parent(None),
+            #[cfg(all(x11_platform, wayland_platform))]
+            _ => Err("Dialog and parent use different display connections"),
+        }
+    }
+
     #[inline]
     pub(crate) fn new(
         window_target: &ActiveEventLoop,

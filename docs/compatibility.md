@@ -371,8 +371,9 @@ both field heights and the resulting total client height without editing data.
 [Resize tests](../crates/gui/src/resize_dialog/tests.rs) check independent formula
 vectors, both platform button orders at 1×/2×, actual text font sizes, all anchor
 hit regions and cancellation. Existing event/asset/blockset workflow tests retain
-edit, keyboard, default-value and persistence coverage. Native window hosting,
-source widget painting and native font rasterization remain M4/M6 work.
+edit, keyboard, default-value and persistence coverage. [Native hosting](#native-dialog-hosting-and-ownership)
+is implemented; source widget painting, native rasterization and integrated
+window-manager acceptance remain M4/M6 work.
 
 ## Error, warning and success message dialogs
 
@@ -405,7 +406,8 @@ native/reference checks. Eight new/updated baselines were inspected; pixel
 differences in the four existing images are confined to their dialog regions.
 
 This is client-layout/input evidence, not native child-window/frame or font
-rasterization parity. Captions remain inside an egui modal. Warning/error/success images now fill their original space; see the
+rasterization parity. Captions are now native titles on desktop; embedded test
+clients retain their egui headings. Warning/error/success images fill their original space; see the
 [completed artwork port](#original-toolbar-message-and-application-artwork). Error details can retain the port's structured diagnostics.
 
 Two-button confirmations now use that same measured body and original warning
@@ -420,7 +422,8 @@ original. Event and tileset warnings identify their source filenames/actions.
 [Confirmation tests](../crates/gui/src/message_dialog/tests.rs) cover actual
 rectangles, labels and keyboard outcomes at both platform metrics and 1×/2×.
 The workflow tests additionally cover dirty-state preservation and sequential
-import decisions. These remain embedded clients, not native modal acceptance.
+import decisions. These client tests are separate from the native hosting and
+protocol evidence below; neither replaces integrated native acceptance.
 
 Verification for the option/confirmation client updates: Windows workspace
 format, warnings-as-errors Clippy, tests and rustdoc pass. The Ubuntu 22.04.5
@@ -429,6 +432,70 @@ native/reference checks; its visual-feature Clippy check also passes. Fifteen
 changed baselines and four new confirmation baselines were reviewed. Material
 pixel changes in existing images are confined to the affected dialog regions.
 No desktop interaction was used for these client checks.
+
+## Native dialog hosting and ownership
+
+Pinned `Modal_Dialog::show`, `Option_Dialog::show` and the block/tileset/roof/palette
+window `show` methods use separate, fixed modal windows centered on their parent.
+[The common host](../crates/gui/src/dialog_host.rs) now applies that model to all
+option, editor, About, warning, success and error routes. The same measured client
+starts at (0,0), with no extra egui caption/frame. Source artwork supplies each
+native icon. Client size is measured from the existing layout, then used for
+native sizing; initial outer position subtracts the measured decoration offset
+from the source client-centering formula. Repaints do not recenter a moved window.
+Wayland supplies parent relationships but delegates absolute placement to the
+compositor, as required by its protocol.
+
+Whole form operations run in the child input context, including shortcuts before
+rendering and Enter/Escape handling afterward. Native Close routes through Cancel,
+including open popups. Main-window Close is refused while an uncommitted draft or
+modal is active, even when the saved document itself is clean. Accepted Exit
+explicitly closes ROOT. Errors retain an inactive editor and its draft under a
+nested message. Help remains nonmodal, but cannot close through a blocked parent
+workflow. The Windows native color chooser is owned by the palette editor.
+
+The [audited adapter patches](../vendor/NOTICE.md) add three eframe registrations,
+a weak window registry with scoped leases, and native ownership hooks. They use
+Windows top-level ownership and restore the previous enabled state before child
+release ([SetWindowLongPtrW](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlongptrw),
+[EnableWindow](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-enablewindow));
+AppKit floating child ordering; [X11 transient/modal hints](https://specifications.freedesktop.org/wm/latest-single/);
+and Wayland `xdg_toplevel.set_parent` plus optional `xdg-dialog-v1` from the locked
+protocol XML. X11 dialogs also request the dialog window type. Input filtering is independent
+of compositor modal-hint support; it resets retained mouse presses without
+synthesizing a click when a release occurred over the child.
+No native call runs under egui's data lock, and replacement registrations cannot
+be detached by their old renderer state's destructor.
+
+[Headless viewport tests](../crates/gui/src/dialog_host/tests.rs) exercise 1×/2×
+client sizing, negative parent coordinates and decoration offsets, cancellation
+across editor/option families, root-close guards, nested errors with retained
+drafts, child keyboard routing, Help guards, and explicit root exit. Ownership
+graph tests reject cycles, sibling modals and accidental reparenting.
+
+The [hidden native probe](../crates/platform/examples/native_modals.rs) passes on
+Windows and Ubuntu 22.04.5/WSL2 under private Xvfb. It checks actual owner/transient
+properties, nested input restoration, renderer-window replacement, parent-first
+state teardown and destruction of all four hidden windows. Windows additionally
+checks preservation of an owner that was already disabled. The
+[Wayland peer](../tools/wayland_modal_probe.py) passes with and without the optional
+dialog protocol, verifying exact parent identities/order, three modal hints when
+supported, and resource destruction before toplevel teardown. The macOS code and
+probe cross-compile; its native run is assigned to the macOS CI job.
+
+Windows workspace format, warnings-as-errors Clippy, tests and rustdoc pass.
+Linux visual-feature Clippy and all seven viewport-host tests pass. The full
+Ubuntu/WSL offscreen visual suite passed 242 tests with four existing ignored
+checks before the additional mouse-retention regression, which then passed in
+the focused host suite. No visual baseline changed. macOS target Clippy passes.
+Vendor archive/patch hashes, all three native production graphs and documentation
+links/examples are verified.
+
+These are implementation, input and protocol checks. They do **not** establish
+native compositor placement, visible stacking/focus behavior, frame appearance,
+clipboard transport, mixed-DPI transitions or complete desktop workflow parity.
+Those remain M4/M6/P1 acceptance. Existing embedded visual baselines continue to
+check the shared clients; no desktop computer use was needed for this work.
 
 ## PNG decoding, interlacing and platform transparency
 
@@ -1388,7 +1455,8 @@ suffix rules, conflict preservation and cleanup. Preference tests include the
 five flags, old-record defaults and malformed nested-field preservation.
 
 The Windows/Unix form and clipboard-success snapshots were inspected. These
-remain egui modals; native child-window frames, font metrics/hinting, actual
+were captured using embedded test modals. Native hosting is now implemented;
+integrated child-window frames, font metrics/hinting, actual
 clipboard ownership/paste, chooser/overwrite behavior and display-driver alpha
 are still platform acceptance gates. No manual computer use was performed.
 
@@ -1721,7 +1789,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Metatiles, palettes, collisions | master metatileset.cpp, tileset.cpp, palette-map.cpp, colors.cpp | Binary metatiles, tilepal, six sets, project/special palette precedence, metadata selection, roofs, compound composition, palette commands/export, GUI Open/New session carry-over, ASM/binary collisions and paired saves tested; full differential and native workflow coverage pending |
 | Project discovery / metadata | master config.cpp, option-dialogs.cpp | Binary-map metadata and legacy asset-path selection match compiled-source fixtures, including precedence and missing inputs; Open size choices match every representable area; Open/New asset dropdowns, numeric ordering and measured client layout are implemented. Source inventory is reconciled above; native filesystem/dialog fidelity and full-project acceptance remain incomplete |
 | Main window geometry | master main-window.cpp, ruler.cpp | Derived rectangle/hit-test/DPI, ruler geometry/scroll/highlight, global hex, block-ID, middle panning and initial Open/New positioning tests pass; light/dark development snapshots inspected; native fonts/themes, placement and native scroll/resize comparisons pending |
-| Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented; native child windows and native clipboard verification remain pending |
+| Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented; native hosting is implemented; integrated window/clipboard verification remains pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented; native fonts, full gesture coverage and native workflows are pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export, internal Drag and Drop and positioned external-drop routing implemented. The meta128 acknowledgment is implemented; legacy import, native file-drop acceptance, storage/placement and Print/clipboard parity remain pending |
 | Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
@@ -2101,7 +2169,7 @@ matrix above and [preferences](preferences.md) for present coverage.
   acceptance, preview refresh, unsaved guards, save and external-change conflicts.
   Both platform button orders have reviewed synthetic snapshots. The 466×304
   content layout and 16/24-pixel cells come directly from Block_Window::initialize.
-  The current dialog is embedded; native child-window verification is still pending.
+  Native hosting is now implemented; integrated desktop verification remains pending.
 - Collision tests cover full/base name and ASM/INC/binary precedence, four-quadrant
   ordering, short-row defaults, trailing data preservation, copy/swap/resize,
   ASM comment/line-ending preservation, and paired save conflicts. GUI tests edit
@@ -2142,7 +2210,8 @@ matrix above and [preferences](preferences.md) for present coverage.
   guards, private copy/live-source swap, bounded image paste and reversed rows.
   Inspected Windows/Unix button-order snapshots use Roof_Window::initialize's
   226×228 client area, 16px tile cells and 18px pixel cells. These are headless
-  tests; native child windows, clipboard transport and DPI remain unverified.
+  tests; native hosting is now implemented, while integrated desktop clipboard
+  transport and DPI remain unverified.
   All 25 current GUI tests pass with snapshot comparisons serialized on Windows.
 - `MasterTilesetDocument` connects the draft model to discovery, contextual
   rendering and PNG/palette persistence. Source-derived tests cover two-bit

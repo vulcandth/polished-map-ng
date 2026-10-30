@@ -1070,6 +1070,45 @@ impl UnownedWindow {
         self.set_netwm(enable.into(), (atom, 0, 0, 0))
     }
 
+    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
+        let conn = self.xconn.xcb_connection();
+        let atoms = self.xconn.atoms();
+        if let Some(parent) = parent {
+            if !Arc::ptr_eq(&self.xconn, &parent.xconn) {
+                return Err("Dialog and parent use different X11 connections");
+            }
+            use x11rb::wrapper::ConnectionExt as _;
+            conn.change_property32(xproto::PropMode::REPLACE, self.xwindow,
+                atoms[WM_TRANSIENT_FOR], xproto::AtomEnum::WINDOW, &[parent.xwindow])
+                .map_err(|_| "Could not send the X11 dialog owner")?
+                .check().map_err(|_| "Could not set the X11 dialog owner")?;
+        } else {
+            conn.delete_property(self.xwindow, atoms[WM_TRANSIENT_FOR])
+                .map_err(|_| "Could not clear the X11 dialog owner")?
+                .check().map_err(|_| "Could not clear the X11 dialog owner")?;
+        }
+        // Unmapped windows need the initial property; mapped windows require
+        // the EWMH root message. Preserve other initial window states.
+        if self.shared_state_lock().visibility == Visibility::No {
+            use x11rb::wrapper::ConnectionExt as _;
+            let reply = conn.get_property(false, self.xwindow, atoms[_NET_WM_STATE],
+                xproto::AtomEnum::ATOM, 0, 4096)
+                .map_err(|_| "Could not read X11 window states")?
+                .reply().map_err(|_| "Could not read X11 window states")?;
+            let mut states: Vec<_> = reply.value32().into_iter().flatten()
+                .filter(|a| *a != atoms[_NET_WM_STATE_MODAL]).collect();
+            if parent.is_some() { states.push(atoms[_NET_WM_STATE_MODAL]); }
+            conn.change_property32(xproto::PropMode::REPLACE, self.xwindow,
+                atoms[_NET_WM_STATE], xproto::AtomEnum::ATOM, &states)
+                .map_err(|_| "Could not set X11 modality")?
+                .check().map_err(|_| "Could not set X11 modality")?;
+        } else {
+            self.toggle_atom(_NET_WM_STATE_MODAL, parent.is_some())
+                .map_err(|_| "Could not set X11 modality")?.ignore_error();
+        }
+        conn.flush().map_err(|_| "Could not flush X11 modality")
+    }
+
     fn set_window_level_inner(&self, level: WindowLevel) -> Result<VoidCookie<'_>, X11Error> {
         self.toggle_atom(_NET_WM_STATE_ABOVE, level == WindowLevel::AlwaysOnTop)?.ignore_error();
         self.toggle_atom(_NET_WM_STATE_BELOW, level == WindowLevel::AlwaysOnBottom)

@@ -72,8 +72,8 @@ impl Default for AboutDialog {
 impl AboutDialog {
     pub(super) fn show(&mut self, ctx: &egui::Context) -> bool {
         let mut close = false;
-        egui::Modal::new(egui::Id::unique("about")).show(ctx, |ui| {
-            ui.heading(TITLE);
+        dialog_host::client(ctx, egui::Id::unique("about"), |ui| {
+            dialog_host::heading(ui, TITLE);
             let text = ui.visuals().text_color();
             let font_size = self.font_size;
             let heading_font = egui::FontId::proportional(font_size + 4.0);

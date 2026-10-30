@@ -181,15 +181,76 @@
 +}
 --- a/winit-0.30.13/src/lib.rs
 +++ b/winit-0.30.13/src/lib.rs
-@@ -212,6 +212,8 @@
+@@ -212,6 +212,10 @@
  pub mod monitor;
  mod platform_impl;
  mod utils;
 +#[cfg(any(windows_platform, macos_platform, x11_platform, wayland_platform))]
 +mod file_drop;
  pub mod window;
++/// Scoped native dialog ownership for the Polished Map NG adapter.
++pub mod modal;
  
  pub mod platform;
+--- a/winit-0.30.13/src/modal.rs
++++ b/winit-0.30.13/src/modal.rs
+@@ -0,0 +1,56 @@
++//! Polished Map NG owned modal-window lifetime, Apache-2.0.
++//! Native hints do not replace application input filtering on Unix.
++use crate::window::Window;
++use std::sync::Arc;
++
++/// Retains a dialog and its parent until their native relationship is detached.
++/// Drop this before dropping the application's last window references. Windows
++/// restores the owner's previous enabled state before releasing the child.
++/// Create a tree (never a cycle), with at most one modal child for each parent.
++pub struct ModalWindow {
++    child: Arc<Window>,
++    parent: Arc<Window>,
++    #[cfg(windows_platform)]
++    parent_was_enabled: bool,
++}
++impl ModalWindow {
++    /// Both windows must belong to the same event loop. Application code must
++    /// suppress parent input independently of the compositor's modal hints.
++    pub fn new(child: Arc<Window>, parent: Arc<Window>) -> Result<Self, &'static str> {
++        #[cfg(any(windows_platform, macos_platform, x11_platform, wayland_platform))]
++        {
++            if child.id() == parent.id() {
++                return Err("A dialog cannot own itself");
++            }
++            child.set_modal_parent(Some(&parent))?;
++            #[cfg(windows_platform)]
++            let parent_was_enabled = {
++                let enabled = parent.window.modal_input_enabled();
++                parent.window.set_enable(false);
++                enabled
++            };
++            Ok(Self {
++                child,
++                parent,
++                #[cfg(windows_platform)]
++                parent_was_enabled,
++            })
++        }
++        #[cfg(not(any(windows_platform, macos_platform, x11_platform, wayland_platform)))]
++        {
++            let _ = (child, parent);
++            Err("Native modal ownership is unsupported on this platform")
++        }
++    }
++}
++impl Drop for ModalWindow {
++    fn drop(&mut self) {
++        #[cfg(windows_platform)]
++        self.parent.window.set_enable(self.parent_was_enabled);
++        #[cfg(any(windows_platform, macos_platform, x11_platform, wayland_platform))]
++        if let Err(reason) = self.child.set_modal_parent(None) {
++            tracing::warn!("Could not detach native dialog: {reason}");
++        }
++        let _ = (&self.child, &self.parent);
++    }
++}
 --- a/winit-0.30.13/src/platform/wayland.rs
 +++ b/winit-0.30.13/src/platform/wayland.rs
 @@ -81,9 +81,23 @@
@@ -216,6 +277,30 @@
      #[inline]
      fn xdg_toplevel(&self) -> Option<NonNull<c_void>> {
          #[allow(clippy::single_match)]
+--- a/winit-0.30.13/src/platform_impl/linux/mod.rs
++++ b/winit-0.30.13/src/platform_impl/linux/mod.rs
+@@ -287,6 +287,21 @@
+ }
+ 
+ impl Window {
++    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
++        match (self, parent) {
++            #[cfg(x11_platform)]
++            (Self::X(child), Some(Self::X(parent))) => child.set_modal_parent(Some(parent)),
++            #[cfg(x11_platform)]
++            (Self::X(child), None) => child.set_modal_parent(None),
++            #[cfg(wayland_platform)]
++            (Self::Wayland(child), Some(Self::Wayland(parent))) => child.set_modal_parent(Some(parent)),
++            #[cfg(wayland_platform)]
++            (Self::Wayland(child), None) => child.set_modal_parent(None),
++            #[cfg(all(x11_platform, wayland_platform))]
++            _ => Err("Dialog and parent use different display connections"),
++        }
++    }
++
+     #[inline]
+     pub(crate) fn new(
+         window_target: &ActiveEventLoop,
 --- a/winit-0.30.13/src/platform_impl/linux/wayland/event_loop/mod.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/wayland/event_loop/mod.rs
 @@ -476,6 +476,7 @@
@@ -654,16 +739,17 @@
      }
 --- a/winit-0.30.13/src/platform_impl/linux/wayland/state.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/wayland/state.rs
-@@ -53,6 +53,8 @@
+@@ -53,6 +53,9 @@
  
      /// The seat state responsible for all sorts of input.
      pub seat_state: SeatState,
 +    pub data_device_manager: Option<sctk::data_device_manager::DataDeviceManagerState>,
++    pub dialog_manager: Option<super::types::dialog::XdgWmDialogV1>,
 +    pub alpha_modifier: Option<wayland_protocols::wp::alpha_modifier::v1::client::wp_alpha_modifier_v1::WpAlphaModifierV1>,
  
      /// The shm for software buffers, such as cursors.
      pub shm: Shm,
-@@ -142,10 +144,13 @@
+@@ -142,10 +145,13 @@
          let monitors = output_state.outputs().map(MonitorHandle::new).collect();
  
          let seat_state = SeatState::new(globals, queue_handle);
@@ -678,16 +764,17 @@
          }
  
          let (viewporter_state, fractional_scaling_manager) =
-@@ -164,6 +169,8 @@
+@@ -164,6 +170,9 @@
              subcompositor_state: subcompositor_state.map(Arc::new),
              output_state,
              seat_state,
 +            data_device_manager,
++            dialog_manager: super::types::dialog::bind(globals, queue_handle),
 +            alpha_modifier: super::types::alpha_modifier::bind(globals, queue_handle),
              shm,
              custom_cursor_pool,
  
-@@ -291,6 +298,11 @@
+@@ -291,6 +300,11 @@
              .lock()
              .unwrap()
              .configure(configure, &self.shm, &self.subcompositor_state);
@@ -727,12 +814,33 @@
 +
 +delegate_noop!(WinitState: ignore WpAlphaModifierV1);
 +delegate_noop!(WinitState: ignore WpAlphaModifierSurfaceV1);
+--- a/winit-0.30.13/src/platform_impl/linux/wayland/types/dialog.rs
++++ b/winit-0.30.13/src/platform_impl/linux/wayland/types/dialog.rs
+@@ -0,0 +1,17 @@
++//! Polished Map NG transient/modal hints, Apache-2.0.
++use crate::platform_impl::wayland::state::WinitState;
++use sctk::reexports::client::{delegate_noop, globals::GlobalList, QueueHandle};
++pub(crate) use wayland_protocols::xdg::dialog::v1::client::{
++    xdg_dialog_v1::XdgDialogV1, xdg_wm_dialog_v1::XdgWmDialogV1,
++};
++pub(crate) fn bind(globals: &GlobalList, queue: &QueueHandle<WinitState>) -> Option<XdgWmDialogV1> {
++    globals.bind(queue, 1..=1, ()).ok()
++}
++pub(crate) struct Dialog(pub XdgDialogV1);
++impl Drop for Dialog {
++    fn drop(&mut self) {
++        self.0.destroy();
++    }
++}
++delegate_noop!(WinitState: ignore XdgWmDialogV1);
++delegate_noop!(WinitState: ignore XdgDialogV1);
 --- a/winit-0.30.13/src/platform_impl/linux/wayland/types/mod.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/wayland/types/mod.rs
-@@ -1,6 +1,9 @@
+@@ -1,6 +1,10 @@
  //! Wayland protocol implementation boilerplate.
  
  pub mod cursor;
++pub mod dialog;
 +pub mod alpha_modifier;
 +#[cfg(not(feature = "sctk-adwaita"))]
 +pub mod opacity_frame;
@@ -1534,21 +1642,76 @@
 +}
 --- a/winit-0.30.13/src/platform_impl/linux/wayland/window/mod.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/wayland/window/mod.rs
-@@ -416,6 +416,14 @@
-         self.window_state.lock().unwrap().set_blur(blur);
+@@ -40,6 +40,11 @@
+ 
+ /// The Wayland window.
+ pub struct Window {
++    // Destroy the hint before the SCTK toplevel. Older compositors still receive
++    // set_parent; input filtering remains the application's responsibility.
++    modal_hint: Mutex<Option<super::types::dialog::Dialog>>,
++    dialog_manager: Option<super::types::dialog::XdgWmDialogV1>,
++
+     /// Reference to the underlying SCTK window.
+     window: SctkWindow,
+ 
+@@ -93,6 +98,7 @@
+         let xdg_activation =
+             state.xdg_activation.as_ref().map(|activation_state| activation_state.global().clone());
+         let display = event_loop_window_target.connection.display();
++        let dialog_manager = state.dialog_manager.clone();
+ 
+         let size: Size = attributes.inner_size.unwrap_or(LogicalSize::new(800., 600.).into());
+ 
+@@ -217,6 +223,8 @@
+         event_loop_awakener.ping();
+ 
+         Ok(Self {
++            modal_hint: Mutex::new(None),
++            dialog_manager,
+             window,
+             display,
+             monitors,
+@@ -232,6 +240,25 @@
+         })
      }
  
++    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
++        if parent.is_some_and(|p| p.display != self.display) {
++            return Err("Dialog and parent use different Wayland connections");
++        }
++        let mut hint = self.modal_hint.lock().unwrap();
++        if parent.is_none() { hint.take(); }
++        self.window.xdg_toplevel().set_parent(parent.map(|p| p.window.xdg_toplevel()));
++        if parent.is_some() && hint.is_none() {
++            if let Some(manager) = &self.dialog_manager {
++                let dialog = manager.get_xdg_dialog(self.window.xdg_toplevel(), &self.queue_handle, ());
++                dialog.set_modal();
++                *hint = Some(super::types::dialog::Dialog(dialog));
++            }
++        }
++        self.window.wl_surface().commit();
++        self.event_loop_awakener.ping();
++        Ok(())
++    }
++
+     pub(crate) fn xdg_toplevel(&self) -> Option<NonNull<c_void>> {
+         NonNull::new(self.window.xdg_toplevel().id().as_ptr().cast())
+     }
+@@ -414,6 +441,14 @@
+     #[inline]
+     pub fn set_blur(&self, blur: bool) {
+         self.window_state.lock().unwrap().set_blur(blur);
++    }
++
 +    pub fn set_whole_window_opacity(&self, multiplier: u32) -> Result<(), &'static str> {
 +        self.window_state.lock().unwrap().set_whole_window_opacity(multiplier)?;
 +        // The renderer owns root commits. Wake it instead of committing a
 +        // surface behind wgpu's back; frame subsurfaces are synchronized with it.
 +        self.request_redraw();
 +        Ok(())
-+    }
-+
+     }
+ 
      #[inline]
-     pub fn set_decorations(&self, decorate: bool) {
-         self.window_state.lock().unwrap().set_decorate(decorate)
 --- a/winit-0.30.13/src/platform_impl/linux/wayland/window/state.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/wayland/window/state.rs
 @@ -47,7 +47,7 @@
@@ -1660,7 +1823,23 @@
          }
 --- a/winit-0.30.13/src/platform_impl/linux/x11/atoms.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/x11/atoms.rs
-@@ -85,12 +85,12 @@
+@@ -40,6 +40,7 @@
+     WM_DELETE_WINDOW,
+     WM_PROTOCOLS,
+     WM_STATE,
++    WM_TRANSIENT_FOR,
+     XIM_SERVERS,
+ 
+     // Assorted ICCCM Atoms
+@@ -49,6 +50,7 @@
+     _NET_WM_PID,
+     _NET_WM_PING,
+     _NET_WM_STATE,
++    _NET_WM_STATE_MODAL,
+     _NET_WM_STATE_ABOVE,
+     _NET_WM_STATE_BELOW,
+     _NET_WM_STATE_FULLSCREEN,
+@@ -85,12 +87,12 @@
      XdndDrop,
      XdndPosition,
      XdndStatus,
@@ -2167,6 +2346,81 @@
  
          if atom == xproto::Atom::from(xproto::AtomEnum::RESOURCE_MANAGER)
              || atom == atoms[_XSETTINGS_SETTINGS]
+--- a/winit-0.30.13/src/platform_impl/linux/x11/window.rs
++++ b/winit-0.30.13/src/platform_impl/linux/x11/window.rs
+@@ -1068,6 +1068,45 @@
+         let atoms = self.xconn.atoms();
+         let atom = atoms[atom_name];
+         self.set_netwm(enable.into(), (atom, 0, 0, 0))
++    }
++
++    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
++        let conn = self.xconn.xcb_connection();
++        let atoms = self.xconn.atoms();
++        if let Some(parent) = parent {
++            if !Arc::ptr_eq(&self.xconn, &parent.xconn) {
++                return Err("Dialog and parent use different X11 connections");
++            }
++            use x11rb::wrapper::ConnectionExt as _;
++            conn.change_property32(xproto::PropMode::REPLACE, self.xwindow,
++                atoms[WM_TRANSIENT_FOR], xproto::AtomEnum::WINDOW, &[parent.xwindow])
++                .map_err(|_| "Could not send the X11 dialog owner")?
++                .check().map_err(|_| "Could not set the X11 dialog owner")?;
++        } else {
++            conn.delete_property(self.xwindow, atoms[WM_TRANSIENT_FOR])
++                .map_err(|_| "Could not clear the X11 dialog owner")?
++                .check().map_err(|_| "Could not clear the X11 dialog owner")?;
++        }
++        // Unmapped windows need the initial property; mapped windows require
++        // the EWMH root message. Preserve other initial window states.
++        if self.shared_state_lock().visibility == Visibility::No {
++            use x11rb::wrapper::ConnectionExt as _;
++            let reply = conn.get_property(false, self.xwindow, atoms[_NET_WM_STATE],
++                xproto::AtomEnum::ATOM, 0, 4096)
++                .map_err(|_| "Could not read X11 window states")?
++                .reply().map_err(|_| "Could not read X11 window states")?;
++            let mut states: Vec<_> = reply.value32().into_iter().flatten()
++                .filter(|a| *a != atoms[_NET_WM_STATE_MODAL]).collect();
++            if parent.is_some() { states.push(atoms[_NET_WM_STATE_MODAL]); }
++            conn.change_property32(xproto::PropMode::REPLACE, self.xwindow,
++                atoms[_NET_WM_STATE], xproto::AtomEnum::ATOM, &states)
++                .map_err(|_| "Could not set X11 modality")?
++                .check().map_err(|_| "Could not set X11 modality")?;
++        } else {
++            self.toggle_atom(_NET_WM_STATE_MODAL, parent.is_some())
++                .map_err(|_| "Could not set X11 modality")?.ignore_error();
++        }
++        conn.flush().map_err(|_| "Could not flush X11 modality")
+     }
+ 
+     fn set_window_level_inner(&self, level: WindowLevel) -> Result<VoidCookie<'_>, X11Error> {
+--- a/winit-0.30.13/src/platform_impl/macos/window.rs
++++ b/winit-0.30.13/src/platform_impl/macos/window.rs
+@@ -23,6 +23,24 @@
+ }
+ 
+ impl Window {
++    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
++        self.window.get_on_main(|window| {
++            // SAFETY: both retained NSWindows are accessed on the AppKit thread.
++            // This is a floating child dialog, not a sheet (matching FLTK).
++            unsafe {
++                if let Some(old) = window.parentWindow() {
++                    old.removeChildWindow(window);
++                }
++                if let Some(parent) = parent {
++                    let mtm = MainThreadMarker::new().expect("AppKit main thread");
++                    parent.window.get(mtm).addChildWindow_ordered(
++                        window, objc2_app_kit::NSWindowOrderingMode::NSWindowAbove);
++                }
++            }
++        });
++        Ok(())
++    }
++
+     pub(crate) fn new(
+         window_target: &ActiveEventLoop,
+         attributes: WindowAttributes,
 --- a/winit-0.30.13/src/platform_impl/macos/window_delegate.rs
 +++ b/winit-0.30.13/src/platform_impl/macos/window_delegate.rs
 @@ -408,10 +408,17 @@
@@ -2483,3 +2737,49 @@
          }
      }
  }
+--- a/winit-0.30.13/src/platform_impl/windows/window.rs
++++ b/winit-0.30.13/src/platform_impl/windows/window.rs
+@@ -86,6 +86,27 @@
+ }
+ 
+ impl Window {
++    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
++        use windows_sys::Win32::Foundation::{GetLastError, SetLastError};
++        use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowLongPtrW, GWLP_HWNDPARENT};
++        // SAFETY: ModalWindow retains both winit windows. Called on their event-loop
++        // thread; GWLP_HWNDPARENT changes top-level ownership, not child embedding.
++        unsafe {
++            SetLastError(0);
++            let previous = SetWindowLongPtrW(self.hwnd(), GWLP_HWNDPARENT,
++                parent.map_or(0, |p| p.hwnd() as isize));
++            if previous == 0 && GetLastError() != 0 {
++                return Err("Could not set the native dialog owner");
++            }
++        }
++        Ok(())
++    }
++
++    pub(crate) fn modal_input_enabled(&self) -> bool {
++        // SAFETY: the window is alive for this call.
++        unsafe { windows_sys::Win32::UI::Input::KeyboardAndMouse::IsWindowEnabled(self.hwnd()) != 0 }
++    }
++
+     pub(crate) fn new(
+         event_loop: &ActiveEventLoop,
+         w_attr: WindowAttributes,
+--- a/winit-0.30.13/src/window.rs
++++ b/winit-0.30.13/src/window.rs
+@@ -483,6 +483,13 @@
+ 
+ /// Base Window functions.
+ impl Window {
++    /// Attach a transient modal to a live parent on the same event loop.
++    /// Prefer `modal::ModalWindow`, which retains both windows and restores input.
++    #[cfg(any(windows_platform, macos_platform, x11_platform, wayland_platform))]
++    pub(crate) fn set_modal_parent(&self, parent: Option<&Window>) -> Result<(), &'static str> {
++        self.window.set_modal_parent(parent.map(|p| &p.window))
++    }
++
+     /// Create a new [`WindowAttributes`] which allows modifying the window's attributes before
+     /// creation.
+     #[inline]

@@ -85,7 +85,7 @@ The isolated Windows platform adapter directly uses already-locked
 `raw-window-handle` 0.6.2 and `windows-sys` 0.61.2 (MIT/Apache-2.0), enabling only
 the common-dialog, Shell, window-message definitions and COM API features.
 No new third-party package versions were added.
-The GUI invokes the safe adapter with eframe's borrowed live window handle;
+The GUI invokes the safe adapter with the registered palette window's borrowed live handle (eframe's root handle for the embedded fallback);
 unsafe Win32 calls are confined to the adapter and documented at each call.
 The script-opening adapter initializes and balances COM on its worker thread,
 uses bounded UTF-16 buffers for association lookup, and checks ShellExecute's
@@ -133,7 +133,7 @@ rules or disable accessibility merely to obtain a green dependency check.
 
 ## Pinned native adapter patches
 
-The workspace patches winit 0.30.13 and egui-winit 0.37.0 from local, audited
+The workspace patches winit 0.30.13, egui-winit 0.37.0 and eframe 0.37.0 from local, audited
 source trees. This supplies complete file transfers without migrating eframe
 to an incompatible prerelease windowing API. The GUI's direct egui-winit
 dependency disables defaults and shares the features already selected by eframe.
@@ -147,5 +147,13 @@ alone does not supply `libxkbcommon-x11.so.0`. CI installs the runtime explicitl
 
 See [vendor maintenance](../vendor/README.md), [source hashes](../vendor/sources.json)
 and [license/modification notices](../vendor/NOTICE.md). CI verifies these trees
-and runs the shared transfer tests. Native file-manager acceptance remains a
+and runs the shared transfer and modal-lifetime tests. Native file-manager acceptance remains a
 separate gate in [architecture](architecture.md#native-external-file-drop-integration-gate).
+
+The modal bridge adds no production package versions. Eframe's audited archive
+is now patched for three renderer-owned window registrations; new egui-winit
+registry/lifetime logic and winit OS hooks use already-locked Windows, AppKit,
+X11 and Wayland dependencies. The hidden native probe adds dev-only uses of
+winit and egui-winit on all desktop targets. Wayland xdg-dialog uses the existing
+0.32.13 staging protocol bindings. Source identity and full supplemental license
+texts are tracked by the vendor manifest, not an unaudited Git checkout.

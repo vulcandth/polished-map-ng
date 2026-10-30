@@ -86,6 +86,27 @@ pub(crate) struct Window {
 }
 
 impl Window {
+    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
+        use windows_sys::Win32::Foundation::{GetLastError, SetLastError};
+        use windows_sys::Win32::UI::WindowsAndMessaging::{SetWindowLongPtrW, GWLP_HWNDPARENT};
+        // SAFETY: ModalWindow retains both winit windows. Called on their event-loop
+        // thread; GWLP_HWNDPARENT changes top-level ownership, not child embedding.
+        unsafe {
+            SetLastError(0);
+            let previous = SetWindowLongPtrW(self.hwnd(), GWLP_HWNDPARENT,
+                parent.map_or(0, |p| p.hwnd() as isize));
+            if previous == 0 && GetLastError() != 0 {
+                return Err("Could not set the native dialog owner");
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) fn modal_input_enabled(&self) -> bool {
+        // SAFETY: the window is alive for this call.
+        unsafe { windows_sys::Win32::UI::Input::KeyboardAndMouse::IsWindowEnabled(self.hwnd()) != 0 }
+    }
+
     pub(crate) fn new(
         event_loop: &ActiveEventLoop,
         w_attr: WindowAttributes,

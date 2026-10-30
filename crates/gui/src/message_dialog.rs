@@ -122,10 +122,10 @@ fn render(
     let mut done = false;
     let mut canceled = false;
     let mut bounds = Rect::NOTHING;
-    egui::Modal::new(egui::Id::unique(id)).show(ctx, |ui| {
+    dialog_host::client(ctx, egui::Id::unique(id), |ui| {
         // Caption stands in for native chrome; the allocated client rectangle
         // below follows the source formula independently of that caption.
-        ui.heading(kind.title());
+        dialog_host::heading(ui, kind.title());
         let font = egui::FontId::proportional(font_size);
         let body = ui.painter().layout(
             message.into(),

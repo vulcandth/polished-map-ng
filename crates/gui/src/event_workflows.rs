@@ -721,8 +721,8 @@ impl Editor {
         };
         let mut accept = false;
         let mut cancel = false;
-        egui::Modal::new(egui::Id::unique("edit-event")).show(ctx, |ui| {
-            ui.heading("Event Options");
+        dialog_host::client(ctx, egui::Id::unique("edit-event"), |ui| {
+            dialog_host::heading(ui, "Event Options");
             let font = egui::FontId::proportional(if form.windows_buttons { 12.0 } else { 13.0 });
             ui.style_mut().override_font_id = Some(font.clone());
             let measure = |s: &str| {

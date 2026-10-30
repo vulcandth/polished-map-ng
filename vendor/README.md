@@ -1,13 +1,13 @@
 # Pinned native window adapters
 
-These are the original Cargo archives for winit 0.30.13 and egui-winit 0.37.0,
+These are the original Cargo archives for winit 0.30.13, egui-winit 0.37.0 and eframe 0.37.0,
 with the changes listed in [NOTICE](NOTICE.md). The root Cargo patch table keeps
-eframe, its renderer and the editor on the same two adapter instances.
+eframe, its renderer and the editor on the same audited adapter instances.
 
 [sources.json](sources.json) records the original archive checksums from the
 previous registry lockfile, every pristine/bundled file hash and each complete
 patch. [patches](patches) contains the readable differences from those archives.
-No source file from either archive has been removed. Cargo's local extraction
+No source file from any archive has been removed. Cargo's local extraction
 marker is not distributed. Original examples/docs are retained as source, not
 installed as application assets. The separately licensed SCTK frame adaptation
 is tracked by [adaptations.json](adaptations.json), its own readable patch and
@@ -15,7 +15,7 @@ the original MIT license; see [NOTICE](NOTICE.md).
 
 Run `python tools/vendor_sources.py` from the repository root. To verify the
 pristine inputs too, supply `--archives` pointing to a directory containing the
-two original `.crate` files plus `smithay-client-toolkit-0.19.2.crate`.
+three original `.crate` files plus `smithay-client-toolkit-0.19.2.crate`.
 After deliberately editing a patch, use
 `--refresh --archives DIR`, review the regenerated patch and manifest, then run
 the ordinary verification and workspace checks. Do not refresh automatically in
@@ -46,7 +46,14 @@ payloads, negative screen positions, delayed/stale events, rejection and teardow
 against winit's native windows. It uses an isolated server and synthetic paths;
 it neither operates a desktop nor proves real file-manager/compositor behavior.
 
-Keep this patch focused on native transfer/opacity integration. Re-evaluate it
+The hidden `native_modals` platform example checks native ownership, nested
+restoration, renderer-window replacement and teardown. Linux runs it in private
+Xvfb; `python tools/wayland_modal_probe.py` checks parent and optional modal-hint
+requests on a private socket, including compositors without xdg-dialog. Windows
+and macOS run the example on the main thread with every window hidden. These
+checks do not establish integrated desktop placement, focus or DPI behavior.
+
+Keep these patches focused on native transfer/opacity/modal integration. Re-evaluate it
 when a compatible egui/winit release supplies these capabilities; remove it only
 after the same behavioral gates pass. Preserve upstream copyrights and license
 texts when updating or distributing the patched sources.

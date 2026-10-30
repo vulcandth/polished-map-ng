@@ -163,8 +163,8 @@ impl Editor {
             return;
         };
         let (mut export, mut copy, mut cancel) = (false, false, false);
-        egui::Modal::new(egui::Id::unique("print-options")).show(ctx, |ui| {
-            ui.heading("Print Options");
+        dialog_host::client(ctx, egui::Id::unique("print-options"), |ui| {
+            dialog_host::heading(ui, "Print Options");
             let font = egui::TextStyle::Body.resolve(ui.style());
             let measure = |label: &str| {
                 ui.painter()

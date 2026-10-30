@@ -188,8 +188,8 @@ impl Editor {
         let mut accept = false;
         let mut cancel = false;
         let choosing = egui::Popup::is_any_open(ctx);
-        egui::Modal::new(egui::Id::unique("change-tileset")).show(ctx, |ui| {
-            ui.heading("Change Tileset");
+        dialog_host::client(ctx, egui::Id::unique("change-tileset"), |ui| {
+            dialog_host::heading(ui, "Change Tileset");
             // Option_Dialog: 10 + 22 + 16 + 22 + 10 = 80 logical pixels.
             let (area, _) = ui.allocate_exact_size(Vec2::new(280.0, 80.0), Sense::hover());
             #[cfg(test)]

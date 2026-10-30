@@ -74,8 +74,8 @@ impl Editor {
         let mut accept = false;
         let mut cancel = false;
         let priority = priority::Textures::get(ctx);
-        egui::Modal::new(egui::Id::unique("edit-block")).show(ctx, |ui| {
-            ui.heading("Edit Block");
+        dialog_host::client(ctx, egui::Id::unique("edit-block"), |ui| {
+            dialog_host::heading(ui, "Edit Block");
             let (area, _) = ui.allocate_exact_size(Vec2::new(466.0, 304.0), Sense::hover());
             let rect =
                 |x, y, w, h| Rect::from_min_size(area.min + Vec2::new(x, y), Vec2::new(w, h));

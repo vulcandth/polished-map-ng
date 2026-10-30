@@ -38,6 +38,7 @@ use raw_window_handle::HasDisplayHandle;
 pub mod file_drop;
 /// Whole-window opacity requests requiring the live native Wayland window.
 pub mod window_opacity;
+pub mod modal_windows;
 
 #[cfg(not(target_arch = "wasm32"))]
 use dropped_file::NativeFile;
@@ -92,6 +93,7 @@ pub struct EventResponse {
 ///
 /// Instantiate one of these per viewport/window.
 pub struct State {
+    window_registration: Option<modal_windows::Registration>,
     /// Shared clone.
     egui_ctx: egui::Context,
 
@@ -153,6 +155,13 @@ pub struct State {
 }
 
 impl State {
+    /// Register this renderer-owned window for scoped native dialog ownership.
+    pub fn register_window(&mut self, window: &std::sync::Arc<Window>) {
+        self.window_registration.take();
+        self.window_registration = Some(modal_windows::Registration::new(
+            &self.egui_ctx, self.viewport_id, window));
+    }
+
     /// Construct a new instance
     pub fn new(
         egui_ctx: egui::Context,
@@ -178,6 +187,7 @@ impl State {
         };
 
         let mut slf = Self {
+            window_registration: None,
             viewport_id,
             start_time: web_time::Instant::now()
                 .checked_sub(web_time::Duration::from_secs_f64(egui_ctx.time()))
@@ -347,7 +357,9 @@ impl State {
             .or_default()
             .native_pixels_per_point = Some(window.scale_factor() as f32);
 
-        self.egui_input.take()
+        let mut input = self.egui_input.take();
+        modal_windows::filter_input(&self.egui_ctx, &mut input);
+        input
     }
 
     /// Call this when there is a new event.

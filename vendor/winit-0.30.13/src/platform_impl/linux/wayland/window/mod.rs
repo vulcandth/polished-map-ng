@@ -40,6 +40,11 @@ pub use state::WindowState;
 
 /// The Wayland window.
 pub struct Window {
+    // Destroy the hint before the SCTK toplevel. Older compositors still receive
+    // set_parent; input filtering remains the application's responsibility.
+    modal_hint: Mutex<Option<super::types::dialog::Dialog>>,
+    dialog_manager: Option<super::types::dialog::XdgWmDialogV1>,
+
     /// Reference to the underlying SCTK window.
     window: SctkWindow,
 
@@ -93,6 +98,7 @@ impl Window {
         let xdg_activation =
             state.xdg_activation.as_ref().map(|activation_state| activation_state.global().clone());
         let display = event_loop_window_target.connection.display();
+        let dialog_manager = state.dialog_manager.clone();
 
         let size: Size = attributes.inner_size.unwrap_or(LogicalSize::new(800., 600.).into());
 
@@ -217,6 +223,8 @@ impl Window {
         event_loop_awakener.ping();
 
         Ok(Self {
+            modal_hint: Mutex::new(None),
+            dialog_manager,
             window,
             display,
             monitors,
@@ -230,6 +238,25 @@ impl Window {
             window_requests,
             window_events_sink,
         })
+    }
+
+    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
+        if parent.is_some_and(|p| p.display != self.display) {
+            return Err("Dialog and parent use different Wayland connections");
+        }
+        let mut hint = self.modal_hint.lock().unwrap();
+        if parent.is_none() { hint.take(); }
+        self.window.xdg_toplevel().set_parent(parent.map(|p| p.window.xdg_toplevel()));
+        if parent.is_some() && hint.is_none() {
+            if let Some(manager) = &self.dialog_manager {
+                let dialog = manager.get_xdg_dialog(self.window.xdg_toplevel(), &self.queue_handle, ());
+                dialog.set_modal();
+                *hint = Some(super::types::dialog::Dialog(dialog));
+            }
+        }
+        self.window.wl_surface().commit();
+        self.event_loop_awakener.ping();
+        Ok(())
     }
 
     pub(crate) fn xdg_toplevel(&self) -> Option<NonNull<c_void>> {
