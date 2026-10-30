@@ -123,13 +123,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev libvulkan1 mesa-vulkan-drivers pkg-config
-      - name: Verify original menu drawing commands
+      - name: Verify original menu drawing and palette slider behavior
         run: |
           git init .reference/master
           git -C .reference/master remote add origin https://github.com/Rangi42/polished-map.git
           git -C .reference/master fetch --depth 1 origin 8b9bdc2b8aac8c865809516c2123af69c498da0b
           python3 tools/menu_marks_oracle.py --checkout .reference/master --output .scratch/reference-menu-marks --fltk-cache .scratch/menu-fltk
           cargo test -p polished-map-gui --locked --features visual-tests --lib reference_menu_marks -- --ignored
+          cargo test -p polished-map-gui --locked --features visual-tests --lib reference_slider_boxes -- --ignored
+          python3 tools/slider_oracle.py --output .scratch/reference-slider --fltk-cache .scratch/menu-fltk
+          cargo test -p polished-map-gui --locked --features visual-tests --lib reference_slider_drag -- --ignored
       - run: cargo test -p polished-map-gui --locked --features visual-tests -- --test-threads=1
       - uses: actions/upload-artifact@v4
         if: failure()

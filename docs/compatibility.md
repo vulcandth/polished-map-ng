@@ -5,6 +5,9 @@ The [roadmap](roadmap.md) owns current task status and execution order. Use the
 The feature records below retain source calculations and verification results;
 test counts and local-run observations describe those individual changes, not
 the current size or acceptance status of the whole suite.
+References below to remaining M4 visual/font matching are deferred under the
+[user-approved aesthetic exception](deviations.md#remaining-m4-aesthetics-deferred).
+Functional acceptance remains required in M5–M7.
 
 ## Master source inventory
 
@@ -916,6 +919,48 @@ differently. Native font coverage, popup shadows/placement, mnemonic/Alt navigat
 and screen-edge behavior remain separate acceptance requirements. No artwork
 or font assets were added for these procedural marks.
 
+## Source palette sliders
+
+`nice_slider.rs` replaces the stock egui palette RGB5 sliders with the pinned
+`widgets.cpp::OS_Slider/Default_Slider` drawing and FLTK `Fl_Slider::handle`
+interaction. The 22-point control paints a 13-point grip, positioned by
+`floor(value / 31 * (width - 13) + 0.5)`, over a four-point recessed track.
+The inherited native handler uses a 16-point drag extent instead. Keeping these
+separate preserves source hit behavior. Clicking outside moves the nearest edge;
+grabbing inside retains the pointer offset. Dragging clamps at either end,
+secondary-button dragging works, horizontal arrow keys step/clamp, and middle
+press/drag does not alter the value before the existing middle-release reset.
+Interrupted focus, disabled controls, open popups and a hidden/reopened slider
+abandon a capture rather than resuming an old drag.
+
+Greybird/Dark border colors, horizontal versus vertical gradients, inactive-color
+passes and FL_DARK2's computed gray ramp follow `themes.cpp` and pinned FLTK.
+The adapter draws source colors directly without egui's additional disabled
+opacity. Geometry remains logical pixels at 1×/2×. Dotted focus and native polygon
+rasterization are not asserted to be identical across OS graphics drivers.
+
+The extended [drawing oracle](../tools/menu_marks_oracle.py) compiles unchanged
+source functions and compares all 36 slider-box cases (both themes, enabled and
+disabled, multiple dimensions). The [drag oracle](../tools/slider_oracle.py)
+compiles the unchanged FLTK handler and valuator functions, generating 84,864
+observations: 42,432 for Windows `floor(v+.5)` rounding and 42,432 for Unix
+`rint` ties-to-even. Each native test compares its corresponding branch, including
+retained offsets after endpoint crossings and the source's retry-on-press rule.
+Generated code and provenance hashes stay in ignored `.scratch/`; CI reruns the
+oracles. No original application or desktop automation is required.
+
+Headless widget tests cover mouse buttons, keyboard, accessibility actions,
+focus/disable interruption and both DPI scales. Existing palette workflow tests
+retain draft cancellation, RGB5 quantization and middle-reset checks. Offscreen
+snapshots cover slider endpoints/midpoint/disabled states in both themes/scales,
+plus the existing full palette dialogs. Native integrated palette acceptance
+remains M6; remaining M4 aesthetics are [deferred by user direction](deviations.md#remaining-m4-aesthetics-deferred).
+Local Windows and Linux oracle comparisons pass. The four dedicated theme/DPI
+snapshots were inspected; the five changed palette-dialog/drag snapshots differ
+only within their three slider rectangles. The rest of the offscreen suite
+passed, and the four initially failing snapshot tests pass after those reviewed
+baselines were accepted. Fonts were unchanged, and no desktop automation was used.
+
 ## Shared editor/Print font policy and variable instances
 
 Print now consumes `NativeFonts`, removing its separate Courier/Helvetica fallback
@@ -948,7 +993,8 @@ collection indices and variation settings. This is **not** synthetic-bold parity
 FLTK's GDI font enumeration advertises synthesized bold faces and CreateFontW
 requests them, while the current portable renderer requires actual outlines.
 Native synthesis, font enumeration/name aliases, glyph metrics/hinting and
-pixel-level GDI/Xft/Quartz equivalence remain open requirements.
+pixel-level GDI/Xft/Quartz equivalence remain unverified and are deferred to
+later manual review under the [approved M4 exception](deviations.md#remaining-m4-aesthetics-deferred).
 
 Print Options now measures with the selected body font (12 logical points on
 native Windows, 13 elsewhere), following `Print_Options_Dialog::refresh`'s

@@ -50,7 +50,7 @@ def main():
     functions, evidence = [], []
     constants = []
     for name in ["FL_BLACK", "FL_WHITE", "FL_BACKGROUND_COLOR", "FL_BACKGROUND2_COLOR",
-                 "FL_SELECTION_COLOR", "FL_DARK3", "FL_LIGHT3"]:
+                 "FL_SELECTION_COLOR", "FL_DARK2", "FL_DARK3", "FL_LIGHT3"]:
         line = next(line for line in sources["Enumerations.H"].splitlines() if line.startswith(f"const Fl_Color {name} "))
         constants.append(line)
     for name in ["FL_GRAY_RAMP", "FL_NUM_GRAY", "FL_GRAY"]:
@@ -70,6 +70,9 @@ def main():
         extract("fl_contrast.cxx", sig)
     functions.append("Fl_Color fl_contrast(Fl_Color a,Fl_Color b) {return fl_contrast_cielab(a,b,0,0);}")
     for sig in ["static Fl_Color activated_color(", "static void vertical_gradient(", "static void horizontal_gradient(",
+                "static void greybird_button_up_frame(", "static void greybird_button_up_box(",
+                "static void greybird_spacer_thin_down_frame(", "static void greybird_spacer_thin_down_box(",
+                "static void dark_spacer_thin_down_frame(", "static void dark_spacer_thin_down_box(",
                 "static void greybird_check_down_frame(", "static void greybird_check_down_box(",
                 "static void greybird_radio_round_down_frame(", "static void greybird_radio_round_down_box(",
                 "static void greybird_panel_thin_up_frame(", "static void greybird_panel_thin_up_box(",
@@ -94,13 +97,13 @@ def main():
 using uchar = unsigned char; using Fl_Color = unsigned;
 '''+"\n".join(constants)+r'''
 enum { FL_MENU_TOGGLE=1, FL_MENU_RADIO=2, FL_DOWN_BOX=3, FL_ROUND_DOWN_BOX=4, FL_NORMAL_SIZE=14 };
-unsigned fl_cmap[256]; bool dark; Fl_Color current; std::ostringstream calls;
+unsigned fl_cmap[256]; bool dark; bool enabled=true; Fl_Color current; std::ostringstream calls;
 unsigned get_color(Fl_Color c) {return (c & 0xffffff00) ? c : fl_cmap[c];}
 Fl_Color fl_rgb_color(uchar r,uchar g,uchar b) {return r||g||b ? ((unsigned)r<<24)|((unsigned)g<<16)|((unsigned)b<<8) : FL_BLACK;}
 int fl_contrast_level() {return 50;}
 Fl_Color fl_color() {return current;} void fl_color(Fl_Color c) {current=c;}
 struct Fl_Screen_Driver {static int bg_set;}; int Fl_Screen_Driver::bg_set=0;
-struct Fl {static bool is_scheme(const char*) {return true;} static bool draw_box_active() {return true;}
+struct Fl {static bool is_scheme(const char*) {return true;} static bool draw_box_active() {return enabled;}
 static int box_dw(int) {return dark?2:6;} static int menu_linespacing(){return 4;}
 static void background(uchar,uchar,uchar);
 static void set_color(Fl_Color i,uchar r,uchar g,uchar b){fl_cmap[i]=fl_rgb_color(r,g,b);}};
@@ -132,7 +135,7 @@ void divider(int BW,int yy,int hh,int W) {
 '''+divider+r'''
 }
 int main(int argc,char**argv) {
- if(argc!=2)return 2;std::ofstream out(argv[1]);
+ if(argc!=3)return 2;std::ofstream out(argv[1]);std::ofstream controls(argv[2]);
  for(int theme=0;theme<2;++theme){dark=theme;
  fl_cmap[FL_BLACK]=0;fl_cmap[FL_WHITE]=0xffffff00;
  fl_cmap[FL_GRAY]=dark?0x53535300:0xcecece00;
@@ -153,7 +156,17 @@ int main(int argc,char**argv) {
  Fl_Color fg=dark?FL_WHITE:0x3c3c3c00;
  fg=!enabled?fl_inactive(fg):hover?fl_contrast(fg,FL_SELECTION_COLOR):fg;
  out<<"color\t"<<theme<<'\t'<<enabled<<'\t'<<hover<<'\t'<<(get_color(fg)>>8)<<'\n';}
- }return out.good()?0:3;
+ for(int active=0;active<2;++active){enabled=active;
+ for(int width:{13,16,92})for(int height:{11,22}){
+ calls.str("");calls.clear();
+ if(dark)dark_button_up_box(0,0,width,height,FL_GRAY);else greybird_button_up_box(0,0,width,height,FL_GRAY);
+ controls<<"button\t"<<theme<<'\t'<<active<<'\t'<<width<<'\t'<<height<<'\t'<<calls.str()<<'\n';}
+ for(int width:{28,92,101}){
+ calls.str("");calls.clear();Fl_Color c=enabled?FL_DARK2:fl_inactive(FL_DARK2);
+ if(dark)dark_spacer_thin_down_box(0,0,width,4,c);else greybird_spacer_thin_down_box(0,0,width,4,c);
+ controls<<"track\t"<<theme<<'\t'<<active<<'\t'<<width<<"\t4\t"<<calls.str()<<'\n';}
+ }enabled=true;
+ }return out.good()&&controls.good()?0:3;
 }
 '''
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -162,8 +175,8 @@ int main(int argc,char**argv) {
     args.output.with_suffix(".provenance.json").write_text(json.dumps({"master": MASTER, "fltk": FLTK, "files": FILES,
         "functions": evidence}, indent=2)+"\n", encoding="utf-8")
     subprocess.run([args.cxx, "-std=c++17", "-O2", str(cpp), "-o", str(args.output)], check=True)
-    subprocess.run([str(args.output.resolve()), str(args.output.with_suffix(".tsv"))], check=True)
-    print("Generated 72 indicator, 18 panel, 32 divider and 8 text-color cases")
+    subprocess.run([str(args.output.resolve()), str(args.output.with_suffix(".tsv")), str(args.output.with_suffix(".controls.tsv"))], check=True)
+    print("Generated 72 indicator, 18 panel, 32 divider and 8 text-color cases; 36 slider box cases")
 
 
 if __name__ == "__main__":

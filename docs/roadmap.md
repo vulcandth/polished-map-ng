@@ -25,14 +25,15 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M4, finish source-derived GUI and native-window fidelity, then M5
-lifecycle compatibility. M3's implementation and isolated native protocol checks
-are in place; its integrated file-manager, compositor, clipboard and mixed-DPI
-acceptance remains open and will run with M6 against the finished windows.
+**Next:** M5, finish legacy preference import and window lifecycle compatibility,
+then M6 and M7 functional acceptance. The remaining M4 aesthetic matching is
+**deferred by user direction (2026-10-30)** after the palette-slider work;
+resume M4 only to fix a functional issue. Exact original fonts are also deferred
+to later manual review. See the [approved scope exception](deviations.md#remaining-m4-aesthetics-deferred).
+M3's implementation and isolated native protocol checks are in place; integrated
+file-manager, compositor, clipboard and mixed-DPI behavior remains open in M6.
 M1 inventory/discovery/save feedback and M2 original artwork are complete.
-Follow with M6 and M7 acceptance. If a task is externally blocked, record the blocker and
-advance another unchecked master task. Do not advance to plusplus merely because
-one feature or test suite is complete.
+Do not advance to plusplus until M7 passes with the approved exceptions recorded.
 
 ## Foundation — bootstrap complete
 
@@ -139,21 +140,20 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   [transparency](compatibility.md#whole-window-transparency).
   Done when the gates in [architecture](architecture.md) pass;
   stale pointer coordinates or widget alpha are not substitutes.
-- [ ] **M4 — Complete source-derived GUI and native-window fidelity (in progress).**
-  Resize/asset/Event dialog client metrics and shared original-artwork
-  confirmations are implemented; evidence: [option dialog metrics](compatibility.md#remaining-option-dialog-client-metrics)
-  and [message clients](compatibility.md#error-warning-and-success-message-dialogs).
-  Native editor/modal hosting, ownership, draft/close guards and isolated Windows,
-  macOS, X11 and Wayland lifetime checks are implemented; see [native hosting](compatibility.md#native-dialog-hosting-and-ownership).
-  Finish integrated window placement/focus acceptance, font fallback/Windows bold synthesis,
-  popup placement/arrows/mnemonics/screen-edge behavior, focus and dismissal.
-  Include the remaining source spinner/slider/dropdown/scrollbar rendering and
-  remaining dialog default-focus and native placement details;
-  stock egui controls do not by themselves establish that fidelity.
-  Verify source geometry at 1×/2× before targeted native checks of dialogs,
-  clipboard, external editor/browser dispatch, shortcuts, scrolling and resizing.
-  Record platform-specific results and any accepted chrome/rasterization differences.
-  Client snapshots alone do not close this task.
+- [ ] **M4 — Source-derived GUI and native-window fidelity (aesthetics deferred;
+  functional acceptance pending M6).** Resize/asset/Event dialog client metrics,
+  original-artwork confirmations, native editor/modal hosting, ownership and
+  draft/close guards are implemented. Isolated Windows, macOS, X11 and Wayland
+  lifetime checks pass. Evidence: [dialog metrics](compatibility.md#remaining-option-dialog-client-metrics),
+  [messages](compatibility.md#error-warning-and-success-message-dialogs),
+  [native hosting](compatibility.md#native-dialog-hosting-and-ownership).
+  Palette sliders now use the source drawing/drag behavior; see [slider evidence](compatibility.md#source-palette-sliders).
+  The user deferred remaining font, widget painting and purely visual menu/window
+  matching on 2026-10-30. Preserve these as later manual work under the
+  [approved exception](deviations.md#remaining-m4-aesthetics-deferred), not as
+  completed fidelity. Fix functional issues when found; window focus, usable
+  placement, keyboard/dismissal, clipboard, scrolling and resize acceptance
+  remain part of M6. Do not resume aesthetic matching before M5–M7.
 - [ ] **M5 — Finish preference and window lifecycle compatibility (in progress).**
   Resolve legacy FLTK user/executable-adjacent preference import, remaining
   inventory differences and native storage/restart/shutdown behavior. Verify

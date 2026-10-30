@@ -66,6 +66,10 @@ exist from day one; a partial slice is not a completed parity milestone.
 - Fix crashes and corruption hazards immediately, recording observable changes
   in `docs/deviations.md`. Never silently convert formats or rewrite unrelated ASM.
 - Initial themes are upstream default light and dark. Other themes are deferred.
+- The user deferred original-font matching and remaining M4 aesthetics on
+  2026-10-30 after the palette-slider work. Follow M5–M7 next; fix functional
+  issues as found, but do not resume visual matching merely to close M4.
+  Preserve the approved exception in `docs/deviations.md` and roadmap status.
 - Do not claim pokecrystal/Polished Crystal parity from synthetic tests alone.
 - Specify UTF-8 explicitly in text tooling (including Python on Windows); use
   byte-preserving operations for fixtures and assets with exact-byte contracts.

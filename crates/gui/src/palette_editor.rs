@@ -563,10 +563,7 @@ impl Editor {
                 });
                 let slider = ui.put(
                     rect(ox + wo + ww + 6.0, y, ss - wo - ww, 22.0),
-                    egui::Slider::new(&mut value, 0..=31)
-                        .step_by(1.0)
-                        .smart_aim(false)
-                        .show_value(false),
+                    nice_slider::NiceSlider(&mut value),
                 );
                 slider.widget_info(|| {
                     egui::WidgetInfo::labeled(egui::Role::Slider, true, format!("{name} slider"))

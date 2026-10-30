@@ -432,6 +432,23 @@ A missing protocol or visible compositor-owned frame reports a capability error;
 the client cannot change another process's title-bar surface. Native visual
 acceptance remains incomplete, not an approved permanent omission. Pixel alpha
 or a faded egui panel is not substituted for whole-window opacity.
+## Remaining M4 aesthetics deferred
+
+On 2026-10-30 the user first deferred original-font matching to later manual work,
+then deferred the rest of M4 after the current palette-slider work unless a
+functional issue needs fixing. This is an approved exception to exact aesthetic
+parity for current master acceptance, not evidence that the visuals match.
+
+Retain existing installed-font selection and explicit fallback reports. Original
+font matching/Windows bold synthesis, remaining spinner/dropdown/scrollbar
+painting, purely visual menu arrows/chrome, and exact native placement/raster
+matching wait for later manual review. The existing implementations remain.
+Do not hide functional problems behind this exception: input, focus, accessible
+placement, dismissal, draft preservation, clipboard and resize/scroll workflows
+still require M6 acceptance and fixes as needed. M5 preferences and lifecycle is
+next. See [font evidence](compatibility.md#shared-editorprint-font-policy-and-variable-instances)
+and the [roadmap](roadmap.md).
+
 ## External transfer bounds and OLE correctness
 
 The native file-drop adapters limit one transfer to 4 MiB and 4,096 paths, and
