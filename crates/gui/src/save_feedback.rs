@@ -98,12 +98,12 @@ impl Editor {
         let Some(message) = self.save_ui.messages.front().cloned() else {
             return;
         };
-        let title = if message.acknowledge_meta128 {
-            "Warning"
+        let kind = if message.acknowledge_meta128 {
+            message_dialog::Kind::Warning
         } else {
-            "Success"
+            message_dialog::Kind::Success
         };
-        if message_dialog::show(ctx, "save-feedback", title, &message.text) {
+        if message_dialog::show(ctx, "save-feedback", kind, &message.text) {
             self.save_ui.messages.pop_front();
             if message.acknowledge_meta128 {
                 self.meta128 = true;

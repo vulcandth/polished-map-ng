@@ -5,6 +5,12 @@ Development artifacts are not parity releases. Before publishing binaries:
 - Complete the applicable compatibility matrix and native smoke tests.
 - Include upstream and port notices, LGPL v3 and GPL v3 texts, and all required
   dependency/asset notices; verify individual asset provenance.
+- Include original application/message XPMs, decoded pixels, `app.ico`,
+  `crates/gui/assets/artwork/NOTICE.md` and `docs/artwork-inventory.json`. Run
+  `python3 tools/artwork_assets.py` on the source archive. Package the original
+  multi-resolution ICO as Windows executable/application resources; derive macOS
+  bundle icon metadata from the attributed application picture. These packaging
+  steps and clean-machine OS display checks remain P2/P4.
 - For the imported Fugue-derived icons, include `LICENSES/CC-BY-3.0.txt`,
   `crates/gui/assets/icons/NOTICE.md`, source XPMs and the icon inventory. Preserve
   the in-app attribution and run `python3 tools/icon_assets.py` on the source

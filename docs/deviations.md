@@ -332,19 +332,15 @@ does not reproduce Windows' default Blue theme or the remaining native themes.
 Sidebar drag feedback follows source/target/selected state, while the existing
 egui drag gesture remains in-process rather than the source's native FLTK DND.
 
-The icon port currently includes 27 reviewed image files (16 commands and four
-collision-quadrant labels, including seven dark variants). Source-colored pixels,
-24-point toolbar/22-point clipboard bounds
-and disabled-color arithmetic are retained. Button selection/hover/focus frames
-still use egui styling; full native toolbar themes remain pending. Disabled icon
-colors use upstream Greybird/Dark backgrounds on all platforms, consistently with
-the existing portable grid palette. All toolbar buttons now have source order,
-grouping and size. Thirteen unresolved images (including Open/Undo/Redo) use
-short text placeholders inside 24-point controls; this is an incomplete visual
-port, not an approved permanent replacement. Native popup/theme behavior remains
-incomplete. Unreviewed
-artwork is not replaced with silently redesigned copies or imported under an
-assumed repository-wide grant. See `docs/assets.md` for the per-asset audit.
+The icon port includes all 41 nonblank original toolbar/editor image files.
+Source pixels, 24-point toolbar/22-point clipboard bounds and disabled-color
+arithmetic are retained. Button selection/hover/focus frames still use egui
+styling; full native toolbar themes remain pending. Disabled colors use upstream
+Greybird/Dark backgrounds on all platforms, consistently with the portable grid
+palette. All toolbar buttons retain source order, grouping and size. Original
+artwork replaces every text placeholder at the user's direction, with upstream
+attribution and the known separate asset notices. No redesigned artwork is used.
+See [asset records](assets.md) for provenance limitations and native verification.
 
 The toolbar palette label and dropdown use upstream text-width/padding formulas
 and 24/22-point heights. Their text is measured with the bundled 13-point
@@ -388,10 +384,9 @@ Desktop Help uses an immediate child viewport; the embedded fallback preserves
 nonmodal interaction but is not evidence of native window behavior.
 
 About identifies the Rust port's own name/version/source alongside the original
-Polished Map/Rangi copyright and Fugue attribution. Its APP_ICON geometry keeps
-the 50×50 image slot blank: the inspected icon history does not establish the
-underlying artwork's provenance. This is a tracked incomplete visual port,
-not a cleared asset or an approved permanent redesign. It uses a centered egui
+Polished Map/Rangi copyright and Fugue attribution. Its APP_ICON geometry now paints the original
+48×48 image centered in the 50×50 slot. Upstream attribution and the unresolved
+underlying-origin record are retained in the asset notices. It uses a centered egui
 modal with a heading in place of native window chrome; its text follows source
 12/16-point Windows and 13/17-point Unix sizes. Desktop startup supplies the
 installed UI font; deterministic test fixtures retain bundled faces. Native

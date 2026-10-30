@@ -1,7 +1,7 @@
-"""Verify imported icon provenance and decode the pinned XPM subset to RGBA8.
+"""Verify imported icon source records and decode the pinned XPM subset to RGBA8.
 
 No upstream checkout, network or third-party Python packages are needed. The
-inventory explicitly lists which artwork has completed review. --write rebuilds
+inventory explicitly lists the selected artwork and its attribution basis. --write rebuilds
 only those RGBA files from their bundled, hash-checked XPM source. Image licenses
 and adaptation notices live in crates/gui/assets/icons/NOTICE.md.
 """
@@ -15,11 +15,11 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "crates/gui/assets/icons"
 
 
-def decode(data):
+def decode(data, size=(16, 16)):
     lines = re.findall(r'^"(.*)"[,]?\r?$', data.decode("ascii"), re.M)
     width, height, colors, cpp = map(int, lines[0].split())
-    if (width, height, cpp) != (16, 16, 1):
-        raise ValueError("Expected the reviewed 16x16, one-character XPM subset")
+    if (width, height) != size or cpp != 1:
+        raise ValueError("Expected the recorded dimensions and one-character XPM subset")
     palette = {}
     for line in lines[1:colors + 1]:
         if not re.fullmatch(r". c (None|#[0-9a-fA-F]{6})", line):
@@ -58,7 +58,7 @@ def main():
             raise ValueError(f"Rebuild RGBA pixels with --write: {output.name}")
     if {p.stem for p in ASSETS.glob("*.rgba")} != {Path(n).stem for n in expected}:
         raise ValueError("Unexpected RGBA assets")
-    print(f"Verified {len(imported)} licensed XPM sources and {len(imported) * 256} RGBA pixels")
+    print(f"Verified {len(imported)} attributed XPM sources and {len(imported) * 256} RGBA pixels")
 
 
 if __name__ == "__main__":

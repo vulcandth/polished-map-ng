@@ -45,6 +45,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: python3 tools/icon_assets.py
+        - run: python3 tools/artwork_assets.py
       - run: python3 tools/font_assets.py
       - run: python3 tools/help_assets.py
       - run: cargo install cargo-deny --locked

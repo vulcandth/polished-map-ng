@@ -1,6 +1,6 @@
 # Icon copyright and adaptation notices
 
-These assets reproduce selected icons from **Polished Map**, by Rangi42/Rangi
+These assets reproduce the toolbar/editor icons from **Polished Map**, by Rangi42/Rangi
 and contributors, at commit `8b9bdc2b8aac8c865809516c2123af69c498da0b`:
 <https://github.com/Rangi42/polished-map/tree/8b9bdc2b8aac8c865809516c2123af69c498da0b/res>.
 Polished Map's adaptations are covered by LGPL-3.0-only. Original notices and
@@ -80,3 +80,14 @@ license/provenance entries. `tools/icon_assets.py` verifies or regenerates the
 RGBA files. Copies of these icons in rendered GUI snapshots carry the same
 attribution and asset terms. Include this notice and the license texts with
 binary and source distributions.
+
+## Remaining original toolbar artwork
+
+`undo`, `redo`, `show`, `warp`, `gameboy`, `change`, `blocks`, `blocks-dark`,
+`events`, `roof` and `change-roof` reproduce the pinned upstream XPMs unchanged.
+They were selected at the user's explicit direction to use original artwork
+with upstream attribution. Their inventory entries record that attribution basis;
+underlying third-party origins are not independently established. The repository
+LGPL grant is retained without asserting that it replaces underlying rights.
+These files are not asserted to be original NG artwork or confirmed Fugue images.
+The confirmed Fugue components above retain their separate CC BY 3.0 notices.

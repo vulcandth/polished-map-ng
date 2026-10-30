@@ -21,7 +21,7 @@ application acceptance; native interactions additionally need M6.
 |---|---|---|
 | `main.cpp`: first path argument, startup theme/position/fullscreen/maximize | [GUI entry point](../crates/gui/src/main.rs), [preferences](preferences.md), [window title](../crates/gui/src/window_title.rs) | M5 startup/native restoration; additional themes remain I3 |
 | `main-window.cpp`: New/Open/Recent/Clear/Close, Save/Save As and each domain save, Exit | [File workflows](../crates/gui/src/file_workflows.rs), [map-open tests](../crates/gui/src/map_open_tests.rs), [recent paths](../crates/gui/src/recent_maps.rs), [persistence tests](../crates/project/tests/persistence.rs) | M4/M5 close/focus/lifecycle |
-| `main-window.cpp`: all eight menu groups, 27 toolbar positions, availability, shortcuts and mode changes | [Menus and tests](../crates/gui/src/menus.rs), [toolbar tests](../crates/gui/src/toolbar_tests.rs), [menu inventory](menus.md) | M2 artwork; M4 popup traversal/mnemonics/placement; I3 deferred theme commands |
+| `main-window.cpp`: all eight menu groups, 27 toolbar positions, availability, shortcuts and mode changes | [Menus and tests](../crates/gui/src/menus.rs), [toolbar tests](../crates/gui/src/toolbar_tests.rs), [menu inventory](menus.md) | M4 popup traversal/mnemonics/placement; I3 deferred theme commands |
 | `main-window.cpp`, `map.cpp`: map paint, fill, replace, swap, drag history, Undo/Redo, resize and event translation | [Map model](../crates/core/src/map.rs), [editing](../crates/core/tests/editing.rs), [resize](../crates/core/tests/resize.rs), [event workflows](../crates/gui/src/event_workflow_tests.rs) | M4 resize client/widget fidelity |
 | `map-buttons.cpp`, `widgets.cpp`: sidebar selection/right-release editing, map/tile/pixel picking and painting, internal swap/Control-copy drags, enabled Drag and Drop | [Block gestures](../crates/gui/src/block_workflow_tests.rs), [tile gestures](../crates/gui/src/tileset_editor_tests.rs), [drag tests](../crates/gui/src/drag_tests.rs), [palette tests](../crates/gui/src/palette_editor_tests.rs) | M4 native input delivery and widget visuals |
 | `main-window.cpp`, `widgets.cpp`: external URI/file drops and workspace eligibility | [File workflows](../crates/gui/src/file_workflows.rs), [external-drop gate](architecture.md#native-external-file-drop-integration-gate) | M3 coordinate/path delivery and Wayland integration |
@@ -39,9 +39,9 @@ application acceptance; native interactions additionally need M6.
 | `palette-map.cpp`, `colors.cpp`, `tileset.cpp`: tilepal/priority, defaults, special/roof colors, compound graphics, 192/256 slots, trimmed PNG/ASM exports | [Graphics tests](../crates/project/tests/graphics.rs), [palettes](../crates/project/tests/palettes.rs), [tileset export tests](../crates/project/tests/tileset.rs) | M7 complete project save/reopen; widget painting remains M4 |
 | `config.cpp`, `utils.cpp`: project root, filename conventions, path precedence, constants/metadata, dimensions, compound suffixes and numeric ordering | [Discovery](#binary-map-metadata-discovery), [asset paths](#legacy-asset-path-selection), [asset ordering](#opennew-asset-selectors), [discovery tests](../crates/project/tests/discovery.rs) | M6 native Unicode/case/permission behavior; safety differences in [deviations](deviations.md) |
 | `widgets.cpp`, `hex-spinner.cpp`: defaults, numeric input, step/repeat/wrap/clamp, middle reset, labels, buttons, dropdowns, scrollbars and help HTML | Specialized GUI modules above and [popup tests](../crates/gui/src/menu_popup/tests.rs) provide partial coverage | M4 source widget rendering/focus; standard egui widgets are not evidence of FLTK parity |
-| `modal-dialog.cpp`: errors, warnings, success, unsaved confirmations and About | [Message dialog tests](../crates/gui/src/message_dialog/tests.rs), [About](../crates/gui/src/about.rs), individual workflow tests | M2 shields/application art; M4 two-button/client/native fidelity |
+| `modal-dialog.cpp`: errors, warnings, success, unsaved confirmations and About | [Message dialog tests](../crates/gui/src/message_dialog/tests.rs), [About](../crates/gui/src/about.rs), individual workflow tests | M4 two-button/client/native fidelity |
 | `help-window.cpp`: full help text, scrolling, external links, resizable nonmodal window and dismissal | [Help implementation](../crates/gui/src/help.rs), [Help tests](../crates/gui/src/help/tests.rs) | M4 native resize/focus/link dispatch |
-| `themes.cpp`, icon/resource/version headers: Greybird/Dark, fonts, inactive colors, application identity and imagery | [Fonts](../crates/gui/src/fonts.rs), [menu marks](../crates/gui/src/menu_popup/marks.rs), [asset audit](assets.md), [notices](../NOTICE.md) | M2 remaining artwork; M4 native fonts/widget drawing; I3 other themes |
+| `themes.cpp`, icon/resource/version headers: Greybird/Dark, fonts, inactive colors, application identity and imagery | [Fonts](../crates/gui/src/fonts.rs), [menu marks](../crates/gui/src/menu_popup/marks.rs), [asset audit](assets.md), [notices](../NOTICE.md) | M4 native fonts/widget drawing; I3 other themes |
 | `preferences.cpp`, startup/exit callbacks: settings, recent files, geometry, legacy stores and `meta128` acknowledgment | [Preferences](preferences.md), [preference tests](../crates/gui/src/preferences.rs), [recent paths](../crates/gui/src/recent_maps.rs) | M5 legacy import, startup policy and native persistence |
 | `directory-chooser.cpp`, native file/clipboard/browser/editor calls | [Platform adapters](../crates/platform/src/lib.rs), [native adapter evidence](#native-clipboardbrowser-adapter-wiring), workflow tests | M4/M6 actual OS delivery; P1/P2 packaging/clean-machine checks |
 
@@ -65,8 +65,8 @@ routes in addition to its status tooltip.
 `Main_Window::{save_cb,save_map,save_metatileset,save_tileset,save_roof,
 save_event_script,export_palettes}`. The existing
 [message dialog](../crates/gui/src/message_dialog.rs) supplies source-derived
-client dimensions and Enter/Escape/OK dismissal. M2 shield artwork and M4 native
-child-window/font fidelity remain separate requirements.
+client dimensions and Enter/Escape/OK dismissal. Original message artwork is imported; M4 native child-window/font fidelity
+remains a separate requirement.
 
 - Save processes dirty tileset, roof, blockset/collisions, events and map in that
   order. A clean map is skipped when another domain is dirty; an entirely clean
@@ -105,7 +105,7 @@ in-memory eframe persistence cover acknowledgment lifetime. Existing editor test
 now dismiss actual success dialogs before further editing. Reviewed
 [success](../crates/gui/tests/snapshots/save-map-success.png) and
 [block-limit warning](../crates/gui/tests/snapshots/save-block-limit-warning.png)
-snapshots preserve the measured message layout; shield artwork remains M2. Native chooser UI,
+snapshots preserve the measured message layout with original message artwork. Native chooser UI,
 on-disk restart persistence and complete original-application save/reopen remain
 M5–M7 acceptance work; these are synthetic/headless tests.
 
@@ -375,9 +375,8 @@ native/reference checks. Eight new/updated baselines were inspected; pixel
 differences in the four existing images are confined to their dialog regions.
 
 This is client-layout/input evidence, not native child-window/frame or font
-rasterization parity. Captions remain inside an egui modal. Warning/error/success
-shield artwork remains unimported pending provenance; its original space is
-reserved. Error details can retain the port's structured diagnostics.
+rasterization parity. Captions remain inside an egui modal. Warning/error/success images now fill their original space; see the
+[completed artwork port](#original-toolbar-message-and-application-artwork). Error details can retain the port's structured diagnostics.
 
 ## PNG decoding, interlacing and platform transparency
 
@@ -532,6 +531,46 @@ Local formatting, warnings-as-errors workspace Clippy, workspace tests and
 rustdoc pass. The full visual suite passes 177 tests with four existing ignored
 tests, using unchanged snapshot baselines.
 
+## Original toolbar, message and application artwork
+
+M2 now imports all 41 nonblank toolbar/editor XPMs from the pinned master,
+including the ten formerly missing designs and the dark Blocks variant.
+[Icon records](icon-inventory.json) and [application/message records](artwork-inventory.json)
+pin original blobs and decoded pixels. The user selected original upstream
+artwork with upstream attribution; known Fugue terms remain separately retained,
+and unknown underlying origins are recorded without claiming new clearance.
+See [assets](assets.md) for the current distribution decision and source history.
+
+The toolbar retains the same 27 controls, 24-point bounds, source order, names,
+keyboard actions and disabled guards. Bitmap faces replace only the interim text.
+The [pixel atlas](../crates/gui/src/icons.rs) checks all 33 designs at 22/24 points,
+light/dark, enabled/disabled and 1×/2× DPI (528 combinations). Source hash checks
+cover all 10,496 toolbar/editor pixels. Popup menus retain their source blank
+image column and check/radio marks; upstream does not give them toolbar images.
+
+[Message/About artwork](../crates/gui/src/artwork.rs) paints the original 48×48
+pixels with a one-point inset in each source 50×50 slot. Typed message kinds select
+Error/Warning/Success independently of their captions. Every source pixel and
+transparent margin is checked over both backgrounds/scales. Pillow independently
+agrees with the XPM decoder for all 9,472 message/application pixels. CI runs both
+offline asset verifiers, including the preserved Windows ICO hash.
+
+The desktop viewport receives the original 16×16 Linux icon or the 48×48
+application picture on Windows/macOS. The latter exactly matches the original
+ICO’s 48×48 frame. This verifies the configured payload, not native OS icon
+selection, scaling, taskbar/Dock or executable metadata. Native rendering remains
+M4/P1; embedding the original multi-resolution ICO and macOS bundle metadata
+remains P2. No GUI computer use was needed for this pixel/geometry work.
+
+The workspace suite passes (362 tests; 33 explicit native/reference ignores),
+and the serial visual suite passes (226 tests; four explicit ignores). All
+99 changed snapshots were compared against their committed predecessors: changes
+are confined to toolbar/image slots, with the previous 23 atlas columns unchanged.
+The original-artwork atlas adds the four 48×48 pictures. Representative light/dark
+full toolbars, message images and About crops were reviewed; both pixel atlases
+also pass their per-pixel checks at 1×/2×. Format, workspace/visual Clippy, rustdoc,
+native-adapter graph, asset hash checks and documentation links/examples pass.
+
 ## Open, Load Events and Load Palettes icons
 
 The three toolbar controls now use the unchanged pinned `open.xpm`, `load.xpm`
@@ -559,8 +598,8 @@ unchanged. Toolbar geometry/action/disabled-guard coverage remains active.
 Formatting, workspace and visual-feature Clippy, workspace tests and rustdoc
 also pass locally. No computer use or native chooser interaction was needed.
 
-Ten toolbar controls still have unresolved artwork and retain placeholders.
-This import does not establish complete toolbar or native-window parity.
+At that import, ten toolbar controls still used placeholders. The remaining
+artwork is now imported below; native-window parity remains unverified.
 
 ## Compressed graphics loader differential
 
@@ -627,7 +666,7 @@ The warning snapshot was reviewed. Formatting, workspace and visual-feature
 Clippy, workspace tests and rustdoc pass locally; all 168 active GUI visual tests
 pass, with four host/reference integrations explicitly ignored in that run.
 These are source-derived and integration checks, not a compiled full-application
-differential. The warning's native window, artwork and exact geometry remain open.
+differential. The warning's native window and exact geometry remain open; original artwork is imported.
 
 ## Popup panel frames and full-width separators
 
@@ -907,7 +946,7 @@ temporary `+/-` label. Review of upstream `e894ac8` identifies the geometric
 plus-minus drawing with the original blockset resize interface; its pinned blob
 is byte-identical to that introduction. Attribution, LGPL-3.0-only terms and
 source/pixel hashes are recorded in the asset notice and inventory. Open and
-Undo/Redo remain excluded after the component comparisons in `docs/assets.md`.
+Undo/Redo were excluded at that time; subsequent imports supersede that state.
 
 The asset verifier checks 27 source files and 6,912 decoded pixels. The rendered
 atlas checks 20 designs across 320 size/theme/disabled/DPI combinations, including
@@ -1173,8 +1212,8 @@ width of 712/713 despite its 700-point measurement setting. Interaction tests
 check identity/attribution, control bounds, menu/shortcut/Enter/Escape, empty-map
 access, modal guards, unchanged project bytes and retained dirty-map history.
 
-The application image remains excluded after history/hash/visual review; the
-icon slot stays blank. That is an unresolved visual gap, not artwork clearance.
+The application image was initially excluded. The original-artwork selection
+and import below now fill that slot while retaining the provenance limitations.
 Native window chrome/system fonts also remain unverified. Windows-light,
 Unix-light and Windows-dark snapshots were inspected, with platform metrics
 selected before the first layout pass for reproducible cross-platform baselines.
@@ -1581,7 +1620,8 @@ matrix above and [preferences](preferences.md) for present coverage.
   modifying the project.
   The Data/Options popup changes, five-choice submenu and confirmation/success
   snapshots were inspected. No other existing baselines changed. These are
-  headless egui snapshots; native shield artwork and modal geometry remain open.
+  headless egui snapshots; native modal geometry remains open. Message artwork
+  has since been imported.
 
 - File Close, Save Map and Exit now follow `Main_Window::close_cb`,
   `save_map_cb`, `exit_cb`, `unsaved` and `modified_filename`. Five headless tests
@@ -1668,8 +1708,8 @@ matrix above and [preferences](preferences.md) for present coverage.
   Interaction checks cover 24×24 bounds in the y=22..46 toolbar, 22×22 clipboard
   controls, accessible labels, keyboard activation, toggle state, editor dispatch
   and modal/disabled guards. Complete toolbar membership is now covered above;
-  native frame/theme styles and remaining artwork are still pending. Open,
-  Undo and Redo now use source-sized text placeholders while provenance is reviewed.
+  native frame/theme styles remain pending. Open, Undo and Redo used text
+  placeholders at this initial import; all now use original source artwork.
   The icon atlas and representative light/dark/tool-dialog snapshots were
   inspected. All 42 changed existing baselines differ only in the toolbar band
   and the four tile/roof clipboard-control areas; the remaining pixels are

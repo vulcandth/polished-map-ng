@@ -31,11 +31,33 @@ pub(super) enum Icon {
     Open,
     LoadEvents,
     LoadPalettes,
+    Undo,
+    Redo,
+    GameBoy,
+    ShowEvents,
+    WarpIds,
+    Blocks,
+    Events,
+    ChangeTileset,
+    ChangeRoof,
+    Roof,
 }
 
 impl Icon {
     pub(super) fn pixels(self, dark: bool) -> &'static [u8; 1024] {
         match (self, dark) {
+            (Self::Undo, _) => include_bytes!("../assets/icons/undo.rgba"),
+            (Self::Redo, _) => include_bytes!("../assets/icons/redo.rgba"),
+            (Self::GameBoy, _) => include_bytes!("../assets/icons/gameboy.rgba"),
+            (Self::ShowEvents, _) => include_bytes!("../assets/icons/show.rgba"),
+            (Self::WarpIds, _) => include_bytes!("../assets/icons/warp.rgba"),
+            (Self::Blocks, true) => include_bytes!("../assets/icons/blocks-dark.rgba"),
+            (Self::Blocks, _) => include_bytes!("../assets/icons/blocks.rgba"),
+            (Self::Events, _) => include_bytes!("../assets/icons/events.rgba"),
+            (Self::ChangeTileset, _) => include_bytes!("../assets/icons/change.rgba"),
+            (Self::ChangeRoof, _) => include_bytes!("../assets/icons/change-roof.rgba"),
+            (Self::Roof, _) => include_bytes!("../assets/icons/roof.rgba"),
+
             (Self::New, _) => include_bytes!("../assets/icons/new.rgba"),
             (Self::Open, _) => include_bytes!("../assets/icons/open.rgba"),
             (Self::LoadEvents, _) => include_bytes!("../assets/icons/load.rgba"),
@@ -131,15 +153,10 @@ pub(super) fn paint(ui: &egui::Ui, bounds: Rect, icon: Icon, enabled: bool) {
 }
 
 pub(super) struct Button<'a> {
-    face: Face<'a>,
+    icon: Icon,
     label: &'a str,
     selected: Option<bool>,
     size: f32,
-}
-
-enum Face<'a> {
-    Icon(Icon),
-    Text(&'a str),
 }
 
 pub(super) fn separator(ui: &mut egui::Ui) {
@@ -155,17 +172,7 @@ pub(super) fn separator(ui: &mut egui::Ui) {
 impl<'a> Button<'a> {
     pub(super) fn new(icon: Icon, label: &'a str) -> Self {
         Self {
-            face: Face::Icon(icon),
-            label,
-            selected: None,
-            size: 24.0,
-        }
-    }
-
-    /// Keep source control geometry while the original artwork is under review.
-    pub(super) fn placeholder(text: &'a str, label: &'a str) -> Self {
-        Self {
-            face: Face::Text(text),
+            icon,
             label,
             selected: None,
             size: 24.0,
@@ -215,20 +222,7 @@ impl egui::Widget for Button<'_> {
                     egui::StrokeKind::Inside,
                 );
             }
-            match self.face {
-                Face::Icon(icon) => paint(ui, rect, icon, ui.is_enabled()),
-                Face::Text(text) => {
-                    ui.painter()
-                        .with_clip_rect(rect.intersect(ui.clip_rect()))
-                        .text(
-                            rect.center(),
-                            egui::Align2::CENTER_CENTER,
-                            text,
-                            egui::FontId::monospace(11.0),
-                            ui.visuals().text_color(),
-                        );
-                }
-            }
+            paint(ui, rect, self.icon, ui.is_enabled());
         }
         response
     }
@@ -348,6 +342,16 @@ mod tests {
             Icon::Open,
             Icon::LoadEvents,
             Icon::LoadPalettes,
+            Icon::Undo,
+            Icon::Redo,
+            Icon::GameBoy,
+            Icon::ShowEvents,
+            Icon::WarpIds,
+            Icon::Blocks,
+            Icon::Events,
+            Icon::ChangeTileset,
+            Icon::ChangeRoof,
+            Icon::Roof,
         ];
         let mut rows = Vec::new();
         for size in [24_u32, 22] {

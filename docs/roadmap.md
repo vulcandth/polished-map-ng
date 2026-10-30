@@ -10,7 +10,7 @@ and design decisions in [architecture](architecture.md).
 | Milestone | Status | What that means |
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
-| 1. Master parity | **In progress — active milestone** | Source inventory and discovery work are complete; artwork, native integration and full application acceptance remain unfinished. |
+| 1. Master parity | **In progress — active milestone** | Source inventory, discovery and original artwork are implemented; native integration and full application acceptance remain unfinished. |
 | 2. Plusplus parity | Not started | Expanded-profile port and compatible Polished Crystal acceptance remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
@@ -25,8 +25,9 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M2, finish artwork provenance and porting. M1 inventory/discovery and
-save feedback are complete. Follow with M3–M6 and M7 acceptance. If a task is externally blocked, record the blocker and
+**Next:** M3, complete external file drops and whole-window transparency.
+M1 inventory/discovery/save feedback and M2 original artwork are complete.
+Follow with M4–M6 and M7 acceptance. If a task is externally blocked, record the blocker and
 advance another unchecked master task. Do not advance to plusplus merely because
 one feature or test suite is complete.
 
@@ -91,6 +92,14 @@ adding improvements. Each completed group below still participates in M7.
   are complete and the [source inventory](compatibility.md#master-source-inventory)
   is reconciled. Native window/widget fidelity, lifecycle and full project
   acceptance remain explicitly owned by M4–M7.
+- [x] **M2 — Original icon and application artwork:** all ten toolbar placeholders,
+  message symbols, About picture and desktop icon payload use pinned upstream
+  artwork with attribution, known third-party notices and recorded provenance
+  limitations, as explicitly selected by the user. Source hashes, decoded pixels,
+  disabled/theme variants and 1×/2× bounds pass; reviewed snapshots preserve
+  existing layout. Evidence: [artwork port](compatibility.md#original-toolbar-message-and-application-artwork),
+  [asset records](assets.md). Native icon delivery remains M4/P1; executable/bundle
+  resources remain P2.
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
   anchors, zero fill and source-compatible history boundaries.
 - [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
@@ -114,12 +123,6 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 
 ### Remaining work, in execution order
 
-- [ ] **M2 — Finish icon and application-artwork provenance and porting (in progress).**
-  Resolve the ten toolbar placeholders, application/About image and message
-  shields. Import only cleared assets, preserve notices, and verify decoded
-  pixels, enabled/disabled states and source bounds at both DPI scales. Any
-  replacement must be explicitly recorded as a deviation. This belongs to master
-  parity, not the later redesign phase. See [assets](assets.md).
 - [ ] **M3 — Complete external file drops and whole-window transparency (in progress).**
   Deliver real drop coordinates/path order through the window adapter; accept
   only workspace drops and use the normal guarded Open flow. Resolve Wayland's
@@ -241,6 +244,7 @@ and release acceptance follow the preceding objectives.
 - Preserve safe valid-input behavior and source serialization/history limits.
   Fix corruption/crashes immediately and record observable [deviations](deviations.md).
 - Derive GUI dimensions from source calculations; use geometry/input/pixel tests
-  first, then targeted native verification. Unverified artwork stays excluded.
-- Every release respects LGPL and separate asset/font licenses. No game assets,
+  first, then targeted native verification. Original upstream UI artwork is
+  selected with attribution; preserve known notices and provenance limitations.
+- Every release respects LGPL and separate asset/font licenses. No project/game fixture assets,
   implicit conversion, web/mobile port or MCP server is part of the accepted scope.

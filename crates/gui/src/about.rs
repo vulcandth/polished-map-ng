@@ -1,5 +1,5 @@
 //! Main_Window About content and Modal_Dialog::refresh at pinned master.
-//! LGPL-3.0-only. The unaudited application icon is deliberately not bundled.
+//! LGPL-3.0-only. Original artwork attribution: assets/artwork/NOTICE.md.
 use super::*;
 
 const TITLE: &str = "About Polished Map NG";
@@ -91,8 +91,9 @@ impl AboutDialog {
                 self.bounds = Some(area);
             }
             let translated = |r: Rect| r.translate(area.min.to_vec2());
-            // Reserve the source icon geometry without importing unverified art.
+            // FL_ALIGN_CENTER places the original 48px picture inside its 50px slot.
             ui.allocate_rect(translated(layout.icon), Sense::hover());
+            artwork::Image::App.paint(ui, translated(layout.icon));
             ui.put(
                 translated(layout.heading),
                 egui::Label::new(egui::RichText::new(SUBJECT).font(heading_font))

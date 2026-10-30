@@ -1,0 +1,59 @@
+{
+  "upstream_commit": "8b9bdc2b8aac8c865809516c2123af69c498da0b",
+  "source": "https://github.com/Rangi42/polished-map/tree/8b9bdc2b8aac8c865809516c2123af69c498da0b/res",
+  "notice": "crates/gui/assets/artwork/NOTICE.md",
+  "license_basis": "Upstream repository LGPL-3.0-only. App artwork underlying origin is not established; user requested original upstream artwork with attribution.",
+  "images": [
+    {
+      "file": "res/warning.xpm",
+      "width": 48,
+      "height": 48,
+      "xpm_sha256": "dcd1a1a9121fdf22bf2cf3ba826f28b9ab2a306787c0d9e2f19f66cab9fcafe3",
+      "rgba_sha256": "f6636f074ee540ba75ea0cd394ba5b987e135b95443c6c539f032a19f041fa17",
+      "last_changed_commit": "5b6e80603c3478b794fb6db89ed9967f48422093"
+    },
+    {
+      "file": "res/error.xpm",
+      "width": 48,
+      "height": 48,
+      "xpm_sha256": "e33d1b5b506703109d9e7c1dffc93bd0ba8a175997fdee73991326358dfb7a41",
+      "rgba_sha256": "81143bae98b5dd3b25f5662ff7583165cb6162840034a59a1cd23badf275a74c",
+      "last_changed_commit": "5b6e80603c3478b794fb6db89ed9967f48422093"
+    },
+    {
+      "file": "res/success.xpm",
+      "width": 48,
+      "height": 48,
+      "xpm_sha256": "f44b1dd19c02652049d32dfcc9428896b50980bb86b307e54225906f4357d4ac",
+      "rgba_sha256": "8bd11c6319cdd1d15530b514252ee19d8a45f7e762550d57834a6bd9103b3ccc",
+      "last_changed_commit": "5b6e80603c3478b794fb6db89ed9967f48422093"
+    },
+    {
+      "file": "res/app.xpm",
+      "width": 48,
+      "height": 48,
+      "xpm_sha256": "c12a076f845397709b2d61c9db4ea26d853baf6a2e1ad71b1f9d6582dcc51375",
+      "rgba_sha256": "6dc8a03ed5cffd7c148fe0af647793852da71369ca18e79503c81706f8747f50",
+      "last_changed_commit": "5862da0bccf0a8421ec25f57cefcbf53e7d898ef"
+    },
+    {
+      "file": "res/app-icon.xpm",
+      "width": 16,
+      "height": 16,
+      "xpm_sha256": "072e9cba4bd023562067337ad366b62e2a24d9e0000816cb24711c59908793f8",
+      "rgba_sha256": "0ce263222ecd94986e5220d34415b1d590dfce83e284b0bccafa0fbef6e3223b",
+      "last_changed_commit": "bc704f9098c07076d840eac798fb7301dce74709"
+    }
+  ],
+  "windows_bundle": {
+    "file": "res/app.ico",
+    "sha256": "d8b7efad10326a6a60e7285845f5316de4206b5074eb82a06f4da4d0a3befc2a",
+    "sizes": [
+      16,
+      24,
+      32,
+      48,
+      64
+    ]
+  }
+}

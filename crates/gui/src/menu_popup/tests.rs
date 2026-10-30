@@ -161,8 +161,7 @@ fn popup_rows_reserve_images_and_align_shortcuts_at_both_font_sizes_and_dpi_scal
             // Text paint positions are checked independently of widget bounds.
             let mut key_x = Vec::new();
             for shape in &h.output().shapes {
-                // Toolbar text placeholders can share a shortcut letter, but
-                // their paint is clipped to the independent 26-point toolbar.
+                // Inspect popup text independently of the separate toolbar layer.
                 if shape.clip_rect.height() <= geometry::TOOLBAR_HEIGHT {
                     continue;
                 }

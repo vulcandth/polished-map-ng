@@ -50,7 +50,12 @@ has at least {bytes} bytes.",
 
     pub(super) fn overworld_dialog(&mut self, ctx: &egui::Context) {
         if let Some(message) = &self.overworld_warning {
-            if message_dialog::show(ctx, "overworld-warning", "Warning", message) {
+            if message_dialog::show(
+                ctx,
+                "overworld-warning",
+                message_dialog::Kind::Warning,
+                message,
+            ) {
                 self.overworld_warning = None;
             }
             return;

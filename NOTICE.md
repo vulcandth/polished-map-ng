@@ -93,8 +93,8 @@ their separate licenses even when used through these font-role aliases.
 
 The complete toolbar order, control extents, grouping and availability rules
 adapt master `Main_Window::{initialize,update_active_controls}` and
-`widgets.cpp::Toolbar::draw`, under LGPL-3.0-only. Text placeholders for
-unreviewed artwork contain no imported image pixels.
+`widgets.cpp::Toolbar::draw`, under LGPL-3.0-only. All toolbar positions now use their pinned upstream artwork; attribution
+bases are recorded in the per-file inventory and icon notice.
 
 The five status fields, fixed measurement samples and hover formatting adapt
 master `Main_Window::{initialize,update_status,update_event_cursor}`. Their
@@ -128,7 +128,7 @@ the embedded `warp_digits_png_buffer` added by Rangi in commit
 8f457b682f35388bb143cfd7c36fc6c109b30898 (2022-03-28), under the repository's
 LGPL-3.0 license. Decoded pixel patterns are stored as row masks; original
 attribution and LGPL-3.0-only terms remain. See `docs/assets.md` for hashes,
-history, verification and the distinction from unaudited toolbar icons.
+history, verification and the separate attribution records for toolbar icons.
 External script dispatch and known Windows editor line arguments adapt
 `Main_Window::view_event_script` in master `main-window.cpp`; native calls,
 worker lifetime, validation and error reporting are Rust implementations.
@@ -138,7 +138,8 @@ see `crates/gui/assets/help/NOTICE.md` for the immutable source, reproducible
 Windows/Unix conversion and preserved upstream attribution.
 About adapts `Main_Window::initialize/about_cb`, `Modal_Dialog::refresh` and
 the platform sizes in `themes.h`. Its text distinguishes NG's own identity from
-the retained Rangi/Fugue notices. Unverified application artwork is not included.
+the retained Rangi/Fugue notices. Original application artwork is included with the upstream attribution and
+provenance limitations in `crates/gui/assets/artwork/NOTICE.md`.
 The shared error/warning/success message layout also adapts `Modal_Dialog::refresh`
 and the 280/700 width range in `Main_Window::initialize`. Enter follows
 `Default_Button`; Escape follows FLTK's modal-window cancel dispatch. Shield
@@ -209,8 +210,8 @@ continuation state machine retains NG's staged-write and conflict protections.
 
 ## Assets and fixtures
 
-No upstream game graphics, example maps or native font files are redistributed.
-Tests create synthetic data. Thirty reviewed toolbar/editor icon images are
+No project game graphics, example maps or native font files are redistributed.
+Tests create synthetic data. Forty-one original toolbar/editor icon images are
 included with unchanged XPM sources, decoded RGBA pixels and provenance hashes.
 Some adapt **Fugue Icons**, copyright © 2013 Yusuke Kamiyamane, under **CC BY 3.0**:
 <https://p.yusukekamiyamane.com/> and <https://creativecommons.org/licenses/by/3.0/>.
@@ -219,7 +220,11 @@ to Rangi/Polished Map under LGPL-3.0-only. NG preserves source pixels, converts
 storage and generates disabled appearances. The original asset terms are not
 replaced by this code license. See `crates/gui/assets/icons/NOTICE.md`,
 `docs/assets.md` and `LICENSES/CC-BY-3.0.txt`, also applicable to icon-containing
-GUI snapshots. Unreviewed icons remain excluded. Reference checkouts are not shipped.
+GUI snapshots. Additional original message/application images and the Windows
+ICO retain upstream attribution in `crates/gui/assets/artwork/NOTICE.md` and
+`docs/artwork-inventory.json`. The user selected original upstream UI artwork,
+including previously unresolved images; this attribution does not establish or
+replace independent underlying third-party rights. Reference checkouts are not shipped.
 
 Rust dependencies retain their own licenses. Dependency notices must accompany
 binary releases. This notice does not relicense third-party assets.

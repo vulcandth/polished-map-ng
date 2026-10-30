@@ -1,6 +1,6 @@
 {
   "upstream_commit": "8b9bdc2b8aac8c865809516c2123af69c498da0b",
-  "scope": "XPM includes in src/icons.h; metadata only. Hashes use Git blob bytes and row-major RGBA8 with zero RGB for transparent pixels. Decode the declared row width. Entries with distribution records identify the reviewed imported assets and their separate license notices; other entries are not imported.",
+  "scope": "All 42 XPM includes in src/icons.h. 41 images are distributed; blank uses geometry only. Hashes use Git blob bytes and declared row-major RGBA8 with zero RGB for transparent pixels. Distribution records distinguish confirmed third-party notices from upstream-only attribution selected by the user.",
   "icons": [
     {
       "file": "res/blank.xpm",
@@ -142,7 +142,14 @@
       "xpm_sha256": "be5c14703d7ed43eb3b1121cef705591ac3c661b4e21483bc5e3708e8c9d1937",
       "rgba_sha256": "9a84597e5c2f4f4e255a5f1c95efa11a570fbaffae93ad47af81426962a2c0c3",
       "last_changed_commit": "e0a2d6c8ce21c82e2282328f0a9dd64d74f9b3b6",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/redo.xpm",
@@ -152,7 +159,14 @@
       "xpm_sha256": "41cfad1f2f7bec98422cea7877a94b9af2a8d1def033124238bbb15f0e706813",
       "rgba_sha256": "f884464d7e8ad97863ec15171d56075cb17a62d5e784b3617f770d6ae342bde1",
       "last_changed_commit": "e0a2d6c8ce21c82e2282328f0a9dd64d74f9b3b6",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/grid.xpm",
@@ -294,7 +308,14 @@
       "xpm_sha256": "765fd4880bc6ee073e8e12827ec5c8bdcca3b2854f726d943fde9cc7da426095",
       "rgba_sha256": "07e105a6268ebbcf76f91a8e6413201590e2b0bab17afa865b3c7a3d5205f2d0",
       "last_changed_commit": "316336ed877cb1c6c4d4f6d549cf960629d9fce1",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/warp.xpm",
@@ -304,7 +325,14 @@
       "xpm_sha256": "f114d02790e4b9b9ad475605e719dd719da728294e4f6a735144705a4253b881",
       "rgba_sha256": "d30f4bec05c1e79f9f25d5be712742caf7792767a1d58973a22e583c5c2d3bfd",
       "last_changed_commit": "19eb0d0aaeabb7ce1730a82d595ed23c67b61347",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/priority.xpm",
@@ -330,7 +358,14 @@
       "xpm_sha256": "134e3279c6212b9dc9e3f0d3aad3cb5edd931dabea1b5f7a0d5d758f3105350e",
       "rgba_sha256": "06da90f6de771d453480265ab8af7ae08d581d5e0ab147c18a0b8e95b9fcf5ab",
       "last_changed_commit": "2899e94ae83d7e23f025185e7acc61b28095880b",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/blocks.xpm",
@@ -340,7 +375,14 @@
       "xpm_sha256": "eb660b1e58db11acf4302f09a7ff9d6f28e61faa76d6963537971aa90f68f5f6",
       "rgba_sha256": "a29c4a04bebbe9a5419940b2f200b9e4b3fb6ed2a2e87b4492487ad5e82f8a9d",
       "last_changed_commit": "4fc39b25b79ec755af45f7b9f7a0942b996ebc4c",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/blocks-dark.xpm",
@@ -350,7 +392,14 @@
       "xpm_sha256": "9d5b95ff030519c8e781a1cd5aa3cd6a12a0f434b552ae6ae2c6323d70f12976",
       "rgba_sha256": "c7f6ae20ec1c0adf6b46fd9c3f34e41081e98d865bf1e067cf5db0eabdc3dcbd",
       "last_changed_commit": "530c963158fceb9d4836363d6d5e39d51019b616",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/events.xpm",
@@ -360,7 +409,14 @@
       "xpm_sha256": "e0b412fd732ed6d788afab2c45ee26b3f5b191d96f6bf2f5d9cc8bb7c2788c60",
       "rgba_sha256": "4ff90d03f7c424a116ecd06e4035aa09a0f64464996db8e3d5b4b1fafb0b79d5",
       "last_changed_commit": "4fc39b25b79ec755af45f7b9f7a0942b996ebc4c",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/add-sub.xpm",
@@ -405,7 +461,14 @@
       "xpm_sha256": "939a79528b128d03dcc919dd8aa068137d996b72018eeef5e3dae132b7c9dbb1",
       "rgba_sha256": "f3e47cb907bc03c4af504d34c5505db5ab8ff19686da3462d11c19962b8d44ea",
       "last_changed_commit": "99ecbf76493ccc4251302ca6cf39e827cc6a56a2",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/change-roof.xpm",
@@ -415,7 +478,14 @@
       "xpm_sha256": "8908e35d5c142e08c439c018184cbde608dccea6fa24746544f0576787d5c672",
       "rgba_sha256": "fd151e090de2bec618ff3057cfcd0da8c28ea595b5c495d706c6722ccdb115b7",
       "last_changed_commit": "923d3384287e1302baf67bd9eb08702e39505ba2",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/tileset.xpm",
@@ -444,7 +514,14 @@
       "xpm_sha256": "65deb11dfd1b7ea59207b5216a8016cecc2fd041666152d1fcf688bbc3b7980d",
       "rgba_sha256": "b8cf27b5759c3b87d31492cd8e9651f03ad8e6372a7d81d48c7061eb61a68d3f",
       "last_changed_commit": "923d3384287e1302baf67bd9eb08702e39505ba2",
-      "overlong_rows_zero_based": []
+      "overlong_rows_zero_based": [],
+      "distribution": {
+        "license_basis": "Upstream repository LGPL-3.0-only; separate underlying artwork origins are not established",
+        "notice": "crates/gui/assets/icons/NOTICE.md",
+        "source": "Polished Map by Rangi42/Rangi and contributors",
+        "selection": "User requested the original upstream artwork with upstream attribution on 2026-10-29",
+        "changes_in_ng": "Unchanged XPM plus decoded RGBA8; runtime disabled appearance"
+      }
     },
     {
       "file": "res/load-palettes.xpm",

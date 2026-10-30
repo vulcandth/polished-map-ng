@@ -154,7 +154,7 @@ impl Editor {
 
     pub(super) fn print_dialog(&mut self, ctx: &egui::Context) {
         if let Some(message) = &self.print_success {
-            if message_dialog::show(ctx, "print-success", "Success", message) {
+            if message_dialog::show(ctx, "print-success", message_dialog::Kind::Success, message) {
                 self.print_success = None;
             }
             return;

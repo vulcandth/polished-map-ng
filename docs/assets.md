@@ -1,27 +1,44 @@
 # Asset provenance
 
-Game graphics and maps are not distributed. Reference checkouts and extracted
-oracle inputs stay ignored. Only the 30 reviewed icon images marked with a
-`distribution` entry in the inventory are imported. Other icons remain excluded;
-this record does not authorize importing other assets.
+Project game graphics and example maps are not distributed. Reference checkouts
+and extracted oracle inputs stay ignored. The UI now uses all 41 nonblank toolbar/
+editor XPMs, the three original message symbols, About image and native app icon.
+The blank menu image is represented by its measured empty column.
 
-## Menu and toolbar icon audit (in progress)
+## Original artwork selection and provenance
 
-The remaining icon work is tracked by M2 in the [roadmap](roadmap.md).
-`src/icons.h` at pinned master includes **42 XPM images, all 16×16**.
-[`icon-inventory.json`](icon-inventory.json) records their Git-blob SHA-256,
-decoded RGBA8 SHA-256, palette size and last-changing upstream commit. It contains
-metadata only; each reviewed import has an explicit `distribution` entry.
-Entries without that field are not cleared for import. Transparent pixels use zero
-RGB in the decoded hash. Decode exactly the declared width: `tileset.xpm` and
-`palettes.xpm` each have a 17-character final row for a 16-pixel image. All 42
-decoded hashes were independently checked against Pillow's XPM decoder.
+The user explicitly requested original upstream artwork with upstream attribution
+on 2026-10-29, including the previously unresolved toolbar and application art.
+This supersedes the earlier placeholder policy. It does not establish independent
+third-party ownership: records distinguish confirmed Fugue licensing from images
+reproduced on the basis of the upstream repository's attribution/license.
+Known third-party notices remain intact; no replacement artwork is introduced.
 
-The complete toolbar now reserves all 27 source button positions. Its ten
-unreviewed designs use short text placeholders inside 24×24 controls with full
-accessible names/tooltips. They import no additional artwork and do not change
-the inventory's clearance decisions. Replacing these placeholders remains part
-of the visual port; they are not final icon designs.
+[`icon-inventory.json`](icon-inventory.json) covers the 42 source includes in
+`src/icons.h`, with 41 distribution records. [`artwork-inventory.json`](artwork-inventory.json)
+covers message/application XPMs and the original multi-resolution Windows ICO.
+Each records the pinned Git blob and decoded RGBA hashes. The original XPM bytes
+are unchanged. All decoded artwork pixels were independently compared with Pillow.
+For `tileset.xpm` and `palettes.xpm`, decode only the declared 16-pixel width despite
+the extra final-row character, as FLTK does. Transparent pixels have zero RGB.
+
+All 27 toolbar buttons now use source images with their original names, bounds,
+actions, disabled arithmetic and available dark variants. No text placeholder
+faces remain. The three 48×48 message symbols and 48×48 About image are centered
+in the source's 50×50 slots. Linux's window adapter uses the original 16×16 XPM;
+Windows/macOS receive the 48×48 application picture. The Windows ICO's 48×48
+frame exactly matches that picture. The unchanged ICO with 16/24/32/48/64 frames
+is retained for release packaging; executable resources and macOS bundle metadata
+remain P2, while native window-system icon selection/rasterization remains M4/P1.
+
+Verification: `python tools/icon_assets.py` and `python tools/artwork_assets.py`
+check all distributed source/decoded hashes offline and run in CI. `--write`
+regenerates only the decoded RGBA files. Runtime pixel tests cover all 33 toolbar
+image designs at 22/24-point button sizes, light/dark, enabled/disabled, and 1×/2×
+DPI (528 combinations); message/About tests check every pixel, transparency and
+one-point centering inset over both backgrounds/scales. Native display delivery
+is not proved by these tests. Notices: [toolbar](../crates/gui/assets/icons/NOTICE.md),
+[application/messages](../crates/gui/assets/artwork/NOTICE.md), [root](../NOTICE.md).
 
 ### Authoritative licensing evidence
 
@@ -89,11 +106,11 @@ bundled XPMs. The dependency CI job runs verification without network access.
 | priority | Imported under LGPL-3.0-only; Rangi's geometric zigzag matches all 252 opaque pixels in the 16×16 priority overlay, with four transparent corners. See the provenance below. |
 | add-sub | Imported under LGPL-3.0-only after reviewing its geometric drawing and introducing commit `e894ac8`; see the component audit below. |
 | open, load, load-palettes | Imported with Fugue CC BY 3.0 and LGPL adaptation notices after the component review below. |
-| undo, redo, show, warp, gameboy, change | Still excluded. Trace composite artwork and other source families; nearest-image candidates remain unverified. |
-| blocks/blocks-dark, events, roof, change-roof | Still excluded. These visually resemble game sprites/tiles. Trace the underlying artwork; repository attribution alone is insufficient to clear it. Appearance is not proof of ownership. Resolve rights or use separately licensed/original artwork and record the visual deviation. |
+| undo, redo, show, warp, gameboy, change | Imported unchanged at the user’s direction with upstream attribution. Independent underlying origins remain unverified; these are not asserted to be Fugue images. |
+| blocks/blocks-dark, events, roof, change-roof | Imported unchanged with upstream attribution under the user’s original-artwork selection. Some resemble game sprites/tiles; independent underlying rights are not established by the repository citation. |
 
 Application logos and warning/error/success imagery are outside the 42-image
-`icons.h` inventory and require their own audit before import. The imported icons
+`icons.h` inventory; their separate source records and notices are linked above. The imported icons
 and their disabled/dark variants appear in the Rust GUI and rendered snapshots;
 those snapshots carry the same asset notices and terms.
 
@@ -124,7 +141,8 @@ and later change `e0a2d6c` do not identify another collection.
 
 The initial whole-image comparisons left Open's arrow and Load Palettes' bulb
 unresolved. The following component review supersedes that conclusion for those
-composites; it does not clear Undo/Redo or any other excluded artwork.
+composites; it does not establish underlying origins for Undo/Redo or the other images
+subsequently selected for upstream-attributed reuse.
 
 ### Open, Load and Load Palettes composite review
 
@@ -171,12 +189,12 @@ python tools/icon_assets.py
 
 The first command checks the archive and component hashes, the two exact masks,
 the three-color base recolor and the shared folder strip. It neither downloads
-nor imports assets. The normal offline CI verifier checks all 30 bundled XPMs
-and 7,680 decoded pixels. Comparison sheets/archive stay in ignored scratch storage.
+nor imports assets. That composite import covered 30 XPMs and 7,680 pixels. The current offline
+verifier covers all 41 toolbar/editor XPMs and 10,496 pixels. Comparison sheets/archive stay in ignored scratch storage.
 
 ### Port and validation sequence
 
-1. Finish the licensing records and import only cleared source assets. Preserve
+1. Preserve the selected original artwork and each asset’s attribution basis. Preserve
    the exact 16×16 pixels of those assets, including transparency and dark variants.
 2. Port `Main_Window::initialize` and `Toolbar::draw` geometry: 24×24 buttons in a
    26-point row, separators composed of 2+2+2 points, centered 16×16 images, and
@@ -257,7 +275,7 @@ GUI tests check texture pixels at 1×/2× DPI over light/dark backgrounds. The
 atlas also includes the later Resize Blockset import described above.
 Native FLTK/egui compositing equivalence still needs platform verification.
 
-## Application icon audit (unresolved)
+## Application and message image source records
 
 The About `APP_ICON` path uses `res/app.xpm`, a 48×48 tree/grass image. It was
 introduced with the About dialog in
@@ -266,9 +284,9 @@ and replaced in
 [`5862da0`](https://github.com/Rangi42/polished-map/commit/5862da0bccf0a8421ec25f57cefcbf53e7d898ef).
 The 16×16 `res/app-icon.xpm` arrived with Linux support in
 [`bc704f9`](https://github.com/Rangi42/polished-map/commit/bc704f9098c07076d840eac798fb7301dce74709).
-These history entries establish the repository changes but do not identify the
-underlying artwork's source or an independent permission chain. Visual inspection
-alone does not establish ownership. Neither file has been cleared or imported.
+These history entries establish the repository changes but not an independent
+underlying-artwork permission chain. Both images are now imported unchanged with
+upstream attribution at the user’s direction, as recorded above.
 
 Pinned-master SHA-256 metadata (original Git blobs, then decoded RGBA8 pixels):
 
@@ -277,10 +295,13 @@ Pinned-master SHA-256 metadata (original Git blobs, then decoded RGBA8 pixels):
 | app.xpm | `c12a076f845397709b2d61c9db4ea26d853baf6a2e1ad71b1f9d6582dcc51375` | `6dc8a03ed5cffd7c148fe0af647793852da71369ca18e79503c81706f8747f50` |
 | app-icon.xpm | `072e9cba4bd023562067337ad366b62e2a24d9e0000816cb24711c59908793f8` | `0ce263222ecd94986e5220d34415b1d590dfce83e284b0bccafa0fbef6e3223b` |
 
-About preserves the original 50×50 icon slot without drawing unverified artwork.
-The `.ico` bundle and warning/error/success artwork still require separate audit.
-The shared one-button message dialogs now also reserve the source's 50×50 shield
-slot and 60-point icon-to-body offset without importing these unreviewed images.
+About now paints the original 48×48 image inside its 50×50 slot. The three
+message symbols are unchanged from Remy Oukaour’s initial commit
+`5b6e80603c3478b794fb6db89ed9967f48422093`: flat-color outlined circles with cross/
+check marks, and an outlined warning triangle. The same author added the LGPL
+repository grant in `01a374288d3ba6261c978ac1d71f54eefae00a22`. Their source hashes,
+pixel hashes and the original ICO hash are in the artwork inventory. The shared
+message dialog now paints them with the source 60-point icon-to-body offset.
 
 ## Fonts
 

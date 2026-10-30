@@ -105,7 +105,12 @@ Report which platform checks actually ran; compilation is not native verificatio
 ## Licensing and delivery
 
 Derivative Rust code is LGPL-3.0-only. Preserve upstream attribution and record
-adaptations in `NOTICE.md`. Audit assets independently; do not distribute game
-assets or unverified icons. Release matching source, licenses, lockfile, and
+adaptations in `NOTICE.md`. Audit new assets independently; do not distribute
+project/game fixture graphics. The user explicitly selected original upstream
+UI artwork with upstream attribution on 2026-10-29, including previously
+unresolved toolbar/application images. Preserve that choice and the provenance
+limitations in `docs/assets.md`; do not replace those images with placeholders
+or claim independently established third-party rights. Retain known asset
+licenses separately from the code license. Release matching source, licenses, lockfile, and
 rebuild/relink instructions with every binary. Do not label development builds
 as parity releases. Update the roadmap and compatibility evidence with changes.

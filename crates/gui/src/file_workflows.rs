@@ -7,7 +7,12 @@ impl Editor {
         let Some(message) = &self.pending_map_warning else {
             return;
         };
-        if message_dialog::show(ctx, "map-length-warning", "Warning", message) {
+        if message_dialog::show(
+            ctx,
+            "map-length-warning",
+            message_dialog::Kind::Warning,
+            message,
+        ) {
             self.pending_map_warning = None;
             self.advance_open_palettes(ctx);
         }

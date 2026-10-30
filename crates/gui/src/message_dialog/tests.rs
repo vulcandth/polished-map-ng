@@ -73,7 +73,8 @@ fn rendered_messages_use_platform_metrics_at_both_dpi_and_wrap_long_text() {
             .build_ui_state(
                 |ui, state: &mut (bool, Rect)| {
                     if !state.0 {
-                        *state = show_with_font(ui.ctx(), "message-test", "Error", message, font);
+                        *state =
+                            show_with_font(ui.ctx(), "message-test", Kind::Error, message, font);
                     }
                 },
                 (false, Rect::NOTHING),
@@ -114,7 +115,7 @@ fn rendered_messages_use_platform_metrics_at_both_dpi_and_wrap_long_text() {
         .with_size(Vec2::new(900.0, 700.0))
         .build_ui_state(
             |ui, state: &mut (bool, Rect)| {
-                *state = show_with_font(ui.ctx(), "long-message", "Warning", &message, 13.0);
+                *state = show_with_font(ui.ctx(), "long-message", Kind::Warning, &message, 13.0);
             },
             (false, Rect::NOTHING),
         );

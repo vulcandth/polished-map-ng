@@ -78,7 +78,12 @@ impl Editor {
 
     pub(super) fn roof_color_dialog(&mut self, ctx: &egui::Context) {
         if let Some(message) = &self.roof_color_success {
-            if message_dialog::show(ctx, "roof-color-success", "Success", message) {
+            if message_dialog::show(
+                ctx,
+                "roof-color-success",
+                message_dialog::Kind::Success,
+                message,
+            ) {
                 self.roof_color_success = None;
             }
             return;

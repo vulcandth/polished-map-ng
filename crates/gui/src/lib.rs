@@ -1,5 +1,7 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
 mod about;
+mod artwork;
+pub use artwork::application_icon;
 mod block_editor;
 mod block_hotkeys;
 mod block_workflows;
@@ -820,13 +822,18 @@ impl Editor {
 
     fn dialogs(&mut self, ctx: &egui::Context) {
         if let Some(message) = self.error.clone() {
-            if message_dialog::show(ctx, "error", "Error", &message) {
+            if message_dialog::show(ctx, "error", message_dialog::Kind::Error, &message) {
                 self.error = None;
             }
             return;
         }
         if let Some(message) = self.open_palette_warning.clone() {
-            if message_dialog::show(ctx, "open-palette-warning", "Warning", &message) {
+            if message_dialog::show(
+                ctx,
+                "open-palette-warning",
+                message_dialog::Kind::Warning,
+                &message,
+            ) {
                 self.open_palette_warning = None;
             }
             return;
@@ -1086,7 +1093,7 @@ impl Editor {
             .as_ref()
             .is_some_and(|l| l.document.map().can_undo());
         if ui
-            .add_enabled(undo, Button::placeholder("U", "Undo"))
+            .add_enabled(undo, Button::new(Icon::Undo, "Undo"))
             .on_hover_text("Undo (Ctrl/Cmd+Z)")
             .clicked()
             && let Some(loaded) = &mut self.loaded
@@ -1098,7 +1105,7 @@ impl Editor {
             .as_ref()
             .is_some_and(|l| l.document.map().can_redo());
         if ui
-            .add_enabled(redo, Button::placeholder("R", "Redo"))
+            .add_enabled(redo, Button::new(Icon::Redo, "Redo"))
             .on_hover_text("Redo (Ctrl/Cmd+Y)")
             .clicked()
             && let Some(loaded) = &mut self.loaded
@@ -1141,28 +1148,28 @@ impl Editor {
         {
             self.show_priority = !self.show_priority;
         }
-        for (text, label, help, value) in [
+        for (icon, label, help, value) in [
             (
-                "GB",
+                Icon::GameBoy,
                 "Game Boy screen",
                 "Game Boy Screen (Ctrl/Cmd+Shift+M)",
                 &mut self.event_ui.game_boy,
             ),
             (
-                "SE",
+                Icon::ShowEvents,
                 "Show events",
                 "Show Events (Ctrl/Cmd+Shift+V)",
                 &mut self.event_ui.show,
             ),
             (
-                "WI",
+                Icon::WarpIds,
                 "Show warp IDs",
                 "Show Warp IDs (Ctrl/Cmd+Shift+3)",
                 &mut self.event_ui.warp_ids,
             ),
         ] {
             if ui
-                .add(Button::placeholder(text, label).selected(*value))
+                .add(Button::new(icon, label).selected(*value))
                 .on_hover_text(help)
                 .clicked()
             {
@@ -1171,14 +1178,14 @@ impl Editor {
         }
         icons::separator(ui);
         if ui
-            .add(Button::placeholder("B", "Blocks mode").selected(!self.event_ui.mode))
+            .add(Button::new(Icon::Blocks, "Blocks mode").selected(!self.event_ui.mode))
             .on_hover_text("Blocks Mode (Ctrl/Cmd+Shift+B)")
             .clicked()
         {
             self.set_event_mode(false);
         }
         if ui
-            .add(Button::placeholder("E", "Events mode").selected(self.event_ui.mode))
+            .add(Button::new(Icon::Events, "Events mode").selected(self.event_ui.mode))
             .on_hover_text("Events Mode (Ctrl/Cmd+Shift+E)")
             .clicked()
         {
@@ -1227,7 +1234,7 @@ impl Editor {
             .as_ref()
             .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some());
         if ui
-            .add_enabled(change, Button::placeholder("CT", "Change tileset"))
+            .add_enabled(change, Button::new(Icon::ChangeTileset, "Change tileset"))
             .on_hover_text("Change Tileset… (Ctrl/Cmd+H)")
             .clicked()
         {
@@ -1247,7 +1254,7 @@ impl Editor {
         if ui
             .add_enabled(
                 self.can_change_roof(),
-                Button::placeholder("CR", "Change roof"),
+                Button::new(Icon::ChangeRoof, "Change roof"),
             )
             .on_hover_text("Change Roof… (Ctrl/Cmd+Shift+H)")
             .clicked()
@@ -1261,7 +1268,7 @@ impl Editor {
             .and_then(|t| t.roof())
             .is_some();
         if ui
-            .add_enabled(roof, Button::placeholder("RF", "Roof"))
+            .add_enabled(roof, Button::new(Icon::Roof, "Roof"))
             .on_hover_text("Edit Roof… (Ctrl/Cmd+F)")
             .clicked()
         {

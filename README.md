@@ -8,7 +8,7 @@ and macOS are the target platforms. See the [roadmap](docs/roadmap.md) for suppo
 scope and remaining work.
 
 See [INSTALL.md](INSTALL.md) to build and run the development version. Work on
-project copies while compatibility testing is incomplete; game assets are not
+project copies while compatibility testing is incomplete; project game assets are not
 included.
 
 Browse the menus, toolbar and Help window to explore the editor. Basic controls:
@@ -34,6 +34,9 @@ development documentation.
 
 LGPL-3.0-only, preserving upstream attribution. See [LICENSE.md](LICENSE.md),
 [NOTICE.md](NOTICE.md) and [release obligations](docs/releases.md).
+Original UI artwork is retained from
+[Polished Map](https://github.com/Rangi42/polished-map/tree/8b9bdc2b8aac8c865809516c2123af69c498da0b/res);
+see the [artwork notices](crates/gui/assets/artwork/NOTICE.md).
 Some toolbar/editor icons adapt Fugue Icons by
 [Yusuke Kamiyamane](https://p.yusukekamiyamane.com/) under
 [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), with Polished Map

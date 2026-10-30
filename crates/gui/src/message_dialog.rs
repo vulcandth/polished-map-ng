@@ -1,5 +1,5 @@
 //! master Modal_Dialog::{initialize,refresh,show} with an empty subject and one
-//! button. LGPL-3.0-only. Shield artwork remains excluded pending provenance.
+//! button. LGPL-3.0-only. Original artwork attribution: assets/artwork/NOTICE.md.
 use super::*;
 
 #[derive(Clone, Copy, Debug)]
@@ -28,8 +28,31 @@ impl Layout {
     }
 }
 
-pub(super) fn show(ctx: &egui::Context, id: &'static str, title: &str, message: &str) -> bool {
-    show_with_font(ctx, id, title, message, font_size(ctx)).0
+#[derive(Clone, Copy, Debug)]
+pub(super) enum Kind {
+    Error,
+    Warning,
+    Success,
+}
+impl Kind {
+    fn title(self) -> &'static str {
+        match self {
+            Self::Error => "Error",
+            Self::Warning => "Warning",
+            Self::Success => "Success",
+        }
+    }
+    fn image(self) -> artwork::Image {
+        match self {
+            Self::Error => artwork::Image::Error,
+            Self::Warning => artwork::Image::Warning,
+            Self::Success => artwork::Image::Success,
+        }
+    }
+}
+
+pub(super) fn show(ctx: &egui::Context, id: &'static str, kind: Kind, message: &str) -> bool {
+    show_with_font(ctx, id, kind, message, font_size(ctx)).0
 }
 
 fn font_size(_ctx: &egui::Context) -> f32 {
@@ -49,7 +72,7 @@ pub(super) fn test_font_size(ctx: &egui::Context, size: f32) {
 fn show_with_font(
     ctx: &egui::Context,
     id: &'static str,
-    title: &str,
+    kind: Kind,
     message: &str,
     font_size: f32,
 ) -> (bool, Rect) {
@@ -58,7 +81,7 @@ fn show_with_font(
     egui::Modal::new(egui::Id::unique(id)).show(ctx, |ui| {
         // Caption stands in for native chrome; the allocated client rectangle
         // below follows the source formula independently of that caption.
-        ui.heading(title);
+        ui.heading(kind.title());
         let font = egui::FontId::proportional(font_size);
         let body = ui.painter().layout(
             message.into(),
@@ -70,6 +93,7 @@ fn show_with_font(
         bounds = ui.allocate_exact_size(layout.size, Sense::hover()).0;
         let rect = |r: Rect| r.translate(bounds.min.to_vec2());
         ui.allocate_rect(rect(layout.icon), Sense::hover());
+        kind.image().paint(ui, rect(layout.icon));
         // Ui::put centers widgets inside their allocation, including short
         // labels. Source FL_ALIGN_TOP_LEFT needs the actual text origin here.
         ui.scope_builder(
