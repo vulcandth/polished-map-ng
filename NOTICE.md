@@ -293,3 +293,9 @@ Plusplus raw graphics editing/rendering adapts `deep-tile.cpp`,
 composition are shared with master. The extended oracle compiles the original
 metatile draw routine with synthetic RGB buffers and an image-stride recorder;
 it does not import game pixels or emulate native driver rasterization.
+
+Plusplus project graphics/roof adapters derive compound ordering, discovery and
+PNG destination rules from pinned `config.cpp`, `utils.cpp`, `tileset.cpp` and
+`image.cpp`, under LGPL-3.0-only. Roof commands reuse the existing pixel editor
+and persistence through a profile-specific adapter; project/game inputs and
+rendered acceptance images remain untracked temporary fixtures.

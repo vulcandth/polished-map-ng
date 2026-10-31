@@ -164,6 +164,6 @@ jobs:
       - run: cargo test -p polished-map-project --locked --test real_project --test real_print -- --ignored --nocapture
         env:
           POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal
-      - run: cargo test -p polished-map-project --locked --test plusplus real_polished -- --ignored
+      - run: cargo test -p polished-map-project --locked --test plusplus --test plusplus_graphics -- --ignored
         env:
           POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal

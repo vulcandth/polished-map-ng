@@ -2437,7 +2437,7 @@ functional differences; it is not a claim that the port is complete.
 | `block-window`, `map-buttons` | 512 raw tile choices; occurrence palette/flip/priority controls, right-click pick and mirrored brush footprints. Raw graphics copy does not copy occurrence attributes. | PP2 commands, PP3 controls |
 | `tileset`, `tiled-image`, `image` | Up to 512 tiles in linear sheet order; compound before/main/after graphics with 16-tile row padding; no master's $60 hole. Reuse bounded 2bpp/LZ/PNG codecs, pixel edits, PNG output and clipboard conversion; do not expose master CHR import. | PP2 |
 | `colors`, removed `palette-map`, `palette-window` | Eight game palettes across the same six sets; default first eight colors match master. No per-raw-tile palette-map ASM or editable monochrome ninth palette. Reuse RGB conversions, safe parsing/export and swatch controls with profile limits. | PP2–PP3 |
-| `config`, `option-dialogs` | Different asset candidates, compound/base-name fallback, no master ASM map/CEL/CHR workflows. Reuse parsers/path primitives only where precedence and macros agree; preserve explicit profile choice. | PP2–PP3 |
+| `config`, `option-dialogs` | Root discovery uses `main.asm`/`layout.link` rather than master's Makefile; different asset candidates, compound/base-name fallback, no master ASM map/CEL/CHR workflows. Reuse parsers/path primitives only where precedence and macros agree; preserve explicit profile choice. | PP2–PP3 |
 | `map-events`, `event` | 26 supported event macros: removes master's four pokered macros, adds `pokemon_event` and seven Red++ macros. Reuse coordinate/field/warp/edit/save logic with a profile-specific catalog; include inverted punctuation symbols. | PP2–PP3 |
 | `map`, `main-window`, `ruler` | Common byte-map editing/history, resize, scrolling, guides and Print composition. Source menus replace 256-tile/monochrome/tile-priority settings with 512-tile and bank ordering. Preserve shortcuts, guards and per-occurrence overlays. | PP3 |
 | `tileset-window`, `roof-window` | Raw hue editing uses `Deep_Tile`; 512 selection/clipboard bounds, monochrome tile preview, roof overlay at ordinal $00a. Share pixel algorithms, drafts, native hosting and save protection. | PP2–PP3 |
@@ -2538,8 +2538,8 @@ suite also passing on WSL Ubuntu 22.04.5:
   these are backend checks, not native application acceptance.
 
 The [graphics backend](#plusplus-graphics-backend) now supplies raw editing,
-rendering and expanded codecs. PP2 still needs compound project/roof documents,
-remaining palette/discovery rules and branch event catalogs. PP3 has no plusplus
+rendering and expanded codecs. PP2 still needs
+palette sessions, map/root/asset discovery rules and branch event catalogs. PP3 has no plusplus
 GUI yet; PP4 original-application interoperability/native acceptance remains open.
 
 ## Plusplus graphics backend
@@ -2595,6 +2595,50 @@ pass. The new graphics, expanded-codec and compiled-source comparisons also pass
 in WSL Ubuntu 22.04.5. Production native-feature validation passes; no GUI
 interaction was used for these backend checks.
 
-Project-level compound load/save, roof editing/persistence and contextual palettes
-are not yet connected to this model. No plusplus GUI or CLI editing workflow is
-claimed from these library tests; those remain PP2–PP4.
+[Compound graphics and roof documents](#plusplus-project-graphics-and-roofs) now
+connect the model to project files. Contextual palettes and map/event discovery
+remain PP2. No plusplus GUI or CLI editing workflow is claimed from these library
+tests; those remain PP2–PP4.
+
+## Plusplus project graphics and roofs
+
+[The tileset document](../crates/project/src/plusplus/tileset.rs) resolves PNG →
+2bpp → 2bpp.lz under `gfx/tilesets`, splits before/after components using the
+pinned first-dot/first-comma rules, and composes a 512-slot raw model. Before
+components round up to 16 tiles; main components round up only when a nonempty
+after component was loaded. Padding retains undefined flags. Loaded counts above
+256 enable the 512 option; aggregate counts above 512 fail before indexing.
+
+Save planning preserves source PNG destinations, including named optional
+components. Explicit zero component counts mean infer the defined tail, as in
+source `Image::write_tileset_image`; missing-before behavior is tested rather than
+silently reinterpreted. All images encode before replacement. Source and output
+hashes are checked, duplicates and impossible reopened sizes fail in preview,
+and the shared staging/rollback layer installs the outputs. Binary imports remain
+intact; after PNG promotion, observations follow the active PNG source. No palette
+map is created or rewritten. Dirty drafts survive failed saves.
+
+[The roof adapter](../crates/project/src/plusplus/roof.rs) selects only plusplus
+formats/paths, requires nine tiles, and exposes raw snapshots/commands without
+master palette attributes. It reuses the existing nine-tile editor, clipped RGB
+paste, grayscale export and guarded `RoofDocument` persistence. Roof dirty state
+and files remain independent of base graphics. Renderers consume its nine tiles
+as an overlay; saving a base sheet does not bake that overlay into the sheet.
+
+[Project tests](../crates/project/tests/plusplus_graphics.rs) cover row padding,
+component boundaries, PNG promotion, unchanged binary inputs, all source/output
+conflicts, missing optional components, duplicate destinations, aggregate bounds,
+roof batch rejection, clipped paste and separate persistence. The pinned Polished
+Crystal fixture passes edit → save → reopen for all 51 tilesets, comparing edited
+hues and complete block-map rendering, and all six roofs, comparing all decoded
+tiles. Tests edit temporary copies, never the fixture checkout. The original-app
+PP4 acceptance gate is still separate from these NG roundtrips.
+
+Windows workspace format, Clippy (all targets, warnings denied), tests and rustdoc
+pass, along with native-feature and documentation checks. The complete project
+graphics test file, including all real-project cases, also passes under WSL
+Ubuntu 22.04.5. CI runs both the block and graphics fixture suites.
+
+Palette sessions, metadata/root/asset discovery and branch event catalogs remain
+PP2. Existing master defaults are not silently applied as plusplus policy. The
+GUI/CLI integration, complete workflow checks and native acceptance remain PP3–PP4.

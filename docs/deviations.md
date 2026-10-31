@@ -531,5 +531,9 @@ Pinned plusplus `Image::write_tileset_image` starts its inferred tail scan at
 nonzero offset. NG scans only the remaining validated slice, rejects empty or
 out-of-range explicit regions, and computes row padding from that bounded count.
 This fixes the compound-export overread without changing valid tile ordering,
-hue conversion or white padding. Source compound project save planning is still
-being ported; this entry records the implemented core export behavior.
+hue conversion or white padding. Project save planning also rejects aggregate
+loaded or reopened layouts above 512 tiles and duplicate output destinations
+before any write. Missing components can trigger source's inferred-length output
+and produce an unopenable aggregate; NG reports that case instead of creating it.
+Valid missing-component output semantics are otherwise preserved. These guards
+extend the existing no-partial-write persistence policy to plusplus.

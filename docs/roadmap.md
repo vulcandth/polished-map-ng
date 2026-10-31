@@ -11,7 +11,7 @@ and design decisions in [architecture](architecture.md).
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | **In progress — active milestone** | Source audit and fixture pin complete; attribute block editing/persistence implemented. Remaining backend, separate GUI and acceptance are PP2–PP4. |
+| 2. Plusplus parity | **In progress — active milestone** | Source audit, fixture pin and block/graphics/roof backends implemented. Palette/discovery/events, separate GUI and acceptance remain PP2–PP4. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
@@ -25,9 +25,9 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next: PP2** — connect the expanded graphics model/codecs to compound project
-loading and guarded PNG/roof persistence, then finish profile-specific
-palette/discovery/event rules. Then PP3 integrates a separate plusplus editor.
+**Next: PP2** — finish plusplus-specific palette sessions, map/root/asset
+metadata discovery and event rules, using the completed block/graphics/roof
+backend. Then PP3 integrates a separate plusplus editor.
 The user authorized this sequence on 2026-10-31 while people test master;
 M5–M7 remain open against the published [development candidate](releases.md#development-packages).
 Both audited master functional gaps are fixed; its remaining gates are verification.
@@ -202,10 +202,12 @@ Do not expose automatic profile switching until the unified-editor milestone.
   attributes, flips, priority, palette/discovery/event rules and serialization.
   Attribute block commands, bank mapping and guarded offset/attribute/collision
   saves are implemented with source differentials and real-project tests.
-  Raw 512-tile edits, CPU map/Print rendering and expanded codecs are now
-  implemented. Compound graphics/roof documents, remaining project rules and
-  branch event handling remain. Keep map IDs byte-sized. Evidence:
-  [blocks](compatibility.md#plusplus-block-backend), [graphics](compatibility.md#plusplus-graphics-backend).
+  Raw 512-tile edits, CPU map/Print rendering, expanded codecs, compound graphics
+  and roof loading/editing/saving are implemented. Palette sessions, remaining
+  map/root/asset discovery and branch event handling remain. Keep map IDs byte-sized.
+  Evidence: [blocks](compatibility.md#plusplus-block-backend),
+  [graphics](compatibility.md#plusplus-graphics-backend),
+  [project graphics](compatibility.md#plusplus-project-graphics-and-roofs).
 - [ ] **PP3:** Port branch-specific controls, dialogs, defaults and rendering
   through a separate plusplus entry point with isolated preferences. Reuse common
   GUI/platform code and preserve source layout/sizing; FLTK visual painting is

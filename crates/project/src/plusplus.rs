@@ -16,6 +16,19 @@ use std::{
     path::{Path, PathBuf},
 };
 
+mod roof;
+mod tileset;
+pub use roof::RoofDocument;
+pub use tileset::TilesetDocument;
+
+fn graphics_path(directory: &Path, name: &str) -> PathBuf {
+    ["png", "2bpp", "2bpp.lz"]
+        .into_iter()
+        .map(|ext| directory.join(format!("{name}.{ext}")))
+        .find(|p| p.is_file())
+        .unwrap_or_else(|| directory.join(format!("{name}.2bpp.lz")))
+}
+
 #[derive(Debug)]
 pub struct BlocksetDocument {
     offsets: SaveTarget,

@@ -58,12 +58,30 @@ impl RoofDocument {
         if optional_hash(&path)? != source.hash {
             return Err(ProjectError::Conflict(path));
         }
+        Self::from_source(
+            name,
+            png_platform,
+            tiles,
+            attributes,
+            source,
+            prepare_target(&directory.join(format!("{name}.png")))?,
+        )
+    }
+    /// Shared storage/export lifecycle; profile adapters own discovery and decoding.
+    pub(crate) fn from_source(
+        name: &str,
+        png_platform: crate::PngPlatform,
+        tiles: [polished_map_core::Tile; 9],
+        attributes: [u8; 9],
+        source: SaveTarget,
+        output: SaveTarget,
+    ) -> Result<Self, ProjectError> {
         Ok(Self {
             png_platform,
             name: name.into(),
             model: Roof::new(tiles, attributes)?,
             source,
-            output: prepare_target(&directory.join(format!("{name}.png")))?,
+            output,
         })
     }
     pub fn name(&self) -> &str {
