@@ -1841,7 +1841,7 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Master testing readiness
 
-The 2026-10-31 audit of commit `8fd2f4e` reviewed the source inventory, command
+**Historical audit:** The 2026-10-31 audit of commit `8fd2f4e` reviewed the source inventory, command
 routing, native adapters, preference migration, documented deviations and CI.
 [All eight CI jobs passed](https://github.com/vulcandth/polished-map-ng/actions/runs/41230741505),
 including the three OS jobs, source comparisons, visual tests and pinned-project
@@ -1856,9 +1856,9 @@ checks. This audit did not operate a desktop or establish native acceptance.
 | M7 verification | Complete edit/save/reopen in both NG and original master for every domain on compatible project copies, including conflicts/failures. Pinned-project/codec tests alone do not complete application acceptance. |
 | Tester delivery preparation | No GitHub releases or runnable CI build archives existed at audit time; CI uploads visual differences only. Testers can build from INSTALL.md. A nondeveloper handoff needs explicitly labeled development packages with source/notices and build identity; this is delivery work, not missing editing behavior. |
 
-Normal master editor testing can begin with those known limitations recorded.
-Resolve the two implementation gaps before describing the candidate as
-functionally complete. Test on copies and collect the build commit, OS/backend,
+The two implementation gaps identified above are now fixed; see the
+[current implementation evidence](#master-functional-gap-fixes). Tester delivery
+is tracked in [development packages](releases.md#development-packages). Test on copies and collect the build commit, OS/backend,
 steps, expected/actual behavior and affected file hashes. Remaining fonts, theme
 styling and the approved rounded palette sliders are not functional blockers.
 Plusplus, unified profiles, stable automation and a new shared graphical color
@@ -2379,3 +2379,37 @@ matrix above and [preferences](preferences.md) for present coverage.
   `41a1012a051d22ade1b6cdb14577c4b6ad3e195be7024d6f3a020a9f7f5fedd3`.
   The pinned reference checkout remained clean. This does not verify DPI changes,
   clipboard, child viewports, or Linux/macOS native dialogs.
+
+## Master functional gap fixes
+
+Menu input in [mnemonics.rs](../crates/gui/src/menu_popup/mnemonics.rs) and
+[specs.rs](../crates/gui/src/menu_popup/specs.rs) adapts pinned master's
+`Main_Window::initialize` ampersand keys and FLTK `Fl_Menu.cxx::find_shortcut`.
+Alt opens the eight top-level menus; visible menu items accept their source
+letter with or without Alt. The deepest submenu wins, followed by its parent
+and the menu bar, preserving source order. Disabled rows and closed popups cannot
+activate, and editor modals block this input route. The normal action callbacks
+still own history, dirty guards and modal opening. Existing menu geometry,
+artwork and slider painting are unchanged; underlines/fonts remain deferred.
+[Headless tests](../crates/gui/src/menu_popup/tests.rs) cover top-level switching,
+held Alt, nested/parent selection, disabled items, Escape, stale popup bindings
+modal blocking and escaped/Unicode recent-filename mnemonics. Native desktop
+keyboard/menu acceptance remains M6.
+
+[Mac home discovery](../crates/platform/src/legacy_home.rs) adapts pinned FLTK's
+`Fl_cocoa.mm::getUserPreferencesDirectory`: use nonempty existing HOME, then an
+existing `NSHomeDirectory`, then the real user's passwd home. The last lookup
+uses bounded `getpwuid_r` storage instead of the original shared C buffer.
+No environment variable, home directory or original settings file is modified.
+Pure tests cover lazy precedence, empty/missing/nonexistent HOME and failure;
+macOS-only tests call the actual Foundation/passwd providers without changing
+the process environment. Reading the actual legacy preference file and NG's
+existing-store precedence continue through the previously tested import path.
+
+Windows format, Clippy with warnings denied, workspace tests, rustdoc and
+production-adapter checks pass. The standalone macOS platform crate cross-check
+also passes; native Foundation/passwd execution is assigned to both Mac package
+runners. Native legacy settings restart and
+window lifecycle acceptance remain M5/M6; implementing discovery does not close
+them. Development package and corresponding-source evidence belongs in
+[releases](releases.md#development-packages).

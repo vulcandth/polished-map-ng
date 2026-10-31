@@ -6,6 +6,7 @@ use super::*;
 use std::sync::Arc;
 
 mod marks;
+mod mnemonics;
 mod specs;
 #[cfg(test)]
 mod tests;
@@ -28,6 +29,7 @@ pub(super) struct Spec<'a> {
     shortcut: &'a str,
     divider: bool,
     verbatim: bool,
+    mnemonic: Option<mnemonics::Mnemonic>,
 }
 
 impl<'a> Spec<'a> {
@@ -38,12 +40,23 @@ impl<'a> Spec<'a> {
             shortcut,
             divider,
             verbatim: false,
+            mnemonic: None,
         }
+    }
+
+    const fn mnemonic(mut self, key: egui::Key) -> Self {
+        self.mnemonic = Some(mnemonics::Mnemonic::Key(key));
+        self
     }
 
     pub(super) fn recent(name: &'a str, shortcut: &'a str, divider: bool) -> Self {
         Self {
             verbatim: true,
+            mnemonic: if name == "Clear Recent" {
+                Some(mnemonics::Mnemonic::Key(egui::Key::R))
+            } else {
+                mnemonics::label_key(name)
+            },
             ..Self::new(name, Mark::Blank, shortcut, divider)
         }
     }
@@ -100,6 +113,7 @@ struct Item {
     label: Arc<egui::Galley>,
     modifiers: Arc<egui::Galley>,
     key: Arc<egui::Galley>,
+    mnemonic: Option<mnemonics::Mnemonic>,
 }
 
 struct Prepared {
@@ -204,6 +218,7 @@ impl Prepared {
                     label,
                     modifiers,
                     key,
+                    mnemonic: spec.mnemonic,
                 }
             })
             .collect();
@@ -281,10 +296,19 @@ pub(super) fn config() -> egui::containers::menu::MenuConfig {
 }
 
 pub(super) fn menu<R>(ui: &mut egui::Ui, name: &str, contents: impl FnOnce(&mut egui::Ui) -> R) {
-    ui.menu_button(name, |ui| {
-        popup_scope(ui, name, specs::group(name), contents)
+    let response = ui.menu_button(name, |ui| {
+        mnemonics::within(ui, name, |ui| {
+            popup_scope(ui, name, specs::group(name), contents)
+        })
     });
+    mnemonics::remember(
+        ui.ctx(),
+        name,
+        egui::Popup::menu(&response.response).get_id(),
+    );
 }
+
+pub(super) use mnemonics::begin;
 
 pub(super) fn submenu<R>(ui: &mut egui::Ui, name: &str, contents: impl FnOnce(&mut egui::Ui) -> R) {
     submenu_with(ui, name, specs::group(name), contents);
@@ -358,8 +382,14 @@ pub(super) fn row_at(
     ui.add_enabled_ui(enabled, |ui| {
         ui.spacing_mut().item_spacing = Vec2::ZERO;
         let height = m.row - if index + 1 == m.count { 1.0 } else { 0.0 };
-        let (rect, response) =
+        let (rect, mut response) =
             ui.allocate_exact_size(Vec2::new(m.width - 2.0, height), Sense::click());
+        if mnemonics::row(ui, &response, item.mnemonic) {
+            response.request_focus();
+            response
+                .flags
+                .insert(egui::response::Flags::FAKE_PRIMARY_CLICKED);
+        }
         let role = match item.mark {
             Mark::Check => egui::Role::CheckBox,
             Mark::Radio => egui::Role::RadioButton,

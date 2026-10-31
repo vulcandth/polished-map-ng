@@ -36,7 +36,7 @@ impl NativeStartup {
             }
         } else if cfg!(target_os = "macos") {
             LegacyUserLocation::Mac {
-                home: std::env::home_dir(),
+                home: polished_map_platform::legacy_macos_home(),
             }
         } else {
             LegacyUserLocation::Unix {

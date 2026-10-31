@@ -271,3 +271,10 @@ Windows image clipboard support includes clipboard-win 5.4.3 and error-code
 3.4.0 by Douman, under the Boost Software License 1.0. Its complete text is
 retained in `LICENSES/BSL-1.0.txt`. These dependencies retain their own license;
 see `docs/dependencies.md` for the scoped review and release requirements.
+
+Menu mnemonic routing adapts master Main_Window::initialize and FLTK 1.4.5
+Fl_Menu.cxx's deepest-menu-first search. macOS legacy home discovery adapts
+FLTK Fl_cocoa.mm::getUserPreferencesDirectory, using caller-owned bounded passwd
+storage. The existing upstream/FLTK notices and separate FLTK license apply.
+Development distributions include matching dependency source and notices plus
+rebuild/relink instructions; see docs/releases.md and docs/rebuild.md.

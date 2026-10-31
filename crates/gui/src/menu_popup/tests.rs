@@ -4,6 +4,130 @@ use egui_kittest::{
     kittest::{NodeT, Queryable},
 };
 
+#[test]
+fn recent_filename_mnemonics_skip_escaped_ampersands_and_accept_unicode() {
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .build_ui_state(
+            |ui, chosen: &mut bool| {
+                begin(ui.ctx());
+                egui::MenuBar::new().config(config()).ui(ui, |ui| {
+                    menu(ui, "File", |ui| {
+                        let entries = [Spec::recent("Town&&Road&é.blk", "", false)];
+                        submenu_with(ui, "Open Recent", &entries, |ui| {
+                            if action(ui, true, entries[0].name) {
+                                *chosen = true;
+                            }
+                        });
+                    });
+                });
+            },
+            false,
+        );
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::F]);
+    h.run();
+    h.get_by_label("Open Recent").click();
+    h.run();
+    h.key_press(egui::Key::R);
+    h.run();
+    assert!(!h.state());
+    h.input_mut().events.push(egui::Event::Text("é".into()));
+    h.run();
+    assert!(*h.state());
+}
+
+#[test]
+fn mnemonics_open_switch_activate_and_respect_modal_and_disabled_state() {
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .build_eframe(|cc| Editor::new(cc));
+    for (key, item) in [
+        (egui::Key::F, "Save Map"),
+        (egui::Key::D, "Unload Event Script"),
+        (egui::Key::E, "Undo"),
+        (egui::Key::V, "Theme"),
+        (egui::Key::M, "Switch Mode"),
+        (egui::Key::T, "Resize Map…"),
+        (egui::Key::O, "Monochrome"),
+        (egui::Key::H, "About"),
+    ] {
+        h.key_combination_modifiers(egui::Modifiers::ALT, &[key]);
+        h.run();
+        assert!(h.get_all_by_label(item).count() > 0, "Alt+{key:?}");
+    }
+    h.key_press(egui::Key::A);
+    h.run();
+    assert!(h.state().about.is_some());
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::F]);
+    h.run();
+    assert!(h.query_by_label("Save Map").is_none());
+    h.key_press(egui::Key::Escape);
+    h.run();
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::F]);
+    h.run();
+    h.key_press(egui::Key::S);
+    h.run();
+    assert!(
+        h.query_by_label("Save Map").is_some(),
+        "disabled Save cannot activate"
+    );
+    h.key_press(egui::Key::Escape);
+    h.run();
+    assert!(h.query_by_label("Save Map").is_none());
+}
+
+#[test]
+fn mnemonics_enter_submenu_and_select_child_without_activating_parent() {
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .build_eframe(|cc| Editor::new(cc));
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::V]);
+    h.run();
+    h.key_press(egui::Key::L);
+    h.run();
+    assert!(h.query_by_label("Night").is_some());
+    // K belongs to Dark in Palettes, not D (Dark in Theme).
+    h.key_press(egui::Key::K);
+    h.run();
+    assert_eq!(
+        h.state().palette_document().selected(),
+        polished_map_core::PaletteSet::Darkness
+    );
+    assert!(h.query_by_label("Show Warp IDs").is_none());
+}
+
+#[test]
+fn held_alt_prefers_open_items_and_submenus_fall_back_to_the_parent() {
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .build_eframe(|cc| Editor::new(cc));
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::V]);
+    h.run();
+    // Alt+T means Theme inside View, not the top-level Tools menu.
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::T]);
+    h.run();
+    assert!(h.query_by_label("Greybird").is_some());
+    assert!(h.query_by_label("Resize Map…").is_none());
+    // Theme has no L: FLTK searches its parent and opens Palettes instead.
+    h.key_press(egui::Key::L);
+    h.run();
+    assert!(h.query_by_label("Night").is_some());
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::N]);
+    h.run();
+    assert_eq!(
+        h.state().palette_document().selected(),
+        polished_map_core::PaletteSet::Nite
+    );
+    assert!(h.query_by_label("Show Warp IDs").is_none());
+    // Closing the popup must invalidate cached mnemonic rows.
+    h.key_press(egui::Key::D);
+    h.run();
+    assert_eq!(
+        h.state().palette_document().selected(),
+        polished_map_core::PaletteSet::Nite
+    );
+}
+
 #[cfg(feature = "visual-tests")]
 #[test]
 fn popup_panel_corners_and_full_width_dividers_match_source_at_both_scales() {

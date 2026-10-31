@@ -1,0 +1,82 @@
+name: Development packages
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_INCREMENTAL: '0'
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: rustup show
+      - run: python3 tools/development_package.py source
+      - uses: actions/upload-artifact@v4
+        with:
+          name: development-source
+          path: .scratch/dist/*
+          compression-level: 0
+          if-no-files-found: error
+  binary:
+    needs: source
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+          - os: macos-15
+            target: aarch64-apple-darwin
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '11.0'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        with:
+          name: development-source
+          path: .scratch/source
+      - name: Verify and extract the matching complete source
+        shell: python
+        run: |
+          import hashlib, os, pathlib, tarfile
+          archive, = pathlib.Path('.scratch/source').glob('*.tar.gz')
+          expected = archive.with_name(archive.name + '.sha256').read_text(encoding='utf-8').split()[0]
+          with archive.open('rb') as file:
+              assert hashlib.file_digest(file, 'sha256').hexdigest() == expected
+          with tarfile.open(archive) as source:
+              source.extractall('.scratch/rebuild', filter='data')
+          root, = pathlib.Path('.scratch/rebuild').iterdir()
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env:
+              env.write('PACKAGE_ROOT=' + str(root.resolve()) + '\n')
+      - name: Linux build dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev pkg-config fonts-liberation
+      - run: rustup show
+      - run: rustup target add ${{ matrix.target }}
+      - run: cargo test -p polished-map-platform --offline --locked --lib legacy_home --target ${{ matrix.target }}
+        working-directory: ${{ env.PACKAGE_ROOT }}
+      - run: cargo build --offline --release --locked --target ${{ matrix.target }} -p polished-map-gui -p polished-map-cli
+        working-directory: ${{ env.PACKAGE_ROOT }}
+      - run: python tools/development_package.py binary --target ${{ matrix.target }} --output "${{ github.workspace }}/.scratch/dist"
+        working-directory: ${{ env.PACKAGE_ROOT }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: development-${{ matrix.target }}
+          path: .scratch/dist/*
+          compression-level: 0
+          if-no-files-found: error

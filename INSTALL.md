@@ -1,7 +1,8 @@
 # Building and running Polished Map NG
 
-These instructions build the development version. Compatibility acceptance and
-distributable packages remain unfinished; see the [roadmap](docs/roadmap.md).
+Development packages are intended for compatibility testing; see
+[tester instructions](docs/testing.md) and the [roadmap](docs/roadmap.md).
+The instructions below build the development version from source.
 
 ## Prerequisites
 

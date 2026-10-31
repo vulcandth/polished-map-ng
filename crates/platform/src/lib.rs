@@ -1,7 +1,9 @@
 //! Narrow platform interop for native dialogs, window opacity and script editing.
 //! LGPL-3.0-only. GUI, project and core crates retain their unsafe-code prohibition.
+mod legacy_home;
 mod opacity;
 mod script;
+pub use legacy_home::legacy_macos_home;
 pub use opacity::{OpacityError, WindowOpacity, set_window_opacity};
 pub use script::{ScriptOpenError, ScriptOpenRequest};
 #[cfg(windows)]

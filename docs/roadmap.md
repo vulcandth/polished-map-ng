@@ -10,12 +10,12 @@ and design decisions in [architecture](architecture.md).
 | Milestone | Status | What that means |
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
-| 1. Master parity | **In progress — active milestone** | Editor feature families are implemented; menu mnemonic input, an edge case in Mac legacy-home discovery, and native/application acceptance remain. |
+| 1. Master parity | **In progress — active milestone** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
 | 2. Plusplus parity | Not started | Expanded-profile port and compatible Polished Crystal acceptance remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
-| 6. Platform delivery | In progress — CI only | Three-OS build/test infrastructure exists; complete native verification and distributable packages remain. |
+| 6. Platform delivery | In progress — development packaging | Three-OS CI exists; tester packages are being prepared. Clean-machine and final release acceptance remain. |
 
 `[x]` means the stated work is implemented with linked evidence, not that its
 entire milestone has passed. `[ ]` means work or acceptance remains. Unchecked
@@ -25,8 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Finish M5's Mac legacy-home fallback and M4's functional menu mnemonic
-input, then verify M5 native settings storage/restart/shutdown and execute M6–M7.
+**Next:** Finish P2/P3 development-package verification and publish the tester
+candidate, then verify M5 native settings storage/restart/shutdown and execute M6–M7.
 See the [master testing-readiness audit](compatibility.md#master-testing-readiness)
 for the distinction between missing functionality and testing gates.
 The remaining M4 aesthetic matching is
@@ -144,7 +144,7 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   Done when the gates in [architecture](architecture.md) pass;
   stale pointer coordinates or widget alpha are not substitutes.
 - [ ] **M4 — Source-derived GUI and native-window fidelity (aesthetics deferred;
-  functional work remains).** Resize/asset/Event dialog client metrics,
+  input implemented; native acceptance remains).** Resize/asset/Event dialog client metrics,
   original-artwork confirmations, native editor/modal hosting, ownership and
   draft/close guards are implemented. Isolated Windows, macOS, X11 and Wayland
   lifetime checks pass. Evidence: [dialog metrics](compatibility.md#remaining-option-dialog-client-metrics),
@@ -155,17 +155,17 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   The user deferred remaining font, widget painting and purely visual menu/window
   matching on 2026-10-30. Preserve these as later manual work under the
   [approved exception](deviations.md#remaining-m4-aesthetics-deferred), not as
-  completed fidelity. **Known implementation gap (not started):** source Alt+letter
-  menu opening and item mnemonics. Implement those input routes with disabled/modal
-  guards; visual underline matching stays deferred. Window focus, usable placement,
+  completed fidelity. Source Alt+letter menu opening and item mnemonics are
+  implemented with disabled/modal guards; see [functional fixes](compatibility.md#master-functional-gap-fixes).
+  Visual underline matching stays deferred. Window focus, usable placement,
   keyboard/dismissal, clipboard, scrolling and resize acceptance remain M6.
   Do not resume aesthetic matching before M5–M7.
 - [ ] **M5 — Finish preference and window lifecycle compatibility (in progress).**
   Read-only legacy FLTK user/executable-adjacent import is implemented for all
   master settings, with NG precedence and malformed-input protection. Root normal
-  geometry now tracks moves/resizes independently of autosave. **Known implementation
-  gap (not started):** reproduce Mac home discovery when HOME names a nonexistent
-  directory, instead of missing the original preference store. Also verify native
+  geometry now tracks moves/resizes independently of autosave. Mac HOME discovery
+  now follows the original existing-HOME → Foundation → passwd fallback; see
+  [functional fixes](compatibility.md#master-functional-gap-fixes). Verify native
   storage/restart/shutdown, placement, fullscreen/maximize restoration,
   transparency startup and canceled exits without losing edits across platforms.
   Done when [preferences](preferences.md) has evidence for each applicable source
@@ -254,10 +254,15 @@ and release acceptance follow the preceding objectives.
 - [ ] **P1 (in progress):** Finish native runtime acceptance on Windows, Linux X11/Wayland and
   macOS, including both Mac architectures. Carry forward M6 and plusplus/unified
   results; distinguish compilation, automated native checks and interactive checks.
-- [ ] **P2:** Produce Windows x86-64 MSVC ZIP, Linux x86-64 tarball and macOS
+- [ ] **P2 (in progress):** Produce Windows x86-64 MSVC ZIP, Linux x86-64 tarball and macOS
   Intel/Apple Silicon app bundles, including the CLI and clean-machine launch checks.
-- [ ] **P3:** Automate checksums, licenses/notices, matching source, lockfile,
+  Development packaging is implemented; artifact verification/publication is in progress.
+  [Packaging and tester handoff](releases.md#development-packages) track evidence;
+  clean-machine GUI launch and final icon resources remain open.
+- [ ] **P3 (in progress):** Automate checksums, licenses/notices, matching source, lockfile,
   toolchain/patch records and rebuild/relink instructions; verify archive contents.
+  The development workflow builds all four binaries offline from the published
+  complete source archive. Verification is in progress; [rebuild instructions](rebuild.md).
 - [ ] **P4 — Acceptance:** Install/run packages and complete release workflows
   on all targets, with [release obligations](releases.md) satisfied. Signing and
   notarization remain explicitly deferred until credentials are available.

@@ -5,7 +5,7 @@ The native opacity adapter adds direct, target-specific uses of already-locked
 (Zlib OR Apache-2.0 OR MIT), plus the
 already-locked `thiserror` for typed failures. `raw-window-handle` now explicitly
 enables its `std` error implementation and is shared across desktop targets.
-AppKit enables only std, NSView, NSWindow and the Core Foundation scalar types;
+AppKit enables only std, NSResponder, NSView, NSWindow and the Core Foundation scalar types;
 Windows reuses the existing windows-sys UI API features. No package versions
 were added or changed. `cargo deny` still passes without new exceptions.
 All unsafe opacity code remains isolated in the platform crate, using borrowed
@@ -157,3 +157,12 @@ X11 and Wayland dependencies. The hidden native probe adds dev-only uses of
 winit and egui-winit on all desktop targets. Wayland xdg-dialog uses the existing
 0.32.13 staging protocol bindings. Source identity and full supplemental license
 texts are tracked by the vendor manifest, not an unaudited Git checkout.
+
+The macOS legacy-home adapter directly uses already-locked `objc2-foundation`
+0.3.2 (Zlib OR Apache-2.0 OR MIT; std/NSString/NSPathUtilities only) and `libc`
+(MIT OR Apache-2.0). No package version is added or changed. The bounded passwd
+FFI stays in the platform crate; core/GUI retain their unsafe prohibition.
+
+The isolated macOS platform check exposed an implicit NSResponder feature
+previously supplied by GUI feature unification. It is now explicit, so the
+platform adapter can compile independently as well as inside the application.

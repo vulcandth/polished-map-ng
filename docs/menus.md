@@ -16,7 +16,7 @@ keyboard and headless counterparts where applicable.
 | Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialog hosting is implemented; integrated desktop delivery needs testing. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The temporary Edit Block entry is removed. Right-release on the same sidebar block opens its editor, matching upstream; native input/child-window verification remains pending. |
 | View | Theme submenu (Greybird/Dark), Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Transparent, Full Screen | Other themes/fonts are deferred; Wayland opacity integration is implemented with capability checks, while compositor acceptance remains open. |
-| Mode | Blocks, Events, Switch Mode | Alt+letter menu access and item mnemonics are unimplemented; existing arrow/Enter navigation needs native verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
+| Mode | Blocks, Events, Switch Mode | Alt+letter menu access and item mnemonics are implemented; native keyboard verification remains. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
 | Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Drag and Drop; Overworld Map Size | Remaining native/persistence gaps are tracked in `preferences.md`. |
 | Help | Help/F1 with bundled source documentation; About/command-/ with project and icon attribution | Original application artwork is included with attribution; native functional acceptance remains open and appearance matching is deferred. |
@@ -99,9 +99,10 @@ coverage, shadows/placement, submenu arrow shape and fonts remain incomplete.
 Keyboard submenu opening/activation and modal guards
 are tested headlessly. Activating Enter is consumed before a command can open
 a modal, preventing accidental acceptance/dismissal in that same frame.
-Alt+letter menu opening and item mnemonic activation remain functional work,
-not merely native verification. Underline styling and additional themes are
-deferred. Screen-edge popup behavior and Transparent require native acceptance.
+Alt+letter menu opening and item mnemonic activation are implemented, including
+held Alt, nested-menu precedence and disabled/modal guards. See
+[functional input evidence](compatibility.md#master-functional-gap-fixes).
+Underline styling and additional themes are deferred. Screen-edge popup behavior and Transparent require native acceptance.
 
 Mac Shift/Option/Command captions use an unchanged, separately licensed Noto
 Sans Symbols 2 font because the existing bundled faces lack some glyphs. Its
@@ -267,7 +268,7 @@ pending; the current egui modal reproduces wording, button order and actions.
 - Preserve the 21-point menu-bar band and source top-level/command order. Tests
   verify bounds, command placement and disabled state when data is unavailable.
 - The popup image/check column, row metrics, dividers and shortcut columns are
-  implemented. Complete theme painting, mnemonics and native behavior remain.
+  implemented. Complete theme painting and native acceptance remain.
   Upstream's `BLANK_ICON` reserves an image column for ordinary commands;
   it does not decorate all commands with toolbar artwork.
 - Verify source enablement for every data/profile condition. Current checks

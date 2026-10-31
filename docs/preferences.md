@@ -128,9 +128,10 @@ version. There is no merging and no write to a legacy file or directory.
 
 On Linux the **vendor directory**, not the preference file, decides the modern/
 old precedence. XDG `~/`, `${HOME}` and `$HOME/` expansion follows pinned FLTK.
-Home discovery uses Rust's OS home-directory lookup. The original Mac fallback
-through `NSHomeDirectory` when an explicitly configured HOME is nonexistent is
-not reproduced; unusual account/home configurations remain a native check.
+Linux home discovery uses Rust's OS home-directory lookup. macOS follows pinned
+FLTK: existing nonempty HOME, then existing `NSHomeDirectory`, then the real
+user's passwd entry. See [fallback evidence](compatibility.md#master-functional-gap-fixes);
+unusual account configurations and actual settings restart remain native checks.
 To import an executable-adjacent store from an older installation, copy it beside
 the NG executable before first launch. NG does not search other installations.
 

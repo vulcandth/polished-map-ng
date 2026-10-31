@@ -1809,6 +1809,9 @@ impl Editor {
         }
         self.external_file_drops(&ctx, ui.max_rect());
         let blocked = self.interaction_blocked();
+        if !blocked {
+            menu_popup::begin(&ctx);
+        }
         if !blocked && !ctx.egui_wants_keyboard_input() {
             self.block_hotkey_input(&ctx);
             if ctx.input_mut(|i| {

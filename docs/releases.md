@@ -1,6 +1,44 @@
 # Release and compliance checklist
 
-Development artifacts are not parity releases. Before publishing binaries:
+Development artifacts are not parity releases. The user authorized tester
+packages before native/master acceptance on 2026-10-31. Those packages follow
+the development policy below; the full checklist remains the final release gate.
+
+## Development packages
+
+[The manual workflow](../.github/workflows/development.yml) creates a complete
+source archive, then builds Windows x86-64, Linux x86-64, Apple Silicon and Intel
+Mac packages **offline from that archive**. Registry source is vendored separately
+from our patched native dependencies. All four jobs run the packaged CLI and
+the platform home-discovery tests. BUILD-INFO identifies the immutable commit,
+toolchain, build host, target and signing status. Each archive has a SHA-256 file.
+Mac bundles have local ad-hoc signatures, not Developer ID signing/notarization.
+
+Each binary package carries original asset/source notices, license texts and a
+lockfile-wide dependency license inventory. The matching source archive includes
+the full tracked repository, all registry dependencies, lockfile, toolchain,
+patches and [rebuild/relink instructions](rebuild.md). No external project/game
+fixtures or ignored working files are included. Source and binaries must be
+published together as a **prerelease**, with successful CI for the packaged commit.
+Do not mark a development release as the latest stable release.
+
+Windows uses an MSVC ZIP; Linux uses an Ubuntu 22.04-built tarball; macOS uses
+separate app-bundle ZIPs. The Mac runner labels follow
+[GitHub's runner documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job).
+The current package run and downloaded archive verification are pending.
+Native clean-machine GUI launch, original executable/bundle icon resources,
+minimum-OS verification and full M5–M7/P4 acceptance remain open. This packaging
+work does not resume deferred M4 aesthetics.
+
+[Tester instructions](testing.md) explain platform requirements, unsigned-build
+handling, test scope and useful bug reports. [INSTALL](../INSTALL.md) retains
+local build instructions. Before publishing a candidate, verify archive contents,
+matching commits/checksums, executable modes, licensing/source files and the
+successful native CLI smoke checks; record the workflow and release links here.
+
+## Final release gate
+
+Before publishing a parity/production release:
 
 - Complete the applicable compatibility matrix and native smoke tests.
 - Include upstream and port notices, LGPL v3 and GPL v3 texts, and all required

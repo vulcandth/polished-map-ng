@@ -197,8 +197,8 @@ continuing with a warning and a partially loaded asset set. Successful changes
 retain the original map/history and session palette semantics; switching does
 not update map header constants. The selector refreshes file discovery and
 constrains long closed-control labels like the roof selector. Original compound
-choice ordering and menu layout are implemented; mnemonic input and native
-acceptance remain separate work.
+choice ordering, menu layout and mnemonic input are implemented; native
+acceptance remains separate work.
 
 Monochrome and 256 Tiles retain the source's changed session preference after a
 canceled reload warning. Upstream also immediately changes the global used by
@@ -367,7 +367,7 @@ inactive colors now follow compiled source comparisons. Popup panel borders and
 full-width divider colors/geometry now follow the original drawing functions,
 including FLTK's background-derived gray ramp. Native curve coverage, submenu
 arrow shape, shadows and native fonts remain incomplete; egui still
-owns popup positioning and keyboard focus. Remaining mnemonic input and native behavior are listed explicitly in
+owns popup positioning and keyboard focus. Mnemonic input is implemented; native acceptance is listed in
 `docs/menus.md`.
 
 Mac modifier captions use the unchanged OFL-1.1 Noto Sans Symbols 2 font in a
@@ -375,7 +375,8 @@ separate family because the existing bundled fonts lack some required symbols.
 Ordinary text remains unchanged. This supplies the original Unicode symbols
 without claiming native macOS glyph metrics or redistributing system fonts.
 Recent filenames are drawn literally, including ampersands, as in the previous
-NG menu; FLTK mnemonic interpretation of filename ampersands remains unported.
+NG menu. Input now interprets the first unescaped ampersand as FLTK does,
+including Unicode; hiding the marker and drawing its underline remain deferred.
 
 Help retains the original product names and upstream documentation, including
 instructions for features still under development in NG. It adds a reference
@@ -498,8 +499,9 @@ preference writes for the session instead of partially importing settings.
 The existing initial-theme scope maps original themes other than Greybird/Dark
 to Greybird, with a visible status message. Invalid/off-screen coordinates and
 impractical window sizes are bounded or repositioned; Wayland delegates absolute
-placement to its compositor. Rust OS home discovery is used; the original Mac
-fallback for an explicitly set nonexistent HOME remains a documented limitation.
+placement to its compositor. Mac home discovery now reproduces the original
+HOME/Foundation/passwd fallback, including nonexistent HOME. Linux uses Rust OS
+home discovery.
 Read-only migration, retry behavior and native acceptance limits are specified in
 [preferences](preferences.md#legacy-import).
 
