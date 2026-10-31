@@ -2393,7 +2393,10 @@ still own history, dirty guards and modal opening. Existing menu geometry,
 artwork and slider painting are unchanged; underlines/fonts remain deferred.
 [Headless tests](../crates/gui/src/menu_popup/tests.rs) cover top-level switching,
 held Alt, nested/parent selection, disabled items, Escape, stale popup bindings
-modal blocking and escaped/Unicode recent-filename mnemonics. Native desktop
+modal blocking and escaped/Unicode recent-filename mnemonics. A regression test
+reproduced macOS Option+F inserting ƒ into an already focused editor field; menu
+activation now consumes its text event and releases editor focus before opening
+the popup. Unmatched typing in the open menu cannot alter that field. Native desktop
 keyboard/menu acceptance remains M6.
 
 [Mac home discovery](../crates/platform/src/legacy_home.rs) adapts pinned FLTK's

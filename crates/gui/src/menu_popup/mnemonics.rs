@@ -113,6 +113,11 @@ pub(crate) fn begin(ctx: &Context) {
         if consume(ctx, Mnemonic::Key(key), !menu_open)
             && let Some(popup) = ctx.data(|data| data.get_temp::<Id>(id(name)))
         {
+            ctx.memory_mut(|memory| {
+                if let Some(focused) = memory.focused() {
+                    memory.surrender_focus(focused);
+                }
+            });
             Popup::open_id(ctx, popup);
             ctx.request_repaint();
             break;
@@ -142,12 +147,10 @@ fn consume(ctx: &Context, key: Mnemonic, require_alt: bool) -> bool {
         if consumed {
             // Native backends can report both a key and text for one stroke.
             // Do not insert the mnemonic into a dialog opened by its action.
-            i.events.retain(|e| {
-                !matches!(e, Event::Text(t) if match key {
-                    Mnemonic::Key(k) => t.eq_ignore_ascii_case(k.name()),
-                    Mnemonic::Text(c) => t.starts_with(c),
-                })
-            });
+            // Option on macOS can produce a different character (Alt+F -> ƒ),
+            // so matching only the ASCII key name would leak text to the old
+            // focused field. A menu activation consumes its text input too.
+            i.events.retain(|e| !matches!(e, Event::Text(_)));
         }
         consumed
     })

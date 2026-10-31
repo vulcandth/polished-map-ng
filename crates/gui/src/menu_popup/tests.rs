@@ -5,6 +5,39 @@ use egui_kittest::{
 };
 
 #[test]
+fn mac_option_mnemonic_text_does_not_edit_the_previous_focused_field() {
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .build_ui_state(
+            |ui, text: &mut String| {
+                begin(ui.ctx());
+                egui::MenuBar::new().config(config()).ui(ui, |ui| {
+                    menu(ui, "File", |ui| {
+                        action(ui, false, "Save");
+                    });
+                });
+                ui.add(egui::TextEdit::singleline(text).hint_text("Editor value"));
+            },
+            "unchanged".to_owned(),
+        );
+    h.get_by_role(egui::Role::TextInput).focus();
+    h.run();
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::F]);
+    // macOS Option+F reports the physical F key and the printable character ƒ.
+    h.input_mut().events.push(egui::Event::Text("ƒ".into()));
+    h.run();
+    assert_eq!(h.state(), "unchanged");
+    assert!(h.query_by_label("Save").is_some());
+    h.input_mut().events.push(egui::Event::Text("q".into()));
+    h.run();
+    assert_eq!(
+        h.state(),
+        "unchanged",
+        "the menu takes focus from the editor"
+    );
+}
+
+#[test]
 fn recent_filename_mnemonics_skip_escaped_ampersands_and_accept_unicode() {
     let mut h = Harness::builder()
         .with_size(Vec2::new(800.0, 600.0))
