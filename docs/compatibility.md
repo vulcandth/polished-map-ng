@@ -1830,7 +1830,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented; native hosting is implemented; integrated window/clipboard verification remains pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented; native fonts, full gesture coverage and native workflows are pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export, internal Drag and Drop and positioned external-drop routing implemented. The meta128 acknowledgment and read-only legacy import are implemented; native file-drop acceptance, storage/restart/placement and Print/clipboard parity remain pending |
-| Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Pending; compatible Polished Crystal test required |
+| Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Attribute block editing, bank addressing and guarded persistence implemented; original-source and 51 real blockset roundtrips pass. Remaining graphics/events/GUI and full application acceptance are PP2–PP4; see [audit](#plusplus-source-audit). |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |
 | Native packaging and runtime | all three OSes | Build/test CI and selected Windows/X11 opacity and installed-font checks exist; complete native runtime acceptance and distribution packages pending |
@@ -1865,8 +1865,9 @@ The two implementation gaps identified above are now fixed; see the
 is tracked in [development packages](releases.md#development-packages). Test on copies and collect the build commit, OS/backend,
 steps, expected/actual behavior and affected file hashes. Remaining fonts, theme
 styling and the approved rounded palette sliders are not functional blockers.
-Plusplus, unified profiles, stable automation and a new shared graphical color
-picker belong to later objectives; their absence does not block master testing.
+Plusplus is now being developed separately under the approved sequencing exception.
+Unified profiles, stable automation and a new shared graphical color picker remain
+later objectives; their absence does not block master testing.
 
 ## Legacy preferences and normal-window geometry
 
@@ -2421,3 +2422,121 @@ passed all eight jobs, including all three OS suites. Native legacy settings res
 window lifecycle acceptance remain M5/M6; implementing discovery does not close
 them. Development package and corresponding-source evidence belongs in
 [releases](releases.md#development-packages).
+
+## Plusplus source audit
+
+PP1 compares master `8b9bdc2b8aac8c865809516c2123af69c498da0b` with plusplus
+`27c1f8479107c7495ac0c1818900190a137da6e1` (2.7.1). The diff changes 43 `src/`
+files, adds `deep-tile`, and removes `palette-map`. Immutable sources are in
+[the upstream lock](../upstream.lock.toml). The following inventory owns the
+functional differences; it is not a claim that the port is complete.
+
+| Family / pinned source | Difference and reuse plan | Owner |
+|---|---|---|
+| `tile`, `deep-tile`, `metatile`, `metatileset` | Raw pixels are independent of each block occurrence's offset, bank, palette, flips and priority. Map/block IDs remain bytes. Use separate attribute models; reuse map/history/collision storage. | PP2 |
+| `block-window`, `map-buttons` | 512 raw tile choices; occurrence palette/flip/priority controls, right-click pick and mirrored brush footprints. Raw graphics copy does not copy occurrence attributes. | PP2 commands, PP3 controls |
+| `tileset`, `tiled-image`, `image` | Up to 512 tiles in linear sheet order; compound before/main/after graphics with 16-tile row padding; no master's $60 hole. Reuse bounded 2bpp/LZ/PNG codecs, pixel edits, PNG output and clipboard conversion; do not expose master CHR import. | PP2 |
+| `colors`, removed `palette-map`, `palette-window` | Eight game palettes across the same six sets; default first eight colors match master. No per-raw-tile palette-map ASM or editable monochrome ninth palette. Reuse RGB conversions, safe parsing/export and swatch controls with profile limits. | PP2–PP3 |
+| `config`, `option-dialogs` | Different asset candidates, compound/base-name fallback, no master ASM map/CEL/CHR workflows. Reuse parsers/path primitives only where precedence and macros agree; preserve explicit profile choice. | PP2–PP3 |
+| `map-events`, `event` | 26 supported event macros: removes master's four pokered macros, adds `pokemon_event` and seven Red++ macros. Reuse coordinate/field/warp/edit/save logic with a profile-specific catalog; include inverted punctuation symbols. | PP2–PP3 |
+| `map`, `main-window`, `ruler` | Common byte-map editing/history, resize, scrolling, guides and Print composition. Source menus replace 256-tile/monochrome/tile-priority settings with 512-tile and bank ordering. Preserve shortcuts, guards and per-occurrence overlays. | PP3 |
+| `tileset-window`, `roof-window` | Raw hue editing uses `Deep_Tile`; 512 selection/clipboard bounds, monochrome tile preview, roof overlay at ordinal $00a. Share pixel algorithms, drafts, native hosting and save protection. | PP2–PP3 |
+| `main`, `version`, preferences | Separate upstream identity `polishedmap-plusplus`; `all512=0`, `swap01=0` defaults. Separate NG launch/storage namespace; share platform adapters. No automatic switching before U1–U3. | PP3 |
+| Unchanged platform/widgets/help mechanisms | Reuse current native adapters, dialogs, persistence, licensing and test harnesses. Audit branch-specific menu/help contents before exposing them. Do not recreate FLTK painting. | PP3–PP4 |
+
+### Addressing and serialization contracts
+
+Attributes use bits 0–2 for palette, bit 3 for bank, bits 5/6 for X/Y flip and
+bit 7 for priority. Bit 4 is discarded by the original reader/writer. Offsets and
+attributes are separate 16-byte rows. Attribute files may end after fewer whole
+rows than offsets; remaining rows are zero. Excess/partial rows fail. Resaving
+an edited blockset emits all rows with bit 4 cleared.
+
+| Graphics ordinal | Default bank:offset | Bank 0 first option |
+|---|---|---|
+| $000–07f | $0:00–7f | $0:00–7f |
+| $080–0ff | $1:00–7f | $1:00–7f |
+| $100–17f | $1:80–ff | $0:80–ff |
+| $180–1ff | $0:80–ff | $1:80–ff |
+
+Changing bank order changes interpretation, not stored bytes. The original
+attribute loader enables the 512 option only for a resolved ordinal **greater
+than $100**, while graphics count enables it above 256 tiles. Preserve this
+threshold in compatibility code; it is not the ordinary >=256 test.
+
+Brush footprints share master's eight modifier patterns, but flip the destination
+coordinates across the entire footprint and apply occurrence attributes. At
+sheet edges, signed intermediate indices pass through `Tile::bank_offset`;
+modulo-512 arithmetic would produce different results. The port bounds public
+selected indices while reproducing these internal conversions.
+
+`config.cpp` searches full compound names before the base before the first dot.
+Offsets/attributes search `data/tilesets` then `tilesets`. Collisions search
+`data/tilesets/*_collision.asm`, `.inc`, then `tilesets/*_collision.asm`, `.bin`;
+master's `data/tilesets/*_collision.bin` candidate is absent. Graphics use
+`gfx/tilesets` with PNG → 2bpp → 2bpp.lz, roofs use `gfx/tilesets/roofs`.
+No palette-map file belongs to a plusplus blockset.
+
+### Geometry baseline
+
+The block editor client is 477×432, with the tileset scroll viewport at
+(10,36,273,258), 16 columns of 16-point tiles and up to 32 rows. The block grid
+is (337,36,130,130); palette, flips and priority occupy rows y=176,202,228.
+Collision fields start at (313,279), width 154, height 22, with 26-point spacing.
+The raw tileset editor is 441×304; roof editor 226×228; palette editor height 191
+and width `295 + max(text_width("YELLOW:", 2), text_width("BROWN:", 2))`. These are baseline source measurements, not completed
+Rust GUI evidence. PP3 must test final text-dependent formulas and hit bounds;
+fonts, widget painting and exact FLTK appearance are excluded from this pass.
+
+### Polished Crystal fixture
+
+The [pinned project](https://github.com/Rangi42/polishedcrystal/tree/1226ea17bb0bdf5de1bad706a688fe89af573981)
+is the last revision before the pinned plusplus source date. Its 51 blocksets all
+have matching complete offset/attribute rows and at most 256 blocks. NewBarkTown
+has 90 map bytes, and its johto_traditional blockset has 248 blocks. The compound
+main PNG is 128×80 (160 tiles), with a 128×64 (128-tile) johto_common component.
+These structures fit the source's expanded format. Backend roundtrips establish
+block-file compatibility; project discovery/rendering/original-app reopening
+still require PP2–PP4 evidence. Follow the independent [fixture policy](assets.md#polished-crystal-fixture-policy).
+
+## Plusplus block backend
+
+[Core](../crates/core/src/plusplus.rs) implements explicit bank ordering,
+canonical attributes, short-row padding, occurrence painting, copy/swap/resize,
+collision edits and atomic command batches. Shared `Blockset` storage keeps its
+byte-sized offset behavior; only common brush footprint/stride math was factored.
+No plusplus settings, raw tile IDs or palette semantics leak into the master GUI.
+
+[Project persistence](../crates/project/src/plusplus.rs) discovers the plusplus
+block paths and loads offsets/attributes with a 4096-byte cap. Saving uses the
+existing content-hash conflict checks, staging/backups and rollback machinery
+for two or three files. It preserves unrelated collision assembly and requires
+explicit paired Save As destinations. This is guarded multi-file saving, not
+crash-atomic filesystem transactionality; interrupted recovery remains A2.
+
+Verification on Windows, with the plusplus source comparisons and persistence/real-project
+suite also passing on WSL Ubuntu 22.04.5:
+
+- [Independent cases](../crates/core/tests/plusplus.rs) cover bank boundaries,
+  row errors/padding, canonicalization, flipped footprints, 256-block bounds,
+  collision synchronization and failed-batch atomicity.
+- [Persistence tests](../crates/project/tests/plusplus.rs) cover full-name
+  precedence, excluded master paths, exact save/reopen, unrelated ASM retention,
+  conflicts in all three files and duplicate destinations.
+- [Original-source comparisons](../crates/project/tests/plusplus_reference.rs)
+  compile unchanged method bodies using the [oracle](../tools/plusplus_block_oracle.py).
+  All 131,072 offset/attribute/order inputs and 524,288 modifier/tile/click/flip
+  combinations match. The harness tests arithmetic, not FLTK event delivery.
+- All 51 pinned real blocksets pass swap → save → reopen → swap back → save,
+  restoring exact offsets, attributes and collision bytes in temporary copies.
+  Fixture files are neither modified nor distributed. CI repeats these checks
+  separately from the existing master suite.
+- Workspace format, Clippy (`--all-targets`, warnings denied), tests and rustdoc
+  pass on Windows. The original master brush differential also passes after
+  factoring shared footprint math. Production native-feature validation and
+  documentation link/CLI-example checks pass. No GUI interaction was needed;
+  these are backend checks, not native application acceptance.
+
+PP2 still needs raw graphics editing/rendering, compound graphics and roofs,
+remaining palette/discovery rules and branch event catalogs. PP3 has no plusplus
+GUI yet; PP4 original-application interoperability/native acceptance remains open.

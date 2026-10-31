@@ -15,6 +15,11 @@ repository = "https://github.com/pret/pokecrystal"
 commit = "bd983395006298e976ae1871ef092e87f3385506"
 purpose = "Contemporaneous master project fixture; fetched separately, assets not redistributed"
 
+[fixtures.polishedcrystal]
+repository = "https://github.com/Rangi42/polishedcrystal"
+commit = "1226ea17bb0bdf5de1bad706a688fe89af573981"
+purpose = "Contemporaneous plusplus fixture; fetched separately, no game/project assets redistributed"
+
 [toolkits.fltk]
 repository = "https://github.com/fltk/fltk"
 commit = "a9b1113516ffd15fc7602a6d425a317df30f4720"

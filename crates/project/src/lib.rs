@@ -16,6 +16,7 @@ mod map_sizes;
 mod native_fonts;
 mod palette_document;
 mod palettes;
+pub mod plusplus;
 mod png_export;
 mod png_import;
 mod print_fonts;

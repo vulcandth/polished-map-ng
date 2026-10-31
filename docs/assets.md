@@ -321,3 +321,20 @@ uses an explicitly reported Arial Bold substitute when Microsoft Sans Serif Bold
 is unavailable. Synthetic bold and native rasterization remain unfinished; see
 `compatibility.md`. The digit masks above are independent of font discovery.
 System font files have not been copied or redistributed.
+
+## Polished Crystal fixture policy
+
+The plusplus fixture is Rangi42/polishedcrystal at
+[`1226ea17bb0bdf5de1bad706a688fe89af573981`](https://github.com/Rangi42/polishedcrystal/tree/1226ea17bb0bdf5de1bad706a688fe89af573981),
+pinned in [upstream.lock.toml](../upstream.lock.toml). It predates the pinned
+plusplus application revision and has paired binary offsets/attributes suitable
+for its format. The audit found no repository-wide LICENSE/COPYING grant;
+`tools/bsp/LICENSE` is tool-specific and is not a game-art license.
+
+Keep the checkout in ignored `.reference/polishedcrystal`. Tests make temporary
+copies; do not edit the checkout, commit fixtures, upload game screenshots/pixel
+outputs, or include them in releases/source packages. CI fetches the immutable
+commit separately and retains only test results. Synthetic differential inputs
+and original-editor algorithm harnesses are distinct from game assets. The user's
+original UI artwork selection does not establish redistribution rights for this
+fixture. Structural/roundtrip evidence is in the [plusplus audit](compatibility.md#plusplus-source-audit).

@@ -237,6 +237,29 @@ impl BlockBrush {
             "Place 4-4-4-4",
         ][usize::from(self.shift) | (usize::from(self.ctrl) << 1) | (usize::from(self.alt) << 2)]
     }
+    pub(crate) fn side(self) -> u16 {
+        (if self.ctrl || self.alt { 2 } else { 1 }) * if self.shift { 2 } else { 1 }
+    }
+    /// Shared brush footprint/stride; each format owns address conversion.
+    pub(crate) fn placements(self) -> impl Iterator<Item = (u16, u16, i16)> {
+        let checkered = self.shift && !self.ctrl && !self.alt;
+        let n = self.side() as i16;
+        (0..n).flat_map(move |dy| {
+            (0..n).map(move |dx| {
+                let offset = if checkered {
+                    dy ^ dx
+                } else {
+                    (if self.ctrl {
+                        if self.alt { -n } else { 16 }
+                    } else {
+                        n
+                    }) * dy
+                        + dx
+                };
+                (dx as u16, dy as u16, offset)
+            })
+        })
+    }
     /// Paint a draft with upstream's byte wrapping, clipping and 0x60 tile skip.
     pub fn paint(
         self,
@@ -248,29 +271,15 @@ impl BlockBrush {
         if at.x >= 4 || at.y >= 4 {
             return Err(BlocksetError::Coordinate(at.x, at.y));
         }
-        let checkered = self.shift && !self.ctrl && !self.alt;
-        let n: i16 = if self.ctrl || self.alt { 2 } else { 1 } * if self.shift { 2 } else { 1 };
-        for dy in 0..n {
-            for dx in 0..n {
-                let x = at.x + dx as u16;
-                let y = at.y + dy as u16;
-                let offset = if checkered {
-                    dy ^ dx
-                } else {
-                    (if self.ctrl {
-                        if self.alt { -n } else { 16 }
-                    } else {
-                        n
-                    }) * dy
-                        + dx
-                };
-                let mut id = tile.wrapping_add(offset as u8);
-                if !allow_256 && tile < 0x60 && id >= 0x60 {
-                    id = id.wrapping_add(0x20);
-                }
-                if x < 4 && y < 4 && (allow_256 || id < 0xe0) {
-                    draft[usize::from(y * 4 + x)] = id;
-                }
+        for (dx, dy, offset) in self.placements() {
+            let x = at.x + dx;
+            let y = at.y + dy;
+            let mut id = tile.wrapping_add(offset as u8);
+            if !allow_256 && tile < 0x60 && id >= 0x60 {
+                id = id.wrapping_add(0x20);
+            }
+            if x < 4 && y < 4 && (allow_256 || id < 0xe0) {
+                draft[usize::from(y * 4 + x)] = id;
             }
         }
         Ok(())

@@ -278,3 +278,11 @@ FLTK Fl_cocoa.mm::getUserPreferencesDirectory, using caller-owned bounded passwd
 storage. The existing upstream/FLTK notices and separate FLTK license apply.
 Development distributions include matching dependency source and notices plus
 rebuild/relink instructions; see docs/releases.md and docs/rebuild.md.
+
+Plusplus attribute block editing adapts `tile.cpp`, `block-window.cpp`,
+`metatileset.cpp` and `config.cpp` at the pinned plusplus revision under
+LGPL-3.0-only. The differential harness compiles unchanged tile method bodies
+and the block placement callback with synthetic widget values. Generated code
+and snippet hashes stay in ignored scratch storage. The Rust implementation
+reuses the existing collision codec and guarded multi-file persistence; no
+Polished Crystal fixture assets are distributed.

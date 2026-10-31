@@ -513,3 +513,13 @@ handle are restored while retaining source drag/clamping, keyboard, accessibilit
 and interrupted-capture fixes. This is an approved visual difference, not an
 unfinished requirement to restore the FLTK appearance. Other M4 aesthetics remain
 deferred. See [slider coverage](compatibility.md#source-palette-sliders).
+
+## Plusplus development before master native acceptance
+
+On 2026-10-31 the user authorized starting the separate plusplus port while master
+is available for testing. This supersedes the original instruction to wait for M7;
+it does not close M3–M7 or assert master parity. Plusplus should reuse the existing
+work and prepare for later combination, while keeping its entry point and formats
+separate for now. Functionality and measured layout/sizing take priority; recreating
+FLTK painting is not part of this porting pass. Original fonts and other master M4
+aesthetics remain deferred. PP4 and native delivery gates remain explicit.

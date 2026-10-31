@@ -5,8 +5,24 @@
 `polished-map-core` owns validated models, commands, history and deterministic
 RGB rendering. It has no filesystem, egui or GPU dependency. `project` owns
 discovery, codecs and persistence. `gui` and `cli` depend on these libraries.
-Master/plusplus remain explicit format profiles; shared code must not erase
-their differences. Public interfaces are experimental until objective four.
+Master is the current application entry point. Plusplus starts as explicit
+`core::plusplus` and `project::plusplus` modules, with separate attribute-bearing
+block documents. Shared code must not erase their differences. Public interfaces
+are experimental until objective four.
+
+Plusplus occurrences own bank, palette, flips and priority; raw graphics tiles do
+not. Do not widen master tile IDs globally or reinterpret master palette-map bytes
+as plusplus attributes. Attribute blocks compose the existing offset/collision
+storage, reuse brush footprint math, and use the existing guarded multi-file
+persistence and collision codec. No mutable access to offset storage may bypass
+attribute synchronization. Next, factor shared raw-pixel operations and raster
+composition below the two format adapters. Keep source bank ordering explicit.
+
+PP3 will add a separate executable/launch configuration and preference namespace,
+using common GUI components and native adapters rather than copying the app.
+A shared internal capability boundary is preparation for U1–U3, not completion of
+profile detection, switching or unified write safety. Both format regression suites
+must remain active during that later integration.
 
 `polished-map-platform` isolates desktop color dialogs and external script opening.
 Core, project, GUI and CLI retain the workspace `unsafe_code = forbid` rule.

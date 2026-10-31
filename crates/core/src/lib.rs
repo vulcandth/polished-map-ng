@@ -8,6 +8,7 @@ mod blockset;
 mod events;
 mod map;
 mod palettes;
+pub mod plusplus;
 mod printing;
 mod priority;
 mod raster;

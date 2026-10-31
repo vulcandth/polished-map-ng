@@ -10,8 +10,8 @@ and design decisions in [architecture](architecture.md).
 | Milestone | Status | What that means |
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
-| 1. Master parity | **In progress — active milestone** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | Not started | Expanded-profile port and compatible Polished Crystal acceptance remain. |
+| 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
+| 2. Plusplus parity | **In progress — active milestone** | Source audit and fixture pin complete; attribute block editing/persistence implemented. Remaining backend, separate GUI and acceptance are PP2–PP4. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
@@ -25,11 +25,13 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Verify M5 native settings storage/restart/shutdown, then execute M6–M7
-on the published [development candidate](releases.md#development-packages).
-Both audited master functional gaps are fixed; the remaining gates are verification.
-See the [master testing-readiness audit](compatibility.md#master-testing-readiness)
-for the distinction between missing functionality and testing gates.
+**Next: PP2** — implement plusplus graphics editing/rendering and remaining
+profile-specific discovery/palette/event rules, building on the completed
+attribute block backend. Then PP3 integrates a separate plusplus editor.
+The user authorized this sequence on 2026-10-31 while people test master;
+M5–M7 remain open against the published [development candidate](releases.md#development-packages).
+Both audited master functional gaps are fixed; its remaining gates are verification.
+See the [master testing-readiness audit](compatibility.md#master-testing-readiness).
 The remaining M4 aesthetic matching is
 **deferred by user direction (2026-10-30)** after the palette-slider work;
 resume M4 only to fix a functional issue. Exact original fonts are also deferred
@@ -37,7 +39,8 @@ to later manual review. See the [approved scope exception](deviations.md#remaini
 M3's implementation and isolated native protocol checks are in place; integrated
 file-manager, compositor, clipboard and mixed-DPI behavior remains open in M6.
 M1 inventory/discovery/save feedback and M2 original artwork are complete.
-Do not advance to plusplus until M7 passes with the approved exceptions recorded.
+The [approved sequencing exception](deviations.md#plusplus-development-before-master-native-acceptance)
+permits plusplus work without claiming M7 has passed.
 
 ## Foundation — bootstrap complete
 
@@ -185,19 +188,30 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   [deviations](deviations.md); record final evidence in [compatibility](compatibility.md).
   Passing codec or synthetic GUI tests alone is insufficient.
 
-## 2. Plusplus parity — not started
+## 2. Plusplus parity — in progress
 
-Begins after M7. Preserve all master acceptance fixtures.
+Master acceptance fixtures remain mandatory. Keep separate entry points and
+format-specific documents; reuse common algorithms, codecs and platform adapters.
+Do not expose automatic profile switching until the unified-editor milestone.
 
-- [ ] **PP1:** Inventory differences at the pinned plusplus revision and pin a
-  compatible Polished Crystal project with an independently audited fixture policy.
-- [ ] **PP2:** Implement expanded tile counts/banks, per-block attributes,
-  flips, priority, palette/discovery rules and serialization. Keep map IDs byte-sized.
+- [x] **PP1:** Inventoried the pinned source differences and pinned a contemporary
+  Polished Crystal fixture. Scope, reuse boundaries and remaining owners are in
+  the [audit](compatibility.md#plusplus-source-audit); the independent
+  [fixture policy](assets.md#polished-crystal-fixture-policy) excludes game assets.
+- [ ] **PP2 (in progress):** Implement expanded tile counts/banks, per-block
+  attributes, flips, priority, palette/discovery/event rules and serialization.
+  Attribute block commands, bank mapping and guarded offset/attribute/collision
+  saves are implemented with source differentials and real-project tests.
+  Graphics editing/rendering, remaining project rules and branch event handling
+  remain. Keep map IDs byte-sized. Evidence: [backend](compatibility.md#plusplus-block-backend).
 - [ ] **PP3:** Port branch-specific controls, dialogs, defaults and rendering
-  with the same geometry, asset and native verification standards as master.
+  through a separate plusplus entry point with isolated preferences. Reuse common
+  GUI/platform code and preserve source layout/sizing; FLTK visual painting is
+  excluded by user direction. Verify geometry/input, then necessary native behavior.
 - [ ] **PP4 — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every
-  remaining difference resolved or explicitly approved.
+  remaining difference resolved or explicitly approved. Backend roundtrips alone
+  do not establish application parity.
 
 ## 3. Unified editor — not started
 
