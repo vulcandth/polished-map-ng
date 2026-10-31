@@ -1841,6 +1841,10 @@ the original application. Unverified assets never become redistributable fixture
 
 ## Master testing readiness
 
+**Current candidate:** both audited functional gaps are fixed and
+[development builds](releases.md#development-packages) are published for Windows,
+Linux and both Mac architectures. Native/application acceptance remains open.
+
 **Historical audit:** The 2026-10-31 audit of commit `8fd2f4e` reviewed the source inventory, command
 routing, native adapters, preference migration, documented deviations and CI.
 [All eight CI jobs passed](https://github.com/vulcandth/polished-map-ng/actions/runs/41230741505),
@@ -2411,8 +2415,9 @@ existing-store precedence continue through the previously tested import path.
 
 Windows format, Clippy with warnings denied, workspace tests, rustdoc and
 production-adapter checks pass. The standalone macOS platform crate cross-check
-also passes; native Foundation/passwd execution is assigned to both Mac package
-runners. Native legacy settings restart and
+also passes; native Foundation/passwd tests passed on both Mac package runners.
+[Final candidate CI](https://github.com/vulcandth/polished-map-ng/actions/runs/41236338190)
+passed all eight jobs, including all three OS suites. Native legacy settings restart and
 window lifecycle acceptance remain M5/M6; implementing discovery does not close
 them. Development package and corresponding-source evidence belongs in
 [releases](releases.md#development-packages).

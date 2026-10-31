@@ -5,7 +5,8 @@ production releases. Use a copy of your project and keep a backup. Original-font
 and remaining aesthetic matching are deferred, including the approved palette
 slider appearance. Plusplus support is not ready for acceptance testing.
 
-Download a package and its `.sha256` from the development prerelease:
+Download a package and its `.sha256` from the
+[development prerelease](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-10-31-9a6f607):
 
 | Platform | Package suffix | Start the editor |
 |---|---|---|
@@ -13,6 +14,10 @@ Download a package and its `.sha256` from the development prerelease:
 | Linux x86-64 | `x86_64-unknown-linux-gnu.tar.gz` | Extract and run `./polished-map-gui` |
 | macOS Apple Silicon | `aarch64-apple-darwin.zip` | Extract and open `Polished Map NG.app` |
 | macOS Intel | `x86_64-apple-darwin.zip` | Extract and open `Polished Map NG.app` |
+
+Windows builds require the [Microsoft Visual C++ v14 Redistributable (x64)](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
+if it is not already installed. Both binaries import `VCRUNTIME140.dll`; use
+Microsoft's installer. This prerequisite is also stated in the release notes.
 
 The CLI is `polished-map` (`polished-map.exe` on Windows); run it with `--help`.
 Linux packages are built on Ubuntu 22.04 and need glibc 2.35 or newer, an X11 or

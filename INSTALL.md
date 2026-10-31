@@ -1,6 +1,7 @@
 # Building and running Polished Map NG
 
-Development packages are intended for compatibility testing; see
+[Download development packages](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-10-31-9a6f607)
+for compatibility testing; see
 [tester instructions](docs/testing.md) and the [roadmap](docs/roadmap.md).
 The instructions below build the development version from source.
 

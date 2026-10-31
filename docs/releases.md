@@ -31,8 +31,27 @@ separate app-bundle ZIPs. The Mac runner labels follow
 ZIP packaging clamps reproducible dependency timestamps to ZIP's supported
 range while preserving license bytes and executable modes. The regression in
 [the archive test](../tools/test_development_package.py) covers the pre-1980
-notice timestamps found during the first Mac package run. The corrected package
-run and downloaded archive verification are pending.
+notice timestamps found during the first Mac package run.
+
+The [2026-10-31 development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-10-31-9a6f607)
+is published from `9a6f6074fc939276fa747c287280a5d61898c5b8`.
+[All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/41236338190)
+and [all five package jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/41236340646)
+passed. Source contains all 455 locked registry packages; each binary archive
+contains all 463 resolved package license/attribution records, including pinned
+supplements. Downloaded archives passed checksum, commit identity, architecture,
+executable permission, Mac bundle/signature metadata, license and source-content
+checks. All ten published asset digests match the verified local files.
+
+Native package build/CLI hosts were Windows Server 2025 (10.0.26100), Ubuntu
+22.04/glibc 2.35, macOS 15.8.2 arm64 and macOS 15.7.9 Intel. Both Macs ran the
+Foundation/passwd home-discovery tests and verified their ad-hoc bundle signatures.
+The downloaded Windows CLI also ran locally. The downloaded Linux CLI and GUI
+ran on WSL Ubuntu 22.04.5; the GUI stayed running through a 15-second isolated
+Xvfb/Vulkan startup check, with no desktop automation or project edits.
+Windows executables import VCRUNTIME140.dll; the current [tester guide](testing.md)
+and release notes specify Microsoft's x64 redistributable prerequisite.
+
 Native clean-machine GUI launch, original executable/bundle icon resources,
 minimum-OS verification and full M5–M7/P4 acceptance remain open. This packaging
 work does not resume deferred M4 aesthetics.

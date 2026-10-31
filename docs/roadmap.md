@@ -15,7 +15,7 @@ and design decisions in [architecture](architecture.md).
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
-| 6. Platform delivery | In progress — development packaging | Three-OS CI exists; tester packages are being prepared. Clean-machine and final release acceptance remain. |
+| 6. Platform delivery | In progress — development builds available | Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
 
 `[x]` means the stated work is implemented with linked evidence, not that its
 entire milestone has passed. `[ ]` means work or acceptance remains. Unchecked
@@ -25,8 +25,9 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Finish P2/P3 development-package verification and publish the tester
-candidate, then verify M5 native settings storage/restart/shutdown and execute M6–M7.
+**Next:** Verify M5 native settings storage/restart/shutdown, then execute M6–M7
+on the published [development candidate](releases.md#development-packages).
+Both audited master functional gaps are fixed; the remaining gates are verification.
 See the [master testing-readiness audit](compatibility.md#master-testing-readiness)
 for the distinction between missing functionality and testing gates.
 The remaining M4 aesthetic matching is
@@ -256,13 +257,15 @@ and release acceptance follow the preceding objectives.
   results; distinguish compilation, automated native checks and interactive checks.
 - [ ] **P2 (in progress):** Produce Windows x86-64 MSVC ZIP, Linux x86-64 tarball and macOS
   Intel/Apple Silicon app bundles, including the CLI and clean-machine launch checks.
-  Development packaging is implemented; artifact verification/publication is in progress.
+  Development packages are built, verified and published for all four targets.
   [Packaging and tester handoff](releases.md#development-packages) track evidence;
   clean-machine GUI launch and final icon resources remain open.
-- [ ] **P3 (in progress):** Automate checksums, licenses/notices, matching source, lockfile,
+- [x] **P3:** Automate checksums, licenses/notices, matching source, lockfile,
   toolchain/patch records and rebuild/relink instructions; verify archive contents.
   The development workflow builds all four binaries offline from the published
-  complete source archive. Verification is in progress; [rebuild instructions](rebuild.md).
+  complete source archive. Archive contents, notices, executable metadata and
+  uploaded digests are verified; see [release evidence](releases.md#development-packages)
+  and [rebuild instructions](rebuild.md).
 - [ ] **P4 — Acceptance:** Install/run packages and complete release workflows
   on all targets, with [release obligations](releases.md) satisfied. Signing and
   notarization remain explicitly deferred until credentials are available.

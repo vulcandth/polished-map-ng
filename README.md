@@ -3,11 +3,13 @@
 A map and tileset editor being rewritten in Rust with egui/eframe, based on
 [Polished Map](https://github.com/Rangi42/polished-map) by Rangi42.
 
-**Development version; compatibility is still being verified.** Windows, Linux
-and macOS are the target platforms. See the [roadmap](docs/roadmap.md) for supported
-scope and remaining work.
+**Development version; compatibility is still being verified.**
+[Download development builds](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-10-31-9a6f607)
+for Windows, Linux and macOS. See the [roadmap](docs/roadmap.md) for supported scope
+and remaining work.
 
-See [INSTALL.md](INSTALL.md) to build and run the development version. Work on
+See [tester instructions](docs/testing.md) or [INSTALL.md](INSTALL.md) to build
+from source. Work on
 project copies while compatibility testing is incomplete; project game assets are not
 included.
 
