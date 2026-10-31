@@ -306,3 +306,10 @@ LGPL-3.0-only. They reuse the master map/history, RGB editing, palette import
 continuations and guarded persistence. Source-reference harnesses compile
 unchanged metadata and palette function bodies with synthetic storage/input;
 the palette export harness records the corrected six-label table separately.
+
+Plusplus event catalogs, source parsing, coordinate formatting and warp handling
+adapt `map-events.cpp`, `event.cpp`, `config.cpp` and `main-window.cpp` at the pinned
+revision, under LGPL-3.0-only. The common event model, source-span persistence and
+Print compositor are reused. Differential harnesses retain original function
+bodies and catalog data; Latin-1 marker bytes are reported numerically for valid
+UTF-8 test output. NG uses the intended Unicode punctuation in its font adapters.

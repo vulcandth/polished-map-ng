@@ -17,10 +17,14 @@ use std::{
     path::{Path, PathBuf},
 };
 
+mod events;
 mod map;
 mod palettes;
 mod roof;
 mod tileset;
+pub use events::{
+    EventDocument, event_script_for_map, event_script_path, parse_event_script, warp_map_path,
+};
 pub use map::{
     MapDocument, MapOpenReport, discover_map, find_project_root, inspect_map_sizes, list_tilesets,
     prepare_save_as, tileset_choices, tileset_options,

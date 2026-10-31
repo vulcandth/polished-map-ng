@@ -1,4 +1,4 @@
-"""Compile pinned master event parsing/formatting/warp functions with UI stubs.
+"""Compile pinned master/plusplus event parsing/formatting/warp functions with UI stubs.
 
 The functions and metadata table are extracted unchanged. This tests event
 semantics, not FLTK dispatch or file persistence. No game assets are used.
@@ -19,20 +19,22 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--cxx", default="g++")
     parser.add_argument("--git", default="git")
+    parser.add_argument("--profile", choices=["master", "plusplus"], default="master")
     args = parser.parse_args()
+    revision = REVISION if args.profile == "master" else "27c1f8479107c7495ac0c1818900190a137da6e1"
     functions, provenance = [], []
     for path, names in [
         ("src/utils.cpp", ["void trim(", "void remove_comment("]),
         ("src/event.cpp", ["static int parse_value(", "std::pair<std::string, int> Event::warp_destination(",
                            "static int16_t parse_coord(", "void Event::parse(", "void Event::update_tooltip("]),
     ]:
-        source = subprocess.check_output([args.git, "-C", str(args.checkout), "show", f"{REVISION}:{path}"], text=True)
+        source = subprocess.check_output([args.git, "-C", str(args.checkout), "show", f"{revision}:{path}"], text=True, encoding="utf-8")
         for name in names:
             start = source.index(name)
             function = source[start:source.index("\n}\n", start)+2]
             functions.append(function)
             provenance.append({"source": path, "function": name, "sha256": hashlib.sha256(function.encode()).hexdigest(), "changes": []})
-    source = subprocess.check_output([args.git, "-C", str(args.checkout), "show", f"{REVISION}:src/map-events.cpp"], text=True)
+    source = subprocess.check_output([args.git, "-C", str(args.checkout), "show", f"{revision}:src/map-events.cpp"], text=True, encoding="utf-8")
     start = source.index("static const std::unordered_map")
     metadata = source[start:source.index("\n};", start)+3]
     provenance.append({"source": "src/map-events.cpp", "table": "events_meta", "sha256": hashlib.sha256(metadata.encode()).hexdigest(), "changes": []})
@@ -81,11 +83,16 @@ int main(int argc, char **argv) {
     return input.bad() || !output.good() ? 3 : 0;
 }
 '''
+    if args.profile == "plusplus":
+        # The table's Latin-1 symbol bytes are reported numerically, preserving
+        # their intended codepoints without putting invalid UTF-8 into TSV.
+        driver = driver.replace("<< e._meta.symbol", "<< unsigned(static_cast<unsigned char>(e._meta.symbol))")
+        driver = driver.replace("<< dest.second << '\\n'", "<< dest.second << '\\t' << int(e._meta.texture) << '\\n'")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     cpp = args.output.with_suffix(".cpp")
     cpp.write_text(harness + metadata + "\n" + "\n".join(functions) + driver, encoding="utf-8")
     subprocess.run([args.cxx, "-std=c++17", "-O2", str(cpp), "-o", str(args.output)], check=True)
-    args.output.with_suffix(".provenance.json").write_text(json.dumps({"revision": REVISION, "functions": provenance}, indent=2), encoding="utf-8")
+    args.output.with_suffix(".provenance.json").write_text(json.dumps({"revision": revision, "functions": provenance, "driver_output": "numeric Latin-1 symbol and texture ID" if args.profile == "plusplus" else "original master TSV"}, indent=2), encoding="utf-8")
 
 
 if __name__ == "__main__":

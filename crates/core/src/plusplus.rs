@@ -8,7 +8,9 @@ use thiserror::Error;
 
 use crate::{BlockBrush, BlockCommand, Blockset, BlocksetError, CollisionRow, Point};
 
+mod events;
 mod graphics;
+pub use events::{EVENT_KINDS, event_kind_from_macro};
 pub use graphics::{Graphics, RawTileCommand, RawTileSnapshot, RawTileset};
 
 /// Ordering of the upper halves of the two VRAM banks in the graphics sheet.

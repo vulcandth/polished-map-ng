@@ -30,6 +30,13 @@ plusplus restricting commands and reads to eight game palettes and excluding
 master monochrome layouts. No mutable shared palette bank escapes that adapter.
 This boundary allows later GUI reuse without accepting the wrong format today.
 
+Events share one semantic model and editing/serialization implementation, with
+explicit 22-macro master and 26-macro plusplus parsing catalogs. Adding a variant
+to the common enum does not add it to master's parser. Plusplus project entry
+points select their catalog and discovery paths; immutable event views and the
+existing move/edit/translate commands cannot switch kinds after parsing. The
+same CPU Print compositor consumes either model, including plusplus punctuation.
+
 PP3 will add a separate executable/launch configuration and preference namespace,
 using common GUI components and native adapters rather than copying the app.
 A shared internal capability boundary is preparation for U1–U3, not completion of

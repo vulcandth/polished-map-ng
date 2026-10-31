@@ -1,8 +1,9 @@
-//! master map-events.cpp/Event::parse and Config::event_script_path adaptations.
+//! Shared master/plusplus map-events.cpp/Event::parse adaptations.
 //! Untouched assembly bytes are retained, including CRLF and the final newline.
 //! LGPL-3.0-only; see upstream.lock.toml and NOTICE.md.
 use crate::{
     ProjectError, SaveTarget, TilesetOutput,
+    discovery::Rules,
     document::{optional_hash, persist_bytes, prepare_target},
     read_bounded,
 };
@@ -29,6 +30,16 @@ pub enum EventScriptError {
 
 /// Upstream search order. A missing script returns the final fallback path.
 pub fn event_script_path(root: &Path, map_name: &str) -> Result<PathBuf, ProjectError> {
+    validate_map_name(root, map_name)?;
+    let candidates = ["maps", "SXY", "data/maps/objects", "data/mapObjects"];
+    Ok(candidates
+        .iter()
+        .map(|dir| root.join(dir).join(format!("{map_name}.asm")))
+        .find(|path| path.is_file())
+        .unwrap_or_else(|| root.join(candidates[3]).join(format!("{map_name}.asm"))))
+}
+
+pub(crate) fn validate_map_name(root: &Path, map_name: &str) -> Result<(), ProjectError> {
     if map_name.is_empty()
         || !map_name
             .bytes()
@@ -39,12 +50,7 @@ pub fn event_script_path(root: &Path, map_name: &str) -> Result<PathBuf, Project
             message: "invalid map name for event discovery".into(),
         });
     }
-    let candidates = ["maps", "SXY", "data/maps/objects", "data/mapObjects"];
-    Ok(candidates
-        .iter()
-        .map(|dir| root.join(dir).join(format!("{map_name}.asm")))
-        .find(|path| path.is_file())
-        .unwrap_or_else(|| root.join(candidates[3]).join(format!("{map_name}.asm"))))
+    Ok(())
 }
 
 #[derive(Clone, Debug)]
@@ -55,6 +61,9 @@ pub struct EventScript {
 }
 impl EventScript {
     pub fn parse(source: &str) -> Result<Self, EventScriptError> {
+        Self::parse_with_rules(source, Rules::Master)
+    }
+    pub(crate) fn parse_with_rules(source: &str, rules: Rules) -> Result<Self, EventScriptError> {
         if source.len() > LIMIT {
             return Err(EventScriptError::Limit);
         }
@@ -74,7 +83,13 @@ impl EventScript {
             }
             let content = body.trim_start_matches(char::is_whitespace);
             let macro_end = content.find(char::is_whitespace).unwrap_or(content.len());
-            let Some(kind) = EventKind::from_macro(&content[..macro_end]) else {
+            let kind = match rules {
+                Rules::Master => EventKind::from_macro(&content[..macro_end]),
+                Rules::PlusPlus => {
+                    polished_map_core::plusplus::event_kind_from_macro(&content[..macro_end])
+                }
+            };
+            let Some(kind) = kind else {
                 continue;
             };
             let args = content[macro_end..].trim_start_matches(char::is_whitespace);
@@ -196,16 +211,20 @@ pub struct EventDocument {
 }
 impl EventDocument {
     pub fn open(path: &Path) -> Result<Self, ProjectError> {
+        Self::open_with_rules(path, Rules::Master)
+    }
+    pub(crate) fn open_with_rules(path: &Path, rules: Rules) -> Result<Self, ProjectError> {
         let source = prepare_target(path)?;
         let bytes = read_bounded(source.path(), LIMIT)?;
         let text = std::str::from_utf8(&bytes).map_err(|e| ProjectError::Format {
             path: source.path.clone(),
             message: e.to_string(),
         })?;
-        let script = EventScript::parse(text).map_err(|error| ProjectError::Format {
-            path: source.path.clone(),
-            message: error.to_string(),
-        })?;
+        let script =
+            EventScript::parse_with_rules(text, rules).map_err(|error| ProjectError::Format {
+                path: source.path.clone(),
+                message: error.to_string(),
+            })?;
         if Some(Sha256::digest(&bytes).into()) != source.hash {
             return Err(ProjectError::Conflict(source.path));
         }

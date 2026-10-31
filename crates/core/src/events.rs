@@ -1,4 +1,4 @@
-//! Event semantics adapted from master event.cpp, map-events.cpp and
+//! Shared event semantics adapted from pinned master/plusplus event.cpp, map-events.cpp and
 //! Main_Window::resize_map/change_event_cb; pinned in upstream.lock.toml.
 //! Copyright Rangi42/Polished Map contributors and 2026 Polished Map NG contributors.
 //! LGPL-3.0-only.
@@ -30,10 +30,22 @@ pub enum EventKind {
     SmashrockEvent,
     PcNurseEvent,
     MartClerkEvent,
+    PokemonEvent,
+    PcChanseyEvent,
+    PcBlisseyEvent,
+    CavebaseEvent,
+    #[serde(rename = "treebase_left_event_1")]
+    TreebaseLeftEvent1,
+    #[serde(rename = "treebase_left_event_2")]
+    TreebaseLeftEvent2,
+    #[serde(rename = "treebase_right_event_1")]
+    TreebaseRightEvent1,
+    #[serde(rename = "treebase_right_event_2")]
+    TreebaseRightEvent2,
 }
 
 impl EventKind {
-    /// Interior and one-pixel-border RGB in master's event textures (alpha 128).
+    /// Interior and one-pixel-border RGB in both branches' event textures (alpha 128).
     pub fn marker_rgb(self) -> ([u8; 3], [u8; 3]) {
         use EventKind::*;
         match self {
@@ -41,11 +53,15 @@ impl EventKind {
             Sign | BgEvent | Signpost => ([255, 0, 0], [205, 0, 0]),
             Object | ObjectEvent | PersonEvent => ([48, 48, 255], [0, 0, 205]),
             CoordEvent | XyTrigger => ([0, 160, 0], [0, 110, 0]),
-            WarpTo => ([255, 128, 0], [205, 78, 0]),
+            WarpTo | PcChanseyEvent | PcBlisseyEvent | CavebaseEvent | TreebaseLeftEvent1
+            | TreebaseLeftEvent2 | TreebaseRightEvent1 | TreebaseRightEvent2 => {
+                ([255, 128, 0], [205, 78, 0])
+            }
             _ => ([0, 128, 255], [0, 78, 205]),
         }
     }
 
+    /// Master's catalog; plusplus has an explicit catalog in `plusplus::EVENT_KINDS`.
     pub const ALL: [Self; 22] = [
         Self::Warp,
         Self::Sign,
@@ -94,6 +110,14 @@ impl EventKind {
             Self::SmashrockEvent => "smashrock_event",
             Self::PcNurseEvent => "pc_nurse_event",
             Self::MartClerkEvent => "mart_clerk_event",
+            Self::PokemonEvent => "pokemon_event",
+            Self::PcChanseyEvent => "pc_chansey_event",
+            Self::PcBlisseyEvent => "pc_blissey_event",
+            Self::CavebaseEvent => "cavebase_event",
+            Self::TreebaseLeftEvent1 => "treebase_left_event_1",
+            Self::TreebaseLeftEvent2 => "treebase_left_event_2",
+            Self::TreebaseRightEvent1 => "treebase_right_event_1",
+            Self::TreebaseRightEvent2 => "treebase_right_event_2",
         }
     }
     pub fn from_macro(name: &str) -> Option<Self> {
@@ -123,10 +147,10 @@ impl EventKind {
             Self::Sign | Self::Signpost => 'S',
             Self::Object | Self::ObjectEvent => 'O',
             Self::WarpTo | Self::TmhmballEvent => 'T',
-            Self::CoordEvent | Self::CuttreeEvent => 'C',
-            Self::BgEvent | Self::StrengthboulderEvent => 'B',
+            Self::CoordEvent | Self::CuttreeEvent | Self::PcChanseyEvent => 'C',
+            Self::BgEvent | Self::StrengthboulderEvent | Self::PcBlisseyEvent => 'B',
             Self::XyTrigger => 'X',
-            Self::PersonEvent => 'P',
+            Self::PersonEvent | Self::PokemonEvent => 'P',
             Self::DummyWarp => 'D',
             Self::ItemballEvent => 'I',
             Self::KeyitemballEvent => 'K',
@@ -134,6 +158,11 @@ impl EventKind {
             Self::SmashrockEvent => 'R',
             Self::PcNurseEvent => 'N',
             Self::MartClerkEvent => 'M',
+            Self::CavebaseEvent => 'V',
+            Self::TreebaseLeftEvent1 => '¿',
+            Self::TreebaseLeftEvent2 => '¡',
+            Self::TreebaseRightEvent1 => '?',
+            Self::TreebaseRightEvent2 => '!',
         }
     }
 }

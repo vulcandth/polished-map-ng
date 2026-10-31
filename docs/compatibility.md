@@ -1830,7 +1830,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented; native hosting is implemented; integrated window/clipboard verification remains pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented; native fonts, full gesture coverage and native workflows are pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export, internal Drag and Drop and positioned external-drop routing implemented. The meta128 acknowledgment and read-only legacy import are implemented; native file-drop acceptance, storage/restart/placement and Print/clipboard parity remain pending |
-| Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Attribute block editing, bank addressing and guarded persistence implemented; original-source and 51 real blockset roundtrips pass. Remaining project graphics integration/events/GUI and full application acceptance are PP2–PP4; see [audit](#plusplus-source-audit). |
+| Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | PP2 block/graphics/roof/map/palette/event backends are implemented with source comparisons and real-project roundtrips. Separate GUI integration and full application acceptance remain PP3–PP4; see [audit](#plusplus-source-audit) and [backend completion](#plusplus-events-and-script-persistence). |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |
 | Native packaging and runtime | all three OSes | Build/test CI and selected Windows/X11 opacity and installed-font checks exist; complete native runtime acceptance and distribution packages pending |
@@ -2495,9 +2495,10 @@ is the last revision before the pinned plusplus source date. Its 51 blocksets al
 have matching complete offset/attribute rows and at most 256 blocks. NewBarkTown
 has 90 map bytes, and its johto_traditional blockset has 248 blocks. The compound
 main PNG is 128×80 (160 tiles), with a 128×64 (128-tile) johto_common component.
-These structures fit the source's expanded format. Backend roundtrips establish
-block-file compatibility; project discovery/rendering/original-app reopening
-still require PP2–PP4 evidence. Follow the independent [fixture policy](assets.md#polished-crystal-fixture-policy).
+These structures fit the source's expanded format. The backend evidence below
+now covers project discovery, rendering and map/block/graphics/roof/palette/event
+roundtrips. Original-application reopening and native workflow acceptance remain
+PP4. Follow the independent [fixture policy](assets.md#polished-crystal-fixture-policy).
 
 ## Plusplus block backend
 
@@ -2537,10 +2538,10 @@ suite also passing on WSL Ubuntu 22.04.5:
   documentation link/CLI-example checks pass. No GUI interaction was needed;
   these are backend checks, not native application acceptance.
 
-The [graphics backend](#plusplus-graphics-backend) now supplies raw editing,
-rendering and expanded codecs. PP2 still needs
-palette sessions, map/root/asset discovery rules and branch event catalogs. PP3 has no plusplus
-GUI yet; PP4 original-application interoperability/native acceptance remains open.
+The [graphics backend](#plusplus-graphics-backend) supplies raw editing,
+rendering and expanded codecs. Palette sessions, map/root/asset discovery and
+branch event catalogs are also implemented in the sections below. PP3 has no
+plusplus GUI yet; PP4 original-application interoperability/native acceptance remains open.
 
 ## Plusplus graphics backend
 
@@ -2597,8 +2598,9 @@ interaction was used for these backend checks.
 
 [Compound graphics and roof documents](#plusplus-project-graphics-and-roofs) now
 connect the model to project files. [Contextual palettes and map discovery](#plusplus-map-discovery-and-palette-sessions)
-are also implemented; branch events remain PP2. No plusplus GUI or CLI editing workflow is claimed from these library
-tests; those remain PP2–PP4.
+and [branch events](#plusplus-events-and-script-persistence) are also implemented.
+No plusplus GUI or CLI editing workflow is claimed from these library tests;
+integration and acceptance remain PP3–PP4.
 
 ## Plusplus project graphics and roofs
 
@@ -2639,8 +2641,8 @@ pass, along with native-feature and documentation checks. The complete project
 graphics test file, including all real-project cases, also passes under WSL
 Ubuntu 22.04.5. CI runs both the block and graphics fixture suites.
 
-Palette sessions and metadata/root/asset discovery are implemented below; branch
-event catalogs remain PP2. Existing master defaults are not silently applied as plusplus policy. The
+Palette sessions, metadata/root/asset discovery and branch event catalogs are
+implemented below. Existing master defaults are not silently applied as plusplus policy. The
 GUI/CLI integration, complete workflow checks and native acceptance remain PP3–PP4.
 
 ## Plusplus map discovery and palette sessions
@@ -2704,3 +2706,60 @@ compiled-source comparisons and real fixture also pass under WSL Ubuntu 22.04.5.
 Master's compiled-source metadata comparisons still pass after the shared extraction.
 CI retains master regressions and runs the new source/fixture cases.
 These backend checks do not close PP3's separate GUI or PP4's native acceptance.
+
+## Plusplus events and script persistence
+
+[The explicit catalog](../crates/core/src/plusplus/events.rs) contains the pinned
+branch's 26 macros. It excludes master's `warp`, `sign`, `object`, `warp_to`, and
+adds `pokemon_event`, `pc_chansey_event`, `pc_blissey_event`, `cavebase_event` and
+the four `treebase_*` macros. Macro names, coordinate order, prefix operands,
+warp classification, destination operand order, marker colors and symbols follow
+`map-events.cpp`/`event.cpp`. Master's 22-macro parser remains unchanged.
+
+[Project adapters](../crates/project/src/plusplus/events.rs) reuse the shared
+parser, model commands, bounded source spans, previews and conflict-protected
+saves. They preserve unrelated assembly, indentation, mixed line endings and
+final-newline state. Edited coordinates retain source formatting; moves, options
+edits and resize translation validate before publishing the draft. Only the
+three recognized warp kinds increment IDs, and local targets use those IDs.
+External warp paths preserve the current extension and directory; invalid map
+operands cannot escape it. GUI existence, already-open and dirty-consent handling
+remain integration work under PP3.
+
+Script discovery uses `maps/<name>.asm`, then an adjacent `.asm` filename when
+opening an existing map. Master-only SXY/pokered paths are ignored. Unsaved maps
+do not auto-load scripts, and a malformed preferred script is an error rather
+than a reason to load a different fallback. The shared Print font adapter now
+accepts the four punctuation symbols, with single-character validation and
+bounded rasterization; this is functional symbol support, not resumed font matching.
+The [recorded event safety differences](deviations.md#event-assembly-preservation-and-validation)
+cover strict operands, negative-hex portability and valid Unicode punctuation.
+
+[Event tests](../crates/project/tests/plusplus_events.rs) verify catalog isolation,
+marker metadata, warp numbering/navigation, field normalization, atomic failure,
+file conflicts, repeated save/reopen and complete Print composition
+with all symbols. The [shared source oracle](../tools/event_oracle.py), selecting
+the pinned plusplus revision explicitly, compares 40,530 coordinate/base/macro and
+warp-destination cases against original functions and metadata. Its driver reports
+symbol bytes numerically; the source functions and table are unchanged.
+
+All 607 `.asm` map scripts in the pinned Polished Crystal fixture parse and
+roundtrip unchanged. A temporary-copy test moves every one of their 6,518 events,
+saves/reopens, and compares coordinates, kinds, source line numbers, prefix/suffix
+data, warp IDs/destinations and every unowned source line. It includes 65
+`pokemon_event` records. The fixture has no Red++ secret-base records; those use
+synthetic, compiled-source and Print coverage, not a claim of real Red++ project
+acceptance. No fixture scripts or generated game images are distributed.
+
+Windows format, workspace Clippy with warnings denied, workspace tests, rustdoc,
+native-feature and documentation checks pass. The complete event suite, including
+source comparisons and all fixture edits, passes on Windows and WSL Ubuntu
+22.04.5. The compiled master event comparison also passes under Linux after the
+shared parser extension. CI runs the plusplus reference and fixture cases in
+addition to all existing master checks. No GUI automation was used here.
+
+PP2's backend implementation is complete with the evidence in this and the four
+preceding plusplus sections. Master regressions remain mandatory. PP3 still owns
+the separate application, controls/layout, preferences and workflow integration;
+PP4 owns comparison in the original application and native acceptance. Backend
+roundtrips do not close either gate.

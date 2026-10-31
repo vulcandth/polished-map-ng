@@ -244,12 +244,25 @@ Upstream's `strtol` accepts partial coordinate expressions and treats unknown
 symbols as zero. This port rejects unsupported expressions, missing coordinates,
 overflow and values that wrap below -6, rather than silently relocating events.
 Valid integer literals retain the original signed remainder and 32-bit narrowing.
+On Windows, the original formatter's negative hexadecimal output (for example
+`$fffffffa` for -6) exceeds signed 32-bit `long` in `strtol`; the subsequent
+coordinate addition can overflow. NG explicitly decodes that 32-bit representation
+and safely reopens its own negative output on every platform. Both source branches
+have this hazard. The plusplus differential uses signed hex input such as `$-6`
+within `strtol`'s safe range; separate tests cover NG's formatted-output roundtrip.
 Warp destination ID interpretation remains permissive as upstream; unresolved
 IDs are reported as zero and do not resolve a local target. Event input/output
 is bounded to four MiB and individual prefix/suffix fields to 64 KiB; embedded
 NUL/CR and field edits that shift coordinates or turn a `warp` event into an
 unrecognized script command are rejected atomically. These are safety changes,
 not an assembly expression evaluator. UTF-8 scripts are currently required.
+
+Plusplus's secret-base metadata stores the intended U+00BF/U+00A1 symbols as
+single Latin-1 bytes and passes them to FLTK text drawing. NG stores them as the
+Unicode characters `¿`/`¡` and sends valid UTF-8 to GUI/Print font adapters.
+The other two secret-base symbols remain `?`/`!`. This preserves the documented
+symbols without reproducing invalid UTF-8; native source glyph appearance is
+not claimed from the backend tests.
 
 Resize translation uses wide intermediates before clamping, avoiding the original
 int16 narrowing overflow for extreme headless displacements. The model exposes

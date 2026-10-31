@@ -319,7 +319,7 @@ impl PrintFonts {
     }
 
     /// Only source Print labels are accepted: 1..=3 hexadecimal ASCII digits or
-    /// a single uppercase event symbol. Reject arbitrary/unbounded shaping work.
+    /// a single event symbol, including plusplus punctuation. Reject unbounded shaping work.
     pub fn rasterize(&self, requested: PrintFont, text: &str) -> Result<PrintTextMask, PrintError> {
         let valid = match requested {
             PrintFont::CourierBold14 => {
@@ -329,7 +329,11 @@ impl PrintFonts {
                         .all(|b| b.is_ascii_digit() || (b'A'..=b'F').contains(&b))
             }
             PrintFont::HelveticaBold14 => {
-                text.len() == 1 && text.as_bytes()[0].is_ascii_uppercase()
+                let mut chars = text.chars();
+                chars
+                    .next()
+                    .is_some_and(|c| c.is_ascii_uppercase() || matches!(c, '¿' | '¡' | '?' | '!'))
+                    && chars.next().is_none()
             }
         };
         if !valid {
@@ -363,7 +367,10 @@ mod tests {
                 assert_eq!(mask.layout_size()[1], 17);
             }
         }
-        for kind in polished_map_core::EventKind::ALL {
+        for kind in polished_map_core::EventKind::ALL
+            .into_iter()
+            .chain(polished_map_core::plusplus::EVENT_KINDS)
+        {
             let mask = fonts
                 .rasterize(PrintFont::HelveticaBold14, &kind.symbol().to_string())
                 .unwrap();
@@ -455,7 +462,10 @@ mod tests {
         for text in ["012", "345", "678", "9AB", "CDE", "FF"] {
             fonts.rasterize(PrintFont::CourierBold14, text).unwrap();
         }
-        for kind in polished_map_core::EventKind::ALL {
+        for kind in polished_map_core::EventKind::ALL
+            .into_iter()
+            .chain(polished_map_core::plusplus::EVENT_KINDS)
+        {
             fonts
                 .rasterize(PrintFont::HelveticaBold14, &kind.symbol().to_string())
                 .unwrap();
