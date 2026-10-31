@@ -1839,6 +1839,31 @@ New tests must distinguish synthetic vectors, source-derived expectations, and
 actual C++ differential observations. A source-derived vector is not a run of
 the original application. Unverified assets never become redistributable fixtures.
 
+## Master testing readiness
+
+The 2026-10-31 audit of commit `8fd2f4e` reviewed the source inventory, command
+routing, native adapters, preference migration, documented deviations and CI.
+[All eight CI jobs passed](https://github.com/vulcandth/polished-map-ng/actions/runs/41230741505),
+including the three OS jobs, source comparisons, visual tests and pinned-project
+checks. This audit did not operate a desktop or establish native acceptance.
+
+| Classification | Finding / next action |
+|---|---|
+| Implemented editor functionality | Map, block, tileset, roof, palette, event, Print/export and save workflows have implementations and automated coverage. No unimplemented editing/save command family was found in this audit. This is not proof of absence of bugs. |
+| M4 functional gap | Upstream ampersand menu mnemonics are absent from NG's menu specification/input routing. A temporary headless probe confirmed Alt+F leaves File closed while clicking File opens it. Ordinary command shortcuts and arrow/Enter navigation after opening a menu are separate implemented paths. Implement source menu/item mnemonic input; underline styling remains deferred. |
+| M5 functional edge case | Mac legacy import uses Rust home discovery and does not reproduce FLTK's fallback when HOME names a nonexistent directory. This can miss an existing original preference store. Restore that fallback or obtain an explicit compatibility exception. |
+| M3/M5/M6 verification | Exercise actual settings restart, maximize/fullscreen/removed-monitor placement, canceled closes with dirty drafts, external file drops, clipboard/Print, native choosers, editor launching and opacity on Windows, macOS, X11 and Wayland. Adapters exist; isolated/headless checks do not close these gates. |
+| M7 verification | Complete edit/save/reopen in both NG and original master for every domain on compatible project copies, including conflicts/failures. Pinned-project/codec tests alone do not complete application acceptance. |
+| Tester delivery preparation | No GitHub releases or runnable CI build archives existed at audit time; CI uploads visual differences only. Testers can build from INSTALL.md. A nondeveloper handoff needs explicitly labeled development packages with source/notices and build identity; this is delivery work, not missing editing behavior. |
+
+Normal master editor testing can begin with those known limitations recorded.
+Resolve the two implementation gaps before describing the candidate as
+functionally complete. Test on copies and collect the build commit, OS/backend,
+steps, expected/actual behavior and affected file hashes. Remaining fonts, theme
+styling and the approved rounded palette sliders are not functional blockers.
+Plusplus, unified profiles, stable automation and a new shared graphical color
+picker belong to later objectives; their absence does not block master testing.
+
 ## Legacy preferences and normal-window geometry
 
 The [read-only project reader](../crates/project/src/legacy_preferences.rs) adapts

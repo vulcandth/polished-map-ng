@@ -199,7 +199,7 @@ and hover coordinates between decimal and hexadecimal. View → Block IDs
 These are display settings: event labels/options keep the number format read
 from their script, and toggling the display does not edit or save any data.
 View preferences are persisted; Print has independent ID and overlay options.
-Native font/theme matching remains an acceptance gate.
+Exact font/theme matching is deferred; native workflow acceptance remains open.
 Grid (Ctrl/Cmd+G) draws the original bottom/right edges in the map and sidebar.
 Selections use black/white inset borders, including map hover and sidebar drag
 source/target feedback. The light/dark grid colors follow upstream Greybird/Dark;

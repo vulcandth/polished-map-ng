@@ -100,8 +100,9 @@ malformed-PNG diagnostic text need not match libpng. See the PNG differential in
   process-termination tests remain required before the stable automation milestone.
 - Headless discovery leaves an unmatched tileset unset instead of accepting the
   GUI's first dropdown item. Callers must supply an explicit choice; this avoids
-  silently rendering or editing an unrelated tileset. Ambiguous compound name
-  ordering and the original full options dropdown remain parity work.
+  silently rendering or editing an unrelated tileset. Compound ordering and the
+  original options dropdown are implemented; native discovery/chooser acceptance
+  remains open.
 - Headless opens start from a fresh palette bank unless the caller explicitly
   uses `begin_for_map` with a session and resolves its `MapPalettePlan`. GUI
   Open/New carries colors forward and prompts separately for default, special
@@ -196,7 +197,8 @@ continuing with a warning and a partially loaded asset set. Successful changes
 retain the original map/history and session palette semantics; switching does
 not update map header constants. The selector refreshes file discovery and
 constrains long closed-control labels like the roof selector. Original compound
-choice ordering and the complete main menu layout remain pending.
+choice ordering and menu layout are implemented; mnemonic input and native
+acceptance remain separate work.
 
 Monochrome and 256 Tiles retain the source's changed session preference after a
 canceled reload warning. Upstream also immediately changes the global used by
@@ -220,7 +222,7 @@ Invalid hex characters and values longer than six ASCII digits are rejected,
 rather than relying on partial C conversion or GUI input filtering. RGB8 edits
 remain exact in memory; copying and exporting still use upstream RGB5 quantization.
 
-## Incomplete resize integration
+## Resize metadata ownership
 
 The block-level resize matches upstream's nine anchors, zero fill, signed division
 and history reset. The GUI now stages loaded event movement with resize. Neither upstream
@@ -264,15 +266,15 @@ the map resized. Event save conflicts stop rather than offering a blind overwrit
 Main Save now follows the original domain ordering, but stops after a failure or
 canceled destination instead of continuing to save later domains.
 
-Event mode controls temporarily live in Tools while the complete main-menu port
-is unfinished. Source rectangles/colors/alpha, cell sizing, coordinate bounds and
+Event mode controls use the source Mode menu; event script actions use Data.
+Source rectangles/colors/alpha, cell sizing, coordinate bounds and
 options geometry are implemented; desktop event letters and zoomed ID text now
 request installed Helvetica Bold/monospace roles. Unavailable faces retain
 bundled fallbacks; native glyph rendering and synthetic bold remain open. Normal
 warp ID pixels now match the original digit sheet. Event
 Options now uses a native modal viewport; auto-load/show preferences are stored
-in the versioned NG settings record (legacy FLTK import remains separate).
-Event export overlays and native event GUI checks remain explicit parity gaps.
+in the versioned NG settings record, with read-only legacy FLTK import.
+Event Print overlays are implemented; native event GUI checks remain open.
 
 External script opening now follows the original Windows association/known-editor
 line rules and Linux `xdg-open` behavior. macOS uses `/usr/bin/open`, fixing the
@@ -365,8 +367,8 @@ inactive colors now follow compiled source comparisons. Popup panel borders and
 full-width divider colors/geometry now follow the original drawing functions,
 including FLTK's background-derived gray ramp. Native curve coverage, submenu
 arrow shape, shadows and native fonts remain incomplete; egui still
-owns popup positioning and keyboard focus. Missing commands, mnemonics and
-native behavior are listed explicitly in `docs/menus.md`.
+owns popup positioning and keyboard focus. Remaining mnemonic input and native behavior are listed explicitly in
+`docs/menus.md`.
 
 Mac modifier captions use the unchanged OFL-1.1 Noto Sans Symbols 2 font in a
 separate family because the existing bundled fonts lack some required symbols.

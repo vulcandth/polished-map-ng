@@ -12,14 +12,14 @@ keyboard and headless counterparts where applicable.
 
 | Group | Present in this port | Remaining source items or differences |
 |---|---|---|
-| File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Print's native fonts, clipboard delivery and chooser behavior remain verification gates. Native close delivery still needs platform verification. |
-| Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialogs and complete popup geometry remain pending. |
+| File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Native clipboard delivery, chooser and close behavior need platform testing; exact fonts are deferred. |
+| Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialog hosting is implemented; integrated desktop delivery needs testing. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The temporary Edit Block entry is removed. Right-release on the same sidebar block opens its editor, matching upstream; native input/child-window verification remains pending. |
-| View | Theme submenu (Greybird/Dark), Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Transparent, Full Screen | Other themes deferred; Wayland whole-window opacity integration and native theme/font matching remain incomplete. |
-| Mode | Blocks, Events, Switch Mode | Native menu keyboard traversal/mnemonics still need verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
+| View | Theme submenu (Greybird/Dark), Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Transparent, Full Screen | Other themes/fonts are deferred; Wayland opacity integration is implemented with capability checks, while compositor acceptance remains open. |
+| Mode | Blocks, Events, Switch Mode | Alt+letter menu access and item mnemonics are unimplemented; existing arrow/Enter navigation needs native verification. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
 | Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Drag and Drop; Overworld Map Size | Remaining native/persistence gaps are tracked in `preferences.md`. |
-| Help | Help/F1 with bundled source documentation; About/command-/ with project and icon attribution | About's application icon remains excluded pending provenance review. Native window/frame/font appearance still needs verification. |
+| Help | Help/F1 with bundled source documentation; About/command-/ with project and icon attribution | Original application artwork is included with attribution; native functional acceptance remains open and appearance matching is deferred. |
 
 ## Geometry and interaction gates
 
@@ -31,14 +31,14 @@ save writes the acknowledged prefix with a conflict check against the complete
 source file. ASM imports retain their separate binary Save As requirement.
 
 All 27 source toolbar buttons are present, with eight six-point separators.
-Each button occupies 24×24 points, including currently unreviewed artwork slots.
+Each button occupies 24×24 points and uses the selected original artwork.
 The palette label/dropdown precedes Load Palettes and Edit Current Palettes;
 blockset/map resize, tileset change/edit and roof change/edit follow in pairs.
 Undo/Redo stay visible when disabled. Change Roof requires a project roof
 inventory captured at successful map open; Edit Roof requires loaded roof pixels.
-The menu uses the same availability rules. Ten buttons use short text
-placeholders with full accessible names and tooltips while icon provenance is
-resolved. Native styles and remaining artwork are still parity gates.
+The menu uses the same availability rules. All former toolbar placeholders use
+original artwork with attribution and recorded provenance limitations. Native
+functional testing remains required; remaining style matching is deferred.
 
 The status bar follows the same fixed-row model: five 21-point fields in a
 23-point frame, four two-point separators, and widths measured from the original
@@ -61,8 +61,8 @@ Transparent precedes Full Screen and shares the source F10 shortcut. It requests
 75% whole-window opacity (Win32 byte 191, X11 CARDINAL `0xBFFFFFFF`, AppKit 0.75).
 The platform adapter changes the root window, including its content; no image,
 palette, export or widget alpha is modified. Native errors preserve the previous
-accepted menu state and are reported. Wayland currently returns an explicit
-unsupported-integration error. The Windows API has a hidden-window round-trip
+accepted menu state and are reported. Wayland uses the implemented native protocol
+adapter and reports a capability error on unsupported compositors/frame setups. The Windows API has a hidden-window round-trip
 test; X11 has an unmapped-window property test under Xvfb. These do not prove
 GPU/compositor appearance or actual F10 delivery. See `preferences.md` for
 startup intent and `architecture.md` for the remaining native acceptance gates.
@@ -99,9 +99,9 @@ coverage, shadows/placement, submenu arrow shape and fonts remain incomplete.
 Keyboard submenu opening/activation and modal guards
 are tested headlessly. Activating Enter is consumed before a command can open
 a modal, preventing accidental acceptance/dismissal in that same frame.
-Mnemonic underlines/Alt navigation, screen-edge/native-popup behavior and the
-complete Theme controls remain separate parity gates. Transparent's remaining
-native verification and Wayland work are described above.
+Alt+letter menu opening and item mnemonic activation remain functional work,
+not merely native verification. Underline styling and additional themes are
+deferred. Screen-edge popup behavior and Transparent require native acceptance.
 
 Mac Shift/Option/Command captions use an unchanged, separately licensed Noto
 Sans Symbols 2 font because the existing bundled faces lack some glyphs. Its
@@ -130,8 +130,8 @@ adds 80 plus OS_FONT_SIZE to the larger text width, and enforces a 280-point
 minimum. OS_FONT_SIZE is 12 on Windows and 13 elsewhere, with heading +4.
 The heading has a 25-point slot at (70,10), body starts at (70,45), and the
 80×22 OK button stays ten points from the bottom/right. The 50×50 image slot
-at (10,10) is reserved but blank until the application artwork is cleared.
-The native frame/system font and missing art remain explicit fidelity gaps.
+at (10,10) contains the selected original application artwork. Remaining native
+frame/system-font matching is deferred; window behavior still requires testing.
 
 Help opens a nonmodal, resizable child viewport with an initial 700×500 client
 size and a 48-point offset from the parent. Its body uses `(10,10,w-20,h-52)`;

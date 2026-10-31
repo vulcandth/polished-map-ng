@@ -10,7 +10,7 @@ and design decisions in [architecture](architecture.md).
 | Milestone | Status | What that means |
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
-| 1. Master parity | **In progress — active milestone** | Source inventory, discovery and original artwork are implemented; native integration and full application acceptance remain unfinished. |
+| 1. Master parity | **In progress — active milestone** | Editor feature families are implemented; menu mnemonic input, an edge case in Mac legacy-home discovery, and native/application acceptance remain. |
 | 2. Plusplus parity | Not started | Expanded-profile port and compatible Polished Crystal acceptance remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
@@ -25,9 +25,11 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** M5, verify native settings storage, restart and shutdown after the
-implemented legacy import and geometry-tracking fix, then M6 and M7 functional
-acceptance. The remaining M4 aesthetic matching is
+**Next:** Finish M5's Mac legacy-home fallback and M4's functional menu mnemonic
+input, then verify M5 native settings storage/restart/shutdown and execute M6–M7.
+See the [master testing-readiness audit](compatibility.md#master-testing-readiness)
+for the distinction between missing functionality and testing gates.
+The remaining M4 aesthetic matching is
 **deferred by user direction (2026-10-30)** after the palette-slider work;
 resume M4 only to fix a functional issue. Exact original fonts are also deferred
 to later manual review. See the [approved scope exception](deviations.md#remaining-m4-aesthetics-deferred).
@@ -142,7 +144,7 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   Done when the gates in [architecture](architecture.md) pass;
   stale pointer coordinates or widget alpha are not substitutes.
 - [ ] **M4 — Source-derived GUI and native-window fidelity (aesthetics deferred;
-  functional acceptance pending M6).** Resize/asset/Event dialog client metrics,
+  functional work remains).** Resize/asset/Event dialog client metrics,
   original-artwork confirmations, native editor/modal hosting, ownership and
   draft/close guards are implemented. Isolated Windows, macOS, X11 and Wayland
   lifetime checks pass. Evidence: [dialog metrics](compatibility.md#remaining-option-dialog-client-metrics),
@@ -153,14 +155,18 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   The user deferred remaining font, widget painting and purely visual menu/window
   matching on 2026-10-30. Preserve these as later manual work under the
   [approved exception](deviations.md#remaining-m4-aesthetics-deferred), not as
-  completed fidelity. Fix functional issues when found; window focus, usable
-  placement, keyboard/dismissal, clipboard, scrolling and resize acceptance
-  remain part of M6. Do not resume aesthetic matching before M5–M7.
+  completed fidelity. **Known implementation gap (not started):** source Alt+letter
+  menu opening and item mnemonics. Implement those input routes with disabled/modal
+  guards; visual underline matching stays deferred. Window focus, usable placement,
+  keyboard/dismissal, clipboard, scrolling and resize acceptance remain M6.
+  Do not resume aesthetic matching before M5–M7.
 - [ ] **M5 — Finish preference and window lifecycle compatibility (in progress).**
   Read-only legacy FLTK user/executable-adjacent import is implemented for all
   master settings, with NG precedence and malformed-input protection. Root normal
-  geometry now tracks moves/resizes independently of autosave. Remaining: verify
-  native storage/restart/shutdown, placement, fullscreen/maximize restoration,
+  geometry now tracks moves/resizes independently of autosave. **Known implementation
+  gap (not started):** reproduce Mac home discovery when HOME names a nonexistent
+  directory, instead of missing the original preference store. Also verify native
+  storage/restart/shutdown, placement, fullscreen/maximize restoration,
   transparency startup and canceled exits without losing edits across platforms.
   Done when [preferences](preferences.md) has evidence for each applicable source
   setting and supported platform. Headless import/tracker tests do not close this gate.
