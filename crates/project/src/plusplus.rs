@@ -1,6 +1,7 @@
-//! Explicit plusplus blockset loading and persistence. Adapted from pinned
-//! plusplus config.cpp/metatileset.cpp; LGPL-3.0-only. Uses the shared collision
-//! codec and guarded multi-file persistence, without master format detection.
+//! Explicit plusplus project documents, palettes, discovery and persistence.
+//! Adapted from pinned plusplus config.cpp, option-dialogs.cpp, colors.cpp and
+//! metatileset.cpp; LGPL-3.0-only. Shares editing/codecs/guarded persistence,
+//! without automatic profile detection or master format conversion.
 
 use crate::{
     ProjectError, SaveTarget,
@@ -16,9 +17,16 @@ use std::{
     path::{Path, PathBuf},
 };
 
+mod map;
+mod palettes;
 mod roof;
 mod tileset;
-pub use roof::RoofDocument;
+pub use map::{
+    MapDocument, MapOpenReport, discover_map, find_project_root, inspect_map_sizes, list_tilesets,
+    prepare_save_as, tileset_choices, tileset_options,
+};
+pub use palettes::{MapPalettePlan, PaletteDocument, PaletteOptions};
+pub use roof::{RoofDocument, list_roofs};
 pub use tileset::TilesetDocument;
 
 fn graphics_path(directory: &Path, name: &str) -> PathBuf {

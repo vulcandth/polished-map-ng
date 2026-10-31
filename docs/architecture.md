@@ -21,6 +21,15 @@ rendered blocks and occurrence priorities without requiring master palette maps.
 Plusplus raw tiles carry independent definition flags. Keep source bank ordering
 explicit and keep project graphics/roof persistence behind the project adapter.
 
+Plusplus map documents wrap the shared byte-map lifecycle with private, explicit
+discovery rules: root markers, filename extensions, metadata macros, asset
+directories and Save As defaults. The public master document keeps its original
+defaults. Neither document exposes an automatic profile switch. Palette sessions
+share RGB editing, export, roof overlays and ordered import continuations, with
+plusplus restricting commands and reads to eight game palettes and excluding
+master monochrome layouts. No mutable shared palette bank escapes that adapter.
+This boundary allows later GUI reuse without accepting the wrong format today.
+
 PP3 will add a separate executable/launch configuration and preference namespace,
 using common GUI components and native adapters rather than copying the app.
 A shared internal capability boundary is preparation for U1–U3, not completion of

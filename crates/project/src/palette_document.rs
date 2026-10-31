@@ -71,6 +71,14 @@ impl PaletteDocument {
     /// Import overlays the layouts recognized by upstream; other sets survive.
     /// Callers decide whether to discard pending color edits before invoking this.
     pub fn load(&mut self, path: &Path) -> Result<(), ProjectError> {
+        self.load_with_rules(path, crate::discovery::Rules::Master)
+    }
+
+    pub(crate) fn load_with_rules(
+        &mut self,
+        path: &Path,
+        rules: crate::discovery::Rules,
+    ) -> Result<(), ProjectError> {
         let source = prepare_target(path)?;
         let raw = read_bounded(path, 4 * 1024 * 1024)?;
         let text = std::str::from_utf8(&raw).map_err(|e| ProjectError::Format {
@@ -84,7 +92,11 @@ impl PaletteDocument {
         if optional_hash(path)? != source.hash {
             return Err(ProjectError::Conflict(path.into()));
         }
-        self.selected = self.bank.apply(&palettes, self.selected);
+        // Plusplus has eight game palettes; 1..6-palette monochrome imports
+        // are a master-only format and do not change its selection or colors.
+        if rules == crate::discovery::Rules::Master || palettes.len() > 6 {
+            self.selected = self.bank.apply(&palettes, self.selected);
+        }
         self.source = Some(source);
         self.modified = false;
         Ok(())

@@ -212,7 +212,7 @@ alongside retained pixel edits and all three asset dirty domains.
 
 ## Palette export labels and validation
 
-Upstream declares six palette sets but initializes the export label table with
+Both pinned upstream branches declare six palette sets but initialize the export label table with
 only `morn`, `day`, `nite`, `indoor`, `custom`. The sixth pointer is null and is
 passed to `%s`; the fourth/fifth names also describe the wrong sets. Export now
 labels all six sets correctly, including `darkness`. Numeric RGB5 values, hue

@@ -1,4 +1,4 @@
-"""Compile unchanged master binary-map metadata discovery with inert UI storage.
+"""Compile pinned master or plusplus metadata discovery with inert UI storage.
 
 Generated code is LGPL-3.0-only. ASCII fixture paths use standard streams;
 native file dialogs, ASM decoding and filesystem case behavior are not simulated.
@@ -17,12 +17,14 @@ def main():
     p.add_argument("--checkout", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--windows", action="store_true", help="original case-insensitive global-header matching")
+    p.add_argument("--profile", choices=["master", "plusplus"], default="master")
     p.add_argument("--cxx", default="g++")
     p.add_argument("--git", default="git")
     args = p.parse_args()
+    revision = REVISION if args.profile == "master" else "27c1f8479107c7495ac0c1818900190a137da6e1"
 
     def read(path):
-        return subprocess.check_output([args.git, "-C", str(args.checkout), "show", f"{REVISION}:{path}"]).decode("utf-8").replace("\r\n", "\n")
+        return subprocess.check_output([args.git, "-C", str(args.checkout), "show", f"{revision}:{path}"]).decode("utf-8").replace("\r\n", "\n")
 
     def function(source, signature):
         start = source.index(signature)
@@ -33,7 +35,9 @@ def main():
         "static bool cmp_ignore_case(", "bool equals_ignore_case(std::string_view",
         "bool starts_with(", "bool ends_with_ignore_case(std::string_view",
         "void trim(", "void lowercase(", "bool leading_macro(", "void remove_comment(", "void remove_dot_ext("]]
-    snippets += [function(config, signature) for signature in ["void Config::map_constants_path(", "bool Config::map_headers_path(", "void Config::map_header_path("]]
+    config_signatures = ["void Config::map_constants_path("]
+    config_signatures += ["bool Config::map_headers_path(", "void Config::map_header_path("] if args.profile == "master" else ["void Config::map_headers_path("]
+    snippets += [function(config, signature) for signature in config_signatures]
     snippets += [function(options, signature) for signature in ["static void guess_map_constant(", "bool Map_Options_Dialog::guess_map_size(", "std::string Map_Options_Dialog::guess_map_tileset(", "int Map_Options_Dialog::add_map_size(", "void Map_Options_Dialog::add_valid_sizes("]]
     map_header = read("src/map.h")
     start = map_header.index("struct Map_Attributes {")
@@ -121,12 +125,14 @@ int main(int argc, char **argv) {
 }
 '''
     body = "\n".join(snippets)
+    if args.profile == "plusplus":
+        harness = harness.replace("static bool map_headers_path", "static void map_headers_path")
     cpp = args.output.with_suffix(".cpp")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     cpp.write_text(harness + attrs + dialog + valid_size + "\n};\n" + helpers + platform + body + driver, encoding="utf-8")
     subprocess.run([args.cxx, "-std=c++17", "-O2", str(cpp), "-o", str(args.output)], check=True)
     args.output.with_suffix(".provenance.json").write_text(json.dumps({
-        "revision": REVISION,
+        "revision": revision,
         "sources": ["src/option-dialogs.cpp", "src/option-dialogs.h", "src/config.cpp", "src/utils.cpp", "src/map.h"],
         "snippet_sha256": hashlib.sha256((body + attrs + helpers + valid_size).encode()).hexdigest(),
         "changes_to_functions": [],

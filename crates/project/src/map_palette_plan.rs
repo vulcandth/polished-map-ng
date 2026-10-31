@@ -1,4 +1,5 @@
-//! master Main_Window::open_map/load_palettes/load_roof_colors. LGPL-3.0-only.
+//! Pinned master/plusplus Main_Window::open_map/load_palettes/load_roof_colors.
+//! LGPL-3.0-only; path/import rules follow the explicit document entry point.
 //! Explicit session transitions let GUI and headless callers make the same import decisions.
 use crate::{MapDocument, MasterGraphicsOptions, PaletteDocument, ProjectError, RoofPaletteLayout};
 use polished_map_core::PaletteSet;
@@ -31,6 +32,7 @@ enum Step {
 #[derive(Clone, Debug)]
 pub struct MapPalettePlan {
     steps: VecDeque<Step>,
+    rules: crate::discovery::Rules,
 }
 
 impl MapPalettePlan {
@@ -62,11 +64,7 @@ impl MapPalettePlan {
             missing_ok: true,
         }]);
         if options.special_palettes {
-            let gfx = root.join(if root.join("MAPDATA").is_dir() {
-                "MAPDATA"
-            } else {
-                "gfx/tilesets"
-            });
+            let gfx = doc.rules().graphics_directory(root);
             let base = tileset.split('.').next().unwrap_or(tileset);
             let mut paths = Vec::new();
             if doc.has_backing_file() {
@@ -115,7 +113,10 @@ impl MapPalettePlan {
                 layout: options.roof_layout,
             });
         }
-        Ok(Self { steps })
+        Ok(Self {
+            steps,
+            rules: doc.rules(),
+        })
     }
     pub fn is_finished(&self) -> bool {
         self.steps.is_empty()
@@ -148,7 +149,7 @@ impl MapPalettePlan {
                 if *missing_ok && !path.try_exists().map_err(|e| ProjectError::io(path, e))? {
                     draft.accept_missing_import();
                 } else {
-                    draft.load(path)?;
+                    draft.load_with_rules(path, self.rules)?;
                 }
             }
             Step::Select {

@@ -10,7 +10,10 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 use crate::codecs::{CodecError, parse_asm};
-use crate::{MapMetadata, discover_map, find_project_root};
+use crate::{
+    MapMetadata,
+    discovery::{Rules, discover_with_rules},
+};
 
 #[derive(Debug, Error)]
 pub enum ProjectError {
@@ -92,6 +95,7 @@ pub struct MapDocument {
     hash: Option<[u8; 32]>,
     map: Map,
     metadata: MapMetadata,
+    rules: Rules,
 }
 
 /// Result of the original editor's prefix-loading behavior. No bytes are written.
@@ -204,6 +208,15 @@ pub struct MapSummary<'a> {
 impl MapDocument {
     /// Create an unsaved zero-filled map. This never creates or overwrites a file.
     pub fn new_map(root: &Path, width: u16, height: u16) -> Result<Self, ProjectError> {
+        Self::new_with_rules(root, width, height, Rules::Master)
+    }
+
+    pub(crate) fn new_with_rules(
+        root: &Path,
+        width: u16,
+        height: u16,
+        rules: Rules,
+    ) -> Result<Self, ProjectError> {
         let map = Map::blank(width, height)?;
         let root = fs::canonicalize(root).map_err(|e| ProjectError::io(root, e))?;
         if !root.is_dir() {
@@ -213,7 +226,8 @@ impl MapDocument {
             });
         }
         Ok(Self {
-            path: root.join("NewMap.blk"),
+            path: root.join(format!("NewMap.{}", rules.default_extension())),
+            rules,
             hash: None,
             map,
             metadata: MapMetadata {
@@ -232,7 +246,7 @@ impl MapDocument {
         options: &OpenOptions,
         root: Option<&Path>,
     ) -> Result<Self, ProjectError> {
-        Ok(Self::read_in_project(path, options, root, false)?.document)
+        Ok(Self::read_in_project(path, options, root, false, Rules::Master)?.document)
     }
 
     /// Load the dimension-sized prefix and report extra decoded blocks, matching
@@ -244,18 +258,19 @@ impl MapDocument {
         options: &OpenOptions,
         root: Option<&Path>,
     ) -> Result<MapOpenReport, ProjectError> {
-        Self::read_in_project(path, options, root, true)
+        Self::read_in_project(path, options, root, true, Rules::Master)
     }
 
-    fn read_in_project(
+    pub(crate) fn read_in_project(
         path: &Path,
         options: &OpenOptions,
         root: Option<&Path>,
         allow_trailing: bool,
+        rules: Rules,
     ) -> Result<MapOpenReport, ProjectError> {
         let path = fs::canonicalize(path).map_err(|e| ProjectError::io(path, e))?;
         let bytes = read_bounded(&path, 4 * 1024 * 1024)?;
-        let metadata = discover_map(&path, root)?;
+        let metadata = discover_with_rules(&path, root, rules)?;
         let dimensions = metadata.dimensions;
         let width = options
             .width
@@ -265,7 +280,10 @@ impl MapDocument {
             .height
             .or(dimensions.map(|d| d.1))
             .ok_or(ProjectError::DimensionsRequired)?;
-        let mut blocks = decode_map_blocks(&path, &bytes)?;
+        let mut blocks = match rules {
+            Rules::Master => decode_map_blocks(&path, &bytes)?,
+            Rules::PlusPlus => bytes.clone(),
+        };
         let mut trailing_blocks = 0;
         if allow_trailing && (1..=255).contains(&width) && (1..=255).contains(&height) {
             let expected = usize::from(width) * usize::from(height);
@@ -277,6 +295,7 @@ impl MapDocument {
             map: Map::from_bytes(width, height, blocks)?,
             path,
             metadata,
+            rules,
         };
         Ok(MapOpenReport {
             document,
@@ -286,6 +305,9 @@ impl MapDocument {
     /// Backing path, or a suggested NewMap.blk path if `has_backing_file` is false.
     pub fn path(&self) -> &Path {
         &self.path
+    }
+    pub(crate) fn rules(&self) -> Rules {
+        self.rules
     }
     pub fn has_backing_file(&self) -> bool {
         self.hash.is_some()
@@ -321,18 +343,26 @@ impl MapDocument {
         if !target
             .path
             .extension()
-            .is_some_and(|e| e.eq_ignore_ascii_case("blk"))
+            .and_then(|e| e.to_str())
+            .is_some_and(|e| self.rules.binary_extension(e))
         {
             return Err(ProjectError::Format {
                 path: target.path.clone(),
-                message: "binary maps require a .blk destination".into(),
+                message: match self.rules {
+                    Rules::Master => "binary maps require a .blk destination",
+                    Rules::PlusPlus => "plusplus binary maps require a .ablk or .blk destination",
+                }
+                .into(),
             });
         }
         persist_bytes(&target.path, target.hash, self.map.blocks())?;
         self.path.clone_from(&target.path);
         self.hash = Some(Sha256::digest(self.map.blocks()).into());
         // Keep loaded map attributes/tileset; moving to another project changes the root.
-        self.metadata.root = find_project_root(&self.path).or_else(|| self.metadata.root.clone());
+        self.metadata.root = self
+            .rules
+            .find_root(&self.path)
+            .or_else(|| self.metadata.root.clone());
         self.map.mark_saved();
         Ok(())
     }

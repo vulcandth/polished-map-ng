@@ -56,6 +56,15 @@ pub(crate) fn graphics_stems(
     extensions: &[&str],
     ignore_colored: bool,
 ) -> Result<Vec<String>, ProjectError> {
+    graphics_stems_with_case(directory, extensions, ignore_colored, false)
+}
+
+pub(crate) fn graphics_stems_with_case(
+    directory: &Path,
+    extensions: &[&str],
+    ignore_colored: bool,
+    case_sensitive: bool,
+) -> Result<Vec<String>, ProjectError> {
     let entries = match fs::read_dir(directory) {
         Ok(entries) => entries,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
@@ -87,7 +96,13 @@ pub(crate) fn graphics_stems(
             }
             extensions
                 .iter()
-                .find(|ext| lower.ends_with(**ext))
+                .find(|ext| {
+                    if case_sensitive {
+                        name.ends_with(**ext)
+                    } else {
+                        lower.ends_with(**ext)
+                    }
+                })
                 .map(|ext| name[..name.len() - ext.len()].to_owned())
         })
         .collect())

@@ -299,3 +299,10 @@ PNG destination rules from pinned `config.cpp`, `utils.cpp`, `tileset.cpp` and
 `image.cpp`, under LGPL-3.0-only. Roof commands reuse the existing pixel editor
 and persistence through a profile-specific adapter; project/game inputs and
 rendered acceptance images remain untracked temporary fixtures.
+
+Plusplus map discovery/lifecycle and palette sessions adapt pinned `config.cpp`,
+`option-dialogs.cpp`, `map.cpp`, `main-window.cpp` and `colors.cpp`, under
+LGPL-3.0-only. They reuse the master map/history, RGB editing, palette import
+continuations and guarded persistence. Source-reference harnesses compile
+unchanged metadata and palette function bodies with synthetic storage/input;
+the palette export harness records the corrected six-label table separately.

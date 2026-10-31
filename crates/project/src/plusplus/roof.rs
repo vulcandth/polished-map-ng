@@ -12,6 +12,19 @@ use polished_map_core::{
 };
 use std::path::Path;
 
+/// Pinned option-dialogs.cpp uses case-sensitive suffixes for roof choices.
+pub fn list_roofs(root: &Path) -> Result<Vec<String>, ProjectError> {
+    let mut names = crate::asset_names::graphics_stems_with_case(
+        &root.join("gfx/tilesets/roofs"),
+        &[".2bpp.lz", ".2bpp", ".png"],
+        false,
+        true,
+    )?;
+    let mut seen = std::collections::HashSet::new();
+    names.retain(|name| seen.insert(name.clone()));
+    Ok(names)
+}
+
 #[derive(Clone, Debug)]
 pub struct RoofDocument {
     inner: crate::RoofDocument,

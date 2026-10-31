@@ -2596,8 +2596,8 @@ in WSL Ubuntu 22.04.5. Production native-feature validation passes; no GUI
 interaction was used for these backend checks.
 
 [Compound graphics and roof documents](#plusplus-project-graphics-and-roofs) now
-connect the model to project files. Contextual palettes and map/event discovery
-remain PP2. No plusplus GUI or CLI editing workflow is claimed from these library
+connect the model to project files. [Contextual palettes and map discovery](#plusplus-map-discovery-and-palette-sessions)
+are also implemented; branch events remain PP2. No plusplus GUI or CLI editing workflow is claimed from these library
 tests; those remain PP2–PP4.
 
 ## Plusplus project graphics and roofs
@@ -2639,6 +2639,68 @@ pass, along with native-feature and documentation checks. The complete project
 graphics test file, including all real-project cases, also passes under WSL
 Ubuntu 22.04.5. CI runs both the block and graphics fixture suites.
 
-Palette sessions, metadata/root/asset discovery and branch event catalogs remain
-PP2. Existing master defaults are not silently applied as plusplus policy. The
+Palette sessions and metadata/root/asset discovery are implemented below; branch
+event catalogs remain PP2. Existing master defaults are not silently applied as plusplus policy. The
 GUI/CLI integration, complete workflow checks and native acceptance remain PP3–PP4.
+
+## Plusplus map discovery and palette sessions
+
+[Explicit map documents](../crates/project/src/plusplus/map.rs) share the byte-map
+model, history, prefix-load reports and conflict-protected persistence. Open and
+Save As accept `.ablk`/`.blk`; extensionless destinations default to `.ablk`.
+ASM import remains master-only. The private discovery rules preserve the nearest
+`main.asm`/`layout.link` root, filename hints and header short-circuiting,
+`map_const`/`mapgroup` dimensions, wrapping group byte and existing-file precedence.
+Plusplus excludes master's `mapconst` and individual pokered header fallbacks.
+Selectors use fixed `gfx/tilesets`, original numeric filename ordering and labels,
+no CHR choices, and the pinned roof selector's case-sensitive suffix matching.
+The shared master entry points retain their existing rules.
+
+[Palette sessions](../crates/project/src/plusplus/palettes.rs) expose eight game
+palettes across six sets, reuse RGB8/RGB5/hex/copy/swap editing, and validate both
+ends of a transfer before changing the draft. Master-only monochrome slots cannot
+be edited; 1–6-palette imports leave colors/selection untouched while still clearing
+the accepted import's dirty flag, as the source does. The recognized 8, 16, 24, 32,
+40, 42, 43, 44 and 48 layouts preserve source set/water assignment. All other
+complete counts are no-ops. Malformed RGB input fails without changing the session.
+Exports preserve the live RGB8 bank, quantize output to RGB5 and use shared source
+and destination conflict guards. The existing [export-label correction](deviations.md#palette-export-labels-and-validation)
+applies to both branches.
+
+The shared import plan retains distinct default/special/selection/roof steps, so
+GUI and headless callers can skip an import or retry a failure without losing the
+draft or advancing past it. Plusplus special paths always use `gfx/tilesets`, even
+if `MAPDATA` exists. Saved-map → landmark → full tileset → base tileset precedence,
+sticky Custom selection, contextual night/indoor/morning/theme order, explicit
+selection and independent roof overlays are tested. Accepting an absent default
+clears palette edits; skipping it preserves them. Unsaved map suggestions never
+become implicit special-palette sources.
+
+[Map tests](../crates/project/tests/plusplus_maps.rs) cover profile isolation,
+byte IDs above 127, history, oversized/short inputs, Save As root refresh, extension
+rejection and concurrent-writer failures. The [shared discovery oracle](../tools/discovery_oracle.py)
+compiles unchanged pinned plusplus functions; 582 cases cover filename extensions,
+dimension/header macros and paths, numeric/symbolic tileset hints, precedence and
+group overflow. [Palette tests](../crates/project/tests/plusplus_palettes.rs) and
+the [palette oracle](../tools/plusplus_palette_oracle.py) compare all 0–64 palette
+counts with all six starting selections (390 cases), 120 roof layout/group/table
+cases and 16 complete export byte streams. The palette oracle uses original
+defaults/functions and a synthetic parsed-color input; it does not prove native
+dialogs or arbitrary ASM evaluation.
+
+The pinned Polished Crystal New Bark Town fixture opens with its discovered
+10×9 dimensions and compound tileset, runs contextual palette/roof imports,
+exports/reloads selected colors, edits/saves/reopens the map and restores original
+bytes and rendered pixels. All writes are temporary; no fixture/game pixels are
+committed. A source limitation is explicit: the pinned header parser reads the
+fourth/seventh arguments as landmark/palette, so this fixture's newer SIGN column
+yields `sign_wood`/`0`. The port preserves those observations rather than silently
+claiming support for the newer header schema. PP4 still requires original-app
+workflow comparison and resolution or approval of remaining differences.
+
+Windows workspace format, Clippy (all targets, warnings denied), tests and rustdoc,
+plus the production native-feature check, pass. The map/palette suites,
+compiled-source comparisons and real fixture also pass under WSL Ubuntu 22.04.5.
+Master's compiled-source metadata comparisons still pass after the shared extraction.
+CI retains master regressions and runs the new source/fixture cases.
+These backend checks do not close PP3's separate GUI or PP4's native acceptance.

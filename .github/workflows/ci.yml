@@ -98,6 +98,14 @@ jobs:
           POLISHED_MAP_PLUSPLUS_BLOCK_ORACLE: ${{ github.workspace }}/.scratch/reference-plusplus-block
       - run: python3 tools/map_sizes_oracle.py --checkout .reference/master --output .scratch/reference-map-sizes
       - run: python3 tools/discovery_oracle.py --checkout .reference/master --output .scratch/reference-discovery
+      - run: python3 tools/discovery_oracle.py --profile plusplus --checkout .reference/plusplus --output .scratch/reference-plusplus-discovery
+      - run: python3 tools/plusplus_palette_oracle.py --checkout .reference/plusplus --output .scratch/reference-plusplus-palette
+      - run: cargo test -p polished-map-project --locked --test plusplus_maps metadata_matches_original_plusplus_functions -- --ignored
+        env:
+          POLISHED_MAP_PLUSPLUS_DISCOVERY_ORACLE: ${{ github.workspace }}/.scratch/reference-plusplus-discovery
+      - run: cargo test -p polished-map-project --locked --test plusplus_palettes -- --ignored
+        env:
+          POLISHED_MAP_PLUSPLUS_PALETTE_ORACLE: ${{ github.workspace }}/.scratch/reference-plusplus-palette
       - run: python3 tools/asset_paths_oracle.py --checkout .reference/master --output .scratch/reference-asset-paths
       - run: python3 tools/asset_sort_oracle.py --checkout .reference/fltk --output .scratch/reference-asset-sort
       - run: cargo test -p polished-map-project --locked --lib reference_asset_numeric_order -- --ignored
@@ -165,5 +173,8 @@ jobs:
         env:
           POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal
       - run: cargo test -p polished-map-project --locked --test plusplus --test plusplus_graphics -- --ignored
+        env:
+          POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
+      - run: cargo test -p polished-map-project --locked --test plusplus_maps real_map_discovery_edit_save_reopen_preserves_bytes -- --ignored
         env:
           POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal

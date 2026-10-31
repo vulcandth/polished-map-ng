@@ -1,10 +1,56 @@
-//! Master discovery rules from config.cpp and option-dialogs.cpp at upstream.lock.toml.
+//! Explicit master/plusplus discovery rules from pinned config.cpp and option-dialogs.cpp.
 //! This reads recognized metadata macros; it does not evaluate arbitrary RGBDS assembly.
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
 
 use crate::{ProjectError, read_bounded};
+
+/// Internal, explicit source rules. Public entry points remain format-specific.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum Rules {
+    Master,
+    PlusPlus,
+}
+
+impl Rules {
+    pub(crate) fn binary_extension(self, extension: &str) -> bool {
+        extension.eq_ignore_ascii_case("blk")
+            || (self == Self::PlusPlus && extension.eq_ignore_ascii_case("ablk"))
+    }
+
+    pub(crate) fn default_extension(self) -> &'static str {
+        match self {
+            Self::Master => "blk",
+            Self::PlusPlus => "ablk",
+        }
+    }
+
+    pub(crate) fn find_root(self, map: &Path) -> Option<PathBuf> {
+        let markers = match self {
+            Self::Master => ["Makefile", "makefile"],
+            Self::PlusPlus => ["main.asm", "layout.link"],
+        };
+        let absolute = if map.is_absolute() {
+            map.to_path_buf()
+        } else {
+            std::env::current_dir().ok()?.join(map)
+        };
+        absolute
+            .ancestors()
+            .skip(1)
+            .find(|p| markers.iter().any(|name| p.join(name).is_file()))
+            .map(Path::to_path_buf)
+    }
+
+    pub(crate) fn graphics_directory(self, root: &Path) -> PathBuf {
+        root.join(if self == Self::Master && root.join("MAPDATA").is_dir() {
+            "MAPDATA"
+        } else {
+            "gfx/tilesets"
+        })
+    }
+}
 
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct MapMetadata {
@@ -25,32 +71,29 @@ pub struct MapMetadata {
 
 /// Locate the nearest ancestor containing Makefile or makefile, as upstream does.
 pub fn find_project_root(map: &Path) -> Option<PathBuf> {
-    let absolute = if map.is_absolute() {
-        map.to_path_buf()
-    } else {
-        std::env::current_dir().ok()?.join(map)
-    };
-    absolute
-        .ancestors()
-        .skip(1)
-        .find(|p| p.join("Makefile").is_file() || p.join("makefile").is_file())
-        .map(Path::to_path_buf)
+    Rules::Master.find_root(map)
 }
 
 /// Inspect metadata without loading graphics or writing any project files.
 /// An explicit root overrides the Makefile search. Missing metadata is optional;
 /// unreadable or oversized files return an error rather than a guessed value.
 pub fn discover_map(map: &Path, root: Option<&Path>) -> Result<MapMetadata, ProjectError> {
+    discover_with_rules(map, root, Rules::Master)
+}
+
+pub(crate) fn discover_with_rules(
+    map: &Path,
+    root: Option<&Path>,
+    rules: Rules,
+) -> Result<MapMetadata, ProjectError> {
     let filename = map.file_name().and_then(|n| n.to_str()).unwrap_or("");
     let name = filename.split('.').next().unwrap_or("").to_owned();
     let mut metadata = MapMetadata {
-        root: root
-            .map(Path::to_path_buf)
-            .or_else(|| find_project_root(map)),
+        root: root.map(Path::to_path_buf).or_else(|| rules.find_root(map)),
         constant: map_constant(&name),
         name,
-        dimensions: filename_dimensions(map),
-        tileset_hint: filename_tileset(map),
+        dimensions: filename_dimensions_with_rules(map, rules),
+        tileset_hint: filename_tileset(map, rules),
         ..Default::default()
     };
     if metadata.dimensions.is_some() {
@@ -69,32 +112,34 @@ pub fn discover_map(map: &Path, root: Option<&Path>) -> Result<MapMetadata, Proj
             ],
         )
     {
-        read_dimensions(&path, &mut metadata)?;
+        read_dimensions(&path, &mut metadata, rules)?;
     }
     // Filename hints short-circuit header attributes in upstream too.
     if metadata.tileset_hint.is_none() {
         if let Some(path) = first_file(&root, &["data/maps/maps.asm", "maps/map_headers.asm"]) {
             read_headers(&path, &mut metadata, false)?;
-        } else if let Some(path) = first_file(
-            &root,
-            &[
-                &format!("data/maps/headers/{}.asm", metadata.name),
-                &format!("data/mapHeaders/{}.asm", metadata.name),
-            ],
-        ) {
+        } else if rules == Rules::Master
+            && let Some(path) = first_file(
+                &root,
+                &[
+                    &format!("data/maps/headers/{}.asm", metadata.name),
+                    &format!("data/mapHeaders/{}.asm", metadata.name),
+                ],
+            )
+        {
             read_headers(&path, &mut metadata, true)?;
         }
     }
-    let options = tileset_options(&root, metadata.tileset_hint.as_deref())?;
+    let options = tileset_options_with_rules(&root, metadata.tileset_hint.as_deref(), rules)?;
     metadata.tileset = options.matched.map(|i| options.choices[i].name.clone());
     metadata.available_tilesets = options.choices.into_iter().map(|c| c.name).collect();
     Ok(metadata)
 }
 
-pub(crate) fn filename_dimensions(map: &Path) -> Option<(u16, u16)> {
+fn filename_dimensions_with_rules(map: &Path, rules: Rules) -> Option<(u16, u16)> {
     let name = map.file_name()?.to_str()?;
     let parts: Vec<_> = name.split('.').collect();
-    if parts.len() < 3 || !parts.last()?.eq_ignore_ascii_case("blk") {
+    if parts.len() < 3 || !rules.binary_extension(parts.last()?) {
         return None;
     }
     // The original regex permits either Name.WxH.blk or Name.WxH.tileset.blk.
@@ -118,9 +163,9 @@ pub(crate) fn filename_dimensions(map: &Path) -> Option<(u16, u16)> {
     None
 }
 
-fn filename_tileset(map: &Path) -> Option<String> {
+fn filename_tileset(map: &Path, rules: Rules) -> Option<String> {
     let parts: Vec<_> = map.file_name()?.to_str()?.split('.').collect();
-    if parts.len() < 3 || !parts.last()?.eq_ignore_ascii_case("blk") {
+    if parts.len() < 3 || !rules.binary_extension(parts.last()?) {
         return None;
     }
     let hint = parts[parts.len() - 2];
@@ -185,7 +230,11 @@ fn macro_args(line: &str, indented: bool) -> Option<(&str, Vec<&str>)> {
     Some((name, rest.trim().split(',').map(str::trim).collect()))
 }
 
-fn read_dimensions(path: &Path, metadata: &mut MapMetadata) -> Result<(), ProjectError> {
+fn read_dimensions(
+    path: &Path,
+    metadata: &mut MapMetadata,
+    rules: Rules,
+) -> Result<(), ProjectError> {
     for line in read_text(path)?.lines() {
         let Some((name, args)) = macro_args(line, true) else {
             continue;
@@ -195,7 +244,8 @@ fn read_dimensions(path: &Path, metadata: &mut MapMetadata) -> Result<(), Projec
             metadata.group = (metadata.group + 1) % 256;
             continue;
         }
-        if !matches!(name, "map_const" | "mapgroup" | "mapconst")
+        if !(matches!(name, "map_const" | "mapgroup")
+            || (rules == Rules::Master && name == "mapconst"))
             || args.first() != Some(&metadata.constant.as_str())
         {
             continue;
@@ -275,17 +325,13 @@ pub fn list_tilesets(root: &Path) -> Result<Vec<String>, ProjectError> {
     Ok(tileset_choices(root)?.into_iter().map(|c| c.name).collect())
 }
 
-fn tileset_stems(root: &Path) -> Result<Vec<String>, ProjectError> {
-    let dir = if root.join("MAPDATA").is_dir() {
-        root.join("MAPDATA")
-    } else {
-        root.join("gfx/tilesets")
+fn tileset_stems(root: &Path, rules: Rules) -> Result<Vec<String>, ProjectError> {
+    let dir = rules.graphics_directory(root);
+    let extensions: &[&str] = match rules {
+        Rules::Master => &[".2bpp.lz", ".2bpp.unique.lz", ".2bpp", ".chr", ".png"],
+        Rules::PlusPlus => &[".2bpp.lz", ".2bpp.unique.lz", ".2bpp", ".png"],
     };
-    crate::asset_names::graphics_stems(
-        &dir,
-        &[".2bpp.lz", ".2bpp.unique.lz", ".2bpp", ".chr", ".png"],
-        true,
-    )
+    crate::asset_names::graphics_stems(&dir, extensions, true)
 }
 
 /// A selector label may decorate a numbered file; always load/save using `name`.
@@ -320,12 +366,20 @@ impl TilesetOptions {
 
 /// master limit_blk_options: deduplicate labels after scanning sorted filenames.
 pub fn tileset_options(root: &Path, hint: Option<&str>) -> Result<TilesetOptions, ProjectError> {
+    tileset_options_with_rules(root, hint, Rules::Master)
+}
+
+pub(crate) fn tileset_options_with_rules(
+    root: &Path,
+    hint: Option<&str>,
+    rules: Rules,
+) -> Result<TilesetOptions, ProjectError> {
     let constants = tileset_constant_names(root)?;
     let mut options = TilesetOptions {
         choices: Vec::new(),
         matched: None,
     };
-    for name in tileset_stems(root)? {
+    for name in tileset_stems(root, rules)? {
         let label = constants
             .iter()
             .find(|(number, _)| name.len() == 2 && number == &name)
