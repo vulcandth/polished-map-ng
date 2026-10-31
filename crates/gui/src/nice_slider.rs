@@ -1,7 +1,6 @@
 //! Palette slider from master widgets.cpp::OS_Slider/Default_Slider and
 //! FLTK 1.4.5 Fl_Slider.cxx::handle. LGPL-3.0-only adaptation; see NOTICE.md.
-//! The source deliberately paints a 13-point grip but uses a 16-point drag
-//! extent at height 22. Keep these separate instead of adjusting hit geometry.
+//! Retains source interaction with the earlier rounded egui slider appearance.
 use super::*;
 
 #[derive(Clone, Copy)]
@@ -77,10 +76,21 @@ pub(super) struct NiceSlider<'a>(pub &'a mut u8);
 
 impl egui::Widget for NiceSlider<'_> {
     fn ui(self, ui: &mut egui::Ui) -> egui::Response {
-        let (rect, mut response) = ui.allocate_exact_size(
-            Vec2::new(ui.available_width(), 22.0),
+        let inner = ui.horizontal(|ui| self.show(ui));
+        inner.inner | inner.response
+    }
+}
+
+impl NiceSlider<'_> {
+    fn show(self, ui: &mut egui::Ui) -> egui::Response {
+        let thickness = ui
+            .text_style_height(&egui::TextStyle::Body)
+            .max(ui.spacing().interact_size.y);
+        let mut response = ui.allocate_response(
+            Vec2::new(ui.spacing().slider_width, thickness),
             Sense::click_and_drag(),
         );
+        let rect = response.rect;
         let old = *self.0;
         let mut value = old.min(31);
         let frame = ui.ctx().cumulative_frame_nr();
@@ -89,8 +99,9 @@ impl egui::Widget for NiceSlider<'_> {
             .filter(|drag| frame <= drag.frame.saturating_add(1));
         let active = ui.is_enabled() && ui.input(|i| i.focused) && !ui.ctx().any_popup_open();
         let width = rect.width() as i32;
-        let height = rect.height() as i32;
-        let hit_grip = height / 2 + 5;
+        // Keep the original 22-point source control's drag extent independently
+        // of the theme's painted handle size.
+        let hit_grip = 16;
         if active {
             for event in ui.input(|i| i.events.clone()) {
                 match event {
@@ -228,63 +239,52 @@ impl egui::Widget for NiceSlider<'_> {
                 node.add_action(action);
             }
         });
-        let dark = ui.visuals().dark_mode;
-        // Avoid egui applying its own disabled-opacity transform a second time.
-        let painter = egui::Painter::new(
-            ui.ctx().clone(),
-            ui.layer_id(),
-            ui.clip_rect().intersect(rect),
+        // Match egui 0.37's slider rail/round handle using the current theme.
+        // Painting is separate from the source-compatible input above.
+        let visuals = ui.style().interact(&response);
+        let inactive = &ui.visuals().widgets.inactive;
+        let rail = Rect::from_center_size(
+            rect.center(),
+            Vec2::new(rect.width(), ui.spacing().slider_rail_height.max(0.0)),
         );
-        painter.rect_filled(
-            rect,
-            0.0,
-            Color32::from_gray(control_paint::background(dark)),
+        ui.painter()
+            .rect_filled(rail, inactive.corner_radius, inactive.bg_fill);
+        let radius = rect.height() / 2.5;
+        let half_width = match ui.visuals().handle_shape {
+            egui::style::HandleShape::Circle => radius,
+            egui::style::HandleShape::Rect { aspect_ratio } => radius * aspect_ratio,
+        };
+        let center = egui::pos2(
+            egui::lerp(
+                (rect.left() + half_width)..=(rect.right() - half_width),
+                f32::from(value) / 31.0,
+            ),
+            rect.center().y,
         );
-        control_paint::paint(
-            &painter,
-            rect.min + Vec2::new(0.0, (height / 2 - 2) as f32),
-            control_paint::track(dark, ui.is_enabled(), width),
-        );
-        let grip = height / 2 + 2;
-        let origin = rect.min + Vec2::new(position(value, width, grip) as f32, 0.0);
-        control_paint::paint(
-            &painter,
-            origin,
-            control_paint::button(dark, ui.is_enabled(), grip, height),
-        );
-        if active && response.has_focus() {
-            let inset = if dark { 1 } else { 2 };
-            let w = grip - 2 * inset - 1;
-            let h = height - 2 * inset - 1;
-            let color = if dark { Color32::WHITE } else { Color32::BLACK };
-            // FLTK's generic box focus rectangle: one-pixel alternating dots.
-            for x in 0..w {
-                for y in [0, h - 1] {
-                    if (x + y) % 2 == 0 {
-                        painter.rect_filled(
-                            Rect::from_min_size(
-                                origin + Vec2::new((inset + x) as f32, (inset + y) as f32),
-                                Vec2::splat(1.0),
-                            ),
-                            0.0,
-                            color,
-                        );
-                    }
-                }
+        if ui.visuals().slider_trailing_fill {
+            let mut fill = rail;
+            fill.max.x = (center.x + f32::from(inactive.corner_radius.nw)).min(rail.right());
+            ui.painter()
+                .rect_filled(fill, inactive.corner_radius, ui.visuals().selection.bg_fill);
+        }
+        match ui.visuals().handle_shape {
+            egui::style::HandleShape::Circle => {
+                ui.painter().circle(
+                    center,
+                    radius + visuals.expansion,
+                    visuals.bg_fill,
+                    visuals.fg_stroke,
+                );
             }
-            for y in 1..h - 1 {
-                for x in [0, w - 1] {
-                    if (x + y) % 2 == 0 {
-                        painter.rect_filled(
-                            Rect::from_min_size(
-                                origin + Vec2::new((inset + x) as f32, (inset + y) as f32),
-                                Vec2::splat(1.0),
-                            ),
-                            0.0,
-                            color,
-                        );
-                    }
-                }
+            egui::style::HandleShape::Rect { .. } => {
+                ui.painter().rect(
+                    Rect::from_center_size(center, 2.0 * Vec2::new(half_width, radius))
+                        .expand(visuals.expansion),
+                    visuals.corner_radius,
+                    visuals.bg_fill,
+                    visuals.fg_stroke,
+                    egui::StrokeKind::Inside,
+                );
             }
         }
         response

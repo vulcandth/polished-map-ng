@@ -5,7 +5,6 @@ pub use artwork::application_icon;
 mod block_editor;
 mod block_hotkeys;
 mod block_workflows;
-mod control_paint;
 mod default_value;
 mod dialog_host;
 #[cfg(test)]

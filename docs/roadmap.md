@@ -148,7 +148,8 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   lifetime checks pass. Evidence: [dialog metrics](compatibility.md#remaining-option-dialog-client-metrics),
   [messages](compatibility.md#error-warning-and-success-message-dialogs),
   [native hosting](compatibility.md#native-dialog-hosting-and-ownership).
-  Palette sliders now use the source drawing/drag behavior; see [slider evidence](compatibility.md#source-palette-sliders).
+  Palette sliders retain source input behavior with the earlier rounded egui
+  appearance selected by the user; see [slider evidence](compatibility.md#source-palette-sliders).
   The user deferred remaining font, widget painting and purely visual menu/window
   matching on 2026-10-30. Preserve these as later manual work under the
   [approved exception](deviations.md#remaining-m4-aesthetics-deferred), not as

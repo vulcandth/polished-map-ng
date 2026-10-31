@@ -5,8 +5,7 @@ use egui_kittest::{
 };
 
 #[test]
-fn source_grip_and_drag_geometry_retain_distinct_extents() {
-    assert_eq!([0, 15, 31].map(|v| position(v, 92, 13)), [0, 38, 79]);
+fn source_drag_geometry_retains_offcenter_capture() {
     assert_eq!([0, 15, 31].map(|v| position(v, 92, 16)), [0, 37, 76]);
     let mut offset = 0;
     // Initial grip at 37..53: grabbing at 40 preserves its off-center origin.
@@ -40,6 +39,8 @@ fn fixture(dark: bool, dpi: f32) -> Harness<'static, State> {
         .with_pixels_per_point(dpi)
         .build_ui_state(
             |ui, s: &mut State| {
+                ui.spacing_mut().slider_width = 92.0;
+                ui.spacing_mut().interact_size.y = 22.0;
                 if s.hidden {
                     return;
                 }
@@ -165,39 +166,6 @@ fn hidden_slider_does_not_resume_an_old_drag_when_it_reappears() {
 }
 
 #[test]
-#[ignore = "requires tools/menu_marks_oracle.py; runs in visual CI"]
-fn reference_slider_boxes_match_original_drawing_commands() {
-    use std::fmt::Write;
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../.scratch/reference-menu-marks.controls.tsv");
-    let data = std::fs::read_to_string(path).unwrap();
-    let mut count = 0;
-    for line in data.lines() {
-        let f: Vec<_> = line.split('\t').collect();
-        let w = f[3].parse().unwrap();
-        let drawing = match f[0] {
-            "button" => control_paint::button(f[1] == "1", f[2] == "1", w, f[4].parse().unwrap()),
-            "track" => control_paint::track(f[1] == "1", f[2] == "1", w),
-            _ => panic!("unknown oracle kind"),
-        };
-        let mut actual = String::new();
-        for (c, [x, y, w, h]) in drawing.0 {
-            write!(
-                actual,
-                "rect,{},{},{},{x},{y},{w},{h};",
-                c.r(),
-                c.g(),
-                c.b()
-            )
-            .unwrap();
-        }
-        assert_eq!(actual, f[5], "{:?}", &f[..5]);
-        count += 1;
-    }
-    assert_eq!(count, 36);
-}
-
-#[test]
 #[ignore = "requires tools/slider_oracle.py; runs in visual CI"]
 fn reference_slider_drag_matches_original_handler() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -225,7 +193,7 @@ fn reference_slider_drag_matches_original_handler() {
 
 #[cfg(feature = "visual-tests")]
 #[test]
-fn source_slider_visuals_both_themes_scales_and_states() {
+fn palette_slider_visuals_both_themes_scales_and_states() {
     let mut snapshots = egui_kittest::SnapshotResults::new();
     for dark in [false, true] {
         for dpi in [1.0, 2.0] {
@@ -260,7 +228,7 @@ fn source_slider_visuals_both_themes_scales_and_states() {
             h.remove_cursor();
             h.run();
             snapshots.add(h.try_snapshot(format!(
-                "source-slider-{}-{dpi}x",
+                "palette-slider-{}-{dpi}x",
                 if dark { "dark" } else { "light" }
             )));
         }

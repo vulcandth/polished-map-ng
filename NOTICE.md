@@ -45,12 +45,12 @@ Spitzak and others, under the retained FLTK license/version-selection terms
 below and in `LICENSES/FLTK.txt`. The Rust implementation uses egui for text
 editing and drawing; numeric limits and interrupted gestures are checked.
 
-Palette sliders adapt master `widgets.cpp::OS_Slider/Default_Slider` and
-Greybird/Dark boxes in `themes.cpp`, under LGPL-3.0-only. Dragging, clamping and
-keyboard stepping adapt FLTK 1.4.5 `Fl_Slider.cxx`/`Fl_Valuator.cxx`; color ramps,
-disabled colors and focus geometry follow FLTK's drawing code under the retained
-FLTK terms above. Reference tools compile unchanged pinned functions in ignored
-scratch storage and compare commands/values; they do not redistribute OS fonts.
+Palette slider interaction adapts master `widgets.cpp::Default_Slider` and
+FLTK 1.4.5 `Fl_Slider.cxx`/`Fl_Valuator.cxx` under the retained FLTK terms above.
+Rounded rail/handle drawing follows egui 0.37 `widgets/slider_core.rs`, under
+MIT OR Apache-2.0; original dependency copyrights and license texts are retained
+in `vendor/NOTICE.md`. Reference tools compile unchanged pinned input functions
+in ignored scratch storage; they do not redistribute OS fonts.
 
 The asset-path reference harness extracts unchanged master `Config` graphics,
 block, collision, palette, roof, event and constants-path functions, plus

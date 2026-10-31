@@ -500,3 +500,12 @@ placement to its compositor. Rust OS home discovery is used; the original Mac
 fallback for an explicitly set nonexistent HOME remains a documented limitation.
 Read-only migration, retry behavior and native acceptance limits are specified in
 [preferences](preferences.md#legacy-import).
+
+## Palette slider appearance
+
+On 2026-10-31 the user explicitly preferred the earlier rounded egui palette
+sliders to the source-styled rectangular controls. The rounded rail and circular
+handle are restored while retaining source drag/clamping, keyboard, accessibility
+and interrupted-capture fixes. This is an approved visual difference, not an
+unfinished requirement to restore the FLTK appearance. Other M4 aesthetics remain
+deferred. See [slider coverage](compatibility.md#source-palette-sliders).

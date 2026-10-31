@@ -70,6 +70,9 @@ exist from day one; a partial slice is not a completed parity milestone.
   2026-10-30 after the palette-slider work. Follow M5–M7 next; fix functional
   issues as found, but do not resume visual matching merely to close M4.
   Preserve the approved exception in `docs/deviations.md` and roadmap status.
+- The user prefers the earlier rounded egui palette sliders (2026-10-31).
+  Preserve that appearance and the retained functional fixes; do not restore
+  FLTK slider styling as part of parity work.
 - Do not claim pokecrystal/Polished Crystal parity from synthetic tests alone.
 - Specify UTF-8 explicitly in text tooling (including Python on Windows); use
   byte-preserving operations for fixtures and assets with exact-byte contracts.

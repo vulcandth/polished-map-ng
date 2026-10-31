@@ -921,45 +921,36 @@ or font assets were added for these procedural marks.
 
 ## Source palette sliders
 
-`nice_slider.rs` replaces the stock egui palette RGB5 sliders with the pinned
-`widgets.cpp::OS_Slider/Default_Slider` drawing and FLTK `Fl_Slider::handle`
-interaction. The 22-point control paints a 13-point grip, positioned by
-`floor(value / 31 * (width - 13) + 0.5)`, over a four-point recessed track.
-The inherited native handler uses a 16-point drag extent instead. Keeping these
-separate preserves source hit behavior. Clicking outside moves the nearest edge;
-grabbing inside retains the pointer offset. Dragging clamps at either end,
-secondary-button dragging works, horizontal arrow keys step/clamp, and middle
-press/drag does not alter the value before the existing middle-release reset.
-Interrupted focus, disabled controls, open popups and a hidden/reopened slider
-abandon a capture rather than resuming an old drag.
+The palette sliders retain the source-compatible interaction in `nice_slider.rs`,
+with the earlier rounded egui rail and theme-specific rounded handle restored at the user's
+request on 2026-10-31. This intentionally supersedes the FLTK box/gradient styling
+introduced on 2026-10-30. The previous full-dialog snapshot baselines are the
+appearance reference; source box-drawing comparisons no longer define acceptance.
+See the [approved preference](deviations.md#palette-slider-appearance).
 
-Greybird/Dark border colors, horizontal versus vertical gradients, inactive-color
-passes and FL_DARK2's computed gray ramp follow `themes.cpp` and pinned FLTK.
-The adapter draws source colors directly without egui's additional disabled
-opacity. Geometry remains logical pixels at 1×/2×. Dotted focus and native polygon
-rasterization are not asserted to be identical across OS graphics drivers.
+The control retains FLTK's 16-point drag extent. Clicking outside moves
+the nearest edge; grabbing inside retains the pointer offset. Dragging clamps at
+either end, secondary-button dragging works, horizontal arrow keys step/clamp,
+and middle press/drag does not alter the value before the existing middle-release
+reset. Focus loss, disabled controls, open popups and hidden/reopened sliders
+cancel stale captures. Accessibility value/increment/decrement actions remain.
+Drawing uses egui's rail height, rounded corners, handle radius, theme colors and
+hover/focus/disabled appearance, independently of those input rules.
 
-The extended [drawing oracle](../tools/menu_marks_oracle.py) compiles unchanged
-source functions and compares all 36 slider-box cases (both themes, enabled and
-disabled, multiple dimensions). The [drag oracle](../tools/slider_oracle.py)
-compiles the unchanged FLTK handler and valuator functions, generating 84,864
-observations: 42,432 for Windows `floor(v+.5)` rounding and 42,432 for Unix
-`rint` ties-to-even. Each native test compares its corresponding branch, including
-retained offsets after endpoint crossings and the source's retry-on-press rule.
-Generated code and provenance hashes stay in ignored `.scratch/`; CI reruns the
-oracles. No original application or desktop automation is required.
+The [drag oracle](../tools/slider_oracle.py) compiles unchanged FLTK handler and
+valuator functions, generating 84,864 observations: 42,432 for Windows rounding
+and 42,432 for Unix ties-to-even. Each platform compares its corresponding branch,
+including endpoint crossings and retained offsets. CI retains this comparison.
+Headless widget tests cover input, accessibility and capture cancellation at
+both DPI scales; palette workflow tests retain quantization, draft cancellation
+and middle-reset coverage. Offscreen snapshots cover both themes/scales and
+existing palette dialogs. Native integrated palette acceptance remains M6.
 
-Headless widget tests cover mouse buttons, keyboard, accessibility actions,
-focus/disable interruption and both DPI scales. Existing palette workflow tests
-retain draft cancellation, RGB5 quantization and middle-reset checks. Offscreen
-snapshots cover slider endpoints/midpoint/disabled states in both themes/scales,
-plus the existing full palette dialogs. Native integrated palette acceptance
-remains M6; remaining M4 aesthetics are [deferred by user direction](deviations.md#remaining-m4-aesthetics-deferred).
-Local Windows and Linux oracle comparisons pass. The four dedicated theme/DPI
-snapshots were inspected; the five changed palette-dialog/drag snapshots differ
-only within their three slider rectangles. The rest of the offscreen suite
-passed, and the four initially failing snapshot tests pass after those reviewed
-baselines were accepted. Fonts were unchanged, and no desktop automation was used.
+Verification on 2026-10-31: all five pre-redesign palette-dialog/drag baselines
+pass unchanged under offscreen Linux rendering. The four theme/DPI slider
+snapshots were reviewed and pass. Both Windows and Linux drag-oracle comparisons
+pass; Windows workspace formatting, Clippy, tests and rustdoc pass. No desktop
+automation or font changes were needed.
 
 ## Shared editor/Print font policy and variable instances
 
