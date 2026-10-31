@@ -197,13 +197,16 @@ fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
         palette_plan: None,
         events: None,
         event_warning: None,
-        document: MapDocument::open(&map, &OpenOptions::default()).unwrap(),
+        document: MapDocument::open(&map, &OpenOptions::default())
+            .unwrap()
+            .into(),
         graphics: Graphics::new(
             (0..3).map(|i| Tile::new([i; 64]).unwrap()).collect(),
             vec![day_palettes()[0]; 3],
             vec![[0; 16], [1; 16], [2; 16]],
         )
-        .unwrap(),
+        .unwrap()
+        .into(),
         blockset: Some(BlocksetDocument::open_with_collisions(&blocks, Some(&collisions)).unwrap()),
         tileset: None,
         allow_256: true,
@@ -239,9 +242,12 @@ fn assert_blocks(h: &Harness<'_, Editor>, ids: &[u8]) {
     assert_eq!(loaded.graphics.block_count(), ids.len());
     for (i, &id) in ids.iter().enumerate() {
         let image = loaded.graphics.render_block(i as u8).unwrap();
+        let MapGraphics::Master(graphics) = &loaded.graphics else {
+            panic!("master fixture")
+        };
         assert_eq!(
             &image.pixels[..3],
-            &loaded.graphics.render_tile(id).unwrap().pixels[..3]
+            &graphics.render_tile(id).unwrap().pixels[..3]
         );
     }
 }

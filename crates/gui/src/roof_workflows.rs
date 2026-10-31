@@ -99,7 +99,7 @@ impl Editor {
             })
             .collect();
         loaded.tileset = Some(draft);
-        loaded.graphics = graphics;
+        loaded.graphics = graphics.into();
         self.textures = textures;
         self.status = format!("Roof: {}", name.unwrap_or("(none)"));
         Ok(())

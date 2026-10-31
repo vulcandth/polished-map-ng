@@ -74,7 +74,8 @@ impl Editor {
                         .ok_or("No block definitions")?
                         .blockset(),
                 )
-                .map_err(|e| e.to_string())?;
+                .map_err(|e| e.to_string())?
+                .into();
         }
         let images = (0..loaded.graphics.block_count())
             .map(|id| loaded.graphics.render_block(id as u8))

@@ -192,7 +192,7 @@ mod tests {
                         y: 0,
                     }])
                     .unwrap();
-                loaded.events = Some(events);
+                loaded.events = Some(events.into());
             }
             "tiles" => loaded
                 .tileset

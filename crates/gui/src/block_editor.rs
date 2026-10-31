@@ -23,12 +23,15 @@ impl Editor {
         let Some(doc) = &loaded.blockset else {
             return;
         };
+        let MapGraphics::Master(graphics) = &loaded.graphics else {
+            return;
+        };
         let Ok(tiles) = doc.blockset().block(self.selected) else {
             return;
         };
         let textures = (0..=255)
             .map(|id| {
-                loaded.graphics.render_tile(id).map(|rgb| {
+                graphics.render_tile(id).map(|rgb| {
                     ctx.load_texture(
                         format!("edit-tile-{id}"),
                         egui::ColorImage::from_rgb([8, 8], &rgb.pixels),
@@ -58,7 +61,7 @@ impl Editor {
                     selected: 0,
                     textures,
                     allow_256: loaded.allow_256,
-                    priority: std::array::from_fn(|id| loaded.graphics.tile_priority(id as u8)),
+                    priority: std::array::from_fn(|id| graphics.tile_priority(id as u8)),
                     show_priority: self.show_priority,
                     windows_buttons: cfg!(target_os = "windows"),
                 })

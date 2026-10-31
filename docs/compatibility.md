@@ -2723,8 +2723,9 @@ final-newline state. Edited coordinates retain source formatting; moves, options
 edits and resize translation validate before publishing the draft. Only the
 three recognized warp kinds increment IDs, and local targets use those IDs.
 External warp paths preserve the current extension and directory; invalid map
-operands cannot escape it. GUI existence, already-open and dirty-consent handling
-remain integration work under PP3.
+operands cannot escape it. Shared GUI existence, already-open and dirty-consent
+handling now use that path boundary; end-to-end plusplus warp loading still needs
+the pending asset/session loader under PP3.
 
 Script discovery uses `maps/<name>.asm`, then an adjacent `.asm` filename when
 opening an existing map. Master-only SXY/pokered paths are ignored. Unsaved maps
@@ -2763,3 +2764,45 @@ preceding plusplus sections. Master regressions remain mandatory. PP3 still owns
 the separate application, controls/layout, preferences and workflow integration;
 PP4 owns comparison in the original application and native acceptance. Backend
 roundtrips do not close either gate.
+
+## Plusplus shared GUI integration
+
+**PP3 is in progress.** [GUI document adapters](../crates/gui/src/documents.rs)
+retain the explicit master or plusplus backend while exposing common map/history
+and event views. The owning map selects script discovery and Load/Reload parsing;
+loading a plusplus script never expands master's catalog. Shared Event Options,
+move/resize, dirty guards and save feedback operate on either document. Save As
+retains plusplus `.ablk`/`.blk` restrictions, defaults extensionless destinations
+to `.ablk`, and records that destination in recent history. Print filenames remove
+the plusplus `.ablk` suffix. Origins are pinned `Main_Window` lifecycle/warp/Print
+callbacks and `map-events.cpp`; backend source comparisons remain applicable.
+
+[Renderer dispatch](../crates/gui/src/documents/graphics.rs) carries the concrete
+CPU renderer through the shared canvas texture cache, priority overlays and Print
+worker snapshots. It never flattens occurrence attributes into master's tile
+palette map. Master asset-editor paths retain their existing renderer and reject
+a mismatched plusplus renderer before publishing block changes.
+
+[Headless integration tests](../crates/gui/src/documents/tests.rs) load synthetic
+plusplus maps/graphics through the editor's normal pending-load path. They edit
+all 26 macros through Event Options, check its shared 300-point width, save/reload
+with macro identity intact, and preserve unrelated mixed-line-ending assembly.
+They exercise map paint/undo/redo, extension handling and recent paths, invalid
+Save As, concurrent-writer failures, atomic invalid resize, event translation,
+dirty reload cancellation, automatic script precedence and confined warp paths.
+An independent pixel vector checks ordinal 511, palette 7, both flips and occurrence
+priority, then checks the Print Copy snapshot after a subsequent map edit. The
+fixture uses generated tiles/colors and does not include game assets.
+
+Windows workspace format, Clippy with warnings denied, tests, rustdoc and the
+production native-feature graph pass. The five integration tests also pass on
+WSL Ubuntu 22.04.5 with no display server. Existing master tests remain in the
+workspace run. These are input/model/rendering checks, not native-window,
+clipboard-service or macOS runtime verification.
+
+This is shared workflow integration, not a separately launchable plusplus editor.
+The production entry point remains master. Plusplus asset sessions and block/
+tileset/roof/palette controls, separate launch/preferences, menus/defaults, full
+Open/warp workflows and native checks remain in PP3. PP4 still requires original
+application interoperability and native acceptance; these tests do not close it.
+No desktop automation or aesthetic matching is part of this change.

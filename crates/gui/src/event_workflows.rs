@@ -1,9 +1,9 @@
 //! master event.cpp, main-window.cpp and Event_Options_Dialog adaptations.
 //! LGPL-3.0-only. Logical cells are 16/32 points with six event cells of margin.
+use super::documents::EventDocument;
 use super::*;
 use polished_map_core::{EventCommand, EventDefinition, EventKind, Events};
 use polished_map_platform::{ScriptOpenError, ScriptOpenRequest};
-use polished_map_project::{EventDocument, event_script_path};
 
 pub(super) struct EventUi {
     pub mode: bool,
@@ -76,33 +76,13 @@ pub(super) struct EventForm {
 }
 
 pub(super) fn auto_load_events(
-    map: &MapDocument,
+    map: &documents::MapDocument,
     enabled: bool,
 ) -> (Option<EventDocument>, Option<String>) {
     if !enabled || !map.has_backing_file() {
         return (None, None);
     }
-    let open = || -> Result<Option<EventDocument>, polished_map_project::ProjectError> {
-        let discovered = map
-            .metadata()
-            .root
-            .as_deref()
-            .map(|root| event_script_path(root, &map.metadata().name))
-            .transpose()?;
-        let path = discovered
-            .filter(|p| p.is_file())
-            .unwrap_or_else(|| map.path().with_extension("asm"));
-        match EventDocument::open(&path) {
-            Ok(doc) => Ok(Some(doc)),
-            Err(polished_map_project::ProjectError::Io { source, .. })
-                if source.kind() == std::io::ErrorKind::NotFound =>
-            {
-                Ok(None)
-            }
-            Err(error) => Err(error),
-        }
-    };
-    match open() {
+    match map.auto_load_events() {
         Ok(doc) => (doc, None),
         Err(error) => (
             None,
@@ -525,7 +505,7 @@ impl Editor {
             }
         };
         if let Some(path) = path {
-            match EventDocument::open(&path) {
+            match loaded.document.open_events(&path) {
                 Ok(doc) => {
                     loaded.events = Some(doc);
                     self.event_ui.drag = None;
@@ -642,21 +622,13 @@ impl Editor {
         if name.is_empty() {
             return;
         }
-        // Macro operands are untrusted text. Navigation stays in the map directory.
-        if !name.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'_') {
-            self.error = Some("Invalid warp map name".into());
-            return;
-        }
-        let extension = loaded
-            .document
-            .path()
-            .extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("blk");
-        let path = loaded
-            .document
-            .path()
-            .with_file_name(format!("{name}.{extension}"));
+        let path = match loaded.document.warp_path(&name) {
+            Ok(path) => path,
+            Err(error) => {
+                self.error = Some(error);
+                return;
+            }
+        };
         if path == loaded.document.path() {
             self.error = Some(format!("{name} is already open"));
             return;

@@ -43,10 +43,12 @@ pub(super) fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
         palette_plan: None,
         events: None,
         event_warning: None,
-        document: MapDocument::open(&root.join("Map.2x1.blk"), &OpenOptions::default()).unwrap(),
+        document: MapDocument::open(&root.join("Map.2x1.blk"), &OpenOptions::default())
+            .unwrap()
+            .into(),
         tileset: Some(tileset),
         blockset: Some(blockset),
-        graphics,
+        graphics: graphics.into(),
         allow_256: false,
     }))
     .unwrap();

@@ -313,3 +313,9 @@ revision, under LGPL-3.0-only. The common event model, source-span persistence a
 Print compositor are reused. Differential harnesses retain original function
 bodies and catalog data; Latin-1 marker bytes are reported numerically for valid
 UTF-8 test output. NG uses the intended Unicode punctuation in its font adapters.
+
+The shared GUI document/renderer boundary adapts the pinned master and plusplus
+`Main_Window` map/event lifecycle, Save As, warp and Print filename behavior under
+LGPL-3.0-only. It reuses map/event controls and native adapters with explicit
+format-specific persistence/rendering. Integration tests use synthetic pixels,
+palettes and scripts; no external project artwork is added.

@@ -207,8 +207,11 @@ fn middle_pan_over_event_markers_and_blank_margin_never_moves_or_opens_events() 
     let path = dir.path().join("Map.asm");
     let text = "\tbg_event 2, 2, SCRIPT\n";
     std::fs::write(&path, text).unwrap();
-    h.state_mut().loaded.as_mut().unwrap().events =
-        Some(polished_map_project::EventDocument::open(&path).unwrap());
+    h.state_mut().loaded.as_mut().unwrap().events = Some(
+        polished_map_project::EventDocument::open(&path)
+            .unwrap()
+            .into(),
+    );
     h.state_mut().event_ui.mode = true;
     h.run();
     let marker = h.get_by_label("Event 0: bg_event").rect().center();

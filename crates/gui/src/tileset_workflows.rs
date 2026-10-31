@@ -135,7 +135,7 @@ impl Editor {
         loaded.allow_256 = tileset.allow_256();
         loaded.tileset = Some(tileset);
         loaded.blockset = Some(blocks);
-        loaded.graphics = graphics;
+        loaded.graphics = graphics.into();
         self.textures = textures;
         self.block_hotkeys.prune(count);
         self.sidebar_reveal = self.sidebar_reveal.filter(|&id| usize::from(id) < count);

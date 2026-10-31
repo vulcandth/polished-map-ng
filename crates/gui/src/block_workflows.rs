@@ -68,7 +68,11 @@ impl Editor {
         };
         // Keep the document and its preview together even if graphics validation fails.
         let mut draft = doc.blockset().clone();
-        let mut graphics = loaded.graphics.clone();
+        let MapGraphics::Master(graphics) = &loaded.graphics else {
+            self.error = Some("Master block commands require master graphics".into());
+            return false;
+        };
+        let mut graphics = graphics.clone();
         let result = draft
             .apply_batch(commands)
             .map_err(|e| e.to_string())
@@ -81,7 +85,7 @@ impl Editor {
         match result {
             Ok(images) => {
                 *doc.blockset_mut() = draft;
-                loaded.graphics = graphics;
+                loaded.graphics = graphics.into();
                 self.textures = images
                     .into_iter()
                     .enumerate()

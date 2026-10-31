@@ -164,7 +164,8 @@ mod tests {
             &OpenOptions::default(),
             Some(root),
         )
-        .unwrap();
+        .unwrap()
+        .into();
         loaded.tileset = Some(
             MasterTilesetDocument::open_in_project(
                 root,

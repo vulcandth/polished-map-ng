@@ -26,7 +26,7 @@ pub(super) struct PrintJob {
     filename: std::ffi::OsString,
     fonts: Option<std::sync::Arc<polished_map_project::NativeFonts>>,
     map: Map,
-    graphics: Graphics,
+    graphics: MapGraphics,
     events: Option<Events>,
     options: PrintOptions,
     style: PrintStyle,

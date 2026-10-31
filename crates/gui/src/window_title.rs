@@ -15,10 +15,12 @@ impl Loaded {
     pub(super) fn print_filename(&self) -> OsString {
         let name = self.display_name();
         let path = std::path::Path::new(name);
-        if path
-            .extension()
-            .is_some_and(|ext| ext.eq_ignore_ascii_case("blk"))
-        {
+        if path.extension().is_some_and(|ext| {
+            self.document
+                .save_extensions()
+                .iter()
+                .any(|e| ext.eq_ignore_ascii_case(e))
+        }) {
             path.with_extension("png").into_os_string()
         } else {
             let mut result = name.to_os_string();

@@ -56,10 +56,10 @@ pub(super) fn fixture(
         palette_plan: None,
         events: None,
         event_warning: None,
-        document,
+        document: document.into(),
         blockset: Some(blocks),
         tileset: Some(tileset),
-        graphics,
+        graphics: graphics.into(),
         allow_256,
     }))
     .unwrap();

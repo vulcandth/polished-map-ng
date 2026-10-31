@@ -7,6 +7,7 @@ mod block_hotkeys;
 mod block_workflows;
 mod default_value;
 mod dialog_host;
+mod documents;
 #[cfg(test)]
 mod drag_tests;
 #[cfg(all(test, feature = "visual-tests"))]
@@ -77,11 +78,14 @@ mod tileset_editor_tests;
 
 use std::{path::PathBuf, sync::mpsc};
 
+use documents::MapGraphics;
 use eframe::egui::{self, Color32, Pos2, Rect, Sense, Vec2};
-use polished_map_core::{Command, Graphics, Point, ResizeAnchor};
+#[cfg(test)]
+use polished_map_core::Graphics;
+use polished_map_core::{Command, Point, ResizeAnchor};
 use polished_map_project::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
-    discover_map, prepare_blockset_save_as, prepare_collision_save_as, prepare_save_as,
+    discover_map, prepare_blockset_save_as, prepare_collision_save_as,
 };
 
 /// Development application identity, also used before a map is open.
@@ -91,11 +95,11 @@ struct Loaded {
     // Retain chosen spelling for history/title independently of canonical I/O paths.
     recent_path: Option<PathBuf>,
     trailing_blocks: usize,
-    events: Option<polished_map_project::EventDocument>,
+    events: Option<documents::EventDocument>,
     event_warning: Option<String>,
     palette_plan: Option<polished_map_project::MapPalettePlan>,
-    document: MapDocument,
-    graphics: Graphics,
+    document: documents::MapDocument,
+    graphics: MapGraphics,
     blockset: Option<BlocksetDocument>,
     tileset: Option<MasterTilesetDocument>,
     allow_256: bool,
@@ -561,6 +565,7 @@ impl Editor {
                 let graphics = source
                     .graphics(blockset.blockset())
                     .map_err(|e| e.to_string())?;
+                let document = document.into();
                 let (events, event_warning) =
                     event_workflows::auto_load_events(&document, auto_events);
                 Ok(Loaded {
@@ -570,7 +575,7 @@ impl Editor {
                     event_warning,
                     palette_plan: Some(palette_plan),
                     document,
-                    graphics,
+                    graphics: graphics.into(),
                     blockset: Some(blockset),
                     tileset: Some(source),
                     allow_256: form.allow_256,
@@ -773,9 +778,18 @@ impl Editor {
             return;
         };
         let source = loaded.document.path();
-        let name = source.with_extension("blk");
+        let name = if matches!(loaded.document, documents::MapDocument::PlusPlus(_))
+            && loaded.document.save_extensions().iter().any(|extension| {
+                source
+                    .extension()
+                    .is_some_and(|e| e.eq_ignore_ascii_case(extension))
+            }) {
+            source.to_owned()
+        } else {
+            source.with_extension(loaded.document.default_extension())
+        };
         let path = rfd::FileDialog::new()
-            .add_filter("Map blocks", &["blk"])
+            .add_filter("Map blocks", loaded.document.save_extensions())
             .set_directory(source.parent().unwrap_or(source))
             .set_file_name(name.file_name().unwrap_or_default().to_string_lossy())
             .save_file();
@@ -796,13 +810,12 @@ impl Editor {
         if self.loaded.is_none() {
             return;
         }
-        match prepare_save_as(&path)
-            .and_then(|target| self.loaded.as_mut().unwrap().document.save_as(&target))
-        {
+        match self.loaded.as_mut().unwrap().document.save_as(&path) {
             Ok(()) => {
                 let mut recent_path = path.clone();
                 if recent_path.extension().is_none() {
-                    recent_path.set_extension("blk");
+                    recent_path
+                        .set_extension(self.loaded.as_ref().unwrap().document.default_extension());
                 }
                 self.loaded.as_mut().unwrap().recent_path = Some(recent_path.clone());
                 self.recent_maps.remember(recent_path);

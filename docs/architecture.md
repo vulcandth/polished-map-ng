@@ -37,7 +37,17 @@ points select their catalog and discovery paths; immutable event views and the
 existing move/edit/translate commands cannot switch kinds after parsing. The
 same CPU Print compositor consumes either model, including plusplus punctuation.
 
-PP3 will add a separate executable/launch configuration and preference namespace,
+The GUI's internal document enums retain concrete master/plusplus map and event
+documents. The owning map selects event discovery, reload parsing, warp paths,
+Save As validation and default extensions. Shared map/history and event controls
+consume their common views; they do not cast plusplus into a master document.
+The canvas and captured Print jobs dispatch to the corresponding CPU renderer,
+preserving per-occurrence attributes and independent worker snapshots. Master
+block commands cannot mutate plusplus graphics. These adapters are internal GUI
+implementation, not the stable automation interface or automatic profile detection.
+See [integration evidence](compatibility.md#plusplus-shared-gui-integration).
+
+PP3 still needs a separate executable/launch configuration and preference namespace,
 using common GUI components and native adapters rather than copying the app.
 A shared internal capability boundary is preparation for U1–U3, not completion of
 profile detection, switching or unified write safety. Both format regression suites

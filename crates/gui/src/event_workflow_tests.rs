@@ -864,12 +864,13 @@ fn automatic_events_discovery_new_map_skip_and_failed_script_warning() {
     std::fs::create_dir_all(dir.path().join("maps")).unwrap();
     std::fs::write(dir.path().join("maps/Map.asm"), "\tbg_event 1, 2, MAP\n").unwrap();
     std::fs::write(dir.path().join("Map.2x1.asm"), "\tbg_event 3, 4, SIBLING\n").unwrap();
-    let doc = MapDocument::open_in_project(
+    let doc: documents::MapDocument = MapDocument::open_in_project(
         &dir.path().join("Map.2x1.blk"),
         &OpenOptions::default(),
         Some(dir.path()),
     )
-    .unwrap();
+    .unwrap()
+    .into();
     let (events, warning) = super::event_workflows::auto_load_events(&doc, true);
     assert!(warning.is_none());
     assert_eq!(
@@ -883,7 +884,7 @@ fn automatic_events_discovery_new_map_skip_and_failed_script_warning() {
             .0
             .is_none()
     );
-    let new = MapDocument::new_map(dir.path(), 2, 1).unwrap();
+    let new = MapDocument::new_map(dir.path(), 2, 1).unwrap().into();
     assert!(
         super::event_workflows::auto_load_events(&new, true)
             .0

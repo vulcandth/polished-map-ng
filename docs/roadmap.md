@@ -11,7 +11,7 @@ and design decisions in [architecture](architecture.md).
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | **In progress — active milestone** | Source audit, fixture pin and PP2 backend implementation complete. Separate application/workflows and acceptance remain PP3–PP4. |
+| 2. Plusplus parity | **In progress — active milestone** | PP2 backend complete; PP3 shared map/event/canvas/Print integration is underway. Separate launch/preferences, asset controls and PP4 acceptance remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
@@ -25,10 +25,11 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next: PP3** — integrate the completed plusplus backend into a separate editor
-entry point with isolated preferences, shared GUI/platform components and the
-branch's controls, defaults and measured layout. Carry complete edit/save/open
-workflows through automated input checks before targeted native verification.
+**Next: PP3 (in progress)** — continue from the shared map/event/canvas/Print
+integration with plusplus asset sessions and controls, then expose the separate
+entry point with isolated preferences, defaults and measured layout. Carry complete
+edit/save/open workflows through automated input checks before targeted native
+verification. See [GUI integration evidence](compatibility.md#plusplus-shared-gui-integration).
 The user authorized this sequence on 2026-10-31 while people test master;
 M5–M7 remain open against the published [development candidate](releases.md#development-packages).
 Both audited master functional gaps are fixed; its remaining gates are verification.
@@ -215,10 +216,13 @@ Do not expose automatic profile switching until the unified-editor milestone.
   [project graphics](compatibility.md#plusplus-project-graphics-and-roofs),
   [maps and palettes](compatibility.md#plusplus-map-discovery-and-palette-sessions),
   [events](compatibility.md#plusplus-events-and-script-persistence).
-- [ ] **PP3:** Port branch-specific controls, dialogs, defaults and rendering
+- [ ] **PP3 (in progress):** Port branch-specific controls, dialogs, defaults and rendering
   through a separate plusplus entry point with isolated preferences. Reuse common
   GUI/platform code and preserve source layout/sizing; FLTK visual painting is
-  excluded by user direction. Verify geometry/input, then necessary native behavior.
+  excluded by user direction. Shared map/event editing and canvas/Print dispatch
+  now accept explicit plusplus documents. Asset sessions/controls, launch/preferences,
+  complete workflows and native checks remain. Verify geometry/input, then necessary
+  native behavior. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every
   remaining difference resolved or explicitly approved. Backend roundtrips alone

@@ -349,7 +349,7 @@ impl Editor {
                 )
             })
             .collect();
-        loaded.graphics = graphics;
+        loaded.graphics = graphics.into();
         loaded.tileset = Some(form.draft.clone());
         self.status = if form.roof {
             "Roof changed"

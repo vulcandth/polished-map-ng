@@ -160,7 +160,7 @@ fn chosen_name_and_original_png_suffix_rules_survive_path_canonicalization() {
         );
     }
     h.state_mut().loaded.as_mut().unwrap().document =
-        MapDocument::new_map(dir.path(), 2, 1).unwrap();
+        MapDocument::new_map(dir.path(), 2, 1).unwrap().into();
     h.step();
     assert_eq!(titles(&h), [format!("{WINDOW_TITLE} - New Map")]);
     assert_eq!(
@@ -183,7 +183,7 @@ fn chosen_name_and_original_png_suffix_rules_survive_path_canonicalization() {
         let document =
             MapDocument::open(&dir.path().join("Map.2x1.blk"), &OpenOptions::default()).unwrap();
         let loaded = h.state_mut().loaded.as_mut().unwrap();
-        loaded.document = document;
+        loaded.document = document.into();
         loaded.recent_path = Some(PathBuf::from(&native));
         h.step();
         assert_eq!(
