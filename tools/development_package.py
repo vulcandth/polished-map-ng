@@ -15,6 +15,7 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import zipfile
 
 
 def run(*args, cwd=None):
@@ -23,6 +24,20 @@ def run(*args, cwd=None):
 
 def metadata():
     return json.loads(run("cargo", "metadata", "--locked", "--format-version", "1"))
+
+
+def archive_tree(output, root, name, fmt):
+    if fmt != "zip":
+        return Path(shutil.make_archive(str(output / name), fmt, root, name))
+    archive = output / (name + ".zip")
+    # Cargo registry sources use reproducible epoch timestamps, predating ZIP's
+    # 1980 limit. Clamp only archive metadata; retain exact license/asset bytes
+    # and Unix executable modes (needed when macOS extracts the app bundle).
+    with zipfile.ZipFile(archive, "w", compression=zipfile.ZIP_DEFLATED,
+                         strict_timestamps=False) as zipped:
+        for path in [root / name, *sorted((root / name).rglob("*"))]:
+            zipped.write(path, path.relative_to(root))
+    return archive
 
 
 def notices(destination, packages):
@@ -126,7 +141,7 @@ def main():
             # Run the shipped CLI, not a separate debug artifact.
             subprocess.run([str(stage / ("polished-map" + suffix)), "--help"], check=True, stdout=subprocess.DEVNULL)
         fmt = "zip" if args.target and ("windows" in args.target or "apple" in args.target) else "gztar"
-        archive = Path(shutil.make_archive(str(output / name), fmt, root, name))
+        archive = archive_tree(output, root, name, fmt)
         with archive.open("rb") as file:
             digest = hashlib.file_digest(file, "sha256").hexdigest()
         archive.with_name(archive.name + ".sha256").write_text(f"{digest}  {archive.name}\n", encoding="utf-8")

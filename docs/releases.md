@@ -25,7 +25,11 @@ Do not mark a development release as the latest stable release.
 Windows uses an MSVC ZIP; Linux uses an Ubuntu 22.04-built tarball; macOS uses
 separate app-bundle ZIPs. The Mac runner labels follow
 [GitHub's runner documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job).
-The current package run and downloaded archive verification are pending.
+ZIP packaging clamps reproducible dependency timestamps to ZIP's supported
+range while preserving license bytes and executable modes. The regression in
+[the archive test](../tools/test_development_package.py) covers the pre-1980
+notice timestamps found during the first Mac package run. The corrected package
+run and downloaded archive verification are pending.
 Native clean-machine GUI launch, original executable/bundle icon resources,
 minimum-OS verification and full M5–M7/P4 acceptance remain open. This packaging
 work does not resume deferred M4 aesthetics.

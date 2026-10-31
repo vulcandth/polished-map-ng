@@ -22,13 +22,27 @@ fn mac_option_mnemonic_text_does_not_edit_the_previous_focused_field() {
         );
     h.get_by_role(egui::Role::TextInput).focus();
     h.run();
-    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::F]);
     // macOS Option+F reports the physical F key and the printable character ƒ.
-    h.input_mut().events.push(egui::Event::Text("ƒ".into()));
+    // Queue both in the same native input frame (harness key helpers otherwise
+    // run after the raw input, which would type ƒ before pressing Option+F).
+    h.input_mut().events.extend([
+        egui::Event::ModifiersChanged(egui::Modifiers::ALT),
+        egui::Event::Key {
+            key: egui::Key::F,
+            physical_key: Some(egui::Key::F),
+            pressed: true,
+            repeat: false,
+            modifiers: egui::Modifiers::ALT,
+        },
+        egui::Event::Text("ƒ".into()),
+    ]);
     h.run();
     assert_eq!(h.state(), "unchanged");
     assert!(h.query_by_label("Save").is_some());
-    h.input_mut().events.push(egui::Event::Text("q".into()));
+    h.input_mut().events.extend([
+        egui::Event::ModifiersChanged(egui::Modifiers::NONE),
+        egui::Event::Text("q".into()),
+    ]);
     h.run();
     assert_eq!(
         h.state(),
