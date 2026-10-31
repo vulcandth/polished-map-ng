@@ -286,3 +286,10 @@ and the block placement callback with synthetic widget values. Generated code
 and snippet hashes stay in ignored scratch storage. The Rust implementation
 reuses the existing collision codec and guarded multi-file persistence; no
 Polished Crystal fixture assets are distributed.
+
+Plusplus raw graphics editing/rendering adapts `deep-tile.cpp`,
+`tileset-window.cpp`, `metatileset.cpp`, `tileset.cpp`, `image.cpp` and
+`tiled-image.cpp` under LGPL-3.0-only. Pixel edits, RGB conversion and map/Print
+composition are shared with master. The extended oracle compiles the original
+metatile draw routine with synthetic RGB buffers and an image-stride recorder;
+it does not import game pixels or emulate native driver rasterization.

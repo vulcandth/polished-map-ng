@@ -15,8 +15,11 @@ not. Do not widen master tile IDs globally or reinterpret master palette-map byt
 as plusplus attributes. Attribute blocks compose the existing offset/collision
 storage, reuse brush footprint math, and use the existing guarded multi-file
 persistence and collision codec. No mutable access to offset storage may bypass
-attribute synchronization. Next, factor shared raw-pixel operations and raster
-composition below the two format adapters. Keep source bank ordering explicit.
+attribute synchronization. Raw-pixel operations and map/Print composition now
+sit below the two format adapters; the internal block-raster interface exposes
+rendered blocks and occurrence priorities without requiring master palette maps.
+Plusplus raw tiles carry independent definition flags. Keep source bank ordering
+explicit and keep project graphics/roof persistence behind the project adapter.
 
 PP3 will add a separate executable/launch configuration and preference namespace,
 using common GUI components and native adapters rather than copying the app.

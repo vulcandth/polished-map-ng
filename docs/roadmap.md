@@ -25,9 +25,9 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next: PP2** — implement plusplus graphics editing/rendering and remaining
-profile-specific discovery/palette/event rules, building on the completed
-attribute block backend. Then PP3 integrates a separate plusplus editor.
+**Next: PP2** — connect the expanded graphics model/codecs to compound project
+loading and guarded PNG/roof persistence, then finish profile-specific
+palette/discovery/event rules. Then PP3 integrates a separate plusplus editor.
 The user authorized this sequence on 2026-10-31 while people test master;
 M5–M7 remain open against the published [development candidate](releases.md#development-packages).
 Both audited master functional gaps are fixed; its remaining gates are verification.
@@ -202,8 +202,10 @@ Do not expose automatic profile switching until the unified-editor milestone.
   attributes, flips, priority, palette/discovery/event rules and serialization.
   Attribute block commands, bank mapping and guarded offset/attribute/collision
   saves are implemented with source differentials and real-project tests.
-  Graphics editing/rendering, remaining project rules and branch event handling
-  remain. Keep map IDs byte-sized. Evidence: [backend](compatibility.md#plusplus-block-backend).
+  Raw 512-tile edits, CPU map/Print rendering and expanded codecs are now
+  implemented. Compound graphics/roof documents, remaining project rules and
+  branch event handling remain. Keep map IDs byte-sized. Evidence:
+  [blocks](compatibility.md#plusplus-block-backend), [graphics](compatibility.md#plusplus-graphics-backend).
 - [ ] **PP3:** Port branch-specific controls, dialogs, defaults and rendering
   through a separate plusplus entry point with isolated preferences. Reuse common
   GUI/platform code and preserve source layout/sizing; FLTK visual painting is

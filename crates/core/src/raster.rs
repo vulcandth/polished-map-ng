@@ -132,11 +132,7 @@ impl Graphics {
     pub fn render_block(&self, block: u8) -> Result<RgbImage, RasterError> {
         let Some(metatile) = self.metatiles.get(usize::from(block)) else {
             // draw_metatile uses EMPTY_RGB for IDs beyond the loaded blockset.
-            return Ok(RgbImage {
-                width: 32,
-                height: 32,
-                pixels: [0xab, 0xcd, 0xef].repeat(32 * 32),
-            });
+            return Ok(empty_block());
         };
         let mut pixels = vec![0; 32 * 32 * 3];
         for (slot, &tile_id) in metatile.iter().enumerate() {
@@ -158,27 +154,50 @@ impl Graphics {
 
     /// Render at native resolution; allocation is bounded by the validated map dimensions.
     pub fn render_map(&self, map: &Map) -> Result<RgbImage, RasterError> {
-        let blocks: Vec<_> = (0..256)
-            .map(|i| self.render_block(i as u8))
-            .collect::<Result<_, _>>()?;
-        let width = usize::from(map.width()) * 32;
-        let height = usize::from(map.height()) * 32;
-        let mut pixels = vec![0; width * height * 3];
-        for (i, &id) in map.blocks().iter().enumerate() {
-            let bx = i % usize::from(map.width());
-            let by = i / usize::from(map.width());
-            for y in 0..32 {
-                let start = ((by * 32 + y) * width + bx * 32) * 3;
-                pixels[start..start + 96]
-                    .copy_from_slice(&blocks[usize::from(id)].pixels[y * 96..y * 96 + 96]);
-            }
-        }
-        Ok(RgbImage {
-            width: width as u32,
-            height: height as u32,
-            pixels,
-        })
+        render_map(self, map)
     }
+}
+
+pub(crate) trait BlockRaster {
+    fn render_block(&self, id: u8) -> Result<RgbImage, RasterError>;
+    fn block_priorities(&self, id: u8) -> Option<[bool; 16]>;
+}
+impl BlockRaster for Graphics {
+    fn render_block(&self, id: u8) -> Result<RgbImage, RasterError> {
+        self.render_block(id)
+    }
+    fn block_priorities(&self, id: u8) -> Option<[bool; 16]> {
+        self.block_priorities(id)
+    }
+}
+pub(crate) fn empty_block() -> RgbImage {
+    RgbImage {
+        width: 32,
+        height: 32,
+        pixels: [0xab, 0xcd, 0xef].repeat(32 * 32),
+    }
+}
+pub(crate) fn render_map(source: &impl BlockRaster, map: &Map) -> Result<RgbImage, RasterError> {
+    let blocks: Vec<_> = (0..256)
+        .map(|i| source.render_block(i as u8))
+        .collect::<Result<_, _>>()?;
+    let width = usize::from(map.width()) * 32;
+    let height = usize::from(map.height()) * 32;
+    let mut pixels = vec![0; width * height * 3];
+    for (i, &id) in map.blocks().iter().enumerate() {
+        let bx = i % usize::from(map.width());
+        let by = i / usize::from(map.width());
+        for y in 0..32 {
+            let start = ((by * 32 + y) * width + bx * 32) * 3;
+            pixels[start..start + 96]
+                .copy_from_slice(&blocks[usize::from(id)].pixels[y * 96..y * 96 + 96]);
+        }
+    }
+    Ok(RgbImage {
+        width: width as u32,
+        height: height as u32,
+        pixels,
+    })
 }
 
 /// Upstream DAY colors, including its exact five-bit expansion (channel * 33 / 4).

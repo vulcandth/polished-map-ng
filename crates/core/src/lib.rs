@@ -8,6 +8,7 @@ mod blockset;
 mod events;
 mod map;
 mod palettes;
+mod pixel_edit;
 pub mod plusplus;
 mod printing;
 mod priority;

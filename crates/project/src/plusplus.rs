@@ -237,3 +237,30 @@ fn collision_path(root: &Path, tileset: &str) -> Option<PathBuf> {
         })
         .find(|p| p.is_file())
 }
+
+/// Read plusplus PNG/2bpp/LZ graphics without accepting master's CHR path.
+/// The same bounded PNG/desaturation and LZ implementations serve both formats.
+pub fn read_tiles(
+    path: &Path,
+    platform: crate::PngPlatform,
+) -> Result<Vec<polished_map_core::Tile>, ProjectError> {
+    let bytes = read_bounded(path, 8 * 1024 * 1024)?;
+    match path
+        .extension()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_ascii_lowercase()
+        .as_str()
+    {
+        "2bpp" => {
+            crate::codecs::decode_plusplus_2bpp(&bytes).map_err(|e| ProjectError::codec(path, e))
+        }
+        "lz" => crate::codecs::decode_plusplus_lz_tiles(&bytes)
+            .map_err(|e| ProjectError::codec(path, e)),
+        "png" => crate::png_import::read_png_tiles_bounded(path, &bytes, platform, 512),
+        _ => Err(ProjectError::Format {
+            path: path.into(),
+            message: "plusplus graphics require PNG, 2bpp or LZ".into(),
+        }),
+    }
+}

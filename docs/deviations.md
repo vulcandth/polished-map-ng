@@ -523,3 +523,13 @@ work and prepare for later combination, while keeping its entry point and format
 separate for now. Functionality and measured layout/sizing take priority; recreating
 FLTK painting is not part of this porting pass. Original fonts and other master M4
 aesthetics remain deferred. PP4 and native delivery gates remain explicit.
+
+## Plusplus graphics export bounds
+
+Pinned plusplus `Image::write_tileset_image` starts its inferred tail scan at
+`MAX_NUM_TILES + offset - 1`, which exceeds the allocated 512 entries for any
+nonzero offset. NG scans only the remaining validated slice, rejects empty or
+out-of-range explicit regions, and computes row padding from that bounded count.
+This fixes the compound-export overread without changing valid tile ordering,
+hue conversion or white padding. Source compound project save planning is still
+being ported; this entry records the implemented core export behavior.

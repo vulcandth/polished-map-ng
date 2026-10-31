@@ -109,20 +109,6 @@ fn palette(value: u8) -> Result<(), TilesetError> {
         Err(TilesetError::Palette(value))
     }
 }
-fn hue(value: u8) -> Result<(), TilesetError> {
-    if value <= 3 {
-        Ok(())
-    } else {
-        Err(TilesetError::Hue(value))
-    }
-}
-fn coordinate(at: Point) -> Result<usize, TilesetError> {
-    if at.x < 8 && at.y < 8 {
-        Ok(usize::from(at.y * 8 + at.x))
-    } else {
-        Err(TilesetError::Coordinate(at.x, at.y))
-    }
-}
 
 impl Tileset {
     pub fn new(tiles: Vec<Tile>, attributes: Vec<u8>) -> Result<Self, TilesetError> {
@@ -179,15 +165,7 @@ impl Tileset {
             TileCommand::Set { tile, value } => {
                 let index = self.index(*tile)?;
                 palette(value.palette)?;
-                let pixels: [u8; 64] = value
-                    .pixels
-                    .as_slice()
-                    .try_into()
-                    .map_err(|_| TilesetError::Pixels)?;
-                for &p in &pixels {
-                    hue(p)?;
-                }
-                self.tiles[index] = Tile::new(pixels).map_err(|_| TilesetError::Pixels)?;
+                self.tiles[index] = crate::pixel_edit::from_pixels(&value.pixels)?;
                 self.attributes[index] = value.palette;
             }
             TileCommand::Paint {
@@ -196,16 +174,7 @@ impl Tileset {
                 hue: value,
             } => {
                 let index = self.index(*tile)?;
-                hue(*value)?;
-                let positions = points
-                    .iter()
-                    .map(|&p| coordinate(p))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let mut pixels = *self.tiles[index].hues();
-                for p in positions {
-                    pixels[p] = *value;
-                }
-                self.tiles[index] = Tile::new(pixels).map_err(|_| TilesetError::Pixels)?;
+                self.tiles[index] = crate::pixel_edit::paint(&self.tiles[index], points, *value)?;
             }
             TileCommand::Fill {
                 tile,
@@ -213,32 +182,7 @@ impl Tileset {
                 hue: value,
             } => {
                 let index = self.index(*tile)?;
-                hue(*value)?;
-                let start = coordinate(*at)?;
-                let mut pixels = *self.tiles[index].hues();
-                let old = pixels[start];
-                if old != *value {
-                    let mut queue = std::collections::VecDeque::from([start]);
-                    while let Some(p) = queue.pop_front() {
-                        if pixels[p] != old {
-                            continue;
-                        }
-                        pixels[p] = *value;
-                        if p % 8 > 0 {
-                            queue.push_back(p - 1);
-                        }
-                        if p % 8 < 7 {
-                            queue.push_back(p + 1);
-                        }
-                        if p >= 8 {
-                            queue.push_back(p - 8);
-                        }
-                        if p < 56 {
-                            queue.push_back(p + 8);
-                        }
-                    }
-                }
-                self.tiles[index] = Tile::new(pixels).map_err(|_| TilesetError::Pixels)?;
+                self.tiles[index] = crate::pixel_edit::fill(&self.tiles[index], *at, *value)?;
             }
             TileCommand::Replace { tile, from, to }
             | TileCommand::SwapHues {
@@ -247,19 +191,12 @@ impl Tileset {
                 b: to,
             } => {
                 let index = self.index(*tile)?;
-                hue(*from)?;
-                hue(*to)?;
-                let swap = matches!(command, TileCommand::SwapHues { .. });
-                let pixels = self.tiles[index].hues().map(|p| {
-                    if p == *from {
-                        *to
-                    } else if swap && p == *to {
-                        *from
-                    } else {
-                        p
-                    }
-                });
-                self.tiles[index] = Tile::new(pixels).map_err(|_| TilesetError::Pixels)?;
+                self.tiles[index] = crate::pixel_edit::replace(
+                    &self.tiles[index],
+                    *from,
+                    *to,
+                    matches!(command, TileCommand::SwapHues { .. }),
+                )?;
             }
             TileCommand::Palette {
                 tile,
@@ -335,11 +272,7 @@ impl Tileset {
                     return Err(TilesetError::Tile(id as u8));
                 }
                 let p = (py * w + px) * 3;
-                let gray = (u16::from(rgb[p]) * 31
-                    + u16::from(rgb[p + 1]) * 61
-                    + u16::from(rgb[p + 2]) * 8)
-                    / 100;
-                pixels[id][(py % 8) * 8 + px % 8] = [3, 1, 2, 0][usize::from(gray / 64)];
+                pixels[id][(py % 8) * 8 + px % 8] = crate::pixel_edit::rgb_hue(&rgb[p..p + 3]);
                 if px % 8 == 0 && py % 8 == 0 && attributes[id] == UNDEFINED_PALETTE {
                     attributes[id] = 0;
                 }

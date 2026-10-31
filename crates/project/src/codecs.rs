@@ -5,6 +5,8 @@ use thiserror::Error;
 pub enum CodecError {
     #[error("2bpp data must contain 0..=256 complete 16-byte tiles")]
     TileLength,
+    #[error("2bpp data must contain 0..=512 complete 16-byte tiles")]
+    ExpandedTileLength,
     #[error("truncated compressed data at byte {0}")]
     Truncated(usize),
     #[error("invalid compressed command at byte {0}")]
@@ -25,6 +27,18 @@ pub fn decode_2bpp(bytes: &[u8]) -> Result<Vec<Tile>, CodecError> {
     if bytes.len() > 4096 || !bytes.len().is_multiple_of(16) {
         return Err(CodecError::TileLength);
     }
+    decode_2bpp_pixels(bytes)
+}
+
+/// Plusplus uses the same bitplanes but permits two 256-tile banks.
+pub fn decode_plusplus_2bpp(bytes: &[u8]) -> Result<Vec<Tile>, CodecError> {
+    if bytes.len() > 8192 || !bytes.len().is_multiple_of(16) {
+        return Err(CodecError::ExpandedTileLength);
+    }
+    decode_2bpp_pixels(bytes)
+}
+
+fn decode_2bpp_pixels(bytes: &[u8]) -> Result<Vec<Tile>, CodecError> {
     bytes
         .as_chunks::<16>()
         .0
@@ -127,6 +141,13 @@ pub fn decode_lz_tiles(input: &[u8]) -> Result<Vec<Tile>, CodecError> {
     let mut bytes = decompress_lz(input, 4096)?;
     bytes.resize(4096, 0);
     decode_2bpp(&bytes)
+}
+
+/// Plusplus likewise passes its entire zero-initialized 8192-byte buffer on.
+pub fn decode_plusplus_lz_tiles(input: &[u8]) -> Result<Vec<Tile>, CodecError> {
+    let mut bytes = decompress_lz(input, 8192)?;
+    bytes.resize(8192, 0);
+    decode_plusplus_2bpp(&bytes)
 }
 
 /// The original data parser recognizes only indented db/dw statements.

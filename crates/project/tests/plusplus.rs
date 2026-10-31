@@ -7,6 +7,59 @@ use polished_map_project::{
 use std::fs;
 
 #[test]
+fn expanded_codecs_keep_master_limits_and_bound_allocation() {
+    use polished_map_project::{PngPlatform, codecs, plusplus::read_tiles};
+    let bytes = vec![0xaa; 8192];
+    assert!(codecs::decode_2bpp(&bytes).is_err());
+    let tiles = codecs::decode_plusplus_2bpp(&bytes).unwrap();
+    assert_eq!(tiles.len(), 512);
+    assert_eq!(codecs::encode_2bpp(&tiles), bytes);
+    assert!(codecs::decode_plusplus_2bpp(&[0; 8193]).is_err());
+    assert!(codecs::decode_plusplus_2bpp(&[0; 17]).is_err());
+    let padded = codecs::decode_plusplus_lz_tiles(&[0, 255, 255]).unwrap();
+    assert_eq!(padded.len(), 512);
+    assert_eq!(&padded[0].hues()[..8], &[2; 8]);
+    assert_eq!(*padded[511].hues(), [0; 64]);
+    // Eight long blank runs exactly fill 8192 bytes; a ninth exceeds the cap.
+    let mut lz = [0xef, 0xff].repeat(8);
+    lz.push(255);
+    assert_eq!(codecs::decode_plusplus_lz_tiles(&lz).unwrap().len(), 512);
+    lz.pop();
+    lz.extend_from_slice(&[0xef, 0xff, 255]);
+    assert!(codecs::decode_plusplus_lz_tiles(&lz).is_err());
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("sheet.png");
+    let raster = polished_map_core::RgbImage {
+        width: 128,
+        height: 256,
+        pixels: vec![170; 128 * 256 * 3],
+    };
+    polished_map_project::write_png(&path, &raster).unwrap();
+    let expanded = read_tiles(&path, PngPlatform::Unix).unwrap();
+    assert_eq!(expanded.len(), 512);
+    assert_eq!(*expanded[511].hues(), [2; 64]);
+    for (width, height) in [(4096, 8), (8, 4096)] {
+        let raster = polished_map_core::RgbImage {
+            width,
+            height,
+            pixels: vec![255; width as usize * height as usize * 3],
+        };
+        polished_map_project::write_png(&path, &raster).unwrap();
+        assert_eq!(read_tiles(&path, PngPlatform::Unix).unwrap().len(), 512);
+    }
+    let wrong = dir.path().join("sheet.chr");
+    fs::write(&wrong, b"\tdb 0\n").unwrap();
+    assert!(read_tiles(&wrong, PngPlatform::Unix).is_err());
+    let raster = polished_map_core::RgbImage {
+        width: 128,
+        height: 264,
+        pixels: vec![0; 128 * 264 * 3],
+    };
+    polished_map_project::write_png(&path, &raster).unwrap();
+    assert!(read_tiles(&path, PngPlatform::Unix).is_err());
+}
+
+#[test]
 fn save_reopens_attributes_offsets_and_preserves_unrelated_asm() {
     let dir = tempfile::tempdir().unwrap();
     let offsets = dir.path().join("offsets.bin");

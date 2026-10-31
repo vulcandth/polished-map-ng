@@ -32,6 +32,15 @@ pub(crate) fn read_png_tiles(
     bytes: &[u8],
     platform: PngPlatform,
 ) -> Result<Vec<Tile>, ProjectError> {
+    read_png_tiles_bounded(path, bytes, platform, 256)
+}
+
+pub(crate) fn read_png_tiles_bounded(
+    path: &Path,
+    bytes: &[u8],
+    platform: PngPlatform,
+    max_tiles: u32,
+) -> Result<Vec<Tile>, ProjectError> {
     let invalid = |message: String| ProjectError::Format {
         path: path.into(),
         message,
@@ -51,15 +60,15 @@ pub(crate) fn read_png_tiles(
     let (width, height) = (reader.info().width, reader.info().height);
     if width == 0
         || height == 0
-        || width > 2048
-        || height > 2048
+        || width > max_tiles * 8
+        || height > max_tiles * 8
         || width % 8 != 0
         || height % 8 != 0
-        || width * height > 256 * 64
+        || width * height > max_tiles * 64
     {
-        return Err(invalid(
-            "PNG must contain 1..=256 complete 8×8 tiles".into(),
-        ));
+        return Err(invalid(format!(
+            "PNG must contain 1..={max_tiles} complete 8×8 tiles"
+        )));
     }
     let size = reader
         .output_buffer_size()

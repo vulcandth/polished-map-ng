@@ -65,11 +65,7 @@ impl Roof {
                     for y in 0..h.min(8) {
                         for x in 0..w.min(8) {
                             let p = (y * w + x) * 3;
-                            let gray = (u16::from(pixels[p]) * 31
-                                + u16::from(pixels[p + 1]) * 61
-                                + u16::from(pixels[p + 2]) * 8)
-                                / 100;
-                            value.pixels[y * 8 + x] = [3, 1, 2, 0][usize::from(gray / 64)];
+                            value.pixels[y * 8 + x] = crate::pixel_edit::rgb_hue(&pixels[p..p + 3]);
                         }
                     }
                     if value.palette == UNDEFINED_PALETTE {

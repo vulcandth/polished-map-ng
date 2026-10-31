@@ -1830,7 +1830,7 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented; native hosting is implemented; integrated window/clipboard verification remains pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented; native fonts, full gesture coverage and native workflows are pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export, internal Drag and Drop and positioned external-drop routing implemented. The meta128 acknowledgment and read-only legacy import are implemented; native file-drop acceptance, storage/restart/placement and Print/clipboard parity remain pending |
-| Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Attribute block editing, bank addressing and guarded persistence implemented; original-source and 51 real blockset roundtrips pass. Remaining graphics/events/GUI and full application acceptance are PP2–PP4; see [audit](#plusplus-source-audit). |
+| Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | Attribute block editing, bank addressing and guarded persistence implemented; original-source and 51 real blockset roundtrips pass. Remaining project graphics integration/events/GUI and full application acceptance are PP2–PP4; see [audit](#plusplus-source-audit). |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |
 | Native packaging and runtime | all three OSes | Build/test CI and selected Windows/X11 opacity and installed-font checks exist; complete native runtime acceptance and distribution packages pending |
@@ -2537,6 +2537,64 @@ suite also passing on WSL Ubuntu 22.04.5:
   documentation link/CLI-example checks pass. No GUI interaction was needed;
   these are backend checks, not native application acceptance.
 
-PP2 still needs raw graphics editing/rendering, compound graphics and roofs,
+The [graphics backend](#plusplus-graphics-backend) now supplies raw editing,
+rendering and expanded codecs. PP2 still needs compound project/roof documents,
 remaining palette/discovery rules and branch event catalogs. PP3 has no plusplus
 GUI yet; PP4 original-application interoperability/native acceptance remains open.
+
+## Plusplus graphics backend
+
+[Raw graphics and rendering](../crates/core/src/plusplus/graphics.rs) adapt pinned
+plusplus `deep-tile`, `tileset-window`, `metatileset`, `tileset` and `image`.
+`RawTileset` keeps 1–512 validated hue tiles and independent defined flags;
+occurrence attributes remain in `AttributeBlockset`. Painting/filling/replacing
+hues defines the selected tile; copy/swap transfers hues and definition state;
+delete clears hues and undefines the tile. Batch failures leave the complete
+original state intact. Clipboard RGB paste clips to 16 columns and either 16
+or 32 rows according to the 512 option, retaining uncovered pixels.
+
+The [shared pixel operations](../crates/core/src/pixel_edit.rs) now serve master,
+plusplus and master roofs. Plusplus trim clears every unused blank tile, including
+interior holes and tile zero, unlike master's trailing-only trim. Linear grayscale
+export pads partial rows white and bounds source ranges before allocation. The
+nonzero-offset source overread is covered by the [safety exception](deviations.md#plusplus-graphics-export-bounds).
+
+The plusplus renderer selects a raw tile by bank order, applies the occurrence
+palette and X/Y flips, substitutes the nine roof tiles at ordinal $00a when
+provided, and reports occurrence priorities. Undefined tiles use the original
+diagnostic palette; absent block IDs use EMPTY_RGB. The existing map and Print
+compositors now consume an internal block-raster interface, preserving master's
+public APIs and Print ordering, clipping, overlay, font-mask and event behavior.
+This is shared infrastructure for later combination, not a unified application.
+
+[Expanded loaders](../crates/project/src/plusplus.rs) reuse the existing bitplane,
+LZ and PNG implementations with explicit plusplus bounds. Master retains 256-tile
+limits and CHR support. Plusplus accepts 512 tiles, including 4096×8 and 8×4096
+PNGs, rejects CHR, and preserves the original LZ loader's 8192-byte zero-padded
+output buffer. PNG byte allocations remain bounded and preserve the existing
+Windows/Unix alpha/desaturation distinction.
+
+Verification:
+
+- [Core graphics cases](../crates/core/tests/plusplus_graphics.rs) cover high-index
+  edits, undefined state, trim holes, image paste at both bank limits, malformed
+  commands, nonzero-offset export, flipped corner colors, roofs and shared Print.
+- [Codec cases](../crates/project/tests/plusplus.rs) cover 512-tile roundtrip,
+  partial/excess input, LZ output caps, wide/tall PNGs and excluded CHR files.
+- The [original-source oracle](../tools/plusplus_block_oracle.py) now also compiles
+  unchanged `Metatileset::draw_metatile`. Synthetic 2× RGB tile buffers and a
+  recording `fl_draw_image` adapter verify its signed pixel/row strides at native
+  map resolution. All 16,384 bank-order/roof/base-offset/attribute combinations
+  match Rust pixels. This does not assert driver/font or native window fidelity.
+- Master's compiled-source pixel edits/RGB paste and all-options Print comparisons
+  still pass after the shared-code extraction. The existing master suite remains
+  mandatory; plusplus tests do not replace it.
+
+Windows workspace format, Clippy (all targets, warnings denied), tests and rustdoc
+pass. The new graphics, expanded-codec and compiled-source comparisons also pass
+in WSL Ubuntu 22.04.5. Production native-feature validation passes; no GUI
+interaction was used for these backend checks.
+
+Project-level compound load/save, roof editing/persistence and contextual palettes
+are not yet connected to this model. No plusplus GUI or CLI editing workflow is
+claimed from these library tests; those remain PP2–PP4.

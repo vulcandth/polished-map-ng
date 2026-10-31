@@ -8,6 +8,9 @@ use thiserror::Error;
 
 use crate::{BlockBrush, BlockCommand, Blockset, BlocksetError, CollisionRow, Point};
 
+mod graphics;
+pub use graphics::{Graphics, RawTileCommand, RawTileSnapshot, RawTileset};
+
 /// Ordering of the upper halves of the two VRAM banks in the graphics sheet.
 /// The first 256 entries are bank 0:00–7f followed by bank 1:00–7f in both modes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -20,6 +23,10 @@ pub enum BankOrder {
 
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum Error {
+    #[error(transparent)]
+    Pixels(#[from] crate::TilesetError),
+    #[error("expected 1..=512 raw tiles and one defined flag per tile")]
+    GraphicsLength,
     #[error(transparent)]
     Blockset(#[from] BlocksetError),
     #[error("attribute data must contain complete 16-byte rows, at most one per block")]

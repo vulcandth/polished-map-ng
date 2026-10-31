@@ -136,142 +136,154 @@ impl Graphics {
         events: Option<&Events>,
         options: PrintOptions,
         style: PrintStyle,
-        mut rasterize: F,
+        rasterize: F,
     ) -> Result<RgbImage, PrintError>
     where
         F: FnMut(PrintFont, &str) -> Result<PrintTextMask, PrintError>,
     {
-        let width = usize::from(map.width()) * 32;
-        let height = usize::from(map.height()) * 32;
-        let mut image = RgbImage {
-            width: width as u32,
-            height: height as u32,
-            pixels: vec![0; width * height * 3],
-        };
-        let mut blocks = BTreeMap::new();
-        let mut masks = BTreeMap::new();
-        let priority = options.priority.then(|| PriorityPattern::Small.rgba());
-        for (index, &id) in map.blocks().iter().enumerate() {
-            let x = (index % usize::from(map.width()) * 32) as i32;
-            let y = (index / usize::from(map.width()) * 32) as i32;
-            if let std::collections::btree_map::Entry::Vacant(entry) = blocks.entry(id) {
-                entry.insert(self.render_block(id)?);
+        render_print(self, map, events, options, style, rasterize)
+    }
+}
+
+pub(crate) fn render_print<F>(
+    source: &impl crate::raster::BlockRaster,
+    map: &Map,
+    events: Option<&Events>,
+    options: PrintOptions,
+    style: PrintStyle,
+    mut rasterize: F,
+) -> Result<RgbImage, PrintError>
+where
+    F: FnMut(PrintFont, &str) -> Result<PrintTextMask, PrintError>,
+{
+    let width = usize::from(map.width()) * 32;
+    let height = usize::from(map.height()) * 32;
+    let mut image = RgbImage {
+        width: width as u32,
+        height: height as u32,
+        pixels: vec![0; width * height * 3],
+    };
+    let mut blocks = BTreeMap::new();
+    let mut masks = BTreeMap::new();
+    let priority = options.priority.then(|| PriorityPattern::Small.rgba());
+    for (index, &id) in map.blocks().iter().enumerate() {
+        let x = (index % usize::from(map.width()) * 32) as i32;
+        let y = (index / usize::from(map.width()) * 32) as i32;
+        if let std::collections::btree_map::Entry::Vacant(entry) = blocks.entry(id) {
+            entry.insert(source.render_block(id)?);
+        }
+        let block = &blocks[&id];
+        // Complete each block before the next, matching Block::print even
+        // if a supplied font mask has ink extending into a neighboring block.
+        for row in 0..32 {
+            let target = ((y as usize + row) * width + x as usize) * 3;
+            image.pixels[target..target + 96]
+                .copy_from_slice(&block.pixels[row * 96..row * 96 + 96]);
+        }
+        if let Some(pattern) = &priority
+            && let Some(flags) = source.block_priorities(id)
+        {
+            for (slot, enabled) in flags.into_iter().enumerate() {
+                if enabled {
+                    let ox = x + (slot % 4 * 8) as i32;
+                    let oy = y + (slot / 4 * 8) as i32;
+                    for (i, rgba) in pattern.as_chunks::<4>().0.iter().enumerate() {
+                        pixel(
+                            &mut image,
+                            ox + (i % 8) as i32,
+                            oy + (i / 8) as i32,
+                            [rgba[0], rgba[1], rgba[2]],
+                            rgba[3],
+                        );
+                    }
+                }
             }
-            let block = &blocks[&id];
-            // Complete each block before the next, matching Block::print even
-            // if a supplied font mask has ink extending into a neighboring block.
-            for row in 0..32 {
-                let target = ((y as usize + row) * width + x as usize) * 3;
-                image.pixels[target..target + 96]
-                    .copy_from_slice(&block.pixels[row * 96..row * 96 + 96]);
+        }
+        if options.grid {
+            for offset in 0..32 {
+                pixel(&mut image, x + offset, y + 31, style.grid_rgb, 255);
+                pixel(&mut image, x + 31, y + offset, style.grid_rgb, 255);
             }
-            if let Some(pattern) = &priority
-                && let Some(flags) = self.block_priorities(id)
+        }
+        if options.ids {
+            let text = if style.hexadecimal_ids {
+                format!("{id:02X}")
+            } else {
+                id.to_string()
+            };
+            let key = (PrintFont::CourierBold14, text);
+            if let std::collections::btree_map::Entry::Vacant(entry) = masks.entry(key.clone()) {
+                entry.insert(rasterize(key.0, &key.1)?);
+            }
+            let mask = &masks[&key];
+            for (dx, dy) in [(-1, -1), (-1, 1), (1, -1), (1, 1)] {
+                text_mask(&mut image, mask, x + 3 + dx, y + 1 + dy, [0; 3]);
+            }
+            text_mask(&mut image, mask, x + 3, y + 1, [255; 3]);
+        }
+    }
+    if options.events
+        && let Some(events) = events
+    {
+        for event in events.entries() {
+            let definition = event.definition();
+            let x = i32::from(definition.x) * 16;
+            let y = i32::from(definition.y) * 16;
+            // Clip actual ink, not the event's nominal rectangle: a text
+            // mask can overhang an off-map event, as in the original draw.
+            let (inside, border) = definition.kind.marker_rgb();
+            for dy in 0..16 {
+                for dx in 0..16 {
+                    let color = if dx == 0 || dy == 0 || dx == 15 || dy == 15 {
+                        border
+                    } else {
+                        inside
+                    };
+                    pixel(&mut image, x + dx, y + dy, color, 128);
+                }
+            }
+            let key = (
+                PrintFont::HelveticaBold14,
+                definition.kind.symbol().to_string(),
+            );
+            if let std::collections::btree_map::Entry::Vacant(entry) = masks.entry(key.clone()) {
+                entry.insert(rasterize(key.0, &key.1)?);
+            }
+            let mask = &masks[&key];
+            text_mask(
+                &mut image,
+                mask,
+                x + (16 - i32::from(mask.layout[0])) / 2,
+                y + (16 - i32::from(mask.layout[1])) / 2,
+                [255; 3],
+            );
+            if options.warp_ids
+                && let Some(label) = event
+                    .warp_id()
+                    .and_then(|id| WarpIdLabel::new(id, definition.hex_coordinates))
             {
-                for (slot, enabled) in flags.into_iter().enumerate() {
-                    if enabled {
-                        let ox = x + (slot % 4 * 8) as i32;
-                        let oy = y + (slot / 4 * 8) as i32;
-                        for (i, rgba) in pattern.as_chunks::<4>().0.iter().enumerate() {
+                for digit in label.digits() {
+                    for (dy, row) in digit.rows().iter().enumerate() {
+                        for dx in 0..5 {
+                            let color = if row & (1 << (4 - dx)) != 0 {
+                                [0; 3]
+                            } else {
+                                [255; 3]
+                            };
                             pixel(
                                 &mut image,
-                                ox + (i % 8) as i32,
-                                oy + (i / 8) as i32,
-                                [rgba[0], rgba[1], rgba[2]],
-                                rgba[3],
+                                x + i32::from(digit.x()) + dx,
+                                y + i32::from(digit.y()) + dy as i32,
+                                color,
+                                255,
                             );
                         }
                     }
                 }
             }
-            if options.grid {
-                for offset in 0..32 {
-                    pixel(&mut image, x + offset, y + 31, style.grid_rgb, 255);
-                    pixel(&mut image, x + 31, y + offset, style.grid_rgb, 255);
-                }
-            }
-            if options.ids {
-                let text = if style.hexadecimal_ids {
-                    format!("{id:02X}")
-                } else {
-                    id.to_string()
-                };
-                let key = (PrintFont::CourierBold14, text);
-                if let std::collections::btree_map::Entry::Vacant(entry) = masks.entry(key.clone())
-                {
-                    entry.insert(rasterize(key.0, &key.1)?);
-                }
-                let mask = &masks[&key];
-                for (dx, dy) in [(-1, -1), (-1, 1), (1, -1), (1, 1)] {
-                    text_mask(&mut image, mask, x + 3 + dx, y + 1 + dy, [0; 3]);
-                }
-                text_mask(&mut image, mask, x + 3, y + 1, [255; 3]);
-            }
         }
-        if options.events
-            && let Some(events) = events
-        {
-            for event in events.entries() {
-                let definition = event.definition();
-                let x = i32::from(definition.x) * 16;
-                let y = i32::from(definition.y) * 16;
-                // Clip actual ink, not the event's nominal rectangle: a text
-                // mask can overhang an off-map event, as in the original draw.
-                let (inside, border) = definition.kind.marker_rgb();
-                for dy in 0..16 {
-                    for dx in 0..16 {
-                        let color = if dx == 0 || dy == 0 || dx == 15 || dy == 15 {
-                            border
-                        } else {
-                            inside
-                        };
-                        pixel(&mut image, x + dx, y + dy, color, 128);
-                    }
-                }
-                let key = (
-                    PrintFont::HelveticaBold14,
-                    definition.kind.symbol().to_string(),
-                );
-                if let std::collections::btree_map::Entry::Vacant(entry) = masks.entry(key.clone())
-                {
-                    entry.insert(rasterize(key.0, &key.1)?);
-                }
-                let mask = &masks[&key];
-                text_mask(
-                    &mut image,
-                    mask,
-                    x + (16 - i32::from(mask.layout[0])) / 2,
-                    y + (16 - i32::from(mask.layout[1])) / 2,
-                    [255; 3],
-                );
-                if options.warp_ids
-                    && let Some(label) = event
-                        .warp_id()
-                        .and_then(|id| WarpIdLabel::new(id, definition.hex_coordinates))
-                {
-                    for digit in label.digits() {
-                        for (dy, row) in digit.rows().iter().enumerate() {
-                            for dx in 0..5 {
-                                let color = if row & (1 << (4 - dx)) != 0 {
-                                    [0; 3]
-                                } else {
-                                    [255; 3]
-                                };
-                                pixel(
-                                    &mut image,
-                                    x + i32::from(digit.x()) + dx,
-                                    y + i32::from(digit.y()) + dy as i32,
-                                    color,
-                                    255,
-                                );
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        Ok(image)
     }
+    Ok(image)
 }
 
 fn text_mask(image: &mut RgbImage, mask: &PrintTextMask, x: i32, y: i32, rgb: [u8; 3]) {
