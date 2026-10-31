@@ -23,7 +23,17 @@ def run(*args, cwd=None):
 
 
 def metadata():
-    return json.loads(run("cargo", "metadata", "--locked", "--format-version", "1"))
+    return json.loads(run("cargo", "metadata", "--locked", "--all-features", "--format-version", "1"))
+
+
+def supplemental_notices(root=Path(".")):
+    records = json.loads((root / "docs/dependency-notices.json").read_text(encoding="utf-8"))
+    for record in records:
+        for file in record["files"]:
+            actual = hashlib.sha256((root / file["path"]).read_bytes()).hexdigest()
+            if actual != file["sha256"]:
+                raise ValueError(f'Changed dependency notice: {file["path"]}')
+    return {(r["name"], r["version"]): r for r in records}
 
 
 def archive_tree(output, root, name, fmt):
@@ -43,6 +53,7 @@ def archive_tree(output, root, name, fmt):
 def notices(destination, packages):
     """Keep dependency license files and full lockfile-wide license metadata."""
     inventory = []
+    supplements = supplemental_notices()
     for package in packages:
         root = Path(package["manifest_path"]).parent
         files = set()
@@ -60,9 +71,20 @@ def notices(destination, packages):
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(path, target)
             copied.append(relative.as_posix())
+        supplement = supplements.get((package["name"], package["version"]))
+        if supplement:
+            for file in supplement["files"]:
+                relative = Path("upstream") / file["upstream_path"]
+                target = destination / "dependencies" / name / relative
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(file["path"], target)
+                copied.append(relative.as_posix())
+        if package["source"] and not copied:
+            raise ValueError(f"No dependency notices collected for {name}")
         inventory.append({"name": package["name"], "version": package["version"],
                           "license": package["license"], "source": package["source"],
-                          "repository": package["repository"], "notices": copied})
+                          "authors": package["authors"], "repository": package["repository"],
+                          "supplement": supplement, "notices": copied})
     (destination / "dependency-inventory.json").write_text(
         json.dumps(inventory, indent=2) + "\n", encoding="utf-8")
 

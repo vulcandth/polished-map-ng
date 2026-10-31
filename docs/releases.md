@@ -15,7 +15,10 @@ toolchain, build host, target and signing status. Each archive has a SHA-256 fil
 Mac bundles have local ad-hoc signatures, not Developer ID signing/notarization.
 
 Each binary package carries original asset/source notices, license texts and a
-lockfile-wide dependency license inventory. The matching source archive includes
+dependency license inventory for the resolved workspace with all features enabled.
+Published-crate omissions are covered by [pinned license supplements](../LICENSES/dependency-supplements/README.md),
+including original authorship metadata and independently verified hashes.
+The matching source archive includes
 the full tracked repository, all registry dependencies, lockfile, toolchain,
 patches and [rebuild/relink instructions](rebuild.md). No external project/game
 fixtures or ignored working files are included. Source and binaries must be

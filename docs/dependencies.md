@@ -166,3 +166,12 @@ FFI stays in the platform crate; core/GUI retain their unsafe prohibition.
 The isolated macOS platform check exposed an implicit NSResponder feature
 previously supplied by GUI feature unification. It is now explicit, so the
 platform adapter can compile independently as well as inside the application.
+
+Development packages collect licenses for the full resolved workspace graph with
+all workspace features enabled. Published crates which omit workspace-level
+notices use [pinned supplements](../LICENSES/dependency-supplements/README.md),
+with exact sources/hashes in [the manifest](dependency-notices.json). Original
+package authors and declared license expressions are retained in the generated
+inventory. The egui release-tag fallback and dispatch's published MIT declaration
+are distinguished from notices retrieved at crate VCS revisions. Packaging rejects
+changed supplement hashes and registry dependencies with no collected notices.
