@@ -1,16 +1,34 @@
-//! master main-window.cpp copy/paste/swap, select_metatile_cb and add_sub_metatiles.
+//! Both pinned main-window.cpp copy/paste/swap, select_metatile_cb and add_sub_metatiles.
 //! Dialog geometry: Option_Dialog::refresh and Add_Sub_Dialog::refresh_content.
 use super::*;
+use polished_map_core::plusplus::AttributeCommand;
 use polished_map_core::{BlockCommand, CollisionRow};
 
 pub(super) struct BlockClipboard {
     pub(super) id: u8,
     tiles: [u8; 16],
+    attributes: Option<[u8; 16]>,
     collision: Option<CollisionRow>,
 }
 
 impl Editor {
     pub(super) fn copy_block(&mut self) {
+        if let Some(assets) = self.loaded.as_ref().and_then(|l| l.plus_assets.as_ref()) {
+            if let Ok(tiles) = assets.blocks.blockset().block(self.selected) {
+                self.block_clipboard = Some(BlockClipboard {
+                    id: self.selected,
+                    tiles: tiles.map(|t| t.offset()),
+                    attributes: Some(tiles.map(|t| t.attribute())),
+                    collision: assets
+                        .blocks
+                        .blockset()
+                        .offsets()
+                        .collisions()
+                        .map(|r| r[usize::from(self.selected)].clone()),
+                });
+            }
+            return;
+        }
         let Some(blockset) = self.loaded.as_ref().and_then(|l| l.blockset.as_ref()) else {
             return;
         };
@@ -18,6 +36,7 @@ impl Editor {
             self.block_clipboard = Some(BlockClipboard {
                 id: self.selected,
                 tiles: *tiles,
+                attributes: None,
                 collision: blockset
                     .blockset()
                     .collisions()
@@ -30,6 +49,21 @@ impl Editor {
         let Some(copied) = &self.block_clipboard else {
             return;
         };
+        if let Some(attributes) = copied.attributes {
+            let mut commands = vec![AttributeCommand::Set {
+                block: self.selected,
+                offsets: copied.tiles,
+                attributes,
+            }];
+            if let Some(collision) = &copied.collision {
+                commands.push(AttributeCommand::SetCollisions {
+                    block: self.selected,
+                    collision: collision.clone(),
+                });
+            }
+            self.apply_attribute_commands(ctx, &commands);
+            return;
+        }
         let mut commands = vec![BlockCommand::Set {
             block: self.selected,
             tiles: copied.tiles,
@@ -60,6 +94,41 @@ impl Editor {
         ctx: &egui::Context,
         commands: &[BlockCommand],
     ) -> bool {
+        if self
+            .loaded
+            .as_ref()
+            .is_some_and(|l| l.plus_assets.is_some())
+        {
+            // Only profile-independent operations may use the common command route.
+            // A master Set/Paint lacks occurrence attributes and must never flatten them.
+            let translated = commands
+                .iter()
+                .map(|c| match c {
+                    BlockCommand::Copy { from, to } => Ok(AttributeCommand::Copy {
+                        from: *from,
+                        to: *to,
+                    }),
+                    BlockCommand::Swap { a, b } => Ok(AttributeCommand::Swap { a: *a, b: *b }),
+                    BlockCommand::Resize { count } => {
+                        Ok(AttributeCommand::Resize { count: *count })
+                    }
+                    BlockCommand::SetCollisions { block, collision } => {
+                        Ok(AttributeCommand::SetCollisions {
+                            block: *block,
+                            collision: collision.clone(),
+                        })
+                    }
+                    _ => Err("Plusplus block edits require occurrence attributes"),
+                })
+                .collect::<Result<Vec<_>, _>>();
+            return match translated {
+                Ok(commands) => self.apply_attribute_commands(ctx, &commands),
+                Err(e) => {
+                    self.error = Some(e.into());
+                    false
+                }
+            };
+        }
         let Some(loaded) = &mut self.loaded else {
             return false;
         };
@@ -97,21 +166,7 @@ impl Editor {
                         )
                     })
                     .collect();
-                let count = self.textures.len();
-                self.block_hotkeys.prune(count);
-                self.sidebar_reveal = self.sidebar_reveal.filter(|&id| usize::from(id) < count);
-                if usize::from(self.selected) >= count {
-                    self.selected = 0;
-                    self.reset_sidebar_scroll = true;
-                }
-                if self
-                    .block_clipboard
-                    .as_ref()
-                    .is_some_and(|c| usize::from(c.id) >= count)
-                {
-                    self.block_clipboard = None;
-                }
-                self.status = format!("Blockset changed ({count} blocks)");
+                self.blocks_changed();
                 true
             }
             Err(error) => {
@@ -121,12 +176,70 @@ impl Editor {
         }
     }
 
+    pub(super) fn apply_attribute_commands(
+        &mut self,
+        ctx: &egui::Context,
+        commands: &[AttributeCommand],
+    ) -> bool {
+        let Some(loaded) = &mut self.loaded else {
+            return false;
+        };
+        if loaded.document.profile() != documents::Profile::PlusPlus
+            || loaded.graphics.profile() != documents::Profile::PlusPlus
+        {
+            self.error = Some("Attribute commands require a plusplus map and renderer".into());
+            return false;
+        }
+        let Some(assets) = &mut loaded.plus_assets else {
+            self.error = Some("Attribute commands require plusplus assets".into());
+            return false;
+        };
+        let result = (|| {
+            let mut draft = assets.blocks.blockset().clone();
+            draft.apply_batch(commands).map_err(|e| e.to_string())?;
+            let graphics = assets.graphics_for_blocks(&draft, &assets.palettes);
+            let textures = documents::block_textures(ctx, &graphics)?;
+            Ok::<_, String>((draft, graphics, textures))
+        })();
+        match result {
+            Ok((draft, graphics, textures)) => {
+                *assets.blocks.blockset_mut() = draft;
+                loaded.graphics = graphics;
+                self.textures = textures;
+                self.blocks_changed();
+                true
+            }
+            Err(e) => {
+                self.error = Some(e);
+                false
+            }
+        }
+    }
+
+    fn blocks_changed(&mut self) {
+        let count = self.textures.len();
+        self.block_hotkeys.prune(count);
+        self.sidebar_reveal = self.sidebar_reveal.filter(|&id| usize::from(id) < count);
+        if usize::from(self.selected) >= count {
+            self.selected = 0;
+            self.reset_sidebar_scroll = true;
+        }
+        if self
+            .block_clipboard
+            .as_ref()
+            .is_some_and(|c| usize::from(c.id) >= count)
+        {
+            self.block_clipboard = None;
+        }
+        self.status = format!("Blockset changed ({count} blocks)");
+    }
+
     pub(super) fn prepare_block_count(&mut self) {
         self.block_count_form = self
             .loaded
             .as_ref()
-            .and_then(|l| l.blockset.as_ref())
-            .map(|b| b.blockset().blocks().len() as u16);
+            .filter(|l| l.blockset.is_some() || l.plus_assets.is_some())
+            .map(|l| l.graphics.block_count() as u16);
         if let Some(count) = self.block_count_form {
             self.block_count_default = default_value::DefaultValue::new(count);
         }
@@ -179,7 +292,10 @@ impl Editor {
     }
 
     pub(super) fn block_menu(&mut self, ui: &mut egui::Ui) {
-        let available = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
+        let available = self
+            .loaded
+            .as_ref()
+            .is_some_and(|l| l.blockset.is_some() || l.plus_assets.is_some());
         let copied = available && self.block_clipboard.is_some();
         for (label, enabled, action) in [
             ("Copy Block", available, 0),

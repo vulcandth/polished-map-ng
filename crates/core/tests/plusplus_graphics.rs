@@ -168,6 +168,21 @@ fn occurrence_palette_bank_flips_roof_and_print_share_a_single_compositor() {
     let g = Graphics::new(r, b, palettes, BankOrder::Bank1First)
         .with_roof(std::array::from_fn(|_| Tile::new([2; 64]).unwrap()));
     let image = g.render_block(0).unwrap();
+    for slot in 0..16 {
+        let tile = g.render_tile(polished_map_core::plusplus::TileReference::from_bytes(
+            offsets[slot],
+            attrs[slot],
+        ));
+        assert_eq!((tile.width, tile.height), (8, 8));
+        for y in 0..8 {
+            for x in 0..8 {
+                assert_eq!(
+                    pixel(&tile, x, y),
+                    pixel(&image, slot % 4 * 8 + x, slot / 4 * 8 + y)
+                );
+            }
+        }
+    }
     assert_eq!(pixel(&image, 0, 0), [0, 1, 77]);
     assert_eq!(pixel(&image, 8, 0), [1, 2, 77]);
     assert_eq!(pixel(&image, 16, 0), [2, 3, 77]);

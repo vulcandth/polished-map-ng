@@ -57,6 +57,13 @@ The existing load worker and ordered import prompts stage the entire candidate
 before adoption. Closing a map retains its profile-specific palette session.
 Asset saves use the shared feedback queue but their own source/output documents.
 
+The block dialog shares collision controls, modal hosting and acceptance while
+its plusplus draft retains occurrence attributes and a 16-bit tile selection.
+An eight-palette atlas calls the core occurrence renderer used by the map;
+palette/flip brush changes reuse it. Sidebar copy/swap/resize use the existing
+input routes, translating only profile-independent commands. Plusplus Set/Paint
+requires explicit attributes, with model and preview committed together.
+
 PP3 still needs a separate executable/launch configuration and preference namespace,
 using common GUI components and native adapters rather than copying the app.
 A shared internal capability boundary is preparation for U1–U3, not completion of

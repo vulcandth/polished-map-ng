@@ -42,7 +42,7 @@ fn open(h: &mut Harness<'_, Editor>, path: &Path, roof: bool) {
     h.step();
     wait(h);
 }
-fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
+pub(crate) fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     for name in ["gfx/tilesets/roofs", "data/tilesets", "maps", "tilesets"] {
@@ -486,4 +486,61 @@ fn real_plusplus_open_palette_edit_and_save_copy_use_shared_gui() {
         .unwrap();
     assets.tiles.verify_unchanged().unwrap();
     assets.blocks.verify_unchanged().unwrap();
+    // Exercise the real project's block draft, then persist its accepted model
+    // to separate temporary paths. Never save edits back into the pinned fixture.
+    crate::block_workflow_tests::open_block(&mut h, 0);
+    h.get_by_label("Tile $0:01").click();
+    h.run();
+    h.key_press_modifiers(egui::Modifiers::ALT, egui::Key::Num8);
+    h.run();
+    h.key_press_modifiers(egui::Modifiers::ALT, egui::Key::X);
+    h.run();
+    h.get_by_label("Block tile 0, 0").click();
+    h.run();
+    h.get_by_label("OK").click();
+    h.run();
+    let doc = &h
+        .state()
+        .loaded
+        .as_ref()
+        .unwrap()
+        .plus_assets
+        .as_ref()
+        .unwrap()
+        .blocks;
+    assert_eq!(doc.blockset().block(0).unwrap()[0].attribute(), 0x27);
+    let mut copy =
+        plusplus::BlocksetDocument::open(doc.path(), doc.attribute_path(), doc.collision_path())
+            .unwrap();
+    *copy.blockset_mut() = doc.blockset().clone();
+    let offsets = plusplus::prepare_binary_save_as(&temporary.path().join("blocks.bin")).unwrap();
+    let attrs = plusplus::prepare_binary_save_as(&temporary.path().join("attributes.bin")).unwrap();
+    let collisions = doc.collision_path().map(|path| {
+        let ext = path.extension().unwrap();
+        polished_map_project::prepare_collision_save_as(
+            &temporary.path().join("collisions").with_extension(ext),
+            ext == "bin",
+        )
+        .unwrap()
+    });
+    copy.save_as(&offsets, &attrs, collisions.as_ref()).unwrap();
+    let reopened = plusplus::BlocksetDocument::open(
+        offsets.path(),
+        attrs.path(),
+        collisions.as_ref().map(|t| t.path()),
+    )
+    .unwrap();
+    assert_eq!(
+        reopened.blockset().offsets().bytes(),
+        doc.blockset().offsets().bytes()
+    );
+    assert_eq!(
+        reopened.blockset().attribute_bytes(),
+        doc.blockset().attribute_bytes()
+    );
+    assert_eq!(
+        reopened.blockset().offsets().collisions(),
+        doc.blockset().offsets().collisions()
+    );
+    doc.verify_unchanged().unwrap();
 }

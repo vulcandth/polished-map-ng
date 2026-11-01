@@ -320,26 +320,10 @@ impl Graphics {
         };
         let mut pixels = vec![0; 32 * 32 * 3];
         for (slot, t) in tiles.into_iter().enumerate() {
-            let index = usize::from(t.index(self.order));
-            let roof = self
-                .roof
-                .as_ref()
-                .and_then(|r| index.checked_sub(0x0a).and_then(|i| r.get(i)));
-            let tile = roof.or_else(|| self.raw.tiles.get(index));
-            let defined = roof.is_some() || self.raw.defined.get(index).copied().unwrap_or(false);
-            let palette = if defined {
-                self.palettes[usize::from(t.palette())]
-            } else {
-                UNDEFINED_COLORS
-            };
+            let tile = self.tile_pixels(t);
             for y in 0..8 {
-                for x in 0..8 {
-                    let sx = if t.x_flip() { 7 - x } else { x };
-                    let sy = if t.y_flip() { 7 - y } else { y };
-                    let hue = tile.map_or(0, |t| t.hues()[sy * 8 + sx]);
-                    let at = ((slot / 4 * 8 + y) * 32 + slot % 4 * 8 + x) * 3;
-                    pixels[at..at + 3].copy_from_slice(&palette[usize::from(hue)]);
-                }
+                let at = ((slot / 4 * 8 + y) * 32 + slot % 4 * 8) * 3;
+                pixels[at..at + 24].copy_from_slice(&tile[y * 24..y * 24 + 24]);
             }
         }
         Ok(RgbImage {
@@ -347,6 +331,40 @@ impl Graphics {
             height: 32,
             pixels,
         })
+    }
+    /// Render one occurrence for the block editor using the same roof, palette,
+    /// undefined-color and flip rules as the map compositor.
+    pub fn render_tile(&self, tile: TileReference) -> RgbImage {
+        RgbImage {
+            width: 8,
+            height: 8,
+            pixels: self.tile_pixels(tile).to_vec(),
+        }
+    }
+    fn tile_pixels(&self, t: TileReference) -> [u8; 192] {
+        let mut pixels = [0; 192];
+        let index = usize::from(t.index(self.order));
+        let roof = self
+            .roof
+            .as_ref()
+            .and_then(|r| index.checked_sub(0x0a).and_then(|i| r.get(i)));
+        let tile = roof.or_else(|| self.raw.tiles.get(index));
+        let defined = roof.is_some() || self.raw.defined.get(index).copied().unwrap_or(false);
+        let palette = if defined {
+            self.palettes[usize::from(t.palette())]
+        } else {
+            UNDEFINED_COLORS
+        };
+        for y in 0..8 {
+            for x in 0..8 {
+                let sx = if t.x_flip() { 7 - x } else { x };
+                let sy = if t.y_flip() { 7 - y } else { y };
+                let hue = tile.map_or(0, |t| t.hues()[sy * 8 + sx]);
+                let at = (y * 8 + x) * 3;
+                pixels[at..at + 3].copy_from_slice(&palette[usize::from(hue)]);
+            }
+        }
+        pixels
     }
     pub fn render_map(&self, map: &Map) -> Result<RgbImage, RasterError> {
         crate::raster::render_map(self, map)

@@ -131,7 +131,7 @@ impl Editor {
                     menu_popup::checkbox(ui, true, &mut self.hex, "Hexadecimal");
                     menu_popup::checkbox(
                         ui,
-                        self.allow_priority,
+                        self.allow_priority || self.profile == documents::Profile::PlusPlus,
                         &mut self.show_priority,
                         "Show Priority",
                     );
@@ -156,7 +156,10 @@ impl Editor {
                     }
                 });
                 menu_popup::menu(ui, "Tools", |ui| {
-                    let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
+                    let blocks = self
+                        .loaded
+                        .as_ref()
+                        .is_some_and(|l| l.blockset.is_some() || l.plus_assets.is_some());
                     if action(ui, blocks, "Resize Blockset…") {
                         self.prepare_block_count();
                     }

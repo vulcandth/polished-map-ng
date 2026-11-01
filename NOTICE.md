@@ -326,3 +326,8 @@ Plusplus GUI asset-session loading, palette controls and save dispatch adapt
 The master controls, palette import prompts, texture cache and save feedback
 are shared. Polished Crystal integration tests operate on ignored fixtures and
 temporary outputs; those project/game assets are not distributed.
+
+The shared block GUI and plusplus occurrence controls adapt pinned
+`block-window.cpp`, `map-buttons.cpp` and `Main_Window` clipboard/resize callbacks,
+under LGPL-3.0-only. Existing modal, collision, sidebar and save workflows are
+reused; tile occurrence rendering is shared with the CPU map compositor.

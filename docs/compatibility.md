@@ -2838,8 +2838,67 @@ workspace run. These are input/model/rendering checks, not native-window,
 clipboard-service or macOS runtime verification.
 
 This is shared workflow integration, not a separately launchable plusplus editor.
-The production entry point remains master. Plusplus block/tileset/roof controls
-and asset switching, separate launch/preferences, menus/defaults, full workflow
+The production entry point remains master. Plusplus [block controls](#plusplus-block-editor-and-transfers)
+are integrated; tileset/roof controls and asset switching, separate launch/preferences, menus/defaults, full workflow
 verification and native checks remain in PP3. PP4 still requires original
 application interoperability and native acceptance; these tests do not close it.
 No desktop automation or aesthetic matching is part of this change.
+
+## Plusplus block editor and transfers
+
+PP3's [shared block dialog](../crates/gui/src/block_editor.rs) and
+[occurrence controls](../crates/gui/src/block_editor/plusplus.rs) adapt the pinned
+plusplus `Block_Window::{initialize,refresh,select,change_chip_cb,change_attributes_cb}`
+and `map-buttons.cpp` tile/chip handlers. The client is 477×432 points; the tile
+list is 273×258 or 273×386 with 16-point cells, and the block grid has 32-point
+chips inside its 130-point frame. Existing collision controls, platform button
+order, native modal hosting, middle-click defaults and accept/cancel are shared.
+Eight palette choices, X/Y flips, priority, Alt+1–8/X/Y/P and bank:offset labels
+retain occurrence semantics. Right-button press picks all attributes and reveals
+the selected row. A held right click no longer loses the pick to egui's drag
+threshold; the shared master picker also follows the original press timing.
+Flip/priority choices survive reopening the dialog, including after Cancel;
+the selected raw tile and palette reset as in `refresh`. Priority is always
+shown in block drafts, independently of the main map's display option.
+
+The visible sheet expands for the 512 option or any current-block reference
+at or above ordinal 256, including the boundary case distinct from automatic
+load-time option detection. Both source bank orders are preserved. A single
+eight-palette texture atlas uses the core occurrence renderer for palettes,
+roof substitution and undefined colors; UVs handle flips. The map compositor
+and block atlas share the same pixel routine. Painting calls the existing
+attribute backend, including mirrored multi-tile footprints and edge clipping.
+Accept validates the entire draft and constructs its preview before replacing
+live state; Cancel leaves blocks, collisions, map history and files unchanged.
+
+[Shared sidebar workflows](../crates/gui/src/block_workflows.rs) preserve offset,
+attribute and collision rows through clipboard snapshot paste, live-ID swap,
+drag copy/swap and resize. Shrinking prunes stale clipboard/hotkey/selection
+state without rewriting the map. Master-only Set/Paint commands cannot flatten
+plusplus attributes; invalid batches retain the old model and preview. Block
+changes use the integrated guarded offset/attribute/collision save path.
+
+[Input/geometry tests](../crates/gui/src/block_editor/plusplus/tests.rs) cover both
+bank orders and ordinal 511, scroll reveal, mirrored brushes, attribute shortcuts
+and repeat suppression, Option-generated text isolation, collision layouts,
+cancel/accept, save/reopen, transfer/resize paths and atomic failures. The rendered
+pixel test checks independent RGB values for both flips, palette 7 and roof
+substitution; it does not add or replace aesthetic snapshot baselines.
+[Core tests](../crates/core/tests/plusplus_graphics.rs) also compare individual
+occurrences with the existing independent map/Print pixel vector.
+The pinned-project GUI workflow additionally edits a New Bark Town block and
+saves/reopens its accepted model through the backend to temporary paths; original
+fixture files remain untouched. This is not original-application acceptance.
+
+Windows and WSL Ubuntu 22.04.5 block input/geometry tests pass, as does the Windows
+offscreen rendered-pixel check. Windows workspace format, Clippy with warnings
+denied, tests, rustdoc and production adapter checks pass. The extended pinned-project
+workflow passes on Windows and WSL. Native window, clipboard and original-application
+checks remain PP3/PP4. FLTK painting and original fonts remain deferred.
+
+The preceding asset-integration CI run passed its Ubuntu workspace/native checks
+but the runner exhausted disk during the final font-test builds. The shared
+[CI workflow](../.github/workflows/ci.yml) now disables incremental compilation
+on fresh runners and uses level-1 debug information for dev/test profiles. This
+retains source locations in backtraces and all existing verification jobs while
+reducing build storage; release profiles and packaged binaries are unchanged.

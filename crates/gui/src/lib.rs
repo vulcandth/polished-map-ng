@@ -238,6 +238,7 @@ pub struct Editor {
     block_count_default: default_value::DefaultValue<u16>,
     block_count_windows_buttons: bool,
     block_clipboard: Option<block_workflows::BlockClipboard>,
+    plus_block_attributes: [bool; 3],
     paste_shortcut_handled: bool,
     sidebar_drag: Option<u8>,
     sidebar_press: Option<(egui::PointerButton, u8)>,
@@ -336,6 +337,7 @@ impl Default for Editor {
             block_count_default: default_value::DefaultValue::new(1),
             block_count_windows_buttons: cfg!(target_os = "windows"),
             block_clipboard: None,
+            plus_block_attributes: [false; 3],
             paste_shortcut_handled: false,
             sidebar_drag: None,
             sidebar_press: None,
@@ -1216,7 +1218,7 @@ impl Editor {
         }
         if ui
             .add_enabled(
-                self.allow_priority,
+                self.allow_priority || self.profile == documents::Profile::PlusPlus,
                 Button::new(Icon::Priority, "Show Priority").selected(self.show_priority),
             )
             .on_hover_text("Show Priority (Ctrl/Cmd+Shift+P)")
@@ -1286,7 +1288,9 @@ impl Editor {
         icons::separator(ui);
         if ui
             .add_enabled(
-                self.loaded.as_ref().is_some_and(|l| l.blockset.is_some()),
+                self.loaded
+                    .as_ref()
+                    .is_some_and(|l| l.blockset.is_some() || l.plus_assets.is_some()),
                 Button::new(Icon::ResizeBlockset, "Resize blockset"),
             )
             .on_hover_text("Resize Blockset… (Ctrl/Cmd+B)")
@@ -1948,7 +1952,7 @@ impl Editor {
             }) {
                 self.hex = !self.hex;
             }
-            if self.allow_priority
+            if (self.allow_priority || self.profile == documents::Profile::PlusPlus)
                 && ctx.input_mut(|i| {
                     i.consume_key(
                         egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,

@@ -6,7 +6,7 @@ use polished_map_core::plusplus::BankOrder;
 use polished_map_project::{ProjectError, plusplus};
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;
 
 pub(super) struct PlusPlusAssets {
     pub blocks: plusplus::BlocksetDocument,
@@ -18,11 +18,16 @@ pub(super) struct PlusPlusAssets {
 }
 impl PlusPlusAssets {
     pub fn graphics(&self, palettes: &plusplus::PaletteDocument) -> MapGraphics {
-        let graphics = self.tiles.graphics(
-            self.blocks.blockset(),
-            palettes.colors(palettes.selected()),
-            self.order,
-        );
+        self.graphics_for_blocks(self.blocks.blockset(), palettes)
+    }
+    pub fn graphics_for_blocks(
+        &self,
+        blocks: &polished_map_core::plusplus::AttributeBlockset,
+        palettes: &plusplus::PaletteDocument,
+    ) -> MapGraphics {
+        let graphics =
+            self.tiles
+                .graphics(blocks, palettes.colors(palettes.selected()), self.order);
         match &self.roof {
             Some(roof) => graphics.with_roof(roof.tiles()).into(),
             None => graphics.into(),
