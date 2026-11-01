@@ -166,10 +166,7 @@ impl Editor {
                     if action(ui, self.loaded.is_some(), "Resize Map…") {
                         self.prepare_resize();
                     }
-                    let change = self
-                        .loaded
-                        .as_ref()
-                        .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some());
+                    let change = self.has_tileset_assets();
                     if action(ui, change, "Change Tileset…") {
                         self.request_tileset_change();
                     }
@@ -187,19 +184,50 @@ impl Editor {
                         self.prepare_palettes();
                     }
                 });
-                menu_popup::menu(ui, "Options", |ui| {
-                    if menu_popup::checkbox(ui, true, &mut self.monochrome, "Monochrome").changed()
-                    {
-                        self.request_tile_mode_reload(&ctx);
-                    }
-                    if menu_popup::checkbox(ui, true, &mut self.allow_priority, "Tile Priority")
+                menu_popup::menu_for_profile(ui, "Options", self.profile, |ui| {
+                    if self.profile == documents::Profile::PlusPlus {
+                        if menu_popup::checkbox(ui, true, &mut self.allow_512, "512 Tiles")
+                            .changed()
+                        {
+                            self.request_tile_mode_reload(&ctx);
+                        }
+                        use polished_map_core::plusplus::BankOrder;
+                        let mut first = self.bank_order == BankOrder::Bank0First;
+                        if menu_popup::checkbox(
+                            ui,
+                            self.allow_512,
+                            &mut first,
+                            "$0:80-FF Before $1:80-FF",
+                        )
                         .changed()
-                        && let Some(tileset) = self.loaded.as_mut().and_then(|l| l.tileset.as_mut())
-                    {
-                        tileset.set_allow_priority(self.allow_priority);
-                    }
-                    if menu_popup::checkbox(ui, true, &mut self.allow_256, "256 Tiles").changed() {
-                        self.request_tile_mode_reload(&ctx);
+                        {
+                            let order = if first {
+                                BankOrder::Bank0First
+                            } else {
+                                BankOrder::Bank1First
+                            };
+                            if let Err(e) = self.change_bank_order(&ctx, order) {
+                                self.error = Some(e);
+                            }
+                        }
+                    } else {
+                        if menu_popup::checkbox(ui, true, &mut self.monochrome, "Monochrome")
+                            .changed()
+                        {
+                            self.request_tile_mode_reload(&ctx);
+                        }
+                        if menu_popup::checkbox(ui, true, &mut self.allow_priority, "Tile Priority")
+                            .changed()
+                            && let Some(tileset) =
+                                self.loaded.as_mut().and_then(|l| l.tileset.as_mut())
+                        {
+                            tileset.set_allow_priority(self.allow_priority);
+                        }
+                        if menu_popup::checkbox(ui, true, &mut self.allow_256, "256 Tiles")
+                            .changed()
+                        {
+                            self.request_tile_mode_reload(&ctx);
+                        }
                     }
                     self.roof_palette_menu(ui);
                     menu_popup::checkbox(

@@ -2,6 +2,28 @@
 use super::{Mark::*, Spec};
 use crate::egui;
 
+pub(super) fn group_for_profile(
+    name: &str,
+    profile: crate::documents::Profile,
+) -> &'static [Spec<'static>] {
+    if name == "Options" && profile == crate::documents::Profile::PlusPlus {
+        const {
+            &[
+                Spec::new("512 Tiles", Check, "", false).mnemonic(egui::Key::T),
+                Spec::new("$0:80-FF Before $1:80-FF", Check, "", false).mnemonic(egui::Key::B),
+                Spec::new("Roof Palettes", Submenu, "", true).mnemonic(egui::Key::F),
+                Spec::new("Auto-Load Events", Check, "", false).mnemonic(egui::Key::E),
+                Spec::new("Auto-Load Special Palettes", Check, "", false).mnemonic(egui::Key::S),
+                Spec::new("Auto-Load Roof Colors", Check, "", true).mnemonic(egui::Key::R),
+                Spec::new("Drag and Drop", Check, "", true).mnemonic(egui::Key::D),
+                Spec::new("Overworld Map Size…", Blank, "", false).mnemonic(egui::Key::O),
+            ]
+        }
+    } else {
+        group(name)
+    }
+}
+
 pub(super) fn group(name: &str) -> &'static [Spec<'static>] {
     match name {
         "File" => {

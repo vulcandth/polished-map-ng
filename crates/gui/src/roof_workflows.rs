@@ -1,4 +1,4 @@
-//! master main-window.cpp::change_roof_cb and option-dialogs.cpp::Roof_Options_Dialog.
+//! Pinned master/plusplus main-window.cpp::change_roof_cb and Roof_Options_Dialog.
 //! LGPL-3.0-only. The 280×80 client area follows the original Option_Dialog math.
 use super::*;
 
@@ -12,11 +12,7 @@ pub(super) struct RoofChoiceForm {
 
 impl Editor {
     pub(super) fn can_change_roof(&self) -> bool {
-        self.roof_choices_available
-            && self
-                .loaded
-                .as_ref()
-                .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some())
+        self.roof_choices_available && self.has_tileset_assets()
     }
 
     pub(super) fn request_roof_change(&mut self) {
@@ -26,16 +22,7 @@ impl Editor {
         let Some(loaded) = &self.loaded else {
             return;
         };
-        let Some(tileset) = &loaded.tileset else {
-            return;
-        };
-        if loaded.blockset.is_none() {
-            return;
-        }
-        if tileset
-            .roof()
-            .is_some_and(|r| r.roof().tileset().is_modified())
-        {
+        if loaded.roof_modified() {
             self.confirm_roof_change = true;
         } else {
             self.prepare_roof_choice();
@@ -43,14 +30,15 @@ impl Editor {
     }
 
     fn prepare_roof_choice(&mut self) {
-        let Some(tileset) = self.loaded.as_ref().and_then(|l| l.tileset.as_ref()) else {
+        let Some(loaded) = &self.loaded else { return };
+        let Some((root, _)) = loaded.tileset_location() else {
             return;
         };
-        match polished_map_project::list_roofs(tileset.root()) {
+        match self.profile.list_roofs(root) {
             Ok(names) => {
-                let selected = tileset
-                    .roof()
-                    .and_then(|r| names.iter().position(|n| n == r.name()))
+                let selected = loaded
+                    .roof_name()
+                    .and_then(|r| names.iter().position(|n| n == r))
                     .map_or(0, |i| i + 1);
                 self.roof_choice_form = Some(RoofChoiceForm {
                     names,
@@ -70,6 +58,43 @@ impl Editor {
         name: Option<&str>,
     ) -> Result<(), String> {
         let loaded = self.loaded.as_mut().ok_or("No map is loaded")?;
+        if let Some(assets) = &mut loaded.plus_assets {
+            let modified = assets.roof.as_ref().is_some_and(|r| r.is_modified());
+            let roof = name
+                .filter(|n| !n.is_empty())
+                .map(|name| {
+                    let mut roof = polished_map_project::plusplus::RoofDocument::open_in_project(
+                        assets.tiles.root(),
+                        name,
+                        assets.tiles.png_platform(),
+                    )?;
+                    if modified {
+                        let value = roof.snapshot(0)?;
+                        roof.apply_batch(&[polished_map_core::plusplus::RawTileCommand::Set {
+                            tile: 0,
+                            value,
+                        }])?;
+                    }
+                    Ok::<_, polished_map_project::ProjectError>(roof)
+                })
+                .transpose()
+                .map_err(|e| e.to_string())?;
+            let graphics = assets.tiles.graphics(
+                assets.blocks.blockset(),
+                assets.palettes.colors(assets.palettes.selected()),
+                assets.order,
+            );
+            let graphics: MapGraphics = match &roof {
+                Some(r) => graphics.with_roof(r.tiles()).into(),
+                None => graphics.into(),
+            };
+            let textures = documents::block_textures(ctx, &graphics)?;
+            assets.roof = roof;
+            loaded.graphics = graphics;
+            self.textures = textures;
+            self.status = format!("Roof: {}", name.unwrap_or("(none)"));
+            return Ok(());
+        }
         let mut draft = loaded
             .tileset
             .as_ref()
@@ -110,9 +135,8 @@ impl Editor {
             let name = self
                 .loaded
                 .as_ref()
-                .and_then(|l| l.tileset.as_ref())
-                .and_then(|t| t.roof())
-                .map_or("Roof", |r| r.name());
+                .and_then(|l| l.roof_name())
+                .unwrap_or("Roof");
             let message = format!("{name}.png has unsaved changes!\n\nChange the roof anyway?");
             let (proceed, cancel) = message_dialog::confirm(
                 ctx,

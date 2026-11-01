@@ -559,6 +559,14 @@ fn real_plusplus_tile_and_roof_gui_edits_save_and_reopen_copied_assets() {
     let original_blocks = plusplus::BlocksetDocument::open_in_project(&root, name).unwrap();
     let original_roof =
         plusplus::RoofDocument::open_in_project(&root, "new_bark", Default::default()).unwrap();
+    let alternate_name = "johto_modern.johto_common";
+    let alternate_tiles =
+        plusplus::TilesetDocument::open_in_project(&root, alternate_name, Default::default())
+            .unwrap();
+    let alternate_blocks =
+        plusplus::BlocksetDocument::open_in_project(&root, alternate_name).unwrap();
+    let alternate_roof =
+        plusplus::RoofDocument::open_in_project(&root, "violet", Default::default()).unwrap();
     let copy = tempfile::tempdir().unwrap();
     let mut paths: Vec<_> = original_tiles.sources().iter().map(|t| t.path()).collect();
     paths.extend([
@@ -567,6 +575,13 @@ fn real_plusplus_tile_and_roof_gui_edits_save_and_reopen_copied_assets() {
         original_roof.source().path(),
     ]);
     paths.extend(original_blocks.collision_path());
+    paths.extend(alternate_tiles.sources().iter().map(|t| t.path()));
+    paths.extend([
+        alternate_blocks.path(),
+        alternate_blocks.attribute_path(),
+        alternate_roof.source().path(),
+    ]);
+    paths.extend(alternate_blocks.collision_path());
     let before: Vec<_> = paths.iter().map(|p| fs::read(p).unwrap()).collect();
     for (path, bytes) in paths.iter().zip(&before) {
         let to = copy.path().join(path.strip_prefix(&root).unwrap());
@@ -591,6 +606,46 @@ fn real_plusplus_tile_and_roof_gui_edits_save_and_reopen_copied_assets() {
     h.step();
     wait(&mut h);
     assert!(h.state().allow_512);
+    // Switch compound tilesets and roof overlays, then return before the edit/save
+    // checks below. All candidates live in the copied project, never the fixture.
+    for (item, from, to) in [
+        ("Change Tileset…", name, alternate_name),
+        ("Change Roof…", "new_bark", "violet"),
+        ("Change Tileset…", alternate_name, name),
+        ("Change Roof…", "violet", "new_bark"),
+    ] {
+        h.get_by_label("Tools").click();
+        h.run();
+        h.get_by_label(item).click();
+        h.run();
+        h.get_by_label(from).click();
+        h.run();
+        h.get_by_label(to).click();
+        h.run();
+        h.get_by_label("OK").click();
+        h.run();
+        assert!(h.state().error.is_none(), "{:?}", h.state().error);
+        let assets = h
+            .state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .plus_assets
+            .as_ref()
+            .unwrap();
+        if item == "Change Tileset…" {
+            assert_eq!(assets.tiles.name(), to);
+            let expected = if to == name {
+                &original_tiles
+            } else {
+                &alternate_tiles
+            };
+            assert_eq!(assets.tiles.model().tiles(), expected.model().tiles());
+        } else {
+            assert_eq!(assets.roof.as_ref().unwrap().name(), to);
+        }
+        assert!(!h.state().is_modified());
+    }
     for roof in [false, true] {
         h.get_by_label("Tools").click();
         h.run();

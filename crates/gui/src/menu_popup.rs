@@ -296,9 +296,18 @@ pub(super) fn config() -> egui::containers::menu::MenuConfig {
 }
 
 pub(super) fn menu<R>(ui: &mut egui::Ui, name: &str, contents: impl FnOnce(&mut egui::Ui) -> R) {
+    menu_for_profile(ui, name, documents::Profile::Master, contents);
+}
+
+pub(super) fn menu_for_profile<R>(
+    ui: &mut egui::Ui,
+    name: &str,
+    profile: documents::Profile,
+    contents: impl FnOnce(&mut egui::Ui) -> R,
+) {
     let response = ui.menu_button(name, |ui| {
         mnemonics::within(ui, name, |ui| {
-            popup_scope(ui, name, specs::group(name), contents)
+            popup_scope(ui, name, specs::group_for_profile(name, profile), contents)
         })
     });
     mnemonics::remember(

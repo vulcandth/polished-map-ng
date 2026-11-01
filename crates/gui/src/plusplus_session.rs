@@ -6,6 +6,8 @@ use polished_map_core::plusplus::BankOrder;
 use polished_map_project::{ProjectError, plusplus};
 
 #[cfg(test)]
+mod switching_tests;
+#[cfg(test)]
 pub(crate) mod tests;
 
 pub(super) struct PlusPlusAssets {
@@ -17,6 +19,34 @@ pub(super) struct PlusPlusAssets {
     pub allow_512: bool,
 }
 impl PlusPlusAssets {
+    pub fn replacement(
+        &self,
+        name: &str,
+        allow_512: bool,
+        order: BankOrder,
+    ) -> Result<Self, ProjectError> {
+        let root = self.tiles.root();
+        let tiles =
+            plusplus::TilesetDocument::open_in_project(root, name, self.tiles.png_platform())?;
+        let blocks = plusplus::BlocksetDocument::open_in_project(root, name)?;
+        let roof = self
+            .roof
+            .as_ref()
+            .map(|r| {
+                plusplus::RoofDocument::open_in_project(root, r.name(), self.tiles.png_platform())
+            })
+            .transpose()?;
+        Ok(Self {
+            allow_512: allow_512
+                || tiles.enables_512_tiles()
+                || blocks.blockset().enables_512_tiles(order),
+            tiles,
+            blocks,
+            roof,
+            order,
+            palettes: self.palettes.clone(),
+        })
+    }
     pub fn graphics(&self, palettes: &plusplus::PaletteDocument) -> MapGraphics {
         self.graphics_for_blocks(self.blocks.blockset(), palettes)
     }
@@ -41,6 +71,33 @@ impl PlusPlusAssets {
 }
 
 impl Loaded {
+    pub(super) fn tileset_location(&self) -> Option<(&std::path::Path, &str)> {
+        if let Some(a) = &self.plus_assets {
+            Some((a.tiles.root(), a.tiles.name()))
+        } else {
+            self.tileset.as_ref().map(|t| (t.root(), t.name()))
+        }
+    }
+    pub(super) fn roof_name(&self) -> Option<&str> {
+        if let Some(a) = &self.plus_assets {
+            a.roof.as_ref().map(|r| r.name())
+        } else {
+            self.tileset
+                .as_ref()
+                .and_then(|t| t.roof())
+                .map(|r| r.name())
+        }
+    }
+    pub(super) fn roof_modified(&self) -> bool {
+        if let Some(a) = &self.plus_assets {
+            a.roof.as_ref().is_some_and(|r| r.is_modified())
+        } else {
+            self.tileset
+                .as_ref()
+                .and_then(|t| t.roof())
+                .is_some_and(|r| r.roof().tileset().is_modified())
+        }
+    }
     pub(super) fn palette_view(&self) -> Option<documents::PaletteRef<'_>> {
         if let Some(assets) = &self.plus_assets {
             Some(documents::PaletteRef::PlusPlus(&assets.palettes))
@@ -164,6 +221,33 @@ impl Loaded {
 }
 
 impl Editor {
+    pub(super) fn change_bank_order(
+        &mut self,
+        ctx: &egui::Context,
+        order: BankOrder,
+    ) -> Result<(), String> {
+        if self.profile != documents::Profile::PlusPlus {
+            return Err("Bank ordering requires plusplus".into());
+        }
+        if let Some(loaded) = &mut self.loaded {
+            let assets = loaded.plus_assets.as_mut().ok_or("No plusplus assets")?;
+            let graphics = assets.tiles.graphics(
+                assets.blocks.blockset(),
+                assets.palettes.colors(assets.palettes.selected()),
+                order,
+            );
+            let graphics: MapGraphics = match &assets.roof {
+                Some(r) => graphics.with_roof(r.tiles()).into(),
+                None => graphics.into(),
+            };
+            let textures = documents::block_textures(ctx, &graphics)?;
+            assets.order = order;
+            loaded.graphics = graphics;
+            self.textures = textures;
+        }
+        self.bank_order = order;
+        Ok(())
+    }
     pub(super) fn save_plusplus_tiles(&mut self) -> bool {
         let Some(assets) = self.loaded.as_mut().and_then(|l| l.plus_assets.as_mut()) else {
             return false;

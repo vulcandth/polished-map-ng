@@ -337,3 +337,10 @@ The shared tile/roof GUI adapts pinned master and plusplus `tileset-window.cpp`,
 reuse pixel editing, clipboard handling, modal hosting and guarded persistence;
 source geometry is retained without porting FLTK painting. Real-project tests
 edit temporary copies and do not distribute project graphics.
+
+Plusplus asset switching and tile-mode menu controls adapt pinned
+`Main_Window::{change_tileset_cb,change_roof_cb,read_metatile_data,
+allow_512_tiles_cb,arrange_0_before_1_cb,update_512_tile_controls}` and
+`option-dialogs.cpp`, under LGPL-3.0-only. Master selector geometry, dirty guards,
+keyboard routing and staged preview construction are reused with explicit
+plusplus discovery and asset documents.

@@ -1,4 +1,4 @@
-//! master Main_Window::change_tileset_cb/force_add_sub_metatiles and
+//! Pinned master/plusplus Main_Window::change_tileset_cb/force_add_sub_metatiles and
 //! Tileset_Options_Dialog. LGPL-3.0-only. Failed replacements preserve the session.
 use super::*;
 use polished_map_project::TilesetChoice;
@@ -24,16 +24,19 @@ impl Editor {
         }
     }
 
-    fn has_tileset_assets(&self) -> bool {
+    pub(super) fn has_tileset_assets(&self) -> bool {
         self.loaded
             .as_ref()
-            .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some())
+            .is_some_and(|l| l.plus_assets.is_some() || l.tileset.is_some() && l.blockset.is_some())
     }
 
     fn tileset_assets_modified(&self) -> bool {
         let Some(loaded) = &self.loaded else {
             return false;
         };
+        if let Some(assets) = &loaded.plus_assets {
+            return assets.is_modified();
+        }
         let Some(tileset) = &loaded.tileset else {
             return false;
         };
@@ -51,6 +54,10 @@ impl Editor {
     /// Source monochrome_cb / allow_256_tiles_cb call change_tileset_cb(NULL):
     /// retain the changed preference even on Cancel, but skip the chooser.
     pub(super) fn request_tile_mode_reload(&mut self, ctx: &egui::Context) {
+        // Plusplus changes the global visibility option before the dirty guard.
+        if let Some(a) = self.loaded.as_mut().and_then(|l| l.plus_assets.as_mut()) {
+            a.allow_512 = self.allow_512;
+        }
         if !self.has_tileset_assets() {
             return;
         }
@@ -66,8 +73,8 @@ impl Editor {
         let name = self
             .loaded
             .as_ref()
-            .and_then(|l| l.tileset.as_ref())
-            .map(|t| t.name().to_owned());
+            .and_then(|l| l.tileset_location())
+            .map(|(_, name)| name.to_owned());
         if let Some(name) = name
             && let Err(error) = self.change_loaded_tileset(ctx, &name)
         {
@@ -76,15 +83,16 @@ impl Editor {
     }
 
     fn prepare_tileset_choice(&mut self) {
-        let Some(tileset) = self.loaded.as_ref().and_then(|l| l.tileset.as_ref()) else {
+        let Some((root, name)) = self.loaded.as_ref().and_then(|l| l.tileset_location()) else {
             return;
         };
-        match polished_map_project::tileset_choices(tileset.root()) {
+        match self
+            .profile
+            .tileset_options(root, None)
+            .map(|options| options.choices().to_vec())
+        {
             Ok(choices) if !choices.is_empty() => {
-                let selected = choices
-                    .iter()
-                    .position(|c| c.name == tileset.name())
-                    .unwrap_or(0);
+                let selected = choices.iter().position(|c| c.name == name).unwrap_or(0);
                 self.tileset_choice_form = Some(TilesetChoiceForm {
                     choices,
                     selected,
@@ -100,6 +108,19 @@ impl Editor {
 
     fn change_loaded_tileset(&mut self, ctx: &egui::Context, name: &str) -> Result<(), String> {
         let loaded = self.loaded.as_mut().ok_or("No map is loaded")?;
+        if let Some(previous) = &loaded.plus_assets {
+            let assets = previous
+                .replacement(name, self.allow_512, self.bank_order)
+                .map_err(|e| e.to_string())?;
+            let graphics = assets.graphics(&assets.palettes);
+            let textures = documents::block_textures(ctx, &graphics)?;
+            self.allow_512 = assets.allow_512;
+            loaded.plus_assets = Some(assets);
+            loaded.graphics = graphics;
+            self.textures = textures;
+            self.finish_tileset_change(name);
+            return Ok(());
+        }
         let previous = loaded.tileset.as_ref().ok_or("No tileset is loaded")?;
         let (tileset, blocks) = previous
             .prepare_replacement_in_mode(
@@ -128,7 +149,6 @@ impl Editor {
                 )
             })
             .collect();
-        let count = textures.len();
         // Preserve all map IDs/history, even when some IDs no longer have definitions.
         self.allow_priority = tileset.allow_priority();
         self.monochrome = tileset.monochrome();
@@ -137,6 +157,12 @@ impl Editor {
         loaded.blockset = Some(blocks);
         loaded.graphics = graphics.into();
         self.textures = textures;
+        self.finish_tileset_change(name);
+        Ok(())
+    }
+
+    fn finish_tileset_change(&mut self, name: &str) {
+        let count = self.textures.len();
         self.block_hotkeys.prune(count);
         self.sidebar_reveal = self.sidebar_reveal.filter(|&id| usize::from(id) < count);
         if usize::from(self.selected) >= count {
@@ -151,7 +177,6 @@ impl Editor {
             self.block_clipboard = None;
         }
         self.status = format!("Tileset: {name} ({count} blocks)");
-        Ok(())
     }
 
     pub(super) fn tileset_choice_dialog(&mut self, ctx: &egui::Context) {

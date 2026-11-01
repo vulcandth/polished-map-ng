@@ -210,6 +210,14 @@ open/reload and saved at exit. Failed reloads preserve the document as above.
 GUI tests compare preflight output hashes/paths before and after cancellation,
 alongside retained pixel edits and all three asset dirty domains.
 
+The staged tileset/roof replacement policy also applies to plusplus. Its 512 Tiles
+option differs from master's format modes: it changes visible/editable rows and
+requests a reload without changing raw pixel or occurrence serialization. NG
+therefore retains that visibility change even if the reload is canceled, as in
+the source, while preserving loaded edits. Bank-order changes rebuild previews
+from the same raw pixels/occurrences without rewriting them. Successful loads
+retain the source's automatic 512-tile enabling thresholds.
+
 ## Palette export labels and validation
 
 Both pinned upstream branches declare six palette sets but initialize the export label table with

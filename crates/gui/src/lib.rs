@@ -1309,10 +1309,7 @@ impl Editor {
             self.prepare_resize();
         }
         icons::separator(ui);
-        let change = self
-            .loaded
-            .as_ref()
-            .is_some_and(|l| l.tileset.is_some() && l.blockset.is_some());
+        let change = self.has_tileset_assets();
         if ui
             .add_enabled(change, Button::new(Icon::ChangeTileset, "Change tileset"))
             .on_hover_text("Change Tileset… (Ctrl/Cmd+H)")

@@ -102,8 +102,10 @@ impl Editor {
         }
         // Map_Options_Dialog inventories roofs when opening a project. Cache
         // availability once; never scan the filesystem while painting controls.
-        self.roof_choices_available = loaded.tileset.as_ref().is_some_and(|tileset| {
-            polished_map_project::list_roofs(tileset.root()).is_ok_and(|names| !names.is_empty())
+        self.roof_choices_available = loaded.tileset_location().is_some_and(|(root, _)| {
+            self.profile
+                .list_roofs(root)
+                .is_ok_and(|names| !names.is_empty())
         });
         self.event_ui.drag = None;
         self.event_ui.form = None;

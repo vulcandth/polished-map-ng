@@ -2838,9 +2838,10 @@ workspace run. These are input/model/rendering checks, not native-window,
 clipboard-service or macOS runtime verification.
 
 This is shared workflow integration, not a separately launchable plusplus editor.
-The production entry point remains master. Plusplus [block controls](#plusplus-block-editor-and-transfers)
-and [tile/roof controls](#plusplus-tile-and-roof-editors) are integrated;
-asset switching, separate launch/preferences, menus/defaults, full workflow
+The production entry point remains master. Plusplus [block controls](#plusplus-block-editor-and-transfers),
+[tile/roof controls](#plusplus-tile-and-roof-editors) and
+[asset switching](#plusplus-asset-switching-and-tile-options) are implemented.
+Separate launch/preferences, remaining menus/defaults, full workflow
 verification and native checks remain in PP3. PP4 still requires original
 application interoperability and native acceptance; these tests do not close it.
 No desktop automation or aesthetic matching is part of this change.
@@ -2948,3 +2949,49 @@ Windows workspace format, Clippy with warnings denied, tests, rustdoc and the
 production adapter graph pass. The five new tile/roof input tests and both
 pinned-project GUI workflows pass on WSL Ubuntu 22.04.5 without a display server.
 Windows offscreen tile/roof rendering checks pass with unchanged master snapshots.
+
+## Plusplus asset switching and tile options
+
+The existing [tileset](../crates/gui/src/tileset_workflows.rs) and
+[roof selectors](../crates/gui/src/roof_workflows.rs) now dispatch through the
+fixed editor profile. Plusplus uses its own discovery, attribute/collision
+documents, compound graphics and roof codecs while retaining the shared 280×80
+client geometry, shortcuts, platform button order and two-stage cancellation.
+Source behavior comes from pinned plusplus `Main_Window::{change_tileset_cb,
+change_roof_cb,read_metatile_data,force_add_sub_metatiles}` and
+`option-dialogs.cpp`. Changing assets never changes the editor profile.
+
+A tileset replacement stages all assets and previews before adoption. It retains
+the current roof name, palette session, map bytes/history and events; removed
+block IDs are pruned from selection/clipboard/hotkeys without rewriting the map.
+Block, raw tile or roof edits trigger the unsaved warning; map/palette edits do
+not. Roof replacement warns only about roof edits and retains the original
+sticky roof dirty flag. Removal clears that domain. Read failures preserve the
+loaded assets, following the existing documented
+[roof](deviations.md#loaded-roof-replacement-safety) and
+[tileset safety policies](deviations.md#loaded-tileset-replacement-safety).
+
+The plusplus Options menu replaces master's Monochrome, Tile Priority and
+256 Tiles rows with 512 Tiles and `$0:80-FF Before $1:80-FF`, including source
+mnemonics. `allow_512_tiles_cb` changes visibility before its guarded same-name
+reload; Cancel retains the option and existing edits. Successful reload can
+re-enable 512 tiles when graphics/attributes require it. Bank-order input is
+disabled while 512 Tiles is off. `arrange_0_before_1_cb` changes only interpretation
+and rendering: it preserves raw pixels, occurrence bytes, dirty flags and
+history, without a reload, confirmation or disk write. Preference persistence
+for these plusplus options belongs to the separate launch/preferences work.
+
+[Input tests](../crates/gui/src/plusplus_session/switching_tests.rs) exercise
+successful replacement and rendering, both cancellation stages, all replaced
+dirty domains, a late roof failure, removal, mode reloads, automatic expansion,
+disabled input and keyboard bank ordering. The copied
+[Polished Crystal workflow](../crates/gui/src/plusplus_session/tests.rs) switches
+between traditional/modern compound Johto tilesets and New Bark/Violet roofs
+before the existing edit/save/reopen checks. Original project inputs remain
+unchanged. Native selectors and original-application acceptance remain PP3/PP4.
+
+Windows workspace format, Clippy with warnings denied, tests, rustdoc and the
+production adapter graph pass. The five switching tests and both real-project
+GUI workflows pass on WSL Ubuntu 22.04.5 without a display server. These checks
+exercise source geometry and input/model behavior; they do not establish native
+dialog or compositor acceptance.

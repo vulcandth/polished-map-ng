@@ -72,6 +72,13 @@ Accept builds the composed preview before publishing the target asset domain;
 roof edits cannot overwrite base tiles, and tile edits cannot discard roof edits.
 The plusplus sheet uses 16-bit selection and the session's explicit bank order.
 
+Asset selectors use profile-specific discovery behind shared forms and dirty
+guards. Plusplus replacements stage raw tiles, occurrence blocks, roof and
+preview together while retaining palettes and the owning map. Bank-order
+changes rebuild the preview from the current assets; they never reload files
+or rewrite occurrences. The 512-tile option controls visibility and requests
+the source's guarded reload. It is not a conversion between asset formats.
+
 PP3 still needs a separate executable/launch configuration and preference namespace,
 using common GUI components and native adapters rather than copying the app.
 A shared internal capability boundary is preparation for U1–U3, not completion of
