@@ -2839,7 +2839,8 @@ clipboard-service or macOS runtime verification.
 
 This is shared workflow integration, not a separately launchable plusplus editor.
 The production entry point remains master. Plusplus [block controls](#plusplus-block-editor-and-transfers)
-are integrated; tileset/roof controls and asset switching, separate launch/preferences, menus/defaults, full workflow
+and [tile/roof controls](#plusplus-tile-and-roof-editors) are integrated;
+asset switching, separate launch/preferences, menus/defaults, full workflow
 verification and native checks remain in PP3. PP4 still requires original
 application interoperability and native acceptance; these tests do not close it.
 No desktop automation or aesthetic matching is part of this change.
@@ -2902,3 +2903,48 @@ but the runner exhausted disk during the final font-test builds. The shared
 on fresh runners and uses level-1 debug information for dev/test profiles. This
 retains source locations in backtraces and all existing verification jobs while
 reducing build storage; release profiles and packaged binaries are unchanged.
+
+## Plusplus tile and roof editors
+
+The [shared tile dialog](../crates/gui/src/tileset_editor.rs) and
+[explicit drafts](../crates/gui/src/tileset_editor/draft.rs) adapt plusplus
+`Tileset_Window`, `Roof_Window` and `map-buttons.cpp` at the pinned revision.
+The raw tile client is 441×304 points with a 273×258 scroll frame, 16-point
+sheet cells, 17-point pixels and horizontal swatches. The roof client remains
+226×228 with reversed thumbnail rows and the source's 146-point frame around
+its 136-point pixel grid. Platform button order follows the original coordinates.
+No original font or FLTK widget-painting work is included.
+
+The sheet exposes 256 or 512 raw tiles, including master's otherwise reserved
+offsets, with bank:offset labels in either configured order. Reopening resets
+selection and scrolling to the first tile. Raw graphics use monochrome editing;
+undefined sheet thumbnails retain their distinct colors. Palette, occurrence
+flip/priority and master monochrome restrictions do not apply to raw tiles.
+Roof selection starts at ordinal six; Delete remains unavailable there.
+
+Shared paint/fill/replace/swap-hue gestures, snapshot paste, live-ID swap,
+drag copy/swap and image clipboard routing call the existing backend commands.
+Roof image paste affects only the selected tile, retaining the existing
+[safe clipping policy](deviations.md#tileset-editing-and-export-safety). Acceptance marks the
+edited domain dirty even without pixel changes, composes its preview before
+publication and preserves other assets and map history. Cancel discards the
+draft. Saves retain the source PNG destinations and conflict guards; no master
+palette-map file is written.
+
+[Input tests](../crates/gui/src/tileset_editor/plusplus_tests.rs) verify geometry,
+both bank orders, ordinal 511, clipped image paste, definition-preserving
+clipboard operations, drag behavior, reopen reset, dirty-domain isolation and
+save conflicts. An offscreen rendered-pixel test checks monochrome and undefined
+RGB values directly. Existing master tile snapshots pass without new baselines.
+The [real-project GUI test](../crates/gui/src/plusplus_session/tests.rs) copies
+Polished Crystal's compound Johto graphics, blocks and New Bark roof to temporary
+storage, then edits, saves and reopens both graphics domains through the shared
+GUI. It compares reloaded pixels and confirms the original inputs are unchanged.
+CI runs this alongside the existing real-project map/palette/block workflow.
+These checks do not establish native clipboard/window or original-application
+acceptance; PP3/PP4 retain those gates.
+
+Windows workspace format, Clippy with warnings denied, tests, rustdoc and the
+production adapter graph pass. The five new tile/roof input tests and both
+pinned-project GUI workflows pass on WSL Ubuntu 22.04.5 without a display server.
+Windows offscreen tile/roof rendering checks pass with unchanged master snapshots.

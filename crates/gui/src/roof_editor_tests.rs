@@ -71,6 +71,8 @@ fn pixels<'a>(h: &'a Harness<'_, Editor>, id: usize) -> &'a [u8; 64] {
         .as_ref()
         .unwrap()
         .draft
+        .master()
+        .unwrap()
         .roof()
         .unwrap()
         .roof()

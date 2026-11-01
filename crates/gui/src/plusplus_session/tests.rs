@@ -544,3 +544,121 @@ fn real_plusplus_open_palette_edit_and_save_copy_use_shared_gui() {
     );
     doc.verify_unchanged().unwrap();
 }
+
+#[test]
+#[ignore = "requires pinned POLISHED_CRYSTAL_FIXTURE; no game assets committed"]
+fn real_plusplus_tile_and_roof_gui_edits_save_and_reopen_copied_assets() {
+    let root = std::env::var_os("POLISHED_CRYSTAL_FIXTURE")
+        .map(PathBuf::from)
+        .expect("set POLISHED_CRYSTAL_FIXTURE")
+        .canonicalize()
+        .unwrap();
+    let name = "johto_traditional.johto_common";
+    let original_tiles =
+        plusplus::TilesetDocument::open_in_project(&root, name, Default::default()).unwrap();
+    let original_blocks = plusplus::BlocksetDocument::open_in_project(&root, name).unwrap();
+    let original_roof =
+        plusplus::RoofDocument::open_in_project(&root, "new_bark", Default::default()).unwrap();
+    let copy = tempfile::tempdir().unwrap();
+    let mut paths: Vec<_> = original_tiles.sources().iter().map(|t| t.path()).collect();
+    paths.extend([
+        original_blocks.path(),
+        original_blocks.attribute_path(),
+        original_roof.source().path(),
+    ]);
+    paths.extend(original_blocks.collision_path());
+    let before: Vec<_> = paths.iter().map(|p| fs::read(p).unwrap()).collect();
+    for (path, bytes) in paths.iter().zip(&before) {
+        let to = copy.path().join(path.strip_prefix(&root).unwrap());
+        fs::create_dir_all(to.parent().unwrap()).unwrap();
+        fs::write(to, bytes).unwrap();
+    }
+    fs::write(
+        copy.path().join("main.asm"),
+        "; isolated integration copy\n",
+    )
+    .unwrap();
+    let map_path = copy.path().join("NewBarkTown.10x9.ablk");
+    let map = fs::read(root.join("maps/NewBarkTown.ablk")).unwrap();
+    fs::write(&map_path, &map).unwrap();
+    let mut h = editor();
+    h.state_mut().prepare_open(map_path.clone());
+    let form = h.state_mut().open_form.as_mut().unwrap();
+    form.tileset = name.into();
+    form.roof = "new_bark".into();
+    h.run();
+    h.key_press(egui::Key::Enter);
+    h.step();
+    wait(&mut h);
+    assert!(h.state().allow_512);
+    for roof in [false, true] {
+        h.get_by_label("Tools").click();
+        h.run();
+        h.get_by_label(if roof {
+            "Edit Roof…"
+        } else {
+            "Edit Tileset…"
+        })
+        .click();
+        h.run();
+        let before = if roof {
+            original_roof.tiles()[6].hues()[0]
+        } else {
+            original_tiles.model().tiles()[0].hues()[0]
+        };
+        let (swatch, hue) = if before == 3 {
+            ("Swatch 1", 0)
+        } else {
+            ("Swatch 4", 3)
+        };
+        h.get_by_label(swatch).click();
+        h.run();
+        h.get_by_label("Pixel 0, 0").click();
+        h.run();
+        h.get_by_label("OK").click();
+        h.run();
+        h.get_by_label("File").click();
+        h.run();
+        h.get_by_label(if roof { "Save Roof" } else { "Save Tileset" })
+            .click();
+        h.run();
+        crate::save_feedback::tests::dismiss(&mut h);
+        assert!(h.state().error.is_none(), "{:?}", h.state().error);
+        let assets = h
+            .state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .plus_assets
+            .as_ref()
+            .unwrap();
+        if roof {
+            let reopened = plusplus::RoofDocument::open_in_project(
+                copy.path(),
+                "new_bark",
+                Default::default(),
+            )
+            .unwrap();
+            assert_eq!(reopened.tiles()[6].hues()[0], hue);
+            assert_eq!(reopened.tiles(), assets.roof.as_ref().unwrap().tiles());
+        } else {
+            let reopened =
+                plusplus::TilesetDocument::open_in_project(copy.path(), name, Default::default())
+                    .unwrap();
+            assert_eq!(reopened.model().tiles()[0].hues()[0], hue);
+            assert_eq!(reopened.model().tiles(), assets.tiles.model().tiles());
+        }
+        assert!(!h.state().is_modified());
+    }
+    assert_eq!(fs::read(map_path).unwrap(), map);
+    for (path, bytes) in paths.iter().zip(before) {
+        assert_eq!(
+            fs::read(path).unwrap(),
+            bytes,
+            "original {}",
+            path.display()
+        );
+    }
+    original_tiles.verify_unchanged().unwrap();
+    original_blocks.verify_unchanged().unwrap();
+}

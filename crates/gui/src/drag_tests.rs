@@ -112,7 +112,14 @@ fn drag_option_gates_sidebar_transfers_but_keeps_click_clipboard_and_map_paintin
 }
 
 fn pixels(h: &Harness<'_, Editor>, roof: bool, id: usize) -> [u8; 64] {
-    let draft = &h.state().tileset_form.as_ref().unwrap().draft;
+    let draft = h
+        .state()
+        .tileset_form
+        .as_ref()
+        .unwrap()
+        .draft
+        .master()
+        .unwrap();
     *if roof {
         &draft.roof().unwrap().roof().tileset().tiles()[id]
     } else {

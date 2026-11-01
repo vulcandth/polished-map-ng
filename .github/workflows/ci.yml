@@ -194,6 +194,6 @@ jobs:
       - run: cargo test -p polished-map-project --locked --test plusplus_events real_event_scripts_edit_save_reopen_without_changing_unowned_source -- --ignored --nocapture
         env:
           POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
-      - run: cargo test -p polished-map-gui --locked --lib real_plusplus_open_palette_edit_and_save_copy_use_shared_gui -- --ignored
+      - run: cargo test -p polished-map-gui --locked --lib real_plusplus_ -- --ignored
         env:
           POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal

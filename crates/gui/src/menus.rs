@@ -173,20 +173,14 @@ impl Editor {
                     if action(ui, change, "Change Tileset…") {
                         self.request_tileset_change();
                     }
-                    let tiles = self.loaded.as_ref().is_some_and(|l| l.tileset.is_some());
+                    let tiles = self.can_edit_tiles();
                     if action(ui, tiles, "Edit Tileset…") {
                         self.prepare_tileset();
                     }
                     if action(ui, self.can_change_roof(), "Change Roof…") {
                         self.request_roof_change();
                     }
-                    let roof = self
-                        .loaded
-                        .as_ref()
-                        .and_then(|l| l.tileset.as_ref())
-                        .and_then(|t| t.roof())
-                        .is_some();
-                    if action(ui, roof, "Edit Roof…") {
+                    if action(ui, self.can_edit_roof(), "Edit Roof…") {
                         self.prepare_roof();
                     }
                     if action(ui, true, "Edit Current Palettes…") {

@@ -1321,10 +1321,7 @@ impl Editor {
             self.request_tileset_change();
         }
         if ui
-            .add_enabled(
-                self.loaded.as_ref().is_some_and(|l| l.tileset.is_some()),
-                Button::new(Icon::Tileset, "Tileset"),
-            )
+            .add_enabled(self.can_edit_tiles(), Button::new(Icon::Tileset, "Tileset"))
             .on_hover_text("Edit Tileset… (Ctrl/Cmd+T)")
             .clicked()
         {
@@ -1341,12 +1338,7 @@ impl Editor {
         {
             self.request_roof_change();
         }
-        let roof = self
-            .loaded
-            .as_ref()
-            .and_then(|l| l.tileset.as_ref())
-            .and_then(|t| t.roof())
-            .is_some();
+        let roof = self.can_edit_roof();
         if ui
             .add_enabled(roof, Button::new(Icon::Roof, "Roof"))
             .on_hover_text("Edit Roof… (Ctrl/Cmd+F)")

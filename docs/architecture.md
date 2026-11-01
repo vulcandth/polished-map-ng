@@ -64,6 +64,14 @@ palette/flip brush changes reuse it. Sidebar copy/swap/resize use the existing
 input routes, translating only profile-independent commands. Plusplus Set/Paint
 requires explicit attributes, with model and preview committed together.
 
+The shared tile/roof dialog retains a concrete master, plusplus raw-tile or
+plusplus roof draft. Pixel gestures, clipboard input and modal handling use the
+same controls; adapters preserve master's palette-bearing snapshots and
+plusplus's independent definition flags. Raw tiles have no palette controls.
+Accept builds the composed preview before publishing the target asset domain;
+roof edits cannot overwrite base tiles, and tile edits cannot discard roof edits.
+The plusplus sheet uses 16-bit selection and the session's explicit bank order.
+
 PP3 still needs a separate executable/launch configuration and preference namespace,
 using common GUI components and native adapters rather than copying the app.
 A shared internal capability boundary is preparation for U1–U3, not completion of

@@ -11,7 +11,7 @@ and design decisions in [architecture](architecture.md).
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | **In progress — active milestone** | PP2 backend complete; PP3 map/event/rendering, asset loading, palette and block workflows implemented. Tile/roof controls, asset switching, launch/preferences and acceptance remain. |
+| 2. Plusplus parity | **In progress — active milestone** | PP2 backend complete; PP3 map/event/rendering, asset loading, palette, block and tile/roof workflows implemented. Asset switching, launch/preferences and acceptance remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
@@ -25,8 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next: PP3 (in progress)** — finish plusplus tile/roof editing and asset
-switching on the integrated asset sessions, then expose the separate entry point
+**Next: PP3 (in progress)** — finish plusplus asset switching on the integrated
+asset sessions, then expose the separate entry point
 with isolated preferences, menus/defaults and measured layout. Carry complete
 edit/save/open workflows through automated input checks before targeted native
 verification. See [GUI integration evidence](compatibility.md#plusplus-shared-gui-integration).
@@ -221,8 +221,8 @@ Do not expose automatic profile switching until the unified-editor milestone.
   GUI/platform code and preserve source layout/sizing; FLTK visual painting is
   excluded by user direction. Shared map/event editing and canvas/Print dispatch
   now accept explicit plusplus documents. Asset loading, palette controls/imports/
-  exports, block editing/transfers/resize and ordered asset saves are integrated.
-  Tile/roof controls, asset switching, launch/preferences, complete workflows and
+  exports, block editing/transfers/resize, tile/roof editing and ordered asset saves
+  are integrated. Asset switching, launch/preferences, complete workflows and
   native checks remain. Verify geometry/input, then necessary
   native behavior. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 — Acceptance:** Differential and real-project edit/save/reopen tests

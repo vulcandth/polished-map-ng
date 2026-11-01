@@ -331,3 +331,9 @@ The shared block GUI and plusplus occurrence controls adapt pinned
 `block-window.cpp`, `map-buttons.cpp` and `Main_Window` clipboard/resize callbacks,
 under LGPL-3.0-only. Existing modal, collision, sidebar and save workflows are
 reused; tile occurrence rendering is shared with the CPU map compositor.
+
+The shared tile/roof GUI adapts pinned master and plusplus `tileset-window.cpp`,
+`roof-window.cpp` and `map-buttons.cpp`, under LGPL-3.0-only. Separate asset drafts
+reuse pixel editing, clipboard handling, modal hosting and guarded persistence;
+source geometry is retained without porting FLTK painting. Real-project tests
+edit temporary copies and do not distribute project graphics.
