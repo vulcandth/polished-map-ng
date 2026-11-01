@@ -385,10 +385,30 @@ impl Editor {
     }
 
     /// Bundled, deterministic fonts for embedding and reproducible headless tests.
-    /// The desktop executable uses `new_native` instead.
+    /// Desktop launchers use `NativeStartup` to add native fonts and migration.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        Self::new_for_profile(cc, documents::Profile::Master)
+    }
+
+    /// Separate plusplus editor with its own settings and eight-palette session.
+    /// The profile is fixed before reading preferences or opening a project.
+    pub fn new_plusplus(cc: &eframe::CreationContext<'_>) -> Self {
+        Self::new_for_profile(cc, documents::Profile::PlusPlus)
+    }
+
+    fn new_for_profile(cc: &eframe::CreationContext<'_>, profile: documents::Profile) -> Self {
         fonts::install_bundled(&cc.egui_ctx);
-        let mut editor = Self::default();
+        let mut editor = Self {
+            profile,
+            ..Self::default()
+        };
+        editor.help_window.profile = profile;
+        if profile == documents::Profile::PlusPlus {
+            editor.unloaded_palettes =
+                polished_map_project::plusplus::PaletteDocument::default().into();
+            editor.status =
+                "Open a map to begin. Development build: plusplus parity is incomplete.".into();
+        }
         editor.restore_preferences(cc.storage);
         cc.egui_ctx.set_theme(if editor.dark {
             egui::Theme::Dark
@@ -438,6 +458,11 @@ impl Editor {
             self.confirm_discard = true;
             return;
         }
+        self.open_map_picker();
+    }
+
+    // Open and its accepted-discard continuation must use the same profile filter.
+    fn open_map_picker(&mut self) {
         if let Some(path) = rfd::FileDialog::new()
             .add_filter(
                 "Map blocks",
@@ -1018,7 +1043,7 @@ impl Editor {
             return;
         }
         if let Some(mut about) = self.about.take() {
-            if !about.show(ctx) {
+            if !about.show(ctx, self.profile) {
                 self.about = Some(about);
             }
             return;
@@ -1100,11 +1125,8 @@ impl Editor {
             self.prepare_open(path);
         } else if let Some(path) = self.event_ui.warp_path.take() {
             self.open_warp(path, ctx);
-        } else if let Some(path) = rfd::FileDialog::new()
-            .add_filter("Map blocks", &["blk", "map"])
-            .pick_file()
-        {
-            self.prepare_open(path);
+        } else {
+            self.open_map_picker();
         }
     }
 

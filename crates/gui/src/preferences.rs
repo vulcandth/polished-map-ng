@@ -6,8 +6,17 @@ use polished_map_project::RoofPaletteLayout;
 use serde::{Deserialize, Serialize};
 
 const KEY: &str = "polished-map-ng.preferences";
+const PLUSPLUS_KEY: &str = "polished-map-ng-plusplus.preferences";
+fn key(profile: documents::Profile) -> &'static str {
+    match profile {
+        documents::Profile::Master => KEY,
+        documents::Profile::PlusPlus => PLUSPLUS_KEY,
+    }
+}
 const MAX_BYTES: usize = 4 * 1024 * 1024;
 pub(super) mod legacy;
+#[cfg(test)]
+mod plusplus_tests;
 
 /// Versioned app settings, deliberately excluding documents, colors and UI drafts.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -33,6 +42,10 @@ struct Preferences {
     allow_priority: bool,
     monochrome: bool,
     allow_256: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    allow_512: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    bank0_first: Option<bool>,
     drag_and_drop: bool,
     overworld_map_size: u16,
     meta128: bool,
@@ -71,6 +84,9 @@ impl Preferences {
             allow_priority: editor.allow_priority,
             monochrome: editor.monochrome,
             allow_256: editor.allow_256,
+            allow_512: (editor.profile == documents::Profile::PlusPlus).then_some(editor.allow_512),
+            bank0_first: (editor.profile == documents::Profile::PlusPlus)
+                .then_some(editor.bank_order == polished_map_core::plusplus::BankOrder::Bank0First),
             drag_and_drop: editor.drag_and_drop,
             overworld_map_size: editor.overworld_map_size,
             meta128: editor.meta128,
@@ -98,12 +114,23 @@ impl Preferences {
         editor.event_ui.auto_load = self.auto_events;
         editor.auto_special_palettes = self.auto_special_palettes;
         editor.auto_roof_colors = self.auto_roof_colors;
-        editor.allow_priority = self.allow_priority;
-        editor.monochrome = self.monochrome;
-        editor.allow_256 = self.allow_256;
+        if editor.profile == documents::Profile::Master {
+            editor.allow_priority = self.allow_priority;
+            editor.monochrome = self.monochrome;
+            editor.allow_256 = self.allow_256;
+        } else {
+            editor.allow_512 = self.allow_512.unwrap_or(false);
+            editor.bank_order = if self.bank0_first.unwrap_or(false) {
+                polished_map_core::plusplus::BankOrder::Bank0First
+            } else {
+                polished_map_core::plusplus::BankOrder::Bank1First
+            };
+        }
         editor.drag_and_drop = self.drag_and_drop;
         editor.overworld_map_size = self.overworld_map_size;
-        editor.meta128 = self.meta128;
+        if editor.profile == documents::Profile::Master {
+            editor.meta128 = self.meta128;
+        }
         editor.show_priority = self.show_priority;
         editor.print_options = self.print_options;
         editor.resize_anchor = self.resize_anchor;
@@ -113,7 +140,7 @@ impl Preferences {
 
 impl Editor {
     pub(super) fn restore_preferences(&mut self, storage: Option<&dyn eframe::Storage>) {
-        let Some(raw) = storage.and_then(|storage| storage.get_string(KEY)) else {
+        let Some(raw) = storage.and_then(|storage| storage.get_string(key(self.profile))) else {
             return;
         };
         let decoded = (raw.len() <= MAX_BYTES)
@@ -136,7 +163,7 @@ impl Editor {
             return;
         }
         match serde_json::to_string(&Preferences::capture(self)) {
-            Ok(raw) if raw.len() <= MAX_BYTES => storage.set_string(KEY, raw),
+            Ok(raw) if raw.len() <= MAX_BYTES => storage.set_string(key(self.profile), raw),
             Ok(_) => {
                 self.status =
                     "Preferences exceed the storage limit; preserving the saved record.".into()

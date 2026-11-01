@@ -2837,11 +2837,11 @@ conflicts preserve the live definition flags as well as file bytes. Existing mas
 workspace run. These are input/model/rendering checks, not native-window,
 clipboard-service or macOS runtime verification.
 
-This is shared workflow integration, not a separately launchable plusplus editor.
-The production entry point remains master. Plusplus [block controls](#plusplus-block-editor-and-transfers),
+The default entry point remains master; the [separate plusplus launcher](#plusplus-launch-settings-and-help)
+uses these shared workflows. Plusplus [block controls](#plusplus-block-editor-and-transfers),
 [tile/roof controls](#plusplus-tile-and-roof-editors) and
 [asset switching](#plusplus-asset-switching-and-tile-options) are implemented.
-Separate launch/preferences, remaining menus/defaults, full workflow
+Remaining menus/defaults, full workflow
 verification and native checks remain in PP3. PP4 still requires original
 application interoperability and native acceptance; these tests do not close it.
 No desktop automation or aesthetic matching is part of this change.
@@ -2978,8 +2978,8 @@ reload; Cancel retains the option and existing edits. Successful reload can
 re-enable 512 tiles when graphics/attributes require it. Bank-order input is
 disabled while 512 Tiles is off. `arrange_0_before_1_cb` changes only interpretation
 and rendering: it preserves raw pixels, occurrence bytes, dirty flags and
-history, without a reload, confirmation or disk write. Preference persistence
-for these plusplus options belongs to the separate launch/preferences work.
+history, without a reload, confirmation or disk write. These options persist in
+the [isolated plusplus settings](#plusplus-launch-settings-and-help).
 
 [Input tests](../crates/gui/src/plusplus_session/switching_tests.rs) exercise
 successful replacement and rendering, both cancellation stages, all replaced
@@ -2995,3 +2995,61 @@ production adapter graph pass. The five switching tests and both real-project
 GUI workflows pass on WSL Ubuntu 22.04.5 without a display server. These checks
 exercise source geometry and input/model behavior; they do not establish native
 dialog or compositor acceptance.
+
+## Plusplus launch, settings and Help
+
+The [separate executable](../crates/gui/src/bin/polished-map-plusplus.rs) selects
+the fixed plusplus profile before constructing the editor. Master remains
+Cargo's default GUI binary. Both call the same
+[native startup](../crates/gui/src/preferences/legacy.rs), native font/platform
+adapters and command-line map opening. Pinned plusplus `main.cpp`, `version.h`,
+`preferences.cpp` and `Main_Window::{Main_Window,initialize,exit_cb}` supply the
+identity, defaults and legacy keys. The initial client remains 800×600 with a
+335×262 minimum. Root titles identify NG++, including after closing a map.
+No automatic profile detection or conversion is introduced.
+
+The source review also found a retained master file filter in Open's accepted
+discard continuation. Both initial Open and that continuation now call the same
+profile-aware chooser: plusplus offers `.ablk`/`.blk`, master `.blk`/`.map`.
+Native chooser display remains a desktop acceptance check.
+[Lifecycle input tests](../crates/gui/src/plusplus_session/tests/lifecycle.rs)
+cancel Open, Close and Exit for each dirty map/event/tile/roof/block domain,
+confirm retained edits and unchanged source bytes, then accept Close and check
+the empty plusplus session/title. A complete New → Save As → Close → Open
+workflow exercises default dimensions/name, unsaved creation, plusplus assets,
+binary save/reopen and preservation of the existing project. The native Save
+chooser is substituted at its returned-path boundary, not operated by these tests.
+
+The app ID `polished-map-ng-plusplus` isolates the native `app.ron` path and
+window record; its JSON preference key is also distinct. The pinned eframe
+WGPU integration passes the viewport app ID to its file-storage constructor.
+Common settings and legacy parsing are shared, while `all512`/`swap01` replace
+master's tile modes and `meta128`. Existing NG files win even if malformed;
+legacy discovery uses only the plusplus filenames and never writes the source.
+[Settings documentation](preferences.md#separate-plusplus-settings) owns paths
+and defaults. Tests use the production plusplus constructor/save callback to
+verify own-key restoration, master isolation, native viewport identity,
+first-launch precedence, malformed-record retention and ignored master flags.
+Project tests cover all three platform path rules and Unix vendor precedence.
+
+The shared [Help viewer](../crates/gui/src/help.rs) selects the branch's complete
+pinned document, retaining source layout, platform substitutions, links and
+the explicit incomplete-parity notice. The plusplus variants each contain 104
+blocks and 15 linked spans. On WSL, compiling the original C++ literals produced
+15,119 Unix bytes and 15,143 Windows bytes exactly matching the converter.
+Master's 95-block/16-link documents remain unchanged. About identifies
+Polished Map++ 2.7.1 and retains upstream, port and asset attribution. Source
+bytes, hashes and LGPL notice are in the [Help asset record](assets.md#branch-specific-help-documentation).
+Windows offscreen Help/About tests pass with unchanged master snapshot baselines;
+plusplus input tests verify branch identity, reference text and shared dismissal.
+
+Windows workspace tests, format, Clippy with warnings denied, rustdoc, both GUI
+binary builds and the production adapter graph pass. WSL Ubuntu 22.04.5 passes
+the shared preference tests, legacy parser/discovery tests and both copied
+Polished Crystal GUI edit/save/reopen workflows, and builds the plusplus binary.
+That binary also remained running through a 15-second isolated Xvfb/Vulkan
+startup check with temporary home/settings directories. Timeout termination
+does not verify graceful shutdown or preference persistence.
+These tests do not establish native storage/restart, compositor placement,
+clipboard or original-application interoperability. Complete PP3 workflows and
+PP4 acceptance remain open; fonts and FLTK painting remain deferred.

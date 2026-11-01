@@ -2,6 +2,41 @@ use super::*;
 use egui_kittest::{Harness, kittest::Queryable};
 
 #[test]
+fn plusplus_help_uses_its_complete_source_and_separate_window_identity() {
+    for windows in [false, true] {
+        let blocks = document(windows, documents::Profile::PlusPlus);
+        let text = blocks
+            .iter()
+            .flat_map(|b| &b.spans)
+            .map(|s| s.text.as_str())
+            .collect::<String>();
+        assert_eq!(blocks.len(), 104);
+        assert!(text.contains("Polished Map++") && text.contains("polishedmap-plusplus"));
+        assert!(text.contains("512") && text.contains(".ablk"));
+        assert!(!text.contains("PROGRAM_") && !text.contains("DIR_SEP"));
+        assert_eq!(
+            blocks
+                .iter()
+                .flat_map(|b| &b.spans)
+                .filter(|s| s.link.is_some())
+                .count(),
+            15
+        );
+    }
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(900.0, 700.0))
+        .build_eframe(|cc| Editor::new_plusplus(cc));
+    h.key_press(egui::Key::F1);
+    h.run();
+    assert!(h.state().help_window.open);
+    assert_eq!(
+        h.state().help_window.builder(Pos2::ZERO).title.as_deref(),
+        Some("Polished Map NG++ Help")
+    );
+    h.get_by_label("Polished Map++ 2.7.1 reference — NG parity is in progress.");
+}
+
+#[test]
 fn complete_bundled_documents_preserve_upstream_text_links_and_platform_paths() {
     for (source, executable, path) in [
         (

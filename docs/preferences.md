@@ -156,6 +156,28 @@ record, so retrying an import requires closing NG and backing up/renaming its
 `app.ron` after correcting the source. This is an explicit first-launch migration,
 not a continuous synchronization mechanism. See [intentional safety differences](deviations.md#legacy-preference-import-safety).
 
+## Separate plusplus settings
+
+The `polished-map-plusplus` launcher uses app ID `polished-map-ng-plusplus` and
+JSON key `polished-map-ng-plusplus.preferences`. Substitute that app ID for
+`polished-map-ng` in the paths above. Its application settings and eframe window
+record are separate from master, with the same validation and preservation rules.
+Neither launcher reads the other profile's settings as a fallback.
+
+The common defaults above also apply to plusplus, except that Tile Priority,
+Monochrome, 256 Tiles and the `meta128` acknowledgment are master-only.
+Plusplus has **512 Tiles** (off) and **$0:80-FF Before $1:80-FF** (off, so bank 1
+comes first in the upper half). Loaded graphics/attributes may enable 512 Tiles.
+Show Priority is available independently of a Tile Priority option. Plusplus
+starts with eight game palettes and has no editable ninth monochrome palette.
+
+First-launch legacy discovery retains the shared precedence but uses
+`polishedmap-plusplus.prefs`, then `Polished Map++.prefs` beside the executable,
+then `Rangi/Polished Map++.prefs` in the platform user-store root above. Common
+keys retain their original meanings; `all512` and `swap01` supply the two
+plusplus options. Master-only keys are ignored. Original files remain read-only.
+See [implementation and verification evidence](compatibility.md#plusplus-launch-settings-and-help).
+
 ## Remaining parity and verification
 
 Legacy discovery/import, the `meta128` workflow and application-record roundtrip

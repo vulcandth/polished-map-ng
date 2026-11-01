@@ -33,6 +33,18 @@ pub(super) enum Profile {
     PlusPlus,
 }
 impl Profile {
+    pub fn app_id(self) -> &'static str {
+        match self {
+            Self::Master => "polished-map-ng",
+            Self::PlusPlus => "polished-map-ng-plusplus",
+        }
+    }
+    pub fn title(self) -> &'static str {
+        match self {
+            Self::Master => crate::WINDOW_TITLE,
+            Self::PlusPlus => "Polished Map NG++ — development",
+        }
+    }
     pub fn discover_map(
         self,
         path: &Path,

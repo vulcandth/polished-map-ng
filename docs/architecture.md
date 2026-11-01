@@ -5,7 +5,8 @@
 `polished-map-core` owns validated models, commands, history and deterministic
 RGB rendering. It has no filesystem, egui or GPU dependency. `project` owns
 discovery, codecs and persistence. `gui` and `cli` depend on these libraries.
-Master is the current application entry point. Plusplus starts as explicit
+Master remains the default application entry point; `polished-map-plusplus`
+launches the separate plusplus editor through the same startup code. Plusplus uses explicit
 `core::plusplus` and `project::plusplus` modules, with separate attribute-bearing
 block documents. Shared code must not erase their differences. Public interfaces
 are experimental until objective four.
@@ -79,8 +80,12 @@ changes rebuild the preview from the current assets; they never reload files
 or rewrite occurrences. The 512-tile option controls visibility and requests
 the source's guarded reload. It is not a conversion between asset formats.
 
-PP3 still needs a separate executable/launch configuration and preference namespace,
-using common GUI components and native adapters rather than copying the app.
+The fixed startup profile selects the app ID, preference key, legacy filenames,
+initial palette session and Help/About identity before settings are restored.
+Both launchers share native window setup, font selection and platform adapters.
+Their app IDs isolate eframe's window records as well as application settings;
+neither launcher imports the other profile's preferences. See
+[startup evidence](compatibility.md#plusplus-launch-settings-and-help).
 A shared internal capability boundary is preparation for U1–U3, not completion of
 profile detection, switching or unified write safety. Both format regression suites
 must remain active during that later integration.

@@ -40,7 +40,8 @@ pub use graphics::{
     load_master_graphics, load_master_map_graphics, write_new_png, write_png, write_png_export,
 };
 pub use legacy_preferences::{
-    LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_preferences,
+    LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_plusplus_preferences,
+    find_legacy_preferences,
 };
 pub use map_palette_plan::MapPalettePlan;
 pub use map_sizes::{MapSizeOptions, inspect_map_sizes};

@@ -1,7 +1,8 @@
-//! First-launch migration of master preference keys; original stores are read-only.
+//! First-launch migration of pinned master/plusplus keys; original stores are read-only.
 use super::*;
 use polished_map_project::{
-    LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_preferences,
+    LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_plusplus_preferences,
+    find_legacy_preferences,
 };
 use std::path::Path;
 
@@ -24,12 +25,22 @@ struct Imported {
 /// wins, including unreadable/future records. No legacy source is ever written.
 #[derive(Default)]
 pub struct NativeStartup {
+    profile: documents::Profile,
     imported: Option<Imported>,
     error: Option<String>,
 }
 
 impl NativeStartup {
     pub fn discover() -> Self {
+        Self::discover_profile(documents::Profile::Master)
+    }
+
+    /// Discover only plusplus settings and construct a separately identified app.
+    pub fn discover_plusplus() -> Self {
+        Self::discover_profile(documents::Profile::PlusPlus)
+    }
+
+    fn discover_profile(profile: documents::Profile) -> Self {
         let user = if cfg!(windows) {
             LegacyUserLocation::Windows {
                 roaming_appdata: polished_map_platform::legacy_roaming_appdata(),
@@ -48,23 +59,29 @@ impl NativeStartup {
             .map_err(LegacyPreferenceError::from)
             .and_then(|exe| {
                 Self::load(
+                    profile,
                     exe.parent().unwrap_or(Path::new(".")),
                     &user,
-                    eframe::storage_dir("polished-map-ng")
+                    eframe::storage_dir(profile.app_id())
                         .map(|p| p.join("app.ron"))
                         .as_deref(),
                 )
             });
-        Self::from_result(result)
+        Self::from_result(profile, result)
     }
 
-    fn from_result(result: Result<Option<Imported>, LegacyPreferenceError>) -> Self {
+    fn from_result(
+        profile: documents::Profile,
+        result: Result<Option<Imported>, LegacyPreferenceError>,
+    ) -> Self {
         match result {
             Ok(imported) => Self {
+                profile,
                 imported,
                 error: None,
             },
             Err(error) => Self {
+                profile,
                 imported: None,
                 error: Some(error.to_string()),
             },
@@ -72,6 +89,7 @@ impl NativeStartup {
     }
 
     fn load(
+        profile: documents::Profile,
         executable_dir: &Path,
         user: &LegacyUserLocation,
         ng_file: Option<&Path>,
@@ -81,17 +99,21 @@ impl NativeStartup {
         {
             return Ok(None);
         }
-        let Some(source) = find_legacy_preferences(executable_dir, user)? else {
+        let source = match profile {
+            documents::Profile::Master => find_legacy_preferences(executable_dir, user),
+            documents::Profile::PlusPlus => find_legacy_plusplus_preferences(executable_dir, user),
+        }?;
+        let Some(source) = source else {
             return Ok(None);
         };
-        Imported::read(source).map(Some)
+        Imported::read(profile, source).map(Some)
     }
 
     /// Initial normal geometry precedes fullscreen/maximization. This lets
     /// eframe capture a usable restore size before the first native transition.
     pub fn viewport(&self) -> egui::ViewportBuilder {
         let mut viewport = egui::ViewportBuilder::default()
-            .with_app_id("polished-map-ng")
+            .with_app_id(self.profile.app_id())
             .with_icon(crate::application_icon())
             .with_inner_size(self.imported.as_ref().map_or([800.0, 600.0], |i| i.size))
             .with_min_inner_size([335.0, 262.0]);
@@ -102,9 +124,29 @@ impl NativeStartup {
     }
 
     pub fn create_editor(self, cc: &eframe::CreationContext<'_>) -> Editor {
-        let mut editor = Editor::new_native(cc);
+        let mut editor = Editor::new_for_profile(cc, self.profile);
+        editor.native_fonts = Some(fonts::install_native(&cc.egui_ctx));
         self.apply(&mut editor, cc.storage, &cc.egui_ctx);
         editor
+    }
+
+    /// Run the fixed-profile native application, sharing platform/window setup.
+    pub fn run(self) -> eframe::Result {
+        eframe::run_native(
+            self.profile.title(),
+            eframe::NativeOptions {
+                viewport: self.viewport(),
+                persist_window: true,
+                ..Default::default()
+            },
+            Box::new(move |cc| {
+                let mut editor = self.create_editor(cc);
+                if let Some(path) = std::env::args_os().nth(1) {
+                    editor.prepare_open(path.into());
+                }
+                Ok(Box::new(editor))
+            }),
+        )
     }
 
     fn apply(
@@ -114,7 +156,12 @@ impl NativeStartup {
         ctx: &egui::Context,
     ) {
         // A native storage file could appear between preflight and construction.
-        if storage.and_then(|s| s.get_string(KEY)).is_some() || !editor.preferences_writable {
+        if self.profile != editor.profile
+            || storage
+                .and_then(|s| s.get_string(key(self.profile)))
+                .is_some()
+            || !editor.preferences_writable
+        {
             return;
         }
         if let Some(error) = self.error {
@@ -151,17 +198,19 @@ impl NativeStartup {
 }
 
 impl Imported {
-    fn read(source: PathBuf) -> Result<Self, LegacyPreferenceError> {
+    fn read(profile: documents::Profile, source: PathBuf) -> Result<Self, LegacyPreferenceError> {
         let legacy = LegacyPreferences::read(&source)?;
-        Self::from_legacy(&legacy, source)
+        Self::from_legacy(profile, &legacy, source)
     }
 
     fn from_legacy(
+        profile: documents::Profile,
         legacy: &LegacyPreferences,
         source: PathBuf,
     ) -> Result<Self, LegacyPreferenceError> {
         use LegacyPreferenceError::Invalid;
         let boolean = |key, default| legacy.integer(key, i32::from(default)).map(|v| v != 0);
+        let master = profile == documents::Profile::Master;
         let theme = legacy.integer("theme", 4)?;
         let mode = legacy.integer("mode", 0)?;
         let palette = legacy.integer("palettes", 1)?;
@@ -214,12 +263,14 @@ impl Imported {
             auto_events: boolean("events", true)?,
             auto_special_palettes: boolean("special", true)?,
             auto_roof_colors: boolean("roofs", true)?,
-            allow_priority: boolean("prioritize", false)?,
-            monochrome: boolean("monochrome", false)?,
-            allow_256: boolean("all256", false)?,
+            allow_priority: master && boolean("prioritize", false)?,
+            monochrome: master && boolean("monochrome", false)?,
+            allow_256: master && boolean("all256", false)?,
+            allow_512: (!master).then(|| boolean("all512", false)).transpose()?,
+            bank0_first: (!master).then(|| boolean("swap01", false)).transpose()?,
             drag_and_drop: boolean("drag", true)?,
             overworld_map_size: capacity as u16,
-            meta128: boolean("meta128", false)?,
+            meta128: master && boolean("meta128", false)?,
             show_priority: boolean("priority", true)?,
             resize_anchor: ResizeAnchor::ALL[anchor as usize],
             recent_maps,

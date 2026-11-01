@@ -52,12 +52,7 @@ fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
     let mut h = Harness::builder()
         .with_size(crate::egui::vec2(800.0, 600.0))
         .with_theme(crate::egui::Theme::Light)
-        .build_eframe(|cc| {
-            let mut editor = Editor::new(cc);
-            editor.profile = Profile::PlusPlus;
-            editor.unloaded_palettes = plusplus::PaletteDocument::default().into();
-            editor
-        });
+        .build_eframe(|cc| Editor::new_plusplus(cc));
     let (tx, rx) = std::sync::mpsc::channel();
     tx.send(Ok(loaded)).unwrap();
     h.state_mut().loading = Some(rx);

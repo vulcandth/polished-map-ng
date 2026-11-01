@@ -1,4 +1,4 @@
-//! Pinned master Help_Window and HTML_View, LGPL-3.0-only.
+//! Pinned master/plusplus Help_Window and HTML_View, LGPL-3.0-only.
 //! Full attributed help text is generated from the bundled original by help_assets.py.
 use super::*;
 use serde::Deserialize;
@@ -54,10 +54,24 @@ struct Block {
     spans: Vec<Span>,
 }
 
-fn document(windows: bool) -> &'static [Block] {
+fn document(windows: bool, profile: documents::Profile) -> &'static [Block] {
     static WINDOWS: OnceLock<Vec<Block>> = OnceLock::new();
     static UNIX: OnceLock<Vec<Block>> = OnceLock::new();
-    let (document, source) = if windows {
+    static PLUS_WINDOWS: OnceLock<Vec<Block>> = OnceLock::new();
+    static PLUS_UNIX: OnceLock<Vec<Block>> = OnceLock::new();
+    let (document, source) = if profile == documents::Profile::PlusPlus {
+        if windows {
+            (
+                &PLUS_WINDOWS,
+                include_str!("../assets/help/plusplus-windows.json"),
+            )
+        } else {
+            (
+                &PLUS_UNIX,
+                include_str!("../assets/help/plusplus-unix.json"),
+            )
+        }
+    } else if windows {
         (&WINDOWS, include_str!("../assets/help/windows.json"))
     } else {
         (&UNIX, include_str!("../assets/help/unix.json"))
@@ -73,6 +87,7 @@ fn viewport_id() -> egui::ViewportId {
 }
 
 pub(super) struct HelpWindow {
+    pub(super) profile: documents::Profile,
     pub(super) open: bool,
     reposition: bool,
     reset_scroll: bool,
@@ -87,6 +102,7 @@ pub(super) struct HelpWindow {
 impl Default for HelpWindow {
     fn default() -> Self {
         Self {
+            profile: documents::Profile::Master,
             open: false,
             reposition: false,
             reset_scroll: false,
@@ -101,6 +117,13 @@ impl Default for HelpWindow {
 }
 
 impl HelpWindow {
+    fn title(&self) -> &'static str {
+        if self.profile == documents::Profile::PlusPlus {
+            "Polished Map NG++ Help"
+        } else {
+            TITLE
+        }
+    }
     pub(super) fn open(&mut self) {
         self.open = true;
         self.reposition = true;
@@ -109,7 +132,7 @@ impl HelpWindow {
 
     fn builder(&self, parent: Pos2) -> egui::ViewportBuilder {
         let builder = egui::ViewportBuilder::default()
-            .with_title(TITLE)
+            .with_title(self.title())
             .with_inner_size(self.native_size)
             .with_resizable(true);
         if self.reposition {
@@ -130,7 +153,7 @@ impl HelpWindow {
             // Egui's automatic embedded viewport currently omits a close button
             // and ignores position. Use its ordinary nonmodal Window fallback.
             let mut open = self.open;
-            let mut window = egui::Window::new(TITLE)
+            let mut window = egui::Window::new(self.title())
                 .id(egui::Id::unique("embedded-help-window"))
                 .open(&mut open)
                 .collapsible(false)
@@ -199,9 +222,14 @@ impl HelpWindow {
                         scroll = scroll.vertical_scroll_offset(0.0);
                     }
                     let result = scroll.show(ui, |ui| {
-                        ui.label(egui::RichText::new(REFERENCE_NOTE).size(13.0));
+                        let note = if self.profile == documents::Profile::PlusPlus {
+                            "Polished Map++ 2.7.1 reference — NG parity is in progress."
+                        } else {
+                            REFERENCE_NOTE
+                        };
+                        ui.label(egui::RichText::new(note).size(13.0));
                         ui.add_space(8.0);
-                        for block in document(self.windows_paths) {
+                        for block in document(self.windows_paths, self.profile) {
                             render_block(ui, block);
                         }
                     });

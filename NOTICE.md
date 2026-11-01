@@ -344,3 +344,12 @@ allow_512_tiles_cb,arrange_0_before_1_cb,update_512_tile_controls}` and
 `option-dialogs.cpp`, under LGPL-3.0-only. Master selector geometry, dirty guards,
 keyboard routing and staged preview construction are reused with explicit
 plusplus discovery and asset documents.
+
+The separate plusplus launcher, settings defaults/migration and Help/About
+identity adapt pinned plusplus `main.cpp`, `version.h`, `preferences.cpp` and
+`Main_Window` initialization/exit behavior, under LGPL-3.0-only. They reuse
+master's native startup, validated settings codec and read-only FLTK parser.
+Original plusplus `res/help.html` and generated platform-specific documents
+retain their source bytes, provenance and copyright in
+`crates/gui/assets/help/NOTICE.md`; the shared converter/viewer adapts both
+branches without distributing external linked content or game graphics.

@@ -21,6 +21,19 @@ keyboard and headless counterparts where applicable.
 | Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Drag and Drop; Overworld Map Size | Remaining native/persistence gaps are tracked in `preferences.md`. |
 | Help | Help/F1 with bundled source documentation; About/command-/ with project and icon attribution | Original application artwork is included with attribution; native functional acceptance remains open and appearance matching is deferred. |
 
+## Separate plusplus menu differences
+
+The separate plusplus launcher shares the eight menu groups and input routing.
+Its Options menu replaces Tile Priority, Monochrome and 256 Tiles with 512 Tiles
+and `$0:80-FF Before $1:80-FF`; bank ordering is disabled while 512 Tiles is off.
+Show Priority operates on occurrence attributes. File and asset actions use
+the explicit plusplus document adapters rather than changing the active profile.
+Help displays the complete pinned Polished Map++ 2.7.1 reference, and About
+identifies the plusplus port while retaining shared attribution. Help remains
+reference documentation, not a declaration that every parity gate has passed.
+See [settings](preferences.md#separate-plusplus-settings) and
+[verification evidence](compatibility.md#plusplus-launch-settings-and-help).
+
 ## Geometry and interaction gates
 
 Open accepts extra map IDs after the selected dimensions with the original

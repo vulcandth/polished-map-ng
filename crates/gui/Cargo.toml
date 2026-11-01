@@ -1,5 +1,6 @@
 [package]
 name = "polished-map-gui"
+default-run = "polished-map-gui"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

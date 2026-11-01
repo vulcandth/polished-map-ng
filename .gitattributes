@@ -14,6 +14,7 @@
 *.xpm text eol=lf
 # Preserve the immutable upstream help blob, including its original CRLF bytes.
 crates/gui/assets/help/master-help.html.inc -text
+crates/gui/assets/help/plusplus-help.html.inc -text whitespace=cr-at-eol
 # Retain the hash-verified upstream license, including its original trailing space.
 LICENSES/egui-fonts/NotoSansSymbols2-OFL.txt whitespace=-blank-at-eol
 # Preserve audited third-party crate bytes; their original formatting is retained.

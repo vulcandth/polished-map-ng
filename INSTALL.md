@@ -39,6 +39,16 @@ cargo run -p polished-map-gui --locked --
 cargo run -p polished-map-cli --locked -- --help
 ```
 
+The default GUI is master. To launch the separate experimental plusplus editor:
+
+```text
+cargo run -p polished-map-gui --bin polished-map-plusplus --locked --
+```
+
+Both launchers accept an optional map path after `--`. Plusplus uses separate
+settings and does not automatically switch formats. Its parity acceptance is
+still in progress; the published master tester packages do not include it.
+
 For optimized binaries:
 
 ```text

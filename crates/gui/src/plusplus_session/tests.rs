@@ -10,16 +10,13 @@ use std::{
     time::{Duration, Instant},
 };
 
+mod lifecycle;
+
 fn editor() -> Harness<'static, Editor> {
     Harness::builder()
         .with_size(Vec2::new(800.0, 600.0))
         .with_theme(egui::Theme::Light)
-        .build_eframe(|cc| {
-            let mut editor = Editor::new(cc);
-            editor.profile = documents::Profile::PlusPlus;
-            editor.unloaded_palettes = plusplus::PaletteDocument::default().into();
-            editor
-        })
+        .build_eframe(|cc| Editor::new_plusplus(cc))
 }
 fn wait(h: &mut Harness<'_, Editor>) {
     let deadline = Instant::now() + Duration::from_secs(10);

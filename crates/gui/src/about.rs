@@ -1,4 +1,4 @@
-//! Main_Window About content and Modal_Dialog::refresh at pinned master.
+//! Main_Window About identity and Modal_Dialog::refresh at pinned master/plusplus.
 //! LGPL-3.0-only. Original artwork attribution: assets/artwork/NOTICE.md.
 use super::*;
 
@@ -70,20 +70,36 @@ impl Default for AboutDialog {
 }
 
 impl AboutDialog {
-    pub(super) fn show(&mut self, ctx: &egui::Context) -> bool {
+    pub(super) fn show(&mut self, ctx: &egui::Context, profile: documents::Profile) -> bool {
+        let plus = profile == documents::Profile::PlusPlus;
+        let title = if plus {
+            "About Polished Map NG++"
+        } else {
+            TITLE
+        };
+        let subject = if plus {
+            SUBJECT.replacen("Polished Map NG", "Polished Map NG++", 1)
+        } else {
+            SUBJECT.into()
+        };
+        let message = if plus {
+            MESSAGE.replacen("Polished Map 4.7.1", "Polished Map++ 2.7.1", 1)
+        } else {
+            MESSAGE.into()
+        };
         let mut close = false;
         dialog_host::client(ctx, egui::Id::unique("about"), |ui| {
-            dialog_host::heading(ui, TITLE);
+            dialog_host::heading(ui, title);
             let text = ui.visuals().text_color();
             let font_size = self.font_size;
             let heading_font = egui::FontId::proportional(font_size + 4.0);
             let body_font = egui::FontId::proportional(font_size);
             let heading = ui
                 .painter()
-                .layout(SUBJECT.into(), heading_font.clone(), text, 620.0);
+                .layout(subject.clone(), heading_font.clone(), text, 620.0);
             let body = ui
                 .painter()
-                .layout(MESSAGE.into(), body_font.clone(), text, 620.0);
+                .layout(message.clone(), body_font.clone(), text, 620.0);
             let layout = Layout::measured(heading.size().x, body.size(), font_size);
             let (area, _) = ui.allocate_exact_size(layout.size, Sense::hover());
             #[cfg(test)]
@@ -96,12 +112,12 @@ impl AboutDialog {
             artwork::Image::App.paint(ui, translated(layout.icon));
             ui.put(
                 translated(layout.heading),
-                egui::Label::new(egui::RichText::new(SUBJECT).font(heading_font))
+                egui::Label::new(egui::RichText::new(&subject).font(heading_font))
                     .halign(egui::Align::Center),
             );
             ui.put(
                 translated(layout.body),
-                egui::Label::new(egui::RichText::new(MESSAGE).font(body_font))
+                egui::Label::new(egui::RichText::new(&message).font(body_font))
                     .wrap()
                     .halign(egui::Align::Min),
             );
@@ -175,6 +191,25 @@ mod tests {
         h.get_by_role_and_label(egui::Role::MenuItem, "About")
             .click();
         h.run();
+    }
+
+    #[test]
+    fn plusplus_about_retains_attribution_and_closes_through_shared_controls() {
+        let mut h = Harness::builder()
+            .with_size(Vec2::new(900.0, 700.0))
+            .build_eframe(|cc| Editor::new_plusplus(cc));
+        open(&mut h);
+        h.get_by_label("About Polished Map NG++");
+        h.get_by_label(&SUBJECT.replacen("Polished Map NG", "Polished Map NG++", 1));
+        h.get_by_label(&MESSAGE.replacen("Polished Map 4.7.1", "Polished Map++ 2.7.1", 1));
+        let area = h.state().about.as_ref().unwrap().bounds.unwrap();
+        let ok = h.get_by_label("OK").rect();
+        assert_eq!(ok.size(), Vec2::new(80.0, 22.0));
+        assert_eq!(area.bottom() - ok.bottom(), 10.0);
+        h.key_press(egui::Key::Escape);
+        h.run();
+        assert!(h.state().about.is_none());
+        assert!(h.state().profile == documents::Profile::PlusPlus);
     }
 
     #[test]

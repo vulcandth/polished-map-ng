@@ -1,0 +1,135 @@
+R"(<html>
+<head>
+<title>)" PROGRAM_NAME R"( Help</title>
+</head>
+<body>
+<h1>)" PROGRAM_NAME R"(</h1>
+<p>Copyright © )" CURRENT_YEAR " " PROGRAM_AUTHOR R"(</p>
+<p>A map and tileset editor for <a href="https://github.com/Rangi42/polishedcrystal">Polished Crystal</a> and <a href="https://github.com/TheFakeMateo/RedPlusPlus">Pokémon Red++</a>.</p>
+<p>Inspired by <a href="https://github.com/yenatch/crowdmap">crowdmap</a> (now defunct), but implemented with C++ and <a href="http://www.fltk.org/">FLTK</a>, and with more functions for graphics editing.</p>
+<p>Source code is available at <a href="https://github.com/Rangi42/polished-map/tree/plusplus">https://github.com/Rangi42/polished-map/tree/plusplus</a> under the <a href="https://github.com/Rangi42/polished-map/blob/plusplus/LICENSE.md">LGPL v3.0</a> license.</p>
+<hr>
+<p>)" PROGRAM_NAME R"( assumes that you have applied two major edits to a <a href="https://github.com/pret/pokecrystal">pokecrystal</a> project:</p>
+<ul>
+<li><a href="https://github.com/pret/pokecrystal/wiki/Expand-tilesets-from-192-to-255-tiles">Expand tilesets from 192 to 255 tiles</a>: By default you cannot use tiles $60 to $7F or $E0 to $FF, since they are reserved for text character tiles.</li>
+<li><a href="https://github.com/pret/pokecrystal/wiki/Allow-tiles-to-have-different-attributes-in-different-blocks-(including-X-and-Y-flip)" ")" R"(">Allow tiles to have different attributes in different blocks (including X and Y flip)</a>: By default colors are assigned to each tile with a palette_map.asm file, and will be the same for that tile in every block; and the X flip, Y flip, and priority attributes are not available.</li>
+</ul>
+<p>These two edits take more advantage of the Game Boy Color's hardware capabilities, and let you create more detailed maps than with standard pokecrystal. Projects including <a href="https://github.com/Rangi42/polishedcrystal">Polished Crystal</a>, <a href="https://github.com/TheFakeMateo/RedPlusPlus">Red++</a>, <a href="https://github.com/pkmncoraldev/pokecoral">Coral</a> , and <a href="https://github.com/BloodlessNS/ancientruby">Ancient Ruby</a> use these features.</p>
+<hr>
+<p>)" PROGRAM_NAME R"( displays and edits .ablk map files. (The extension has been renamed from .blk so that you can use it side-by-side with standard pokecrystal projects.) It supports all the standard ways to open a file:</p>
+<ul>
+<li><b>Initial:</b> Double-click an .ablk file in File Explorer. (Run install.bat to associate .ablk files with )" PROGRAM_NAME R"(.)</li>
+<li><b>Menu bar:</b> Run )" PROGRAM_EXE R"( and select the File&nbsp;→&nbsp;Open… menu item.</li>
+<li><b>Toolbar:</b> Run )" PROGRAM_EXE R"( and click the Open toolbar button.</li>
+<li><b>Keyboard:</b> Run )" PROGRAM_EXE R"( and press Ctrl+O.</li>
+<li><b>File Explorer:</b> Drag an .ablk file onto )" PROGRAM_EXE R"(.</li>
+<li><b>GUI:</b> Drag an .ablk file onto an open )" PROGRAM_NAME R"( window.</li>
+<li><b>Command Prompt:</b> Pass the .ablk filename as an argument to )" PROGRAM_EXE R"(:<br><font size="2"><kbd>)" PROGRAM_EXE "&nbsp;pokecrystal" DIR_SEP "maps" DIR_SEP R"(SomeMap.ablk</kbd></font></li>
+</ul>
+<p>You can include a map's size and tileset in its filename as <var>MapName</var>.<var>WIDTH</var>x<var>HEIGHT</var>.<var>TILESET</var>.ablk; for instance, NewBarkTown.10x9.ablk, UnionCave1F.cave.ablk, or House1.4x4.house.ablk.</p>
+<p>Otherwise )" PROGRAM_NAME R"( will try to guess a map's size and tileset from the assembly code. This can fail if the map and tileset filenames do not exactly correspond to their constants in the code. Then you'll just have to enter the size and tileset yourself.</p>
+<p>Be sure to set the right options (via the Options menu) before creating or opening a map. The available options are:</p>
+<ul>
+<li><b>512 Tiles:</b> Allow as many tile IDs as the GBC hardware will support. VRAM has two banks, 0 and 1, each of which allows 256 tile IDs from $00 to $FF. Regular tileset graphics load into $0:00-7F and $1:00-7F, with $0:80-FF used for font tiles and $1:80-FF for NPCs' walking sprites. If your project is modified to use any of $80-FF for map tiles, this option will let you do so.</li>
+<li><b>$0:80-FF Before $1:80-FF:</b> The first 128 tiles in the tileset graphic load into $0:00-7F; the next 128 load into $1:00-7F. )" PROGRAM_NAME R"( expects an extra 128 after that to load into $1:80-FF, and a further 128 into $0:80-FF, since that's what Polished Crystal does. This option will swap them so $0:80-FF comes before $1:80-FF.</li>
+<li><b>Roof Palettes:</b> pokecrystal loads two pairs of ROOF colors per map group by default: one for Morn + Day, one for Night. If your project is modified to use different ROOF colors (such as by <a href="https://github.com/pret/pokecrystal/wiki/Make-evening-the-fourth-time-of-day">making evening the fourth time of day</a>, with its own third pair of Custom colors), this option will let you choose which palettes they load into.</li>
+<li><b>Auto-Load Events:</b> Automatically loads the .asm file corresponding to the map if one exists. For example, if you open maps)" DIR_SEP "PalletTown.ablk, then this option will automatically try to load maps" DIR_SEP R"(PalletTown.asm.</li>
+<li><b>Auto-Load Special Palettes:</b> Automatically loads a .pal file associated with the map if one exists. Association is based on the map, landmark, or tileset. For example, if you open maps)" DIR_SEP "IcePath1F.ablk with the tileset gfx" DIR_SEP "tilesets" DIR_SEP "ice_path.png and the landmark in data" DIR_SEP "maps" DIR_SEP "maps.asm for IcePath is ICE_PATH, then this option will automatically load maps" DIR_SEP "IcePath1F.pal (corresponding to the map), or else gfx" DIR_SEP "tilesets" DIR_SEP "ice_path.pal (the landmark), or else gfx" DIR_SEP "tilesets" DIR_SEP R"(ice_path.pal (the tileset). You can also use Data&nbsp;→&nbsp;Load&nbsp;Palettes… to manually load any such .pal file.</li>
+<li><b>Auto-Load Roof Colors:</b> Automatically loads colors for the ROOF palette of the map's group, if the group was detected from constants)" DIR_SEP "map_constants.asm and the roof palettes are defined in gfx" DIR_SEP "tilesets" DIR_SEP "roofs.pal (or tilesets" DIR_SEP R"(roof.pal for backwards compatibility with older pokecrystal versions). You can also use Data&nbsp;→&nbsp;Load&nbsp;Roof&nbsp;Colors to do this manually.</li>
+<li><b>Drag and Drop:</b> Enables drag-and-drop for blocks in the sidebar, tiles in the tileset editor or roof editor, and colors in the palette editor. Left-click and drag one item onto another to swap them; hold Ctrl and do the same to copy.</li>
+<li><b>Overworld Map Size:</b> The overworld map block buffer in WRAM stores the entire current map, padded by 3 blocks on each side. )" PROGRAM_NAME R"( warns you if you save a map that would overflow this buffer. If your project modifies the buffer size, this option will let you configure the warning.</li>
+</ul>
+<hr>
+<p>Most functions are available via the menu bar, the toolbar, or shortcut keys.</p>
+<p>The sidebar array uses the mouse:</p>
+<ul>
+<li>Left-click to select a block.</li>
+<li>Left-click and drag one block onto another to swap them.</li>
+<li>Hold Ctrl, left-click and drag one block onto another to copy it.</li>
+<li>Right-click to edit a block.</li>
+<li>Middle-click and drag to scroll.</li>
+</ul>
+<p>The map area also uses the mouse, but it depends on the Mode. In Block mode (Ctrl+Shift+B or the toolbar's Headbutt tree button):</p>
+<ul>
+<li>Left-click or drag to place the selected block in the sidebar array.</li>
+<li>Right-click to select a block from the map.</li>
+<li>Middle-click and drag to scroll.</li>
+<li>Hold Shift and left-click a group of blocks to flood-fill it with the selected block.</li>
+<li>Hold Ctrl and left-click a block to replace every block of that type with the selected type.</li>
+<li>Hold Alt and left-click a block to swap every block of that type and every block of the selected type.</li>
+</ul>
+<p>And in Event mode (Ctrl+Shift+T or the toolbar's Kris button):</p>
+<ul>
+<li>Hover over an event to see a tooltip with its full definition.</li>
+<li>Left-click and drag an event to move it. You can drag into the three-block margin around a map.</li>
+<li>Right-click to edit an event.</li>
+<li>Double-click an event to open the .asm file in the system text editor. If you use Notepad++, Notepad2, Notepad3, Sublime Text, or VS Code on Windows, then it will also open to the specific event's line number. If you edit and save the .asm file, you can reload it in )" PROGRAM_NAME R"( with Data&nbsp;→&nbsp;Reload&nbsp;Event&nbsp;Script or Ctrl+R.</li>
+<li>Middle-click and drag to scroll.</li>
+<li>Hold Shift and left-click a warp event to open the map it warps to. The map's filename is guessed from the warp event's constant. For example, a warp to UNION_CAVE_B1F will try to open UnionCaveB1F.ablk.</li>
+</ul>
+<p>The arrow keys, or the mouse's scrolling function if it has one, will scroll the sidebar array or the map area (whichever one the cursor is over).</p>
+<p>The number keys 0-9 are hotkeys for the sidebar array.</p>
+<ul>
+<li>Press Ctrl+0-9 to assign that key to the selected block.</li>
+<li>Press 0-9 to select the block assigned to that key.</li>
+<li>Press Ctrl+Shift+0-9 to unassign that key.</li>
+</ul>
+<p>In Block mode, you can view and edit the map's blocks. In Event mode, you can view and edit the map's events (NPCs, warps, signs, etc). Events are also visible in Block mode if View&nbsp;→&nbsp;Show&nbsp;Events is checked.</p>
+<hr>
+<p>The block editor window has some simple mouse controls:</p>
+<ul>
+<li>Left-click the tileset array to select a tile.</li>
+<li>Left-click or drag inside the block area to place the selected tile in the block.</li>
+<li>Right-click inside the block area to select a tile from the block.</li>
+</ul>
+<p>And some more complex ones for placing multiple tiles at once, with the selected tile as the top-left:</p>
+<ul>
+<li>Hold Ctrl and left-click to place a contiguous 2x2 square.</li>
+<li>Hold Ctrl+Shift and left-click to place a contiguous 4x4 square.</li>
+<li>Hold Alt and left-click to place a sequential 2+2 line in a square.</li>
+<li>Hold Alt+Shift and left-click to place a sequential 4+4+4+4 line in a square.</li>
+<li>Hold Ctrl+Alt and left-click to place a sequential 2-2 line in a square, with the rows going backwards.</li>
+<li>Hold Ctrl+Alt+Shift and left-click to place a sequential 4-4-4-4 line in a square, with the rows going backwards.</li>
+<li>Hold Shift and left-click to place two sequential tiles in a checkerboard 2/2 square.</li>
+</ul>
+<p>When you place tiles, they use the currently selected attributes. The attributes are:</p>
+<ul>
+<li><b>X flip:</b> Flip the tile horizontally. Alt+X will toggle this.</li>
+<li><b>Y flip:</b> Flip the tile vertically. Alt+Y will toggle this.</li>
+<li><b>Priority:</b> Display the tile above sprites, including NPCs and the player. (The lightest hue will be transparent to sprites.) Alt+P will toggle this.</li>
+<li><b>Color:</b> The tile's color. The TEXT color is meant for menus and text boxes, and should not be used for map tiles. Alt+1 through Alt+8 will select the <i>N</i>th palette.</li>
+</ul>
+<p>Selecting the X or Y flip attributes also affects placement of multiple tiles at once with Ctrl/Alt/Shift, so large symmetrical designs can be placed more easily.</p>
+<p>You can also edit the collision values of the block's four quadrants. Old-style collision.bin files and up-to-date collision.asm files are both supported.</p>
+<hr>
+<p>The tileset editor window (Ctrl+T or the toolbar's green puzzle piece button) has more mouse controls, similar to the map editor:</p>
+<ul>
+<li>Left-click the tileset array to select a tile.</li>
+<li>Left-click and drag one tile onto another to swap them.</li>
+<li>Hold Ctrl, left-click and drag one tile onto another to copy it.</li>
+<li>Left-click a swatch, or press the 1/2/3/4 keys, to choose a hue.</li>
+<li>Left-click or drag inside the pixel area to draw with the chosen hue in the selected tile.</li>
+<li>Right-click inside the pixel area to choose a hue from the tile.</li>
+<li>Hold Shift and left-click a group of pixels to flood-fill it with the selected hue.</li>
+<li>Hold Ctrl and left-click a pixel to replace every pixel of that hue with the selected hue.</li>
+<li>Hold Alt and left-click a pixel to swap every pixel of that hue and every pixel of the selected hue.</li>
+</ul>
+<p>Ctrl+C, Ctrl+V, and Ctrl+X will copy, paste, and swap tiles respectively, just like they do for blocks in the map editor's sidebar array. Delete will clear a tile's graphics.</p>
+<p>The Copy and Paste buttons, or Ctrl+Shift+C and Ctrl+Shift+V, will copy and paste the tile graphics using the system clipboard. Tile graphics can be pasted as any color; they get converted to four-hue monochrome. (So you can easily rip tiles from full-color game screenshots.)</p>
+<hr>
+<p>Tilesets can be augmented by roofs. A roof is assumed to take up the nine tiles from $0A to $12. When a roof is loaded, it visibly affects the map and the block editor, but not the tileset editor. Thus you can edit the tileset without the loaded roof overwriting those nine tiles.</p>
+<p>When you open a map the roof selection always defaults to none, even if the map uses a roof. This is because pokecrystal only loads roofs for certain tilesets, which are <a href="https://github.com/pret/pokecrystal/wiki/Hard-coded-logic#tilesets-that-have-per-mapgroup-roofs">hard-coded</a> instead of being defined in a data table. This makes it impractical to automatically detect a map's roof type, so you'll have to manually specify it.</p>
+<p>The roof editor window (Ctrl+F or the toolbar's green roof button) is similar to the tileset editor. However, it does not support Delete.</p>
+<hr>
+<p>The colors' exact appearance depends on the current palettes: MORN, DAY, NITE, INDOOR, or CUSTOM. The default set of palettes' colors is based on pokecrystal, but custom ones will be read from gfx)" DIR_SEP "tilesets" DIR_SEP "bg_tiles.pal (or tilesets" DIR_SEP R"(bg.pal for backwards compatibility with older pokecrystal versions) if it exists.</p>
+<p>When a map <var>MapName</var>.ablk is opened with the tileset <var>tileset</var>.png, )" PROGRAM_NAME R"( will automatically load <var>tileset</var>.pal if it exists, and <var>MapName</var>.pal if it exists. If the map is part of the <var>LANDMARK</var> landmark, it will automatically load <var>landmark</var>.pal if it exists. This is convenient for maps like Ice Path with custom palettes. This can be disabled via Options&nbsp;→&nbsp;Auto-Load&nbsp;Special&nbsp;Palettes.</p>
+<p>The palette editor window (Ctrl+Shift+L or the toolbar's lightbulb button) has some mouse controls:</p>
+<ul>
+<li>Left-click the palette array to select a color.</li>
+<li>Left-click and drag one color onto another to swap them.</li>
+<li>Hold Ctrl, left-click and drag one color onto another to copy it.</li>
+</ul>
+<p>Ctrl+C, Ctrl+V, and Ctrl+X will copy, paste, and swap colors respectively, just like they do for blocks and tiles in their own editor dialogs.</p>
+<p>You can export the edited colors of all the palettes at once to a single .pal file. Do not overwrite an existing file with this; instead, copy+paste only the palettes you need. For example, bg_tiles.pal defines MORN, DAY, NITE, and INDOOR palettes (as well as separate WATER colors for MORN/DAY and NITE), and ice_path.pal defines a CUSTOM palette.</p>
+</body>
+</html>)"

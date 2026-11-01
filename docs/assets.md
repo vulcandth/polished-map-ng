@@ -322,6 +322,17 @@ is unavailable. Synthetic bold and native rasterization remain unfinished; see
 `compatibility.md`. The digit masks above are independent of font discovery.
 System font files have not been copied or redistributed.
 
+## Branch-specific Help documentation
+
+The shared Help viewer bundles the complete pinned master and plusplus
+`res/help.html` C++ literals, original byte hashes and generated Windows/Unix
+display blocks. These are LGPL-3.0-only documentation adaptations; attribution
+and immutable source links are in the [Help notice](../crates/gui/assets/help/NOTICE.md).
+`tools/help_assets.py` verifies both sources and all four generated documents;
+the reference CI job compares expansions with compiled original C++ for each
+branch. No external linked page content or game graphics are bundled here.
+See [viewer evidence](compatibility.md#plusplus-launch-settings-and-help).
+
 ## Polished Crystal fixture policy
 
 The plusplus fixture is Rangi42/polishedcrystal at

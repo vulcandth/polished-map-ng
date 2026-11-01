@@ -10,7 +10,8 @@ fn every_master_setting_maps_to_the_ng_record_without_document_state() {
     let input = legacy(
         "theme:9\nmode:1\ngrid:0\nrulers:1\nzoom:1\nids:1\nhex:1\npriority:0\ngameboy:1\nevent:0\nwarp-ids:0\ntransparent:1\npalettes:5\nmonochrome:1\nprioritize:1\nall256:1\nroof-palettes:4\nevents:0\nspecial:0\nroofs:0\ndrag:0\noverworld-map:4096\nmeta128:1\nprint-grid:1\nprint-ids:1\nprint-priority:1\nprint-events:1\nprint-warp-ids:1\nresize-anchor:8\nrecent0:one.blk\nrecent1:two.blk\nrecent2:one.blk\nx:-100\ny:70\nw:920\nh:680\nfullscreen:1\nmaximized:1\n",
     );
-    let imported = Imported::from_legacy(&input, "original.prefs".into()).unwrap();
+    let imported =
+        Imported::from_legacy(documents::Profile::Master, &input, "original.prefs".into()).unwrap();
     assert_eq!(imported.size, [920.0, 680.0]);
     assert_eq!(imported.position, Some([-100.0, 70.0]));
     assert!(imported.state.fullscreen && imported.state.maximized && !imported.theme_fallback);
@@ -63,9 +64,118 @@ fn every_master_setting_maps_to_the_ng_record_without_document_state() {
 }
 
 #[test]
+fn plusplus_legacy_keys_defaults_and_identity_use_separate_startup() {
+    let profile = documents::Profile::PlusPlus;
+    let default = Imported::from_legacy(profile, &legacy(""), "defaults".into()).unwrap();
+    let h = Harness::builder().build_eframe(|cc| Editor::new_plusplus(cc));
+    assert_eq!(default.settings, Preferences::capture(h.state()));
+    assert_eq!(default.size, [800.0, 600.0]);
+    let input = legacy(
+        "theme:9\nmode:1\ngrid:0\nrulers:1\nzoom:1\nids:1\nhex:1\npriority:0\ngameboy:1\nevent:0\nwarp-ids:0\ntransparent:1\npalettes:5\nall512:1\nswap01:1\nroof-palettes:4\nevents:0\nspecial:0\nroofs:0\ndrag:0\noverworld-map:4096\nprint-grid:1\nprint-ids:1\nprint-priority:1\nprint-events:1\nprint-warp-ids:1\nresize-anchor:8\nrecent0:one.ablk\nrecent1:two.ablk\nw:940\nh:690\nfullscreen:1\nmaximized:1\nmonochrome:2147483648\nall256:2147483648\nprioritize:2147483648\nmeta128:2147483648\n",
+    );
+    let imported = Imported::from_legacy(profile, &input, "plusplus.prefs".into()).unwrap();
+    assert_eq!(imported.settings.allow_512, Some(true));
+    assert_eq!(imported.settings.bank0_first, Some(true));
+    assert!(
+        !imported.settings.allow_256
+            && !imported.settings.monochrome
+            && !imported.settings.allow_priority
+            && !imported.settings.meta128
+    );
+    let expected = imported.settings.clone();
+    let startup = NativeStartup::from_result(profile, Ok(Some(imported)));
+    let viewport = startup.viewport();
+    assert_eq!(viewport.app_id.as_deref(), Some("polished-map-ng-plusplus"));
+    assert_eq!(viewport.inner_size, Some(Vec2::new(940.0, 690.0)));
+    assert_eq!(viewport.min_inner_size, Some(Vec2::new(335.0, 262.0)));
+    assert_ne!(viewport.app_id, NativeStartup::default().viewport().app_id);
+    let h = Harness::builder().build_eframe(|cc| startup.create_editor(cc));
+    assert!(h.state().profile == profile);
+    assert_eq!(Preferences::capture(h.state()), expected);
+    assert_eq!(
+        h.state().palette_document().colors(PaletteSet::Day).len(),
+        8
+    );
+    for bad in [
+        "all512:2147483648",
+        "swap01:2147483648",
+        "palettes:6",
+        "overworld-map:0",
+    ] {
+        assert!(Imported::from_legacy(profile, &legacy(bad), "bad".into()).is_err());
+    }
+}
+
+#[test]
+fn plusplus_migration_respects_own_ng_file_and_storage_race_without_reading_master() {
+    let dir = tempfile::tempdir().unwrap();
+    let profile = documents::Profile::PlusPlus;
+    let original = dir.path().join("polishedmap-plusplus.prefs");
+    let bytes = b"; FLTK preferences file format 1.0\n; vendor: Rangi\n; application: polishedmap-plusplus\n[.]\nall512:1\nswap01:1\n";
+    std::fs::write(&original, bytes).unwrap();
+    std::fs::write(
+        dir.path().join("polishedmap.prefs"),
+        b"invalid master prefs",
+    )
+    .unwrap();
+    let user = LegacyUserLocation::Windows {
+        roaming_appdata: None,
+    };
+    let ng = dir.path().join("plus-app.ron");
+    let mut storage = super::super::tests::MemoryStorage::default();
+    eframe::Storage::set_string(&mut storage, KEY, "invalid master record".into());
+    let startup = NativeStartup::from_result(
+        profile,
+        NativeStartup::load(profile, dir.path(), &user, Some(&ng)),
+    );
+    let mut h = Harness::builder().build_eframe(|cc| {
+        cc.storage = Some(&storage);
+        startup.create_editor(cc)
+    });
+    assert!(h.state().allow_512 && h.state().preferences_writable);
+    let mut editor = std::mem::take(h.state_mut());
+    drop(h);
+    eframe::App::save(&mut editor, &mut storage);
+    let saved = eframe::Storage::get_string(&storage, PLUSPLUS_KEY).unwrap();
+    assert_eq!(
+        eframe::Storage::get_string(&storage, KEY).unwrap(),
+        "invalid master record"
+    );
+    let startup = NativeStartup::from_result(
+        profile,
+        NativeStartup::load(profile, dir.path(), &user, Some(&ng)),
+    );
+    eframe::Storage::set_string(
+        &mut storage,
+        PLUSPLUS_KEY,
+        r#"{"version":1,"allow_512":false,"bank0_first":false}"#.into(),
+    );
+    let h = Harness::builder().build_eframe(|cc| {
+        cc.storage = Some(&storage);
+        startup.create_editor(cc)
+    });
+    assert!(
+        !h.state().allow_512
+            && h.state().bank_order == polished_map_core::plusplus::BankOrder::Bank1First
+    );
+    assert!(!h.state().status.contains("Imported"));
+    drop(h);
+    for contents in [saved.as_bytes(), b"invalid own NG file".as_slice()] {
+        std::fs::write(&ng, contents).unwrap();
+        assert!(
+            NativeStartup::load(profile, dir.path(), &user, Some(&ng))
+                .unwrap()
+                .is_none()
+        );
+        assert_eq!(std::fs::read(&ng).unwrap(), contents);
+    }
+    assert_eq!(std::fs::read(&original).unwrap(), bytes);
+}
+
+#[test]
 fn defaults_enums_themes_and_invalid_values_are_explicit() {
     assert_eq!(
-        Imported::from_legacy(&legacy(""), "defaults".into())
+        Imported::from_legacy(documents::Profile::Master, &legacy(""), "defaults".into())
             .unwrap()
             .settings,
         Preferences::default()
@@ -74,6 +184,7 @@ fn defaults_enums_themes_and_invalid_values_are_explicit() {
         for roof in 0..5 {
             for anchor in 0..9 {
                 let p = Imported::from_legacy(
+                    documents::Profile::Master,
                     &legacy(&format!(
                         "palettes:{palette}\nroof-palettes:{roof}\nresize-anchor:{anchor}\n"
                     )),
@@ -91,7 +202,12 @@ fn defaults_enums_themes_and_invalid_values_are_explicit() {
         }
     }
     for theme in 0..12 {
-        let p = Imported::from_legacy(&legacy(&format!("theme:{theme}\n")), "test".into()).unwrap();
+        let p = Imported::from_legacy(
+            documents::Profile::Master,
+            &legacy(&format!("theme:{theme}\n")),
+            "test".into(),
+        )
+        .unwrap();
         assert_eq!(p.theme_fallback, !matches!(theme, 4 | 9));
         assert_eq!(p.settings.dark, theme == 9);
     }
@@ -109,7 +225,8 @@ fn defaults_enums_themes_and_invalid_values_are_explicit() {
         "recent0:bad\\",
     ] {
         assert!(
-            Imported::from_legacy(&legacy(body), "test".into()).is_err(),
+            Imported::from_legacy(documents::Profile::Master, &legacy(body), "test".into())
+                .is_err(),
             "{body}"
         );
     }
@@ -125,7 +242,10 @@ fn ng_file_precedence_first_launch_save_and_failure_retention() {
     let user = LegacyUserLocation::Windows {
         roaming_appdata: None,
     };
-    let startup = NativeStartup::from_result(NativeStartup::load(dir.path(), &user, Some(&ng)));
+    let startup = NativeStartup::from_result(
+        documents::Profile::Master,
+        NativeStartup::load(documents::Profile::Master, dir.path(), &user, Some(&ng)),
+    );
     let mut h = Harness::builder().build_eframe(|cc| {
         let mut editor = Editor::new(cc);
         startup.apply(&mut editor, None, &cc.egui_ctx);
@@ -141,18 +261,18 @@ fn ng_file_precedence_first_launch_save_and_failure_retention() {
     for existing in [b"valid NG record".as_slice(), b"malformed NG record"] {
         std::fs::write(&ng, existing).unwrap();
         assert!(
-            NativeStartup::load(dir.path(), &user, Some(&ng))
+            NativeStartup::load(documents::Profile::Master, dir.path(), &user, Some(&ng))
                 .unwrap()
                 .is_none()
         );
         assert_eq!(std::fs::read(&ng).unwrap(), existing);
     }
     let mut editor = Editor::default();
-    NativeStartup::from_result(Err(LegacyPreferenceError::Invalid("bad file"))).apply(
-        &mut editor,
-        None,
-        &h.ctx,
-    );
+    NativeStartup::from_result(
+        documents::Profile::Master,
+        Err(LegacyPreferenceError::Invalid("bad file")),
+    )
+    .apply(&mut editor, None, &h.ctx);
     assert!(!editor.preferences_writable && editor.status.contains("preserving"));
     let previous = eframe::Storage::get_string(&storage, KEY);
     eframe::App::save(&mut editor, &mut storage);

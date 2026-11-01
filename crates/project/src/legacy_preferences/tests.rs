@@ -174,3 +174,74 @@ fn unix_vendor_directory_precedence_and_mac_location_match_source() {
         Some(mac)
     );
 }
+
+#[test]
+fn plusplus_uses_its_own_names_with_shared_platform_precedence() {
+    for platform in 0..3 {
+        let dir = tempfile::tempdir().unwrap();
+        let exe = dir.path().join("bin");
+        let home = dir.path().join("home");
+        fs::create_dir_all(&exe).unwrap();
+        let (user, root) = match platform {
+            0 => (
+                LegacyUserLocation::Windows {
+                    roaming_appdata: Some(home.clone()),
+                },
+                home.clone(),
+            ),
+            1 => (
+                LegacyUserLocation::Mac {
+                    home: Some(home.clone()),
+                },
+                home.join("Library/Preferences"),
+            ),
+            _ => (
+                LegacyUserLocation::Unix {
+                    home: Some(home.clone()),
+                    xdg_config_home: None,
+                },
+                home.join(".fltk"),
+            ),
+        };
+        let vendor = root.join("Rangi");
+        fs::create_dir_all(&vendor).unwrap();
+        let master = exe.join("polishedmap.prefs");
+        fs::write(&master, file("grid:1\n")).unwrap();
+        fs::write(vendor.join(FILE_NAME), file("grid:1\n")).unwrap();
+        assert_eq!(find_legacy_plusplus_preferences(&exe, &user).unwrap(), None);
+        let user_file = vendor.join("Polished Map++.prefs");
+        fs::write(&user_file, file("all512:1\n")).unwrap();
+        assert_eq!(
+            find_legacy_plusplus_preferences(&exe, &user).unwrap(),
+            Some(user_file)
+        );
+        if platform == 2 {
+            fs::create_dir_all(home.join(".config/Rangi")).unwrap();
+            assert_eq!(
+                find_legacy_plusplus_preferences(&exe, &user).unwrap(),
+                None,
+                "vendor directory masks old store"
+            );
+        }
+        let display = exe.join("Polished Map++.prefs");
+        fs::write(&display, file("swap01:1\n")).unwrap();
+        assert_eq!(
+            find_legacy_plusplus_preferences(&exe, &user).unwrap(),
+            Some(display.clone())
+        );
+        let short = exe.join("polishedmap-plusplus.prefs");
+        fs::write(&short, b"malformed first store").unwrap();
+        assert_eq!(
+            find_legacy_plusplus_preferences(&exe, &user).unwrap(),
+            Some(short.clone())
+        );
+        assert!(LegacyPreferences::read(&short).is_err());
+        assert_eq!(
+            find_legacy_preferences(&exe, &user).unwrap(),
+            Some(master.clone())
+        );
+        assert_eq!(fs::read(master).unwrap(), file("grid:1\n"));
+        assert_eq!(fs::read(display).unwrap(), file("swap01:1\n"));
+        assert_eq!(fs::read(short).unwrap(), b"malformed first store");
+    }
+}

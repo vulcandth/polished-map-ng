@@ -1,4 +1,4 @@
-//! Read-only migration of pinned master preferences.cpp and FLTK 1.4.5's
+//! Read-only migration of pinned master/plusplus preferences.cpp and FLTK 1.4.5's
 //! Fl_Preferences file format. LGPL-3.0-only adaptation; see NOTICE.md.
 use std::{
     collections::BTreeMap,
@@ -41,7 +41,30 @@ pub fn find_legacy_preferences(
     executable_dir: &Path,
     user: &LegacyUserLocation,
 ) -> Result<Option<PathBuf>, LegacyPreferenceError> {
-    for name in ["polishedmap.prefs", FILE_NAME] {
+    find_for(executable_dir, user, "polishedmap.prefs", FILE_NAME)
+}
+
+/// Pinned plusplus preferences.cpp uses its own executable/display names and
+/// never falls back to the master store. The FLTK location rules are shared.
+pub fn find_legacy_plusplus_preferences(
+    executable_dir: &Path,
+    user: &LegacyUserLocation,
+) -> Result<Option<PathBuf>, LegacyPreferenceError> {
+    find_for(
+        executable_dir,
+        user,
+        "polishedmap-plusplus.prefs",
+        "Polished Map++.prefs",
+    )
+}
+
+fn find_for(
+    executable_dir: &Path,
+    user: &LegacyUserLocation,
+    exe_name: &str,
+    file_name: &str,
+) -> Result<Option<PathBuf>, LegacyPreferenceError> {
+    for name in [exe_name, file_name] {
         let path = executable_dir.join(name);
         if path.try_exists()? {
             return Ok(Some(path));
@@ -78,7 +101,7 @@ pub fn find_legacy_preferences(
     let Some(root) = root else {
         return Ok(None);
     };
-    let path = root.join("Rangi").join(FILE_NAME);
+    let path = root.join("Rangi").join(file_name);
     Ok(path.try_exists()?.then_some(path))
 }
 

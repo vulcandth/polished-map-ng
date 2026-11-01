@@ -1,4 +1,4 @@
-"""Verify/rebuild the complete pinned master help document, without network access.
+"""Verify/rebuild the complete pinned master/plusplus help documents, without network access.
 
 The bundled original is a C++ concatenation of literals and version constants.
 Expand only that known grammar, then parse its HTML subset into display blocks.
@@ -19,12 +19,12 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "crates/gui/assets/help"
 
 
-def expand(source, windows):
+def expand(source, windows, profile="master"):
     # C++ translation normalizes physical CRLF source lines before raw literals.
     source = source.replace("\r\n", "\n")
     constants = {
-        "PROGRAM_NAME": "Polished Map", "CURRENT_YEAR": "2021",
-        "PROGRAM_AUTHOR": "Rangi", "PROGRAM_EXE": "polishedmap.exe" if windows else "polishedmap",
+        "PROGRAM_NAME": "Polished Map++" if profile == "plusplus" else "Polished Map", "CURRENT_YEAR": "2021",
+        "PROGRAM_AUTHOR": "Rangi", "PROGRAM_EXE": ("polishedmap-plusplus" if profile == "plusplus" else "polishedmap") + (".exe" if windows else ""),
         "DIR_SEP": "\\" if windows else "/",
     }
     output = []
@@ -126,7 +126,7 @@ class Document(HTMLParser):
             self.add_text(re.sub(r"[ \t\r\n]+", " ", data))
 
 
-def compare_cpp(checkout, cxx, git, provenance, source):
+def compare_cpp(checkout, cxx, git, provenance, source, profile):
     def blob(path):
         return subprocess.check_output([git, "-C", str(checkout), "show", f"{provenance['commit']}:{path}"])
 
@@ -161,7 +161,7 @@ int main() { const char* body =
                 command.append("-DHELP_WINDOWS")
             subprocess.run(command, check=True)
             actual = subprocess.check_output([str(output)]).replace(b"\r\n", b"\n")
-            expected = expand(source.decode("utf8"), windows).encode("utf8")
+            expected = expand(source.decode("utf8"), windows, profile).encode("utf8")
             if actual != expected:
                 raise ValueError("C++ and Python help expansions differ")
             print(f"Original C++ {'Windows' if windows else 'Unix'} expansion: {len(actual)} matching bytes")
@@ -173,27 +173,31 @@ def main():
     parser.add_argument("--reference-checkout", type=Path)
     parser.add_argument("--cxx", default="c++")
     parser.add_argument("--git", default="git")
+    parser.add_argument("--profile", choices=["master", "plusplus"])
     args = parser.parse_args()
-    provenance = json.loads((ASSETS / "provenance.json").read_text(encoding="utf8"))
-    source = (ASSETS / "master-help.html.inc").read_bytes()
-    if hashlib.sha256(source).hexdigest() != provenance["sha256"]:
-        raise ValueError("Pinned help source hash mismatch")
-    if args.reference_checkout:
-        compare_cpp(args.reference_checkout, args.cxx, args.git, provenance, source)
-    for platform in ["windows", "unix"]:
-        document = Document()
-        document.feed(expand(source.decode("utf8"), platform == "windows"))
-        document.close()
-        if document.block or document.tags or document.in_body:
-            raise ValueError("Unclosed document")
-        data = json.dumps(document.blocks, ensure_ascii=False, indent=2) + "\n"
-        path = ASSETS / f"{platform}.json"
-        if args.write:
-            path.write_text(data, encoding="utf8", newline="\n")
-        elif path.read_text(encoding="utf8") != data:
-            raise ValueError(f"Rebuild {path.name} using --write")
-        links = sum(span["link"] is not None for block in document.blocks for span in block["spans"])
-        print(f"Verified {platform}: {len(document.blocks)} blocks, {links} linked spans")
+    profiles = [args.profile] if args.profile else (["master"] if args.reference_checkout else ["master", "plusplus"])
+    for profile in profiles:
+        prefix = "plusplus-" if profile == "plusplus" else ""
+        provenance = json.loads((ASSETS / ("plusplus-provenance.json" if profile == "plusplus" else "provenance.json")).read_text(encoding="utf8"))
+        source = (ASSETS / f"{profile}-help.html.inc").read_bytes()
+        if hashlib.sha256(source).hexdigest() != provenance["sha256"]:
+            raise ValueError("Pinned help source hash mismatch")
+        if args.reference_checkout:
+            compare_cpp(args.reference_checkout, args.cxx, args.git, provenance, source, profile)
+        for platform in ["windows", "unix"]:
+            document = Document()
+            document.feed(expand(source.decode("utf8"), platform == "windows", profile))
+            document.close()
+            if document.block or document.tags or document.in_body:
+                raise ValueError("Unclosed document")
+            data = json.dumps(document.blocks, ensure_ascii=False, indent=2) + "\n"
+            path = ASSETS / f"{prefix}{platform}.json"
+            if args.write:
+                path.write_text(data, encoding="utf8", newline="\n")
+            elif path.read_text(encoding="utf8") != data:
+                raise ValueError(f"Rebuild {path.name} using --write")
+            links = sum(span["link"] is not None for block in document.blocks for span in block["spans"])
+            print(f"Verified {profile}/{platform}: {len(document.blocks)} blocks, {links} linked spans")
 
 
 if __name__ == "__main__":
