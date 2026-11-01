@@ -54,6 +54,7 @@ pub(super) fn fixture(
         recent_path: None,
         trailing_blocks: 0,
         palette_plan: None,
+        plus_assets: None,
         events: None,
         event_warning: None,
         document: document.into(),

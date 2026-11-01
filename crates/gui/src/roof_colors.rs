@@ -48,7 +48,11 @@ impl Editor {
             self.error = Some("The map's project root is unknown!".into());
             return;
         };
-        let path = roof_palette_path(root);
+        let path = if self.profile == documents::Profile::PlusPlus {
+            root.join("gfx/tilesets/roofs.pal")
+        } else {
+            roof_palette_path(root)
+        };
         if self.palette_document().is_modified() {
             self.pending_roof_colors = Some(path);
         } else {
@@ -61,7 +65,7 @@ impl Editor {
             return;
         };
         let group = loaded.document.metadata().group;
-        let mut draft = self.palette_document().clone();
+        let mut draft = self.palette_document().to_owned();
         let result = draft
             .load_roof_colors(path, group, self.roof_palette_layout)
             .map_err(|e| e.to_string())
@@ -177,7 +181,7 @@ mod tests {
             )
             .unwrap(),
         );
-        let palettes = h.state().palette_document().clone();
+        let palettes = h.state().palette_document().to_owned();
         let ctx = h.ctx.clone();
         h.state_mut().commit_palettes(&ctx, palettes).unwrap();
         h.state_mut().status = "Synthetic roof colors".into();
@@ -217,8 +221,8 @@ mod tests {
             );
             h.get_by_label("Success");
             let palettes = h.state().palette_document();
-            assert_eq!(palettes.bank().colors(PaletteSet::Day)[6][2], [33; 3]);
-            assert_eq!(palettes.bank().colors(PaletteSet::Day)[6][1], [41; 3]);
+            assert_eq!(palettes.colors(PaletteSet::Day)[6][2], [33; 3]);
+            assert_eq!(palettes.colors(PaletteSet::Day)[6][1], [41; 3]);
             assert!(!palettes.is_modified());
             assert!(!h.state().is_modified());
             assert!(!h.state().loaded.as_ref().unwrap().document.map().can_undo());
@@ -255,7 +259,7 @@ mod tests {
     fn dirty_palette_consent_preserves_edits_and_history_on_cancel_error_and_accept() {
         let (dir, mut h) = fixture(false, "TOWN");
         let ctx = h.ctx.clone();
-        let mut palettes = h.state().palette_document().clone();
+        let mut palettes = h.state().palette_document().to_owned();
         palettes
             .apply_batch(&[PaletteCommand::SetRgb {
                 slot: ColorSlot {
@@ -320,8 +324,8 @@ mod tests {
         let palettes = h.state().palette_document();
         assert!(palettes.is_modified());
         assert_eq!(palettes.selected(), PaletteSet::Day);
-        assert_eq!(palettes.bank().colors(PaletteSet::Day)[0][0], [17, 34, 51]);
-        assert_eq!(palettes.bank().colors(PaletteSet::Day)[6][2], [33; 3]);
+        assert_eq!(palettes.colors(PaletteSet::Day)[0][0], [17, 34, 51]);
+        assert_eq!(palettes.colors(PaletteSet::Day)[6][2], [33; 3]);
         let loaded = h.state().loaded.as_ref().unwrap();
         assert!(loaded.document.map().is_modified() && loaded.document.map().can_undo());
         assert!(loaded.tileset.as_ref().unwrap().tileset().is_modified());
@@ -377,10 +381,7 @@ mod tests {
         }
         invoke(&mut h);
         assert_eq!(
-            h.state()
-                .palette_document()
-                .bank()
-                .colors(PaletteSet::Custom)[6][2],
+            h.state().palette_document().colors(PaletteSet::Custom)[6][2],
             [115; 3]
         );
         h.get_by_label("OK").click();
@@ -410,14 +411,11 @@ mod tests {
         assert!(h.state().loading.is_none() && h.state().error.is_none());
         h.run();
         assert_eq!(
-            h.state()
-                .palette_document()
-                .bank()
-                .colors(PaletteSet::Custom)[6][2],
+            h.state().palette_document().colors(PaletteSet::Custom)[6][2],
             [115; 3]
         );
         assert_eq!(
-            h.state().palette_document().bank().colors(PaletteSet::Day)[6][2],
+            h.state().palette_document().colors(PaletteSet::Day)[6][2],
             [82; 3]
         );
         assert!(h.state().loaded.is_some() && h.state().pending_open.is_none());

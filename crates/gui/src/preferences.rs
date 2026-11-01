@@ -333,8 +333,13 @@ mod tests {
         assert_eq!(editor.canvas_scroll, Vec2::ZERO);
         assert!(!editor.is_modified() && !editor.palette_document().is_modified());
         assert_eq!(
-            editor.palette_document().bank(),
-            &polished_map_core::PaletteBank::default()
+            editor.palette_document().color_snapshot(),
+            PaletteSet::ALL
+                .into_iter()
+                .map(|set| polished_map_core::PaletteBank::default()
+                    .colors(set)
+                    .to_vec())
+                .collect::<Vec<_>>()
         );
         assert_eq!(storage.writes, 1, "startup does not write preferences");
         assert_eq!(

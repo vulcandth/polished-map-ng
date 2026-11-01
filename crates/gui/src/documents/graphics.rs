@@ -24,6 +24,12 @@ impl From<plusplus::Graphics> for MapGraphics {
 }
 
 impl MapGraphics {
+    pub fn profile(&self) -> super::Profile {
+        match self {
+            Self::Master(_) => super::Profile::Master,
+            Self::PlusPlus(_) => super::Profile::PlusPlus,
+        }
+    }
     pub fn block_count(&self) -> usize {
         match self {
             Self::Master(g) => g.block_count(),

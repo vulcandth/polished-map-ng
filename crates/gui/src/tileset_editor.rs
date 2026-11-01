@@ -361,6 +361,9 @@ impl Editor {
     }
 
     pub(super) fn save_tileset(&mut self) {
+        if self.save_plusplus_tiles() {
+            return;
+        }
         let Some(loaded) = &mut self.loaded else {
             return;
         };
@@ -399,6 +402,9 @@ impl Editor {
     }
 
     pub(super) fn save_roof(&mut self) {
+        if self.save_plusplus_roof() {
+            return;
+        }
         let Some(roof) = self
             .loaded
             .as_mut()

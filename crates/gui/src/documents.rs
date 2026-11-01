@@ -7,6 +7,100 @@ use std::path::{Path, PathBuf};
 
 mod graphics;
 pub(super) use graphics::MapGraphics;
+mod palettes;
+pub(super) use palettes::{PaletteDocument, PaletteRef};
+
+pub(super) fn block_textures(
+    ctx: &crate::egui::Context,
+    graphics: &MapGraphics,
+) -> Result<Vec<crate::egui::TextureHandle>, String> {
+    (0..graphics.block_count())
+        .map(|id| {
+            let rgb = graphics.render_block(id as u8).map_err(|e| e.to_string())?;
+            Ok(ctx.load_texture(
+                format!("block-{id}"),
+                crate::egui::ColorImage::from_rgb([32, 32], &rgb.pixels),
+                crate::egui::TextureOptions::NEAREST,
+            ))
+        })
+        .collect()
+}
+
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+pub(super) enum Profile {
+    #[default]
+    Master,
+    PlusPlus,
+}
+impl Profile {
+    pub fn discover_map(
+        self,
+        path: &Path,
+        root: Option<&Path>,
+    ) -> Result<MapMetadata, ProjectError> {
+        match self {
+            Self::Master => polished_map_project::discover_map(path, root),
+            Self::PlusPlus => plusplus::discover_map(path, root),
+        }
+    }
+    pub fn tileset_options(
+        self,
+        root: &Path,
+        hint: Option<&str>,
+    ) -> Result<polished_map_project::TilesetOptions, ProjectError> {
+        match self {
+            Self::Master => polished_map_project::tileset_options(root, hint),
+            Self::PlusPlus => plusplus::tileset_options(root, hint),
+        }
+    }
+    pub fn list_roofs(self, root: &Path) -> Result<Vec<String>, ProjectError> {
+        match self {
+            Self::Master => polished_map_project::list_roofs(root),
+            Self::PlusPlus => plusplus::list_roofs(root),
+        }
+    }
+    pub fn inspect_map_sizes(
+        self,
+        path: &Path,
+        preferred: Option<(u16, u16)>,
+    ) -> Result<polished_map_project::MapSizeOptions, ProjectError> {
+        match self {
+            Self::Master => polished_map_project::inspect_map_sizes(path, preferred),
+            Self::PlusPlus => plusplus::inspect_map_sizes(path, preferred),
+        }
+    }
+    pub fn extension(self) -> &'static str {
+        match self {
+            Self::Master => "blk",
+            Self::PlusPlus => "ablk",
+        }
+    }
+}
+
+pub(super) enum PalettePlan {
+    Master(polished_map_project::MapPalettePlan),
+    PlusPlus(plusplus::MapPalettePlan),
+}
+impl PalettePlan {
+    pub fn is_finished(&self) -> bool {
+        match self {
+            Self::Master(p) => p.is_finished(),
+            Self::PlusPlus(p) => p.is_finished(),
+        }
+    }
+    pub fn next_is_roof_colors(&self) -> bool {
+        match self {
+            Self::Master(p) => p.next_is_roof_colors(),
+            Self::PlusPlus(p) => p.next_is_roof_colors(),
+        }
+    }
+    pub fn next_import_path(&self) -> Option<&Path> {
+        match self {
+            Self::Master(p) => p.next_import_path(),
+            Self::PlusPlus(p) => p.next_import_path(),
+        }
+    }
+}
 
 #[derive(Debug)]
 pub(super) enum MapDocument {
@@ -26,6 +120,12 @@ impl From<plusplus::MapDocument> for MapDocument {
 }
 
 impl MapDocument {
+    pub fn profile(&self) -> Profile {
+        match self {
+            Self::Master(_) => Profile::Master,
+            Self::PlusPlus(_) => Profile::PlusPlus,
+        }
+    }
     pub fn path(&self) -> &Path {
         match self {
             Self::Master(d) => d.path(),

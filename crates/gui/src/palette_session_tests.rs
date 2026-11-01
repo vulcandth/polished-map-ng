@@ -175,7 +175,7 @@ fn palette_auto_load_options_defer_changes_and_independently_gate_the_next_open(
             assert!(h.state().error.is_none() && h.state().open_palette_warning.is_none());
             assert!(h.state().pending_open.is_none());
             let base = if special { 16 } else { 8 };
-            let colors = h.state().palette_document().bank().colors(PaletteSet::Day);
+            let colors = h.state().palette_document().colors(PaletteSet::Day);
             assert_eq!(colors[0][0], [base; 3]);
             assert_eq!(colors[6][2], [if roofs { 24 } else { base }; 3]);
             assert!(!h.state().palette_document().is_modified());
@@ -192,7 +192,7 @@ fn palette_auto_load_options_defer_changes_and_independently_gate_the_next_open(
                 h.run();
                 assert!(h.state().roof_color_success.is_some());
                 assert_eq!(
-                    h.state().palette_document().bank().colors(PaletteSet::Day)[6][2],
+                    h.state().palette_document().colors(PaletteSet::Day)[6][2],
                     [24; 3]
                 );
             }
@@ -229,7 +229,10 @@ fn premap_colors_survive_new_and_second_map_when_default_import_is_skipped() {
     let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
     h.state_mut().loaded = None;
     h.state_mut().textures.clear();
-    edit(&mut h.state_mut().unloaded_palettes);
+    let documents::PaletteDocument::Master(palettes) = &mut h.state_mut().unloaded_palettes else {
+        panic!("master fixture")
+    };
+    edit(palettes);
     let hash = h.state().palette_document().content_hash();
     load(&mut h, dir.path(), true);
     assert!(
@@ -353,14 +356,11 @@ fn skipping_default_and_special_still_prompts_for_roof_without_clearing_edited_f
     assert!(h.state().pending_open.is_none());
     assert!(h.state().palette_document().is_modified());
     assert_eq!(
-        h.state().palette_document().bank().colors(PaletteSet::Day)[6][2],
+        h.state().palette_document().colors(PaletteSet::Day)[6][2],
         [8, 16, 24]
     );
     assert_eq!(
-        h.state()
-            .palette_document()
-            .bank()
-            .colors(PaletteSet::Custom)[0][0],
+        h.state().palette_document().colors(PaletteSet::Custom)[0][0],
         [17, 34, 51]
     );
     assert_eq!(h.state().palette_document().selected(), PaletteSet::Custom);
@@ -437,7 +437,7 @@ fn optional_roof_color_failures_warn_and_keep_the_new_map_and_existing_colors() 
         "map Next, TILESET_DEMO, TOWN, LANDMARK_NEXT, MUSIC, FALSE, PALETTE_AUTO\n",
     )
     .unwrap();
-    let before = h.state().palette_document().bank().clone();
+    let before = h.state().palette_document().color_snapshot();
     fs::write(root.join("gfx/tilesets/roofs.pal"), "\tRGB 32,0,0\n").unwrap();
     for missing in [false, true] {
         if missing {
@@ -456,7 +456,7 @@ fn optional_roof_color_failures_warn_and_keep_the_new_map_and_existing_colors() 
                 .path()
                 .ends_with("Next.blk")
         );
-        assert_eq!(h.state().palette_document().bank(), &before);
+        assert_eq!(h.state().palette_document().color_snapshot(), before);
         h.get_by_label("OK").click();
         h.run();
         assert!(h.state().open_palette_warning.is_none());

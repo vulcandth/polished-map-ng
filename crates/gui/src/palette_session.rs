@@ -3,17 +3,21 @@
 use super::*;
 
 fn advance_import(
-    plan: &mut polished_map_project::MapPalettePlan,
-    palettes: &mut polished_map_project::PaletteDocument,
+    loaded: &mut Loaded,
     load: bool,
     warnings: &mut Vec<String>,
 ) -> Result<(), polished_map_project::ProjectError> {
-    match plan.advance(palettes, load) {
-        Err(e) if plan.next_is_roof_colors() => {
+    match loaded.advance_palette(load) {
+        Err(e)
+            if loaded
+                .palette_plan
+                .as_ref()
+                .is_some_and(|p| p.next_is_roof_colors()) =>
+        {
             warnings.push(format!(
                 "The map opened, but roof colors were not loaded:\n{e}"
             ));
-            plan.advance(palettes, false)
+            loaded.advance_palette(false)
         }
         result => result,
     }
@@ -24,26 +28,24 @@ impl Editor {
         let Some(mut loaded) = self.pending_open.take() else {
             return;
         };
-        if let Some(plan) = &mut loaded.palette_plan {
-            let Some(tileset) = &mut loaded.tileset else {
-                self.error = Some("Palette import requires a tileset".into());
+        while loaded
+            .palette_plan
+            .as_ref()
+            .is_some_and(|p| !p.is_finished())
+        {
+            if loaded
+                .palette_plan
+                .as_ref()
+                .is_some_and(|p| p.next_import_path().is_some())
+                && loaded.palette_view().is_some_and(|p| p.is_modified())
+            {
+                self.pending_open = Some(loaded);
                 return;
-            };
-            while !plan.is_finished() {
-                if plan.next_import_path().is_some() && tileset.palettes().is_modified() {
-                    self.pending_open = Some(loaded);
-                    return;
-                }
-                if let Err(e) = advance_import(
-                    plan,
-                    tileset.palettes_mut(),
-                    true,
-                    &mut self.pending_palette_warnings,
-                ) {
-                    self.error = Some(e.to_string());
-                    self.status = "Open failed".into();
-                    return;
-                }
+            }
+            if let Err(e) = advance_import(&mut loaded, true, &mut self.pending_palette_warnings) {
+                self.error = Some(e.to_string());
+                self.status = "Open failed".into();
+                return;
             }
         }
         if loaded.trailing_blocks != 0 {
@@ -62,36 +64,22 @@ impl Editor {
     }
 
     fn finish_open(&mut self, mut loaded: Loaded, ctx: &egui::Context) -> Result<(), String> {
-        if loaded.palette_plan.take().is_some() {
-            loaded.graphics = loaded
-                .tileset
-                .as_ref()
-                .ok_or("No tileset")?
-                .graphics(
-                    loaded
-                        .blockset
-                        .as_ref()
-                        .ok_or("No block definitions")?
-                        .blockset(),
-                )
-                .map_err(|e| e.to_string())?
-                .into();
+        if loaded.document.profile() != self.profile || loaded.graphics.profile() != self.profile {
+            return Err("Map and graphics must belong to this editor profile".into());
         }
-        let images = (0..loaded.graphics.block_count())
-            .map(|id| loaded.graphics.render_block(id as u8))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| e.to_string())?;
-        let textures = images
-            .into_iter()
-            .enumerate()
-            .map(|(id, rgb)| {
-                ctx.load_texture(
-                    format!("block-{id}"),
-                    egui::ColorImage::from_rgb([32, 32], &rgb.pixels),
-                    egui::TextureOptions::NEAREST,
-                )
-            })
-            .collect();
+        if loaded.palette_plan.take().is_some() {
+            loaded.graphics = loaded.refresh_graphics()?;
+        }
+        if let Some(assets) = &loaded.plus_assets {
+            if loaded.tileset.is_some()
+                || loaded.blockset.is_some()
+                || !matches!(loaded.document, documents::MapDocument::PlusPlus(_))
+            {
+                return Err("Plusplus assets require a separate plusplus document".into());
+            }
+            self.allow_512 = assets.allow_512;
+        }
+        let textures = documents::block_textures(ctx, &loaded.graphics)?;
         self.status = if loaded.document.has_backing_file() {
             loaded.document.path().display().to_string()
         } else {
@@ -160,19 +148,7 @@ impl Editor {
         );
         if load || skip {
             let pending = self.pending_open.as_mut().expect("dialog has pending map");
-            let result = advance_import(
-                pending
-                    .palette_plan
-                    .as_mut()
-                    .expect("dialog has palette plan"),
-                pending
-                    .tileset
-                    .as_mut()
-                    .expect("palette plan has tileset")
-                    .palettes_mut(),
-                !skip,
-                &mut self.pending_palette_warnings,
-            );
+            let result = advance_import(pending, !skip, &mut self.pending_palette_warnings);
             if let Err(e) = result {
                 self.pending_open = None;
                 self.error = Some(e.to_string());

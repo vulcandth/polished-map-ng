@@ -183,7 +183,6 @@ fn color(h: &Harness<'_, Editor>, slot: ColorSlot) -> [u8; 3] {
         .as_ref()
         .unwrap()
         .draft
-        .bank()
         .color(slot)
         .unwrap()
 }
@@ -198,7 +197,7 @@ fn palette_drag_swaps_or_copies_live_rgb8_and_cancels_outside_or_when_disabled()
         } else {
             ["GRAY color 1", "GRAY color 2"]
         };
-        let bank = h.state().palette_document().bank().clone();
+        let bank = h.state().palette_document().color_snapshot();
         h.state_mut().prepare_palettes();
         h.run();
         let (a, b) = (slot(p, 0), slot(p, 2));
@@ -251,7 +250,7 @@ fn palette_drag_swaps_or_copies_live_rgb8_and_cancels_outside_or_when_disabled()
         );
         h.get_by_label("Cancel").click();
         h.run();
-        assert_eq!(h.state().palette_document().bank(), &bank);
+        assert_eq!(h.state().palette_document().color_snapshot(), bank);
         toggle(&mut h);
         h.state_mut().prepare_palettes();
         h.run();
@@ -261,24 +260,36 @@ fn palette_drag_swaps_or_copies_live_rgb8_and_cancels_outside_or_when_disabled()
             .as_ref()
             .unwrap()
             .draft
-            .bank()
-            .clone();
+            .view()
+            .color_snapshot();
         let from = h.get_by_label(names[0]).rect().center();
         let to = h.get_by_label(names[1]).rect().center();
         for ctrl in [false, true] {
             drag(&mut h, from, to, ctrl);
         }
         assert_eq!(
-            h.state().palette_form.as_ref().unwrap().draft.bank(),
-            &before
+            h.state()
+                .palette_form
+                .as_ref()
+                .unwrap()
+                .draft
+                .view()
+                .color_snapshot(),
+            before
         );
         h.get_by_label(names[1]).click();
         h.run();
         h.get_by_label("R channel").set_value_accesskit(1.0);
         h.run();
         assert_ne!(
-            h.state().palette_form.as_ref().unwrap().draft.bank(),
-            &before
+            h.state()
+                .palette_form
+                .as_ref()
+                .unwrap()
+                .draft
+                .view()
+                .color_snapshot(),
+            before
         );
         h.get_by_label("OK").click();
         h.run();

@@ -2,8 +2,9 @@
 //! Swatch transfers and borders follow Color_Button in master map-buttons.cpp.
 //! Text-measured offsets preserve the original 20px colors and 21px grid pitch.
 use super::*;
+use documents::{PaletteDocument, PaletteRef};
 use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
-use polished_map_project::{PaletteDocument, SaveTarget, prepare_palette_export};
+use polished_map_project::{SaveTarget, prepare_palette_export};
 
 const NAMES: [&str; 9] = [
     "GRAY",
@@ -32,15 +33,13 @@ pub(super) struct PaletteForm {
     pub(super) windows_buttons: bool,
     #[cfg(test)]
     pub(super) bounds: Rect,
+    #[cfg(test)]
+    pub(super) client_bounds: Rect,
 }
 impl PaletteForm {
     fn select(&mut self, slot: ColorSlot) {
         self.selected = slot;
-        let rgb = self
-            .draft
-            .bank()
-            .color(slot)
-            .expect("validated color button");
+        let rgb = self.draft.color(slot).expect("validated color button");
         self.defaults = rgb.map(|c| {
             [
                 default_value::DefaultValue::new(c / 8),
@@ -52,7 +51,6 @@ impl PaletteForm {
     fn refresh_hex(&mut self) {
         let [r, g, b] = self
             .draft
-            .bank()
             .color(self.selected)
             .expect("validated color button");
         self.hex = format!("{r:02X}{g:02X}{b:02X}");
@@ -70,7 +68,6 @@ impl PaletteForm {
         self.clipboard = Some((
             self.selected,
             self.draft
-                .bank()
                 .copy_color(self.selected)
                 .expect("validated color button"),
         ));
@@ -144,11 +141,7 @@ impl Editor {
         let Some(form) = &mut self.palette_form else {
             return;
         };
-        let rgb = form
-            .draft
-            .bank()
-            .color(slot)
-            .expect("validated color button");
+        let rgb = form.draft.color(slot).expect("validated color button");
         let result = egui_winit::modal_windows::with_window(
             ctx,
             dialog_host::main_id("palette"),
@@ -165,21 +158,23 @@ impl Editor {
             Err(e) => self.error = Some(e),
         }
     }
-    pub(super) fn palette_document(&self) -> &PaletteDocument {
+    pub(super) fn palette_document(&self) -> PaletteRef<'_> {
         self.loaded
             .as_ref()
-            .and_then(|l| l.tileset.as_ref())
-            .map(|t| t.palettes())
-            .unwrap_or(&self.unloaded_palettes)
+            .and_then(Loaded::palette_view)
+            .unwrap_or_else(|| self.unloaded_palettes.view())
     }
     pub(super) fn palette_monochrome(&self) -> bool {
+        if matches!(self.palette_document(), PaletteRef::PlusPlus(_)) {
+            return false;
+        }
         self.loaded
             .as_ref()
             .and_then(|l| l.tileset.as_ref())
             .map_or(self.monochrome, |t| t.monochrome())
     }
     pub(super) fn prepare_palettes(&mut self) {
-        let draft = self.palette_document().clone();
+        let draft = self.palette_document().to_owned();
         let monochrome = self.palette_monochrome();
         let selected = ColorSlot {
             set: draft.selected(),
@@ -201,6 +196,8 @@ impl Editor {
             windows_buttons: cfg!(target_os = "windows"),
             #[cfg(test)]
             bounds: Rect::NOTHING,
+            #[cfg(test)]
+            client_bounds: Rect::NOTHING,
         };
         form.select(selected);
         self.palette_form = Some(form);
@@ -208,11 +205,33 @@ impl Editor {
     pub(super) fn commit_palettes(
         &mut self,
         ctx: &egui::Context,
-        palettes: PaletteDocument,
+        palettes: impl Into<PaletteDocument>,
     ) -> Result<(), String> {
+        let palettes = palettes.into();
+        if !matches!(
+            (self.profile, &palettes),
+            (documents::Profile::Master, PaletteDocument::Master(_))
+                | (documents::Profile::PlusPlus, PaletteDocument::PlusPlus(_))
+        ) {
+            return Err("Palette session belongs to the other editor profile".into());
+        }
+        if let Some(assets) = self.loaded.as_mut().and_then(|l| l.plus_assets.as_mut()) {
+            let PaletteDocument::PlusPlus(palettes) = palettes else {
+                return Err("Cannot apply master palettes to plusplus assets".into());
+            };
+            let graphics = assets.graphics(&palettes);
+            let textures = documents::block_textures(ctx, &graphics)?;
+            assets.palettes = palettes;
+            self.loaded.as_mut().unwrap().graphics = graphics;
+            self.textures = textures;
+            return Ok(());
+        }
         if let Some(loaded) = &mut self.loaded
             && let Some(tileset) = &loaded.tileset
         {
+            let PaletteDocument::Master(palettes) = palettes else {
+                return Err("Cannot apply plusplus palettes to master assets".into());
+            };
             let mut draft = tileset.clone();
             *draft.palettes_mut() = palettes;
             let blocks = loaded
@@ -222,23 +241,10 @@ impl Editor {
             let graphics = draft
                 .graphics(blocks.blockset())
                 .map_err(|e| e.to_string())?;
-            let images = (0..graphics.block_count())
-                .map(|id| graphics.render_block(id as u8))
-                .collect::<Result<Vec<_>, _>>()
-                .map_err(|e| e.to_string())?;
-            let textures = images
-                .into_iter()
-                .enumerate()
-                .map(|(id, rgb)| {
-                    ctx.load_texture(
-                        format!("block-{id}"),
-                        egui::ColorImage::from_rgb([32, 32], &rgb.pixels),
-                        egui::TextureOptions::NEAREST,
-                    )
-                })
-                .collect();
+            let graphics: MapGraphics = graphics.into();
+            let textures = documents::block_textures(ctx, &graphics)?;
             loaded.tileset = Some(draft);
-            loaded.graphics = graphics.into();
+            loaded.graphics = graphics;
             self.textures = textures;
         } else {
             self.unloaded_palettes = palettes;
@@ -250,7 +256,7 @@ impl Editor {
         ctx: &egui::Context,
         path: &std::path::Path,
     ) -> Result<(), String> {
-        let mut draft = self.palette_document().clone();
+        let mut draft = self.palette_document().to_owned();
         draft.load(path).map_err(|e| e.to_string())?;
         self.commit_palettes(ctx, draft)?;
         self.status = format!("Loaded palettes from {}", path.display());
@@ -295,13 +301,18 @@ impl Editor {
     }
     pub(super) fn export_palette_target(&mut self, target: &SaveTarget) -> Result<(), String> {
         let mono = self.palette_monochrome();
-        let doc = self
-            .loaded
-            .as_mut()
-            .and_then(|l| l.tileset.as_mut())
-            .map(|t| t.palettes_mut())
-            .unwrap_or(&mut self.unloaded_palettes);
-        doc.export(target, mono).map_err(|e| e.to_string())?;
+        if let Some(assets) = self.loaded.as_mut().and_then(|l| l.plus_assets.as_mut()) {
+            assets.palettes.export(target).map_err(|e| e.to_string())?;
+        } else if let Some(tiles) = self.loaded.as_mut().and_then(|l| l.tileset.as_mut()) {
+            tiles
+                .palettes_mut()
+                .export(target, mono)
+                .map_err(|e| e.to_string())?;
+        } else {
+            self.unloaded_palettes
+                .export(target, mono)
+                .map_err(|e| e.to_string())?;
+        }
         self.status = format!("Exported palettes to {}", target.path().display());
         self.save_ui.messages.push_back(save_feedback::Message {
             text: format!("Exported {}!", save_feedback::basename(target.path())),
@@ -381,7 +392,7 @@ impl Editor {
                 ui.selectable_label(selected == set, name)
             };
             if response.clicked() {
-                let mut draft = self.palette_document().clone();
+                let mut draft = self.palette_document().to_owned();
                 draft.select(set);
                 if let Err(e) = self.commit_palettes(ui.ctx(), draft) {
                     self.error = Some(e);
@@ -449,6 +460,10 @@ impl Editor {
                 egui::FontId::monospace(13.0),
             ));
             let (area, _) = ui.allocate_exact_size(Vec2::new(width, height), Sense::hover());
+            #[cfg(test)]
+            {
+                form.client_bounds = area;
+            }
             let rect =
                 |x, y, w, h| Rect::from_min_size(area.min + Vec2::new(x, y), Vec2::new(w, h));
             ui.painter().rect_filled(
@@ -476,7 +491,7 @@ impl Editor {
                         palette,
                         hue,
                     };
-                    let rgb = form.draft.bank().color(slot).unwrap();
+                    let rgb = form.draft.color(slot).unwrap();
                     let r = rect(
                         12.0 + off + col as f32 * 21.0,
                         12.0 + f32::from(row) * 21.0,
@@ -521,11 +536,7 @@ impl Editor {
                             command = Some(if ui.input(|i| i.modifiers.ctrl) {
                                 PaletteCommand::SetRgb {
                                     slot,
-                                    rgb: form
-                                        .draft
-                                        .bank()
-                                        .color(from)
-                                        .expect("validated drag source"),
+                                    rgb: form.draft.color(from).expect("validated drag source"),
                                 }
                             } else {
                                 PaletteCommand::Swap { a: from, b: slot }
@@ -539,7 +550,7 @@ impl Editor {
             if ui.input(|i| !i.pointer.primary_down()) {
                 form.drag = None;
             }
-            let rgb = form.draft.bank().color(form.selected).unwrap();
+            let rgb = form.draft.color(form.selected).unwrap();
             for (channel, name) in ["R", "G", "B"].into_iter().enumerate() {
                 let y = oy + channel as f32 * 26.0;
                 ui.painter().text(

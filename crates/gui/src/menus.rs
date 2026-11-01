@@ -34,11 +34,17 @@ impl Editor {
                     if action(ui, loaded, "Save Map") {
                         self.save_map();
                     }
-                    let blocks = self.loaded.as_ref().is_some_and(|l| l.blockset.is_some());
+                    let blocks = self
+                        .loaded
+                        .as_ref()
+                        .is_some_and(|l| l.blockset.is_some() || l.plus_assets.is_some());
                     if action(ui, blocks, "Save Blockset") {
                         self.save_blockset();
                     }
-                    let tiles = self.loaded.as_ref().is_some_and(|l| l.tileset.is_some());
+                    let tiles = self
+                        .loaded
+                        .as_ref()
+                        .is_some_and(|l| l.tileset.is_some() || l.plus_assets.is_some());
                     if action(ui, tiles, "Save Tileset") {
                         self.save_tileset();
                     }
@@ -48,6 +54,12 @@ impl Editor {
                         .and_then(|l| l.tileset.as_ref())
                         .and_then(|t| t.roof())
                         .is_some();
+                    let roof = roof
+                        || self
+                            .loaded
+                            .as_ref()
+                            .and_then(|l| l.plus_assets.as_ref())
+                            .is_some_and(|a| a.roof.is_some());
                     if action(ui, roof, "Save Roof") {
                         self.save_roof();
                     }

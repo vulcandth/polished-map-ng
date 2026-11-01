@@ -138,6 +138,11 @@ impl TilesetDocument {
     pub fn model(&self) -> &RawTileset {
         &self.model
     }
+    /// Main_Window::save_tileset trims definitions even on a clean save, without
+    /// making the pixel document dirty or writing source files.
+    pub fn trim_unused(&mut self, blocks: &AttributeBlockset, order: BankOrder) {
+        self.model.trim_unused(blocks, order);
+    }
     pub fn apply_batch(&mut self, commands: &[RawTileCommand]) -> Result<(), ProjectError> {
         self.model.apply_batch(commands)?;
         Ok(())

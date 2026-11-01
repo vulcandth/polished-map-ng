@@ -2724,8 +2724,8 @@ edits and resize translation validate before publishing the draft. Only the
 three recognized warp kinds increment IDs, and local targets use those IDs.
 External warp paths preserve the current extension and directory; invalid map
 operands cannot escape it. Shared GUI existence, already-open and dirty-consent
-handling now use that path boundary; end-to-end plusplus warp loading still needs
-the pending asset/session loader under PP3.
+handling now use that path boundary and the plusplus asset/session loader.
+End-to-end navigation and native acceptance remain PP3 verification.
 
 Script discovery uses `maps/<name>.asm`, then an adjacent `.asm` filename when
 opening an existing map. Master-only SXY/pokered paths are ignored. Unsaved maps
@@ -2794,15 +2794,52 @@ An independent pixel vector checks ordinal 511, palette 7, both flips and occurr
 priority, then checks the Print Copy snapshot after a subsequent map edit. The
 fixture uses generated tiles/colors and does not include game assets.
 
+[Asset-session integration](../crates/gui/src/plusplus_session.rs) uses the shared
+Open/New forms and load worker with explicit plusplus discovery and formats. It
+loads offset/attribute/collision documents, compound raw graphics and selected
+roofs, then drives default/special/roof palette imports through the existing
+Load/Skip prompts. The previous map remains live until the candidate succeeds.
+Expanded graphics or block references enable the 512 setting using the pinned
+thresholds. Internal profile guards reject mismatched Open options, map/renderers
+and palette drafts; no automatic profile switch is exposed.
+
+[Palette views/drafts](../crates/gui/src/documents/palettes.rs) let the existing
+palette dialog edit plusplus's eight palettes and six sets, with its source-derived
+191-point client height and measured width. RGB/hex, rounded sliders, transfers,
+native Windows chooser and import/export paths keep their shared controls.
+Plusplus never exposes the master monochrome palette, and exports preserve RGB5
+quantization. Palette selection/edits refresh map textures independently of map
+history and asset dirty flags; closing a map retains the palette session.
+
+The shared Save All sequence now dispatches plusplus raw graphics, roof,
+offset/attribute/collision, event and map saves in order, waiting for each success
+message and stopping on failure. A clean Save Tileset trims unused blank definitions
+without dirtying pixels or writing files, matching `Metatileset::trim_tileset`
+before the source callback's dirty check. Attribute saves include all paired
+outputs and use existing guarded persistence; no master palette-map file is created.
+
+[Asset-session tests](../crates/gui/src/plusplus_session/tests.rs) use the actual
+Open dialog/worker, palette editor, load prompts and save dispatch. They cover
+cancel/accept previews, eight-palette limits, export/reload quantization, close
+retention, wrong-profile rejection, failed imports preserving the prior map,
+ordered saves and a conflicting attribute file preventing later map writes.
+The pinned Polished Crystal New Bark Town also opens through the GUI worker with
+10×9 blocks, its 248-block compound tileset and 288 loaded raw tiles. The test edits
+and exports palettes, edits the map and saves/reopens a temporary copy, while
+checking the fixture map and observed assets remain unchanged. This fixture test
+is in CI; it does not claim original-application interoperability.
+
 Windows workspace format, Clippy with warnings denied, tests, rustdoc and the
-production native-feature graph pass. The five integration tests also pass on
-WSL Ubuntu 22.04.5 with no display server. Existing master tests remain in the
+production native-feature graph pass. The five map/event integration tests and
+six asset-session tests also pass on WSL Ubuntu 22.04.5 with no display server.
+The pinned-project GUI worker test passes on both Windows and WSL; dirty tile-save
+conflicts preserve the live definition flags as well as file bytes. Existing master tests remain in the
 workspace run. These are input/model/rendering checks, not native-window,
 clipboard-service or macOS runtime verification.
 
 This is shared workflow integration, not a separately launchable plusplus editor.
-The production entry point remains master. Plusplus asset sessions and block/
-tileset/roof/palette controls, separate launch/preferences, menus/defaults, full
-Open/warp workflows and native checks remain in PP3. PP4 still requires original
+The production entry point remains master. Plusplus block/tileset/roof controls
+and asset switching, separate launch/preferences, menus/defaults, full workflow
+verification and native checks remain in PP3. PP4 still requires original
 application interoperability and native acceptance; these tests do not close it.
 No desktop automation or aesthetic matching is part of this change.

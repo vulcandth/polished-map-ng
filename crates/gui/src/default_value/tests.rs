@@ -272,7 +272,6 @@ fn middle_reset_palette_channels_keep_selection_defaults_across_hex_and_channel_
         .as_ref()
         .unwrap()
         .draft
-        .bank()
         .color(slot)
         .unwrap();
     h.get_by_label("Hex color").click();
@@ -295,7 +294,6 @@ fn middle_reset_palette_channels_keep_selection_defaults_across_hex_and_channel_
             .as_ref()
             .unwrap()
             .draft
-            .bank()
             .color(slot)
             .unwrap(),
         quantized
@@ -314,17 +312,13 @@ fn middle_reset_palette_channels_keep_selection_defaults_across_hex_and_channel_
             .as_ref()
             .unwrap()
             .draft
-            .bank()
             .color(slot)
             .unwrap()[0],
         57
     );
     h.get_by_label("Cancel").click();
     h.run();
-    assert_eq!(
-        h.state().palette_document().bank().color(slot).unwrap(),
-        original
-    );
+    assert_eq!(h.state().palette_document().color(slot).unwrap(), original);
     assert!(!h.state().is_modified());
 }
 
@@ -410,7 +404,6 @@ fn middle_reset_palette_clipboard_and_drag_capture_the_transferred_color() {
             .as_ref()
             .unwrap()
             .draft
-            .bank()
             .color(b)
             .unwrap();
         assert!(
@@ -426,7 +419,6 @@ fn middle_reset_palette_clipboard_and_drag_capture_the_transferred_color() {
             .as_ref()
             .unwrap()
             .draft
-            .bank()
             .color(b)
             .unwrap();
         assert_eq!(

@@ -281,7 +281,11 @@ impl Editor {
                     {
                         self.error = Some(error.to_string());
                     }
-                    ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
+                    if form.profile == documents::Profile::PlusPlus {
+                        ui.checkbox(&mut form.allow_512, "Allow all 512 tiles");
+                    } else {
+                        ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
+                    }
                 });
             // Advanced controls run after the source client: revalidate after
             // editing the root so Enter cannot submit stale asset choices.

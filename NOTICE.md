@@ -319,3 +319,10 @@ The shared GUI document/renderer boundary adapts the pinned master and plusplus
 LGPL-3.0-only. It reuses map/event controls and native adapters with explicit
 format-specific persistence/rendering. Integration tests use synthetic pixels,
 palettes and scripts; no external project artwork is added.
+
+Plusplus GUI asset-session loading, palette controls and save dispatch adapt
+`Main_Window::{open_map,save_tileset,save_roof,save_metatileset}` and
+`palette-window.cpp` at the pinned plusplus revision, under LGPL-3.0-only.
+The master controls, palette import prompts, texture cache and save feedback
+are shared. Polished Crystal integration tests operate on ignored fixtures and
+temporary outputs; those project/game assets are not distributed.

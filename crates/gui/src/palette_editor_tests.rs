@@ -19,7 +19,6 @@ fn color(h: &Harness<'_, Editor>, palette: u8, hue: u8) -> [u8; 3] {
         .as_ref()
         .unwrap()
         .draft
-        .bank()
         .color(ColorSlot {
             set: PaletteSet::Day,
             palette,
@@ -31,7 +30,7 @@ fn color(h: &Harness<'_, Editor>, palette: u8, hue: u8) -> [u8; 3] {
 #[test]
 fn palette_spinners_wrap_but_slider_keys_clamp_and_cancel_discards_both() {
     let (_dir, mut h) = super::tileset_editor_tests::fixture(false, false);
-    let original = h.state().palette_document().bank().clone();
+    let original = h.state().palette_document().color_snapshot();
     open(&mut h);
     for (channel, name) in ["R", "G", "B"].into_iter().enumerate() {
         let spin = format!("{name} channel");
@@ -69,7 +68,7 @@ fn palette_spinners_wrap_but_slider_keys_clamp_and_cancel_discards_both() {
     }
     h.get_by_label("Cancel").click();
     h.run();
-    assert_eq!(h.state().palette_document().bank(), &original);
+    assert_eq!(h.state().palette_document().color_snapshot(), original);
     assert!(!h.state().is_modified());
 }
 
@@ -94,7 +93,7 @@ fn channel_controls_and_set_selection_refresh_colors_without_map_edits() {
     h.run();
     assert_eq!(h.state().palette_document().selected(), PaletteSet::Nite);
     assert_eq!(
-        h.state().palette_document().bank().colors(PaletteSet::Day)[0][0],
+        h.state().palette_document().colors(PaletteSet::Day)[0][0],
         [16, 255, 249]
     );
     assert!(h.state().palette_document().is_modified());
@@ -125,7 +124,7 @@ fn toolbar_palette_sets_share_menu_state_and_preserve_edits_and_history() {
         .undo();
     h.run();
     let palette_hash = h.state().palette_document().content_hash();
-    let palette_colors = h.state().palette_document().bank().clone();
+    let palette_colors = h.state().palette_document().color_snapshot();
     let map_modified = h
         .state()
         .loaded
@@ -168,7 +167,10 @@ fn toolbar_palette_sets_share_menu_state_and_preserve_edits_and_history() {
             Some(name)
         );
         assert_eq!(h.get_by_label("Map palette set").rect(), initial_bounds);
-        assert_eq!(h.state().palette_document().bank(), &palette_colors);
+        assert_eq!(
+            h.state().palette_document().color_snapshot(),
+            palette_colors
+        );
         assert!(h.state().palette_document().is_modified());
         let loaded = h.state().loaded.as_ref().unwrap();
         assert_eq!(loaded.document.map().is_modified(), map_modified);
@@ -177,7 +179,7 @@ fn toolbar_palette_sets_share_menu_state_and_preserve_edits_and_history() {
         assert!(!loaded.tileset.as_ref().unwrap().tileset().is_modified());
         assert_eq!(
             loaded.graphics.render_block(0).unwrap().pixels[..3],
-            h.state().palette_document().bank().colors(set)[0][1],
+            h.state().palette_document().colors(set)[0][1],
         );
         h.get_by_label("View").click();
         h.run();
@@ -261,7 +263,7 @@ fn palette_editor_operates_before_loading_a_map() {
     h.run();
     assert!(h.state().loaded.is_none());
     assert_eq!(
-        h.state().palette_document().bank().colors(PaletteSet::Day)[0][0],
+        h.state().palette_document().colors(PaletteSet::Day)[0][0],
         [0, 1, 35]
     );
     assert!(h.state().palette_document().is_modified());
@@ -344,7 +346,7 @@ fn palette_draft_accept_cancel_export_and_load_preserve_map_and_tile_state() {
     h.run();
     assert!(!h.state().palette_document().is_modified());
     assert_eq!(
-        h.state().palette_document().bank().colors(PaletteSet::Day)[0][1],
+        h.state().palette_document().colors(PaletteSet::Day)[0][1],
         [0, 123, 255]
     );
     let before = h.state().palette_document().content_hash();

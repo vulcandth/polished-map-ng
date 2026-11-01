@@ -47,6 +47,16 @@ block commands cannot mutate plusplus graphics. These adapters are internal GUI
 implementation, not the stable automation interface or automatic profile detection.
 See [integration evidence](compatibility.md#plusplus-shared-gui-integration).
 
+The editor now has an internal fixed profile. Open options, map/renderer adoption
+and palette commits reject profile mismatches. Plusplus asset sessions own their
+attribute block document, raw tiles, optional roof, eight-palette document and
+bank order; master retains its existing asset documents. Plusplus sessions never
+populate those master asset slots. Shared palette controls use borrowed read views
+and owned format-specific drafts, retaining each backend's validation and exports.
+The existing load worker and ordered import prompts stage the entire candidate
+before adoption. Closing a map retains its profile-specific palette session.
+Asset saves use the shared feedback queue but their own source/output documents.
+
 PP3 still needs a separate executable/launch configuration and preference namespace,
 using common GUI components and native adapters rather than copying the app.
 A shared internal capability boundary is preparation for U1–U3, not completion of

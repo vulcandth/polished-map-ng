@@ -52,7 +52,7 @@ impl Editor {
     pub(super) fn close_map(&mut self) {
         self.save_ui = Default::default();
         // Upstream colors and selected set are global, outside Tileset::clear.
-        self.unloaded_palettes = self.palette_document().clone();
+        self.unloaded_palettes = self.palette_document().to_owned();
         self.loaded = None;
         self.roof_choices_available = false;
         self.textures.clear();
@@ -91,6 +91,16 @@ impl Editor {
             && events.script().events().is_modified()
         {
             events.source().path()
+        } else if let Some(assets) = &loaded.plus_assets {
+            if assets.tiles.model().is_modified() {
+                return format!("{}.png", assets.tiles.name());
+            } else if let Some(roof) = &assets.roof
+                && roof.is_modified()
+            {
+                roof.source().path()
+            } else {
+                assets.blocks.path()
+            }
         } else if let Some(tileset) = &loaded.tileset
             && tileset.tileset().is_modified()
         {
@@ -224,7 +234,7 @@ mod tests {
     }
 
     fn edit_palettes(editor: &mut Editor, ctx: &egui::Context) {
-        let mut palettes = editor.palette_document().clone();
+        let mut palettes = editor.palette_document().to_owned();
         palettes
             .apply_batch(&[PaletteCommand::SetRgb {
                 slot: ColorSlot {
