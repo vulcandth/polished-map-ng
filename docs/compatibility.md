@@ -3085,9 +3085,10 @@ OS families, with Xvfb for Linux; local instructions are in [INSTALL](../INSTALL
 
 All ten native child processes pass locally on WSL Ubuntu 22.04.5 using an
 isolated Xvfb display and Vulkan. Windows workspace format, Clippy, tests,
-rustdoc and opt-in-feature Clippy pass. The macOS and Ubuntu native jobs in
+rustdoc and opt-in-feature Clippy pass. Windows, macOS and Ubuntu native settings
+probes in
 [the probe CI run](https://github.com/vulcandth/polished-map-ng/actions/runs/41267258063)
-also pass; Windows native execution is still pending completion. This is new development-branch evidence and does
+also pass. This is new development-branch evidence and does
 not retroactively certify the published master candidate or close M5/PP3.
 
 ## Plusplus sheet panning
