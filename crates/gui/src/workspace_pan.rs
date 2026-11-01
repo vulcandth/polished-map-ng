@@ -1,4 +1,4 @@
-//! Pinned master widgets.cpp::Workspace::handle, LGPL-3.0-only.
+//! Pinned master/plusplus widgets.cpp::Workspace::handle, LGPL-3.0-only.
 //! The workspace consumes middle presses before dispatching to its children.
 use super::*;
 
@@ -11,6 +11,64 @@ pub(super) struct WorkspacePan {
 pub(super) struct PanFrame {
     pub handled: bool,
     pub offset: Option<Vec2>,
+}
+
+/// Plusplus block/raw-tile lists use the same Workspace gesture. Callers pass
+/// the inset client rectangle: its size already subtracts the source frame,
+/// equivalent to plusplus's extra box_dw/box_dh term in the outer-bound formula.
+#[derive(Default)]
+pub(super) struct SheetScroll {
+    pan: WorkspacePan,
+    offset: f32,
+    initialized: bool,
+}
+
+impl SheetScroll {
+    pub fn show<R>(
+        &mut self,
+        ui: &mut egui::Ui,
+        id: &str,
+        content_height: f32,
+        add_contents: impl FnOnce(&mut egui::Ui, bool) -> R,
+    ) -> R {
+        ui.spacing_mut().scroll.bar_width = 15.0;
+        ui.spacing_mut().scroll.bar_inner_margin = 0.0;
+        ui.spacing_mut().scroll.bar_outer_margin = 0.0;
+        let pan = self.pan.update(
+            ui,
+            Vec2::new(0.0, self.offset),
+            Vec2::new(256.0, content_height),
+            true,
+        );
+        let mut scroll = egui::ScrollArea::vertical()
+            .id_salt(id)
+            .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
+            .max_height(ui.max_rect().height())
+            .auto_shrink([false, false])
+            .scroll_source(egui::scroll_area::ScrollSource {
+                drag: egui::scroll_area::DragScroll::Never,
+                ..Default::default()
+            });
+        if !self.initialized {
+            scroll = scroll.vertical_scroll_offset(0.0);
+        } else if let Some(offset) = pan.offset {
+            scroll = scroll.vertical_scroll_offset(offset.y).scroll_source(
+                egui::scroll_area::ScrollSource {
+                    mouse_wheel: true,
+                    ..egui::scroll_area::ScrollSource::NONE
+                },
+            );
+        }
+        let output = scroll.show(ui, |ui| add_contents(ui, pan.handled));
+        self.offset = output.state.clamped_offset().y;
+        self.initialized = true;
+        output.inner
+    }
+
+    #[cfg(test)]
+    pub fn offset(&self) -> f32 {
+        self.offset
+    }
 }
 
 /// Workspace bounds exclude each visible perpendicular scrollbar. Visibility

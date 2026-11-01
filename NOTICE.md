@@ -353,3 +353,8 @@ Original plusplus `res/help.html` and generated platform-specific documents
 retain their source bytes, provenance and copyright in
 `crates/gui/assets/help/NOTICE.md`; the shared converter/viewer adapts both
 branches without distributing external linked content or game graphics.
+
+Plusplus's expanded block/raw-tile list panning adapts `widgets.cpp::Workspace`
+and the list setup in `block-window.cpp`/`tileset-window.cpp` at the pinned
+plusplus revision, under LGPL-3.0-only. It reuses the existing gesture adapter
+and source frame calculations without introducing FLTK widget painting.

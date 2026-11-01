@@ -42,6 +42,74 @@ fn click(
 }
 
 #[test]
+fn occurrence_sheet_middle_pan_retains_selection_attributes_and_source_limits() {
+    for scale in [1.0, 2.0] {
+        for expanded in [false, true] {
+            let (_dir, mut h) = fixture();
+            h.set_pixels_per_point(scale);
+            h.set_size(Vec2::new(800.0, 600.0));
+            h.run();
+            h.state_mut()
+                .loaded
+                .as_mut()
+                .unwrap()
+                .plus_assets
+                .as_mut()
+                .unwrap()
+                .allow_512 = expanded;
+            crate::block_workflow_tests::open_block(&mut h, 0);
+            let form = h.state().block_form.as_ref().unwrap();
+            let attributes = form.plus.as_ref().unwrap().attributes;
+            let start = form.client_bounds.min + Vec2::new(120.75, 140.75);
+            h.hover_at(start);
+            h.event(egui::Event::PointerButton {
+                pos: start,
+                button: egui::PointerButton::Middle,
+                pressed: true,
+                modifiers: egui::Modifiers::NONE,
+            });
+            h.run();
+            // Expanded source client: 512 - 386 + box_dh(2) = 128.
+            for (distance, expected) in [(1000.0, 128.0), (70.0, 70.0), (0.0, 0.0)] {
+                h.hover_at(start - Vec2::new(0.0, distance));
+                h.run();
+                let form = h.state().block_form.as_ref().unwrap();
+                let plus = form.plus.as_ref().unwrap();
+                assert!(
+                    (plus.scroll.offset() - if expanded { expected } else { 0.0 }).abs() < 0.01
+                );
+                assert_eq!(form.selected, 0);
+                assert_eq!(plus.attributes, attributes);
+            }
+            h.event(egui::Event::PointerButton {
+                pos: start,
+                button: egui::PointerButton::Middle,
+                pressed: false,
+                modifiers: egui::Modifiers::NONE,
+            });
+            h.run();
+            h.hover_at(start - Vec2::new(0.0, 50.0));
+            h.run();
+            assert_eq!(
+                h.state()
+                    .block_form
+                    .as_ref()
+                    .unwrap()
+                    .plus
+                    .as_ref()
+                    .unwrap()
+                    .scroll
+                    .offset(),
+                0.0
+            );
+            h.get_by_label("Cancel").click();
+            h.run();
+            assert!(!h.state().is_modified());
+        }
+    }
+}
+
+#[test]
 fn attributes_collisions_cancel_accept_and_save_use_shared_block_dialog() {
     let (dir, mut h) = fixture();
     h.state_mut().show_priority = false;

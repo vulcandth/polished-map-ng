@@ -2841,8 +2841,8 @@ The default entry point remains master; the [separate plusplus launcher](#pluspl
 uses these shared workflows. Plusplus [block controls](#plusplus-block-editor-and-transfers),
 [tile/roof controls](#plusplus-tile-and-roof-editors) and
 [asset switching](#plusplus-asset-switching-and-tile-options) are implemented.
-Remaining menus/defaults, full workflow
-verification and native checks remain in PP3. PP4 still requires original
+The [source reconciliation](#plusplus-gui-source-reconciliation) accounts for
+menu/default differences; full native workflow verification remains in PP3. PP4 still requires original
 application interoperability and native acceptance; these tests do not close it.
 No desktop automation or aesthetic matching is part of this change.
 
@@ -3085,6 +3085,62 @@ OS families, with Xvfb for Linux; local instructions are in [INSTALL](../INSTALL
 
 All ten native child processes pass locally on WSL Ubuntu 22.04.5 using an
 isolated Xvfb display and Vulkan. Windows workspace format, Clippy, tests,
-rustdoc and opt-in-feature Clippy pass; the native Windows/macOS runs await
-the corresponding CI result. This is new development-branch evidence and does
+rustdoc and opt-in-feature Clippy pass. The macOS and Ubuntu native jobs in
+[the probe CI run](https://github.com/vulcandth/polished-map-ng/actions/runs/41267258063)
+also pass; Windows native execution is still pending completion. This is new development-branch evidence and does
 not retroactively certify the published master candidate or close M5/PP3.
+
+## Plusplus sheet panning
+
+Pinned plusplus `Block_Window` and `Tileset_Window` use `Workspace` for their
+expanded tile lists. The shared [panning adapter](../crates/gui/src/workspace_pan.rs)
+now supplies the same middle-button capture, integer anchor/delta calculations,
+clamping, pointer/focus-loss cancellation and no-fling behavior to both lists.
+Wheel and scrollbar movement remain available; panning suppresses tile selection
+and copy/swap drags. Each reopened draft resets its scroll state.
+
+Plusplus's `widgets.cpp::Workspace::handle` adds the frame's `box_dw`/`box_dh`
+to the outer scroll bounds. The port passes the inset list client rectangle,
+which produces the same calculation without another frame allowance. The raw
+512-tile list limit is `512 - 258 + 2 = 256` points; the expanded block-editor
+list is `512 - 386 + 2 = 128`. The 256-tile lists have a zero scroll limit.
+Main map/sidebar Workspaces use `FL_NO_BOX`, so the branch's additional frame
+term is zero there and the existing shared bounds remain valid.
+
+[Block input tests](../crates/gui/src/block_editor/plusplus/tests.rs) and
+[raw-tile input tests](../crates/gui/src/tileset_editor/plusplus_tests.rs) exercise
+256/512 modes at 1×/2× DPI, dragging past both limits, returning from an edge
+without rebasing the anchor, release and retained selection/attributes/pixels.
+Cancel leaves the project unchanged. The surrounding suites retain wheel-scroll,
+high-ID selection, right-pick reveal, primary-button copy/swap and reopen tests.
+Native pointer capture outside a real editor window remains PP3 acceptance.
+
+Windows format, Clippy with warnings denied, workspace tests and rustdoc pass.
+Both new panning tests pass on Windows and WSL Ubuntu 22.04.5. Windows offscreen
+tile-editor checks pass with unchanged master snapshot baselines.
+
+## Plusplus GUI source reconciliation
+
+The PP3 review compares the GUI-related changes among the 43 source files in
+the pinned master-to-plusplus diff. The implemented families below retain
+separate documents/launchers and shared controls. This completes source inventory
+reconciliation, not native or original-application acceptance.
+
+| Source difference | Implemented behavior and evidence |
+|---|---|
+| `main`, `version`, `Main_Window` constructor/exit | Fixed plusplus identity, own startup/settings and `all512`/`swap01`; [launcher](#plusplus-launch-settings-and-help), [native persistence](#native-profile-preference-lifecycle). The approved two-theme scope replaces the original Windows Rose Gold default. |
+| `Main_Window` menus/control activation | Same eight menu groups; 512/bank-order options replace master tile modes; priority display is independent. [Options and asset-switching evidence](#plusplus-asset-switching-and-tile-options). |
+| `Main_Window` choosers/lifecycle and `option-dialogs` | `.ablk`/`.blk` filtering, `.ablk` New/Save defaults, branch discovery, shared measured forms and dirty guards; [GUI workflows](#plusplus-shared-gui-integration), [New/save/close/reopen and discard paths](#plusplus-launch-settings-and-help). |
+| `block-window`, `map-buttons` | Occurrence palette/bank/flip/priority controls, shared collision fields, mirrored brushes, pick/reveal and attribute-preserving transfers; [block evidence](#plusplus-block-editor-and-transfers). |
+| `tileset-window`, `roof-window` | Independent raw pixels, 512 selection, bank labels, no master palette-map/monochrome controls, isolated asset drafts and saves; [tile/roof evidence](#plusplus-tile-and-roof-editors). |
+| `palette-window`, `colors` | Eight game palettes, six sets, shared RGB editing/import/export, no editable monochrome ninth palette; [palette integration](#plusplus-shared-gui-integration). |
+| `map-events`, `Main_Window` event/Print paths | Explicit 26-macro catalog, shared Event Options/history/persistence and occurrence-aware canvas/Print rendering; [event backend](#plusplus-events-and-script-persistence), [GUI input/render checks](#plusplus-shared-gui-integration). |
+| `widgets`, `ruler` | Shared main geometry/ruler behavior; expanded list frame terms and middle panning handled by [sheet panning](#plusplus-sheet-panning). The ruler source change only swaps a tile header. |
+| Help/About | Complete original branch Help text, platform expansion and attribution through shared viewers; [Help evidence](#plusplus-launch-settings-and-help). |
+
+PP3 still needs complete native workflows with real windows, clipboard services,
+file choosers, capture outside child windows, placement and DPI transitions.
+Automated native process probes cover only the specifically recorded lifecycle
+cases. PP4 requires saved outputs reopened in the original application, alongside
+both pinned project suites and retained master regressions. Deferred fonts and
+FLTK painting are approved exceptions, not missing functional work.

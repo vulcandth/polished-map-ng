@@ -1,9 +1,30 @@
 # Editing guide
 
-This guide describes the current master-oriented development build. Master
-parity is still in progress; plusplus support has not started. Use project copies
+This guide primarily describes the master development build. The separate
+[plusplus editor](#separate-plusplus-editor) shares these workflows with the
+format-specific differences below. Both parity milestones are in progress. Use project copies
 while acceptance testing is incomplete. See the [roadmap](roadmap.md) for the
 remaining work and [compatibility evidence](compatibility.md) for verification.
+
+## Separate plusplus editor
+
+Launch `polished-map-plusplus` as described in [INSTALL](../INSTALL.md). It has
+its own preferences and recent history; neither launcher automatically switches
+formats. The published master testing packages do not include this experimental
+launcher yet.
+
+Plusplus opens binary `.ablk`/`.blk` maps in projects with `main.asm` or
+`layout.link` roots, using its own metadata and asset discovery rules. New maps
+and extensionless Save As destinations default to `.ablk`. Master ASM maps,
+CHR graphics and raw-tile palette-map editing do not apply to this profile.
+
+Blocks retain per-occurrence palette, bank, X/Y flips and priority. The block
+editor exposes eight palettes and up to 512 raw tiles. Options controls 512 Tiles
+and upper-bank ordering; see [menu differences](menus.md#separate-plusplus-menu-differences).
+Wheel, scrollbar and middle-button dragging scroll expanded tile lists in both
+the block and tileset editors. Middle dragging pans without selecting or editing
+tiles. Common pixel tools, palette editing, event workflows and save guards are
+shared with master. See the [roadmap](roadmap.md) for remaining acceptance gates.
 
 ## Opening projects
 

@@ -10,6 +10,7 @@ impl TilesetForm {
         cell: Rect,
         drag: bool,
         priority: &priority::Textures,
+        panning: bool,
     ) -> Option<TileCommand> {
         let enabled = self.enabled(id);
         let mut tile_ui = ui.new_child(
@@ -58,6 +59,9 @@ impl TilesetForm {
         {
             super::super::block_editor::selection_border(ui, cell);
         }
+        if panning {
+            return None;
+        }
         if response.clicked() {
             self.selected = id;
         }
@@ -91,39 +95,38 @@ impl TilesetForm {
                 egui::UiBuilder::new()
                     .max_rect(Rect::from_min_size(origin, Vec2::new(271.0, 256.0))),
                 |ui| {
-                    ui.spacing_mut().scroll.bar_width = 15.0;
-                    ui.spacing_mut().scroll.bar_inner_margin = 0.0;
-                    ui.spacing_mut().scroll.bar_outer_margin = 0.0;
-                    let mut scroll = egui::ScrollArea::vertical()
-                        .id_salt("raw-tileset-sheet")
-                        .scroll_bar_visibility(
-                            egui::scroll_area::ScrollBarVisibility::AlwaysVisible,
-                        )
-                        .max_height(256.0)
-                        .auto_shrink([false, false]);
-                    if std::mem::take(&mut self.reset_scroll) {
-                        scroll = scroll.vertical_scroll_offset(0.0);
-                    }
-                    scroll.show(ui, |ui| {
-                        let count = self.draft.visible_count();
-                        let (sheet, _) =
-                            ui.allocate_exact_size(Vec2::new(256.0, count as f32), Sense::hover());
-                        for index in 0..count {
-                            let cell = Rect::from_min_size(
-                                sheet.min
-                                    + Vec2::new(
-                                        (index % 16) as f32 * 16.0,
-                                        (index / 16) as f32 * 16.0,
-                                    ),
-                                Vec2::splat(16.0),
-                            );
-                            if ui.is_rect_visible(cell) {
-                                command = self
-                                    .sheet_cell(ui, index as u16, cell, drag, priority)
-                                    .or(command.take());
+                    let mut scroll = std::mem::take(&mut self.sheet_scroll);
+                    scroll.show(
+                        ui,
+                        "raw-tileset-sheet",
+                        self.draft.visible_count() as f32,
+                        |ui, panning| {
+                            if panning {
+                                self.drag = None;
                             }
-                        }
-                    });
+                            let count = self.draft.visible_count();
+                            let (sheet, _) = ui.allocate_exact_size(
+                                Vec2::new(256.0, count as f32),
+                                Sense::hover(),
+                            );
+                            for index in 0..count {
+                                let cell = Rect::from_min_size(
+                                    sheet.min
+                                        + Vec2::new(
+                                            (index % 16) as f32 * 16.0,
+                                            (index / 16) as f32 * 16.0,
+                                        ),
+                                    Vec2::splat(16.0),
+                                );
+                                if ui.is_rect_visible(cell) {
+                                    command = self
+                                        .sheet_cell(ui, index as u16, cell, drag, priority, panning)
+                                        .or(command.take());
+                                }
+                            }
+                        },
+                    );
+                    self.sheet_scroll = scroll;
                 },
             );
         } else {
@@ -138,7 +141,7 @@ impl TilesetForm {
                     Vec2::splat(16.0),
                 );
                 command = self
-                    .sheet_cell(ui, id, cell, drag, priority)
+                    .sheet_cell(ui, id, cell, drag, priority, false)
                     .or(command.take());
             }
         }

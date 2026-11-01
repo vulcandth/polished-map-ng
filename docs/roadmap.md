@@ -11,7 +11,7 @@ and design decisions in [architecture](architecture.md).
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | **In progress — active milestone** | PP2 backend complete; PP3 editing, asset switching, separate launcher, settings and Help implemented. Remaining menu/default review, complete workflow and native acceptance remain. |
+| 2. Plusplus parity | **In progress — active milestone** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
@@ -25,9 +25,11 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next: PP3 (in progress)** — finish the menu/default review and measured layout. Carry complete
-edit/save/open workflows through automated input checks before targeted native
-verification. See [GUI integration evidence](compatibility.md#plusplus-shared-gui-integration).
+**Next: PP3 (in progress)** — complete targeted native edit/save/open, dialog,
+clipboard and window-lifecycle verification on supported desktops. Use the
+[source reconciliation](compatibility.md#plusplus-gui-source-reconciliation) and
+existing automated input/geometry evidence to focus those checks. PP4 then
+requires save/reopen interoperability with the original application.
 The user authorized this sequence on 2026-10-31 while people test master;
 M5–M7 remain open against the published [development candidate](releases.md#development-packages).
 Both audited master functional gaps are fixed; its remaining gates are verification.
@@ -224,13 +226,15 @@ Do not expose automatic profile switching until the unified-editor milestone.
   now accept explicit plusplus documents. Asset loading, palette controls/imports/
   exports, block editing/transfers/resize, tile/roof editing and ordered asset saves
   are integrated, including asset switching and 512-tile/bank-order options.
+  Expanded lists reuse [middle-button panning](compatibility.md#plusplus-sheet-panning).
   The separate launcher, isolated settings/import and branch-specific Help/About
   are implemented; see [startup evidence](compatibility.md#plusplus-launch-settings-and-help).
   A shared [native process probe](compatibility.md#native-profile-preference-lifecycle)
   checks settings and normal-window restoration for both profiles.
-  Remaining menu/default review, complete workflows and
-  native checks remain. Verify geometry/input, then necessary
-  native behavior. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
+  The [menu/default review](compatibility.md#plusplus-gui-source-reconciliation)
+  and automated workflow/geometry checks are implemented. Complete native
+  workflows, integrated window/dialog/clipboard behavior and desktop acceptance
+  remain. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every
   remaining difference resolved or explicitly approved. Backend roundtrips alone

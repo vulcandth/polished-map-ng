@@ -47,6 +47,73 @@ fn menu(h: &mut Harness<'_, Editor>, item: &str) {
 }
 
 #[test]
+fn raw_sheet_middle_pan_clamps_without_selecting_swapping_or_editing() {
+    for scale in [1.0, 2.0] {
+        for expanded in [false, true] {
+            let (_dir, mut h) = fixture();
+            h.set_pixels_per_point(scale);
+            h.run();
+            h.set_size(Vec2::new(800.0, 600.0));
+            h.run();
+            h.state_mut()
+                .loaded
+                .as_mut()
+                .unwrap()
+                .plus_assets
+                .as_mut()
+                .unwrap()
+                .allow_512 = expanded;
+            open(&mut h, false);
+            let before = pixels(&h, 0);
+            let start = h.state().tileset_form.as_ref().unwrap().client_bounds.min
+                + Vec2::new(120.75, 140.75);
+            h.hover_at(start);
+            h.event(egui::Event::PointerButton {
+                pos: start,
+                button: egui::PointerButton::Middle,
+                pressed: true,
+                modifiers: egui::Modifiers::NONE,
+            });
+            h.run();
+            // Source: 512 - 258 + box_dh(2) = 256; the 256-tile sheet cannot scroll.
+            for (distance, expected) in [(1000.0, 256.0), (100.0, 100.0), (0.0, 0.0)] {
+                h.hover_at(start - Vec2::new(0.0, distance));
+                h.run();
+                let form = h.state().tileset_form.as_ref().unwrap();
+                assert!(
+                    (form.sheet_scroll.offset() - if expanded { expected } else { 0.0 }).abs()
+                        < 0.01
+                );
+                assert_eq!(form.selected, 0);
+                assert!(form.drag.is_none());
+                assert_eq!(pixels(&h, 0), before);
+            }
+            h.event(egui::Event::PointerButton {
+                pos: start,
+                button: egui::PointerButton::Middle,
+                pressed: false,
+                modifiers: egui::Modifiers::NONE,
+            });
+            h.run();
+            h.hover_at(start - Vec2::new(0.0, 50.0));
+            h.run();
+            assert_eq!(
+                h.state()
+                    .tileset_form
+                    .as_ref()
+                    .unwrap()
+                    .sheet_scroll
+                    .offset(),
+                0.0
+            );
+            h.get_by_label("Cancel").click();
+            h.run();
+            assert!(!h.state().is_modified());
+        }
+    }
+}
+
+#[test]
 fn raw_tile_and_roof_dialogs_match_geometry_keep_dirty_domains_and_save() {
     for roof in [false, true] {
         let (dir, mut h) = fixture();

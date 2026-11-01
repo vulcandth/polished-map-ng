@@ -20,6 +20,7 @@ pub(super) struct Draft {
     priority: bool,
     count: u16,
     reveal: bool,
+    scroll: workspace_pan::SheetScroll,
     atlas: egui::TextureHandle,
 }
 
@@ -86,6 +87,7 @@ pub(super) fn prepare(
             priority: attributes[2],
             count,
             reveal: false,
+            scroll: Default::default(),
             atlas: ctx.load_texture(
                 "plusplus-block-tiles",
                 egui::ColorImage::from_rgb([128, 2048], &pixels),
@@ -262,15 +264,12 @@ impl BlockForm {
         ui.scope_builder(
             egui::UiBuilder::new().max_rect(rect(11.0, 37.0, 271.0, height - 2.0)),
             |ui| {
-                ui.spacing_mut().scroll.bar_width = 15.0;
-                ui.spacing_mut().scroll.bar_inner_margin = 0.0;
-                ui.spacing_mut().scroll.bar_outer_margin = 0.0;
-                egui::ScrollArea::vertical()
-                    .id_salt("plusplus-block-tiles")
-                    .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysVisible)
-                    .max_height(height - 2.0)
-                    .auto_shrink([false, false])
-                    .show(ui, |ui| {
+                let mut scroll = std::mem::take(&mut plus.scroll);
+                scroll.show(
+                    ui,
+                    "plusplus-block-tiles",
+                    f32::from(plus.count),
+                    |ui, panning| {
                         let (sheet, _) = ui.allocate_exact_size(
                             Vec2::new(256.0, f32::from(plus.count / 16) * 16.0),
                             Sense::hover(),
@@ -307,12 +306,14 @@ impl BlockForm {
                             if self.selected == index {
                                 selection_border(ui, cell);
                             }
-                            if response.clicked() {
+                            if response.clicked() && !panning {
                                 self.selected = index;
                             }
                         }
                         plus.reveal = false;
-                    });
+                    },
+                );
+                plus.scroll = scroll;
             },
         );
         let font = egui::FontId::proportional(13.0);
