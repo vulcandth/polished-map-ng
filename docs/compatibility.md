@@ -3053,3 +3053,38 @@ does not verify graceful shutdown or preference persistence.
 These tests do not establish native storage/restart, compositor placement,
 clipboard or original-application interoperability. Complete PP3 workflows and
 PP4 acceptance remain open; fonts and FLTK painting remain deferred.
+
+## Native profile preference lifecycle
+
+The opt-in [native example](../crates/gui/examples/native_preferences.rs) runs
+master and plusplus in independent processes with real eframe native windows,
+file storage and shutdown flushing. Its
+[probe](../crates/gui/src/preferences/legacy/native_probe.rs) wraps the production
+editor, delegates its UI/save/autosave/persistence hooks, and calls the normal
+exit action. Only fixture paths and the app wrapper differ from normal startup.
+The example supplies temporary legacy files and explicit native persistence
+paths, so the user's stores are neither read nor written. The profile still
+selects its real app ID, legacy filename and JSON key.
+
+For each profile, the first process imports 640×480 normal geometry and selected
+legacy settings, changes one setting and exits. A second process verifies the NG
+record wins over the unchanged legacy file, restores that size, resizes to
+720×520 and exits without an intervening autosave. Subsequent processes verify
+that resized geometry and settings survive native restart. A simulated future
+application record then survives two further process exits unchanged while
+defaults are used. Every child must complete a single native shutdown save;
+the parent verifies original legacy bytes and the other profile's entire store.
+No synthetic call to the save callback substitutes for native shutdown.
+
+This covers temporary-path storage, normal sizing and empty-session exit. It
+does not exercise default OS store-directory discovery, moved/maximized/fullscreen
+windows, mixed DPI, Wayland compositor placement, power-loss recovery, or
+interactive canceled exits with loaded documents. Those remain M5/M6/PP3 gates.
+The [CI matrix](../.github/workflows/ci.yml) runs this opt-in feature on all three
+OS families, with Xvfb for Linux; local instructions are in [INSTALL](../INSTALL.md).
+
+All ten native child processes pass locally on WSL Ubuntu 22.04.5 using an
+isolated Xvfb display and Vulkan. Windows workspace format, Clippy, tests,
+rustdoc and opt-in-feature Clippy pass; the native Windows/macOS runs await
+the corresponding CI result. This is new development-branch evidence and does
+not retroactively certify the published master candidate or close M5/PP3.

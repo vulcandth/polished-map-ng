@@ -9,6 +9,11 @@ repository.workspace = true
 
 [features]
 visual-tests = ["egui_kittest/wgpu", "egui_kittest/snapshot"]
+native-tests = []
+
+[[example]]
+name = "native_preferences"
+required-features = ["native-tests"]
 
 [dependencies]
 polished-map-core.workspace = true

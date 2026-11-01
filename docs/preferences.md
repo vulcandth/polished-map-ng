@@ -1,6 +1,6 @@
 # Preference persistence
 
-The implemented settings follow the pinned master's `Main_Window` constructor,
+The implemented settings follow the pinned master/plusplus `Main_Window` constructors,
 `exit_cb` and `Resize_Dialog::initialize`. Settings are captured by eframe's
 shutdown `App::save` hook. Periodic autosave is disabled to retain the source's
 exit-time behavior. A canceled exit leaves the current session running.
@@ -181,8 +181,10 @@ See [implementation and verification evidence](compatibility.md#plusplus-launch-
 ## Remaining parity and verification
 
 Legacy discovery/import, the `meta128` workflow and application-record roundtrip
-are implemented. M5 remains in progress for native storage/restart/shutdown,
-placement and restored fullscreen/maximization/transparency; M6 supplies the
+are implemented. The [native process probe](compatibility.md#native-profile-preference-lifecycle)
+exercises both profiles' real eframe storage, shutdown/restart and normal size
+restoration in temporary directories. M5 remains in progress for integrated
+storage/lifecycle acceptance, placement and restored fullscreen/maximization/transparency; M6 supplies the
 integrated platform evidence. Remaining theme/font aesthetics are deferred by
 user direction and are not a functional acceptance requirement.
 
@@ -194,5 +196,6 @@ Parser tests cover source selection, continuations, duplicate keys, escaped
 paths and malformed input; Unix adds non-UTF-8 paths. The exact vendored geometry
 tracker is tested for resize/move followed by maximize/fullscreen/minimize,
 child-window isolation and invalid-size rejection without an intervening save.
-These tests do not establish native filesystem shutdown delivery, compositor
-placement or integrated restart behavior on Windows, Linux and macOS.
+These headless tests do not establish native filesystem shutdown delivery or
+compositor placement. The separate native probe supplies the platform-specific
+evidence linked above; it does not close integrated desktop acceptance.

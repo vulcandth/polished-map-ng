@@ -32,6 +32,16 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked
+      - name: Check native settings probe
+        run: cargo clippy -p polished-map-gui --all-targets --features native-tests --locked -- -D warnings
+      - name: Verify native settings shutdown and restart
+        if: runner.os != 'Linux'
+        run: cargo run -p polished-map-gui --example native_preferences --features native-tests --locked
+        env:
+          POLISHED_MAP_NATIVE_PREFERENCES_PROBE: '1'
+      - name: Verify isolated X11 settings shutdown and restart
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum env -u WAYLAND_DISPLAY POLISHED_MAP_NATIVE_PREFERENCES_PROBE=1 cargo run -p polished-map-gui --example native_preferences --features native-tests --locked
       - name: Verify hidden native modal windows
         if: runner.os != 'Linux'
         run: cargo run -p polished-map-platform --locked --example native_modals
@@ -67,6 +77,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev pkg-config
       - run: rustup toolchain install 1.95 --profile minimal
       - run: cargo +1.95 check --workspace --all-targets --locked
+      - run: cargo +1.95 check -p polished-map-gui --all-targets --features native-tests --locked
   dependencies:
     runs-on: ubuntu-24.04
     steps:

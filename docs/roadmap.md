@@ -172,6 +172,9 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   [functional fixes](compatibility.md#master-functional-gap-fixes). Verify native
   storage/restart/shutdown, placement, fullscreen/maximize restoration,
   transparency startup and canceled exits without losing edits across platforms.
+  The [shared native process probe](compatibility.md#native-profile-preference-lifecycle)
+  verifies isolated settings shutdown/restart and normal-size persistence;
+  complete desktop lifecycle acceptance remains open.
   Done when [preferences](preferences.md) has evidence for each applicable source
   setting and supported platform. Headless import/tracker tests do not close this gate.
 - [ ] **M6 — Verify complete user workflows on native platforms.**
@@ -223,6 +226,8 @@ Do not expose automatic profile switching until the unified-editor milestone.
   are integrated, including asset switching and 512-tile/bank-order options.
   The separate launcher, isolated settings/import and branch-specific Help/About
   are implemented; see [startup evidence](compatibility.md#plusplus-launch-settings-and-help).
+  A shared [native process probe](compatibility.md#native-profile-preference-lifecycle)
+  checks settings and normal-window restoration for both profiles.
   Remaining menu/default review, complete workflows and
   native checks remain. Verify geometry/input, then necessary
   native behavior. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).

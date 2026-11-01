@@ -44,6 +44,8 @@ mod palette_session_tests;
 mod plusplus_session;
 mod preferences;
 pub use preferences::legacy::NativeStartup;
+#[cfg(feature = "native-tests")]
+pub use preferences::legacy::native_probe::run as run_native_preferences_probe;
 mod printing;
 mod priority;
 mod recent_maps;

@@ -6,6 +6,9 @@ use polished_map_project::{
 };
 use std::path::Path;
 
+#[cfg(feature = "native-tests")]
+pub(crate) mod native_probe;
+
 #[derive(Clone, Copy, Default)]
 pub(crate) struct StartupWindowState {
     fullscreen: bool,

@@ -1,4 +1,4 @@
-//! Implemented preferences from master Main_Window constructor/exit_cb.
+//! Implemented preferences from master/plusplus Main_Window constructor/exit_cb.
 //! LGPL-3.0-only. eframe owns platform storage and native window placement.
 use super::*;
 use polished_map_core::PaletteSet;
