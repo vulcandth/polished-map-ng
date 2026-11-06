@@ -527,5 +527,5 @@ changes, not a resumption of deferred FLTK aesthetic matching.
 
 Implicit egui whole-interface keyboard zoom is disabled: its Ctrl+- reduced UI
 scale while Ctrl+= was consumed by the original map zoom action, preventing the
-inverse operation. Ctrl+0 also belongs to block assignment. OS DPI scaling and
+inverse operation. Ctrl+0 also belongs to block assignment. Startup also recovers UI scale saved by that old shortcut. OS DPI scaling and
 map zoom remain intact; additional zoom controls are planned under I3.

@@ -2416,9 +2416,9 @@ The user selected reviewed fixes now and future-feature planning on November 6.
 
 | Finding | Disposition and acceptance |
 |---|---|
-| Quick Alt mnemonics | Shared plusplus fix carried over; master regression and native quick Alt+F pass. Native testing also exposed the same frame-final modifier bug in About/Print/F10; these now match per-event modifiers exactly and have press/release regressions. |
+| Quick Alt mnemonics | Shared plusplus fix carried over; master regression and native quick Alt+F pass. Native testing also exposed the same frame-final modifier bug in About/Print/F10; these now match per-event modifiers exactly and have press/release regressions. Native quick Ctrl+/ opens About after the fix. |
 | Ctrl+Shift+digit cannot clear bindings | Normalize shifted physical digits only after editor text/modal guards; all-digit regression and native Ctrl+1 then Ctrl+Shift+1 pass. |
-| Ctrl+- shrinks the whole UI without a matching zoom-in | Disabled implicit egui keyboard zoom; regression and native Ctrl+-/Ctrl+= checks pass. Map zoom and OS DPI remain. |
+| Ctrl+- shrinks the whole UI without a matching zoom-in | Disabled implicit egui keyboard zoom and restore normal UI zoom at startup; regression and native Ctrl+-/Ctrl+= checks pass. A startup regression preserves 2× native DPI. |
 | Selectable placeholder labels | Ordinary labels no longer select; About credits, Help and errors explicitly retain selection. Automated regression suite passes. |
 | Project-folder chooser and bottom padding | Native folder chooser and bottom margin implemented; Windows folder selection refreshed the roof inventory. Cancellation retains the draft. |
 | Small native dropdown windows | 300-point native minimum for Open/New and asset selectors; Windows Open and Change Roof lists expose eight or more rows, scroll and select later entries. |
@@ -2443,5 +2443,7 @@ These focused checks do not close native acceptance on other platforms.
 
 The first WSL snapshot attempt crashed in its default graphics backend; rerunning
 with Vulkan completed. Inspected differences cover scrollbar fills, About links,
-Map Options bottom spacing and the Dark Theme menu row. Baseline verification
-and packaged-build CI are still pending; compilation is not native acceptance.
+Map Options bottom spacing and the Dark Theme menu row. All inspected snapshots pass. The remaining menu-pixel assertion needed to
+distinguish checkbox rows and preserve a half-point anchor at 2× DPI; the targeted
+pixel check now passes. Final cross-platform CI and packaging remain pending;
+compilation is not native acceptance.

@@ -282,13 +282,21 @@ fn popup_panel_corners_and_full_width_dividers_match_source_at_both_scales() {
                     pixel(bounds.left(), bounds.bottom() - 1.0, lower);
                     pixel(bounds.right() - 1.0, bounds.bottom() - 1.0, lower);
                     for item in items.iter().filter(|item| item.divider) {
-                        let row = h.get_by_label(item.name).rect();
+                        let role = match item.mark {
+                            Mark::Check => egui::Role::CheckBox,
+                            Mark::Radio => egui::Role::RadioButton,
+                            Mark::Blank | Mark::Submenu => egui::Role::MenuItem,
+                        };
+                        let row = h.get_by_role_and_label(role, item.name).rect();
                         let (upper, lower) = if dark { (3, 216) } else { (110, 247) };
-                        for x in bounds.left() as u32..bounds.right() as u32 {
+                        // Menu-bar anchors may land on a half logical point at
+                        // 2x DPI; preserve that physical-pixel-aligned origin.
+                        for column in 0..bounds.width() as u32 {
+                            let x = bounds.left() + column as f32;
                             // Dividers are part of the preceding row, overwrite
                             // both panel edges, and occupy exactly two pixels.
-                            pixel(x as f32, row.bottom() - 2.0, upper);
-                            pixel(x as f32, row.bottom() - 1.0, lower);
+                            pixel(x, row.bottom() - 2.0, upper);
+                            pixel(x, row.bottom() - 1.0, lower);
                         }
                     }
                 };
