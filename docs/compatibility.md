@@ -2401,8 +2401,15 @@ held Alt, nested/parent selection, disabled items, Escape, stale popup bindings
 modal blocking and escaped/Unicode recent-filename mnemonics. A regression test
 reproduced macOS Option+F inserting ƒ into an already focused editor field; menu
 activation now consumes its text event and releases editor focus before opening
-the popup. Unmatched typing in the open menu cannot alter that field. Native desktop
-keyboard/menu acceptance remains M6.
+the popup. Unmatched typing in the open menu cannot alter that field.
+The [Windows plusplus workflow check](#plusplus-windows-native-workflow-checks)
+subsequently found that a complete Alt chord delivered between frames was
+ignored after Alt release. The shared handler now matches the pressed event's
+modifiers instead of the frame's final modifier state. A failing-then-passing
+regression covers both profiles, shifted letters and Ctrl/Command exclusion;
+the original held-Alt, modal, submenu and macOS text-input tests remain in place.
+The same native Alt+F input opens File after the fix. Remaining desktop keyboard
+acceptance stays in M6/PP3; this does not update the already published candidate.
 
 [Mac home discovery](../crates/platform/src/legacy_home.rs) adapts pinned FLTK's
 `Fl_cocoa.mm::getUserPreferencesDirectory`: use nonempty existing HOME, then an
@@ -3141,7 +3148,53 @@ reconciliation, not native or original-application acceptance.
 
 PP3 still needs complete native workflows with real windows, clipboard services,
 file choosers, capture outside child windows, placement and DPI transitions.
+The [Windows map/tile check](#plusplus-windows-native-workflow-checks) supplies
+initial integrated evidence and exposed a shared menu-input timing bug, now fixed.
 Automated native process probes cover only the specifically recorded lifecycle
 cases. PP4 requires saved outputs reopened in the original application, alongside
 both pinned project suites and retained master regressions. Deferred fonts and
 FLTK painting are approved exceptions, not missing functional work.
+
+## Plusplus Windows native workflow checks
+
+On 2026-11-06 the separate `polished-map-plusplus` debug executable was exercised
+on Windows 11 25H2, build 26220.9757, using actual window input, native file
+choosers and the system clipboard. The starting revision was `a7690eb`; the
+menu-timing correction described above was rebuilt and checked in a second
+process. All project files were generated under ignored scratch storage;
+no pinned project or game graphics were edited or redistributed.
+
+- Open's native filter showed `.ablk`/`.blk`. Map Options inferred an 8×6 map
+  and `demo` tileset from its filename, listed the synthetic roof, and disabled
+  the parent editor until accepted. The loaded project exposed 16 blocks and
+  its `pokemon_event` script.
+- Selecting a block and painting one cell enabled Undo; Ctrl+Z and Ctrl+Y
+  reversed/reapplied it. Ctrl+S displayed the native success dialog. Independent
+  byte comparison found exactly map byte 0 changed from 0 to 1; all other
+  project files retained their original hashes.
+- The native tile editor accepted a color/pixel edit, copied it through the
+  Windows clipboard, and pasted into the next tile. Accept and Save created
+  the source-compatible `gfx/tilesets/demo.png` destination. An independent
+  decoder compared every pixel of the 128×256 PNG against all 512 source tiles:
+  only the intended first-pixel edit and complete destination-tile copy differed.
+  Original 2bpp bytes and unrelated assets/scripts remained unchanged.
+- Close and process exit completed without a dirty prompt after saving. Restart
+  retained the test map in Open Recent; reopening loaded the saved map and PNG,
+  and the tile editor displayed the edited pixels. Enter dismissed native success
+  dialogs and Escape closed the inspection draft. A second clean exit completed.
+- Quick Alt+F failed before the shared modifier-timing fix and opened File after
+  rebuilding. The Recent submenu then opened the saved map through the normal
+  options/load path. This verifies this native key route, not every shortcut.
+
+These checks cover a synthetic Windows map/tile workflow and native clipboard
+roundtrip within NG. Block attributes/collisions, roof/palette/event editing,
+Print/export, dirty/conflict cancellation, inter-application clipboard exchange,
+external capture/drop, placement and mixed-DPI checks remain in PP3. Linux/macOS
+integrated workflows and original-application save/reopen remain open. Existing
+headless/source/real-project suites retain their separate evidence; this native
+check does not close PP3 or PP4 or resume deferred aesthetics.
+
+The shared modifier-timing change passes Windows format, workspace Clippy with
+warnings denied, workspace tests, rustdoc and the production native-adapter
+graph check. A workspace test build initially encountered the running Windows
+executable's file lock; it passed after the native session exited cleanly.

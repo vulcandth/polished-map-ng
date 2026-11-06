@@ -232,7 +232,9 @@ Do not expose automatic profile switching until the unified-editor milestone.
   A shared [native process probe](compatibility.md#native-profile-preference-lifecycle)
   checks settings and normal-window restoration for both profiles.
   The [menu/default review](compatibility.md#plusplus-gui-source-reconciliation)
-  and automated workflow/geometry checks are implemented. Complete native
+  and automated workflow/geometry checks are implemented. Initial
+  [Windows native map/tile save/reopen and clipboard checks](compatibility.md#plusplus-windows-native-workflow-checks)
+  pass; the shared quick-Alt menu failure they exposed is fixed. Complete native
   workflows, integrated window/dialog/clipboard behavior and desktop acceptance
   remain. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 — Acceptance:** Differential and real-project edit/save/reopen tests
