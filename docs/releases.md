@@ -35,6 +35,21 @@ range while preserving license bytes and executable modes. The regression in
 [the archive test](../tools/test_development_package.py) covers the pre-1980
 notice timestamps found during the first Mac package run.
 
+The [2026-11-06 master development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-06-73c0e36)
+is published from `73c0e362ead36be8b8a44c0e7b999ed187b8ac17`.
+[All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42297779471)
+and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42297818324)
+passed. The source archive contains all 455 locked registry packages, patched
+native dependencies, original artwork and rebuilding instructions. Each binary
+archive retains all 463 dependency license/attribution records and asset notices.
+All five archives passed checksum, exact-commit, source-content, executable
+architecture/mode, Mac bundle/signature-metadata and license checks. All ten
+published asset digests match the verified local files. The shipped Windows CLI
+also ran locally; focused native Windows GUI evidence is recorded in the
+[review disposition](compatibility.md#november-1-upstream-review).
+
+Historical package evidence follows; it does not supersede this candidate.
+
 The [2026-10-31 development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-10-31-9a6f607)
 is published from `9a6f6074fc939276fa747c287280a5d61898c5b8`.
 [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/41236338190)
@@ -111,5 +126,15 @@ This preserves the existing optimization level and panic behavior. Further size
 tradeoffs need measurement rather than assuming size-oriented optimization is
 always smaller or appropriate for CPU rendering. See the official
 [Cargo profile reference](https://doc.rust-lang.org/cargo/reference/profiles.html#strip).
-The previous Windows GUI was 18,750,464 bytes and Linux GUI 26,835,744 bytes;
-new candidate measurements will be recorded with its release evidence.
+Measured GUI executable sizes (bytes, uncompressed):
+
+| Target | October 31 | November 6 |
+|---|---:|---:|
+| Windows x86-64 | 18,750,464 | 18,740,224 |
+| Linux x86-64 | 26,835,744 | 22,501,552 |
+| macOS Apple Silicon | 16,233,296 | 13,975,392 |
+| macOS Intel | 17,574,448 | 15,233,216 |
+
+These are complete-build comparisons, not an isolated optimization benchmark.
+Linux is about 16% smaller; both Macs about 14%; Windows is essentially unchanged.
+Further compression/size tradeoffs are deferred to measured improvements.
