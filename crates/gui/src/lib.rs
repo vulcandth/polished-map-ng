@@ -56,6 +56,7 @@ mod roof_workflow_tests;
 mod roof_workflows;
 mod rulers;
 mod save_feedback;
+mod shortcuts;
 mod status_bar;
 mod tileset_editor;
 #[cfg(test)]
@@ -412,6 +413,13 @@ impl Editor {
                 "Open a map to begin. Development build: plusplus parity is incomplete.".into();
         }
         editor.restore_preferences(cc.storage);
+        // Ctrl+= belongs to map zoom and Ctrl+0 to block assignment. Letting
+        // egui consume the remaining UI-zoom shortcuts creates one-way scaling.
+        // OS DPI scaling remains automatic.
+        cc.egui_ctx
+            .options_mut(|options| options.zoom_with_keyboard = false);
+        // Recover a scale persisted by the old one-way shortcut.
+        cc.egui_ctx.set_zoom_factor(1.0);
         cc.egui_ctx.set_theme(if editor.dark {
             egui::Theme::Dark
         } else {
@@ -424,6 +432,8 @@ impl Editor {
             // update_layout reserves exactly Fl::scrollbar_size(), without a gap.
             s.spacing.scroll.bar_inner_margin = 0.0;
             s.spacing.scroll.floating = false;
+            s.spacing.scroll.foreground_color = false;
+            s.interaction.selectable_labels = false;
             s.text_styles
                 .insert(egui::TextStyle::Body, egui::FontId::proportional(13.0));
             s.text_styles
@@ -1911,10 +1921,10 @@ impl Editor {
             menu_popup::begin(&ctx);
         }
         if !blocked && !ctx.egui_wants_keyboard_input() {
+            block_hotkeys::normalize_shifted_digits(&ctx);
             self.block_hotkey_input(&ctx);
             if ctx.input_mut(|i| {
-                i.modifiers.matches_exact(egui::Modifiers::COMMAND)
-                    && i.consume_key(egui::Modifiers::COMMAND, egui::Key::Slash)
+                shortcuts::consume_exact(i, egui::Modifiers::COMMAND, egui::Key::Slash)
             }) {
                 self.about = Some(Default::default());
             }
@@ -1924,17 +1934,14 @@ impl Editor {
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F11)) {
                 fullscreen::toggle(&ctx);
             }
-            if ctx.input_mut(|i| {
-                i.modifiers.matches_exact(egui::Modifiers::NONE)
-                    && i.consume_key(egui::Modifiers::NONE, egui::Key::F10)
-            }) {
+            if ctx.input_mut(|i| shortcuts::consume_exact(i, egui::Modifiers::NONE, egui::Key::F10))
+            {
                 self.transparency.toggle();
             }
             if ctx.input_mut(|i| {
                 // egui's logical match ignores extra Shift/Alt modifiers.
                 // Command+Shift+P belongs to Show Priority, even when disabled.
-                i.modifiers.matches_exact(egui::Modifiers::COMMAND)
-                    && i.consume_key(egui::Modifiers::COMMAND, egui::Key::P)
+                shortcuts::consume_exact(i, egui::Modifiers::COMMAND, egui::Key::P)
             }) {
                 self.prepare_print();
             }

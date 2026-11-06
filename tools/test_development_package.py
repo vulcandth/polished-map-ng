@@ -7,10 +7,23 @@ import tempfile
 import unittest
 import zipfile
 
-from development_package import archive_tree, supplemental_notices
+from development_package import archive_tree, common, supplemental_notices
 
 
 class DevelopmentArchiveTests(unittest.TestCase):
+    def test_binary_assets_keep_notices_without_loose_runtime_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            destination = Path(temporary)
+            common(destination, {"development": True})
+            source = Path("crates/gui/assets")
+            expected = sorted(source.rglob("NOTICE.md"))
+            self.assertTrue(expected)
+            copied = sorted(p for p in (destination / source).rglob("*") if p.is_file())
+            self.assertEqual([p.relative_to(destination) for p in copied], expected)
+            for notice in expected:
+                self.assertEqual((destination / notice).read_bytes(), notice.read_bytes())
+            self.assertTrue((destination / "LICENSES/egui-fonts/NotoSansSymbols2-OFL.txt").is_file())
+
     def test_pinned_upstream_notices_match_the_provenance_manifest(self):
         supplemental_notices(Path(__file__).resolve().parents[1])
 

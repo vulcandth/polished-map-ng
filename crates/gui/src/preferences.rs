@@ -208,16 +208,14 @@ mod tests {
     }
 
     #[test]
-    fn theme_radio_choices_reuse_v1_preferences_and_restore_the_selected_theme() {
+    fn theme_checkbox_choices_reuse_v1_preferences_and_restore_the_selected_theme() {
         use egui_kittest::kittest::{NodeT, Queryable};
         let mut storage = MemoryStorage::default();
-        for (name, dark) in [("Dark", true), ("Greybird", false)] {
+        for dark in [true, false] {
             let mut h = restore(&storage);
             h.get_by_label("View").click();
             h.run();
-            h.get_by_label("Theme").click();
-            h.run();
-            h.get_by_role_and_label(egui::Role::RadioButton, name)
+            h.get_by_role_and_label(egui::Role::CheckBox, "Dark Theme")
                 .click();
             h.run();
             let mut editor = std::mem::take(h.state_mut());
@@ -253,13 +251,15 @@ mod tests {
             );
             h.get_by_label("View").click();
             h.run();
-            h.get_by_label("Theme").click();
-            h.run();
             assert_eq!(
-                h.get_by_role_and_label(egui::Role::RadioButton, name)
+                h.get_by_role_and_label(egui::Role::CheckBox, "Dark Theme")
                     .accesskit_node()
                     .toggled(),
-                Some(egui::accesskit::Toggled::True)
+                Some(if dark {
+                    egui::accesskit::Toggled::True
+                } else {
+                    egui::accesskit::Toggled::False
+                })
             );
         }
     }

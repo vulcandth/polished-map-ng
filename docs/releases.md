@@ -14,12 +14,14 @@ the platform home-discovery tests. BUILD-INFO identifies the immutable commit,
 toolchain, build host, target and signing status. Each archive has a SHA-256 file.
 Mac bundles have local ad-hoc signatures, not Developer ID signing/notarization.
 
-Each binary package carries original asset/source notices, license texts and a
+Fonts, icons and Help are embedded in the executable; no neighboring asset files
+are required to run it. Binary packages retain asset notices, license texts and a
 dependency license inventory for the resolved workspace with all features enabled.
 Published-crate omissions are covered by [pinned license supplements](../LICENSES/dependency-supplements/README.md),
 including original authorship metadata and independently verified hashes.
 The matching source archive includes
-the full tracked repository, all registry dependencies, lockfile, toolchain,
+the full tracked repository (including original artwork and converted pixels),
+all registry dependencies, lockfile, toolchain,
 patches and [rebuild/relink instructions](rebuild.md). No external project/game
 fixtures or ignored working files are included. Source and binaries must be
 published together as a **prerelease**, with successful CI for the packaged commit.
@@ -101,3 +103,13 @@ Before publishing a parity/production release:
 - Signing/notarization is not yet configured; never claim signed delivery.
 
 No binaries should be presented as production-ready before these gates pass.
+
+## Development binary size
+
+Release builds use thin LTO, one codegen unit and explicit symbol stripping.
+This preserves the existing optimization level and panic behavior. Further size
+tradeoffs need measurement rather than assuming size-oriented optimization is
+always smaller or appropriate for CPU rendering. See the official
+[Cargo profile reference](https://doc.rust-lang.org/cargo/reference/profiles.html#strip).
+The previous Windows GUI was 18,750,464 bytes and Linux GUI 26,835,744 bytes;
+new candidate measurements will be recorded with its release evidence.

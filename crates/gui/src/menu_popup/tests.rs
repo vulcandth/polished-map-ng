@@ -144,7 +144,7 @@ fn mnemonics_open_switch_activate_and_respect_modal_and_disabled_state() {
         (egui::Key::F, "Save Map"),
         (egui::Key::D, "Unload Event Script"),
         (egui::Key::E, "Undo"),
-        (egui::Key::V, "Theme"),
+        (egui::Key::V, "Dark Theme"),
         (egui::Key::M, "Switch Mode"),
         (egui::Key::T, "Resize Map…"),
         (egui::Key::O, "Monochrome"),
@@ -185,7 +185,7 @@ fn mnemonics_enter_submenu_and_select_child_without_activating_parent() {
     h.key_press(egui::Key::L);
     h.run();
     assert!(h.query_by_label("Night").is_some());
-    // K belongs to Dark in Palettes, not D (Dark in Theme).
+    // K selects the Dark palette.
     h.key_press(egui::Key::K);
     h.run();
     assert_eq!(
@@ -202,15 +202,24 @@ fn held_alt_prefers_open_items_and_submenus_fall_back_to_the_parent() {
         .build_eframe(|cc| Editor::new(cc));
     h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::V]);
     h.run();
-    // Alt+T means Theme inside View, not the top-level Tools menu.
+    // Alt+T toggles the View checkbox, not the top-level Tools menu.
     h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::T]);
     h.run();
-    assert!(h.query_by_label("Greybird").is_some());
+    assert!(h.state().dark);
     assert!(h.query_by_label("Resize Map…").is_none());
-    // Theme has no L: FLTK searches its parent and opens Palettes instead.
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::V]);
+    h.run();
     h.key_press(egui::Key::L);
     h.run();
     assert!(h.query_by_label("Night").is_some());
+    // Palettes has no Z: search its parent and toggle map zoom.
+    h.key_press(egui::Key::Z);
+    h.run();
+    assert!(h.state().zoom);
+    h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::V]);
+    h.run();
+    h.key_press(egui::Key::L);
+    h.run();
     h.key_combination_modifiers(egui::Modifiers::ALT, &[egui::Key::N]);
     h.run();
     assert_eq!(
@@ -281,15 +290,21 @@ fn popup_panel_corners_and_full_width_dividers_match_source_at_both_scales() {
                     pixel(bounds.left(), bounds.bottom() - 1.0, lower);
                     pixel(bounds.right() - 1.0, bounds.bottom() - 1.0, lower);
                     for item in items.iter().filter(|item| item.divider) {
-                        let row = h
-                            .get_by_role_and_label(egui::Role::MenuItem, item.name)
-                            .rect();
+                        let role = match item.mark {
+                            Mark::Check => egui::Role::CheckBox,
+                            Mark::Radio => egui::Role::RadioButton,
+                            Mark::Blank | Mark::Submenu => egui::Role::MenuItem,
+                        };
+                        let row = h.get_by_role_and_label(role, item.name).rect();
                         let (upper, lower) = if dark { (3, 216) } else { (110, 247) };
-                        for x in bounds.left() as u32..bounds.right() as u32 {
+                        // Menu-bar anchors may land on a half logical point at
+                        // 2x DPI; preserve that physical-pixel-aligned origin.
+                        for column in 0..bounds.width() as u32 {
+                            let x = bounds.left() + column as f32;
                             // Dividers are part of the preceding row, overwrite
                             // both panel edges, and occupy exactly two pixels.
-                            pixel(x as f32, row.bottom() - 2.0, upper);
-                            pixel(x as f32, row.bottom() - 1.0, lower);
+                            pixel(x, row.bottom() - 2.0, upper);
+                            pixel(x, row.bottom() - 1.0, lower);
                         }
                     }
                 };
@@ -300,9 +315,7 @@ fn popup_panel_corners_and_full_width_dividers_match_source_at_both_scales() {
                 h.run();
                 h.get_by_label("View").click();
                 h.run();
-                h.get_by_label("Theme").click();
-                h.run();
-                check(&mut h, "Theme");
+                check(&mut h, "View");
             }
         }
     }

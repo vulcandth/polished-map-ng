@@ -558,3 +558,19 @@ before any write. Missing components can trigger source's inferred-length output
 and produce an unopenable aggregate; NG reports that case instead of creating it.
 Valid missing-component output semantics are otherwise preserved. These guards
 extend the existing no-partial-write persistence policy to plusplus.
+
+## Upstream tester usability review
+
+The November 1 review, accepted for M8 on November 6, replaces the two-entry
+Theme submenu with a Dark Theme checkbox; ordinary labels no longer select text,
+while About credits, Help and error messages remain selectable. About URLs are
+links. Scrollbars use widget background fills instead of foreground contrast.
+Native Open/New, Change Tileset and Change Roof clients have a 300-point minimum
+height because egui choices cannot extend outside the native window. Project
+options add a folder chooser and bottom padding. These are reviewed usability
+changes, not a resumption of deferred FLTK aesthetic matching.
+
+Implicit egui whole-interface keyboard zoom is disabled: its Ctrl+- reduced UI
+scale while Ctrl+= was consumed by the original map zoom action, preventing the
+inverse operation. Ctrl+0 also belongs to block assignment. Startup also recovers UI scale saved by that old shortcut. OS DPI scaling and
+map zoom remain intact; additional zoom controls are planned under I3.

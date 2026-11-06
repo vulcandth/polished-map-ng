@@ -113,14 +113,42 @@ impl AboutDialog {
             ui.put(
                 translated(layout.heading),
                 egui::Label::new(egui::RichText::new(&subject).font(heading_font))
+                    .selectable(true)
                     .halign(egui::Align::Center),
             );
-            ui.put(
-                translated(layout.body),
-                egui::Label::new(egui::RichText::new(&message).font(body_font))
-                    .wrap()
-                    .halign(egui::Align::Min),
-            );
+            // Retain measured line positions, with selectable credits and real
+            // hyperlinks instead of one inert multiline label.
+            for row in &body.rows {
+                let line: String = row.glyphs.iter().map(|glyph| glyph.chr).collect();
+                let (prefix, url) = line
+                    .find("https://")
+                    .map_or((line.as_str(), None), |at| (&line[..at], Some(&line[at..])));
+                let origin = translated(layout.body).min + row.pos.to_vec2();
+                let prefix_width = ui
+                    .painter()
+                    .layout_no_wrap(prefix.into(), body_font.clone(), text)
+                    .size()
+                    .x;
+                if !prefix.is_empty() {
+                    ui.put(
+                        Rect::from_min_size(origin, Vec2::new(prefix_width, row.size.y)),
+                        egui::Label::new(egui::RichText::new(prefix).font(body_font.clone()))
+                            .selectable(true),
+                    );
+                }
+                if let Some(url) = url {
+                    ui.put(
+                        Rect::from_min_size(
+                            origin + Vec2::new(prefix_width, 0.0),
+                            Vec2::new(row.size.x - prefix_width, row.size.y),
+                        ),
+                        egui::Hyperlink::from_label_and_url(
+                            egui::RichText::new(url).font(body_font.clone()),
+                            url,
+                        ),
+                    );
+                }
+            }
             close = ui
                 .put(
                     translated(layout.ok),
@@ -201,7 +229,7 @@ mod tests {
         open(&mut h);
         h.get_by_label("About Polished Map NG++");
         h.get_by_label(&SUBJECT.replacen("Polished Map NG", "Polished Map NG++", 1));
-        h.get_by_label(&MESSAGE.replacen("Polished Map 4.7.1", "Polished Map++ 2.7.1", 1));
+        h.get_by_label("Rust port of Polished Map++ 2.7.1 by Rangi42.");
         let area = h.state().about.as_ref().unwrap().bounds.unwrap();
         let ok = h.get_by_label("OK").rect();
         assert_eq!(ok.size(), Vec2::new(80.0, 22.0));
@@ -236,7 +264,7 @@ mod tests {
             });
             h.run();
             h.get_by_label(SUBJECT);
-            h.get_by_label(MESSAGE);
+            h.get_by_label("Rust port of Polished Map 4.7.1 by Rangi42.");
             assert!(MESSAGE.contains("Copyright © 2021 Rangi."));
             assert!(MESSAGE.contains("LGPL-3.0-only") && MESSAGE.contains("CC BY 3.0"));
             assert!(
@@ -249,7 +277,9 @@ mod tests {
             assert_eq!(ok.size(), Vec2::new(80.0, 22.0));
             assert_eq!(area.bottom() - ok.bottom(), 10.0);
             assert_eq!(area.right() - ok.right(), 10.0);
-            let body = h.get_by_label(MESSAGE).rect();
+            let body = h
+                .get_by_label("Rust port of Polished Map 4.7.1 by Rangi42.")
+                .rect();
             assert_eq!(body.left() - area.left(), 70.0);
             assert_eq!(body.top() - area.top(), 45.0);
             h.remove_cursor();
@@ -262,6 +292,31 @@ mod tests {
         }
         #[cfg(feature = "visual-tests")]
         snapshots.unwrap();
+    }
+
+    #[test]
+    fn about_links_emit_browser_requests_without_dismissing_the_dialog() {
+        let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+        open(&mut h);
+        for url in [
+            "https://github.com/vulcandth/polished-map-ng",
+            "https://github.com/Rangi42/polished-map",
+            "https://p.yusukekamiyamane.com/",
+            "https://creativecommons.org/licenses/by/3.0/",
+        ] {
+            h.get_by_role_and_label(egui::Role::Link, url).click();
+            let mut requests = Vec::new();
+            for _ in 0..4 {
+                h.step();
+                for command in &h.output().platform_output.commands {
+                    if let egui::OutputCommand::OpenUrl(request) = command {
+                        requests.push(request.url.clone());
+                    }
+                }
+            }
+            assert_eq!(requests, [url]);
+            assert!(h.state().about.is_some());
+        }
     }
 
     #[test]

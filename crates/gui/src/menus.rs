@@ -108,22 +108,14 @@ impl Editor {
                     self.block_menu(ui);
                 });
                 menu_popup::menu(ui, "View", |ui| {
-                    // Main_Window::{greybird_theme_cb,dark_theme_cb}: setonly,
-                    // redraw icons/main/help, without changing document colors.
-                    menu_popup::submenu(ui, "Theme", |ui| {
-                        for (name, dark) in [("Greybird", false), ("Dark", true)] {
-                            if menu_popup::radio(ui, self.dark == dark, name).clicked() {
-                                self.dark = dark;
-                                ctx.set_theme(if dark {
-                                    egui::Theme::Dark
-                                } else {
-                                    egui::Theme::Light
-                                });
-                                ctx.request_repaint();
-                                ui.close();
-                            }
-                        }
-                    });
+                    if menu_popup::checkbox(ui, true, &mut self.dark, "Dark Theme").changed() {
+                        ctx.set_theme(if self.dark {
+                            egui::Theme::Dark
+                        } else {
+                            egui::Theme::Light
+                        });
+                        ctx.request_repaint();
+                    }
                     menu_popup::checkbox(ui, true, &mut self.grid, "Grid");
                     menu_popup::checkbox(ui, true, &mut self.rulers, "Rulers");
                     menu_popup::checkbox(ui, true, &mut self.zoom, "Zoom");
@@ -282,31 +274,24 @@ mod tests {
         h.run();
         assert!(h.query_by_label("Dark appearance").is_none());
         assert!(
-            h.get_by_label("Theme").rect().bottom()
+            h.get_by_label("Dark Theme").rect().bottom()
                 <= h.get_by_role_and_label(egui::Role::CheckBox, "Grid")
                     .rect()
                     .top()
         );
-        h.get_by_label("Theme").focus();
-        h.run();
-        h.key_press(egui::Key::ArrowRight);
-        h.run();
     }
 
     fn check_theme(h: &Harness<'_, Editor>, dark: bool) {
-        for (name, selected) in [("Greybird", !dark), ("Dark", dark)] {
-            assert_eq!(
-                h.get_by_role_and_label(egui::Role::RadioButton, name)
-                    .accesskit_node()
-                    .toggled(),
-                Some(if selected {
-                    egui::accesskit::Toggled::True
-                } else {
-                    egui::accesskit::Toggled::False
-                })
-            );
-        }
-        assert!(h.get_by_label("Greybird").rect().bottom() <= h.get_by_label("Dark").rect().top());
+        assert_eq!(
+            h.get_by_role_and_label(egui::Role::CheckBox, "Dark Theme")
+                .accesskit_node()
+                .toggled(),
+            Some(if dark {
+                egui::accesskit::Toggled::True
+            } else {
+                egui::accesskit::Toggled::False
+            })
+        );
         assert_eq!(
             h.ctx
                 .style_of(if dark {
@@ -329,7 +314,7 @@ mod tests {
     }
 
     #[test]
-    fn theme_submenu_keyboard_and_pointer_choices_preserve_document_and_palette_edits() {
+    fn theme_checkbox_keyboard_and_pointer_choices_preserve_document_and_palette_edits() {
         use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
         let (dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
         menu_popup::test_font_size(&h.ctx, 12.0);
@@ -372,10 +357,10 @@ mod tests {
             .collect();
         #[cfg(feature = "visual-tests")]
         let mut snapshots = egui_kittest::SnapshotResults::new();
-        for (dark, _capture_snapshot) in [(false, true), (true, true), (false, false)] {
+        for (dark, _capture_snapshot) in [(true, true), (false, true), (true, false)] {
             open_theme(&mut h);
             check_theme(&h, h.state().dark);
-            let name = if dark { "Dark" } else { "Greybird" };
+            let name = "Dark Theme";
             if dark {
                 h.get_by_label(name).focus();
                 h.run();
@@ -386,7 +371,7 @@ mod tests {
             h.run();
             assert_eq!(h.state().dark, dark);
             assert!(
-                h.query_by_label("Theme").is_none(),
+                h.query_by_label("Dark Theme").is_none(),
                 "selection closes the menus"
             );
             assert_eq!(h.state().palette_document().content_hash(), palettes);
@@ -409,9 +394,9 @@ mod tests {
             #[cfg(feature = "visual-tests")]
             if _capture_snapshot {
                 snapshots.add(h.try_snapshot(if dark {
-                    "theme-submenu-dark"
+                    "theme-checkbox-dark"
                 } else {
-                    "theme-submenu-greybird"
+                    "theme-checkbox-light"
                 }));
             }
             h.key_press(egui::Key::Escape);
@@ -430,11 +415,11 @@ mod tests {
         h.state_mut().close_map();
         h.run();
         open_theme(&mut h);
-        h.get_by_label("Dark").click();
+        h.get_by_label("Dark Theme").click();
         h.run();
-        assert!(h.state().dark && h.state().loaded.is_none());
+        assert!(!h.state().dark && h.state().loaded.is_none());
         open_theme(&mut h);
-        check_theme(&h, true);
+        check_theme(&h, false);
         #[cfg(feature = "visual-tests")]
         snapshots.unwrap();
     }

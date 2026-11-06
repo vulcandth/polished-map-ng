@@ -11,7 +11,7 @@ and design decisions in [architecture](architecture.md).
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | **In progress — active milestone** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
+| 2. Plusplus parity | In progress — parked for M8 verification | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
@@ -25,15 +25,10 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next: PP3 (in progress)** — complete targeted native edit/save/open, dialog,
-clipboard and window-lifecycle verification on supported desktops. Use the
-[source reconciliation](compatibility.md#plusplus-gui-source-reconciliation) and
-existing automated input/geometry evidence to focus those checks. PP4 then
-requires save/reopen interoperability with the original application.
-The user authorized this sequence on 2026-10-31 while people test master;
-M5–M7 remain open against the published [development candidate](releases.md#development-packages).
-Both audited master functional gaps are fixed; its remaining gates are verification.
-See the [master testing-readiness audit](compatibility.md#master-testing-readiness).
+**Next:** Complete M8 shared-fix backport verification while the master review
+candidate is packaged. Then resume PP3 native acceptance and PP4 original-app
+interoperability; master M5–M7 gates remain open. The plusplus implementation is
+parked at its existing checkpoint until this backport is verified.
 The remaining M4 aesthetic matching is
 **deferred by user direction (2026-10-30)** after the palette-slider work;
 resume M4 only to fix a functional issue. Exact original fonts are also deferred
@@ -62,6 +57,15 @@ permits plusplus work without claiming M7 has passed.
 Target: the immutable master revision in [upstream.lock.toml](../upstream.lock.toml),
 with compatible pinned pokecrystal. Preserve safe valid-input behavior before
 adding improvements. Each completed group below still participates in M7.
+
+### Active review follow-up
+
+- [ ] **M8 (in progress) — Upstream tester review:** resolve the November 1
+  input, dialog and usability findings; verify portable packaging and measure
+  release size; publish refreshed Windows/Linux/macOS development builds with
+  matching source/licenses; backport shared fixes to the separate plusplus branch.
+  Acceptance: regression checks, focused native verification and successful
+  four-target packaging. Evidence: [review disposition](compatibility.md#november-1-upstream-review).
 
 ### Implemented work
 
@@ -283,8 +287,11 @@ refactoring from deliberately changed user behavior.
 - [ ] **I2:** Add a shared egui RGB/HSV graphical picker on Linux, macOS and
   Windows, retaining exact RGB8 edits and RGB5 controls/export. Parity currently
   targets upstream's Windows native chooser and RGB/hex controls on all OSes.
-- [ ] **I3:** Evaluate remaining themes, expanded undo, newer project conventions
-  and usability/format-preservation improvements as separately scoped proposals.
+- [ ] **I3:** Evaluate remaining themes, all-domain undo, adding/removing events,
+  field-specific event controls, additional map zoom levels, a movable blocks
+  sidebar, map-connection navigation, update checks and newer project conventions
+  as separately scoped proposals. The November 6 direction defers this wishlist
+  until after parity; it is not part of M8 tester builds.
 - [ ] **I4 — Acceptance:** Each chosen change has a stated benefit, appropriate
   regression/benchmark evidence and documented intentional differences. Unselected
   proposals are explicitly deferred rather than silently expanding scope.

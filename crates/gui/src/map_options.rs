@@ -275,6 +275,20 @@ impl Editor {
                     let label = ui.label("Project folder");
                     ui.text_edit_singleline(&mut form.root)
                         .labelled_by(label.id);
+                    if ui
+                        .button("Browse…")
+                        .on_hover_text("Choose project folder")
+                        .clicked()
+                        && let Some(root) = rfd::FileDialog::new()
+                            .set_title("Choose project folder")
+                            .set_directory(&form.root)
+                            .pick_folder()
+                    {
+                        form.root = root.to_string_lossy().into_owned();
+                        if let Err(error) = form.refresh_choices() {
+                            self.error = Some(error.to_string());
+                        }
+                    }
                     if form.root != form.choices_root
                         && ui.button("Reload project options").clicked()
                         && let Err(error) = form.refresh_choices()
@@ -286,7 +300,9 @@ impl Editor {
                     } else {
                         ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
                     }
+                    ui.add_space(10.0);
                 });
+            ui.add_space(10.0);
             // Advanced controls run after the source client: revalidate after
             // editing the root so Enter cannot submit stale asset choices.
             let enabled = form.root == form.choices_root

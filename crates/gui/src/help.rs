@@ -222,6 +222,7 @@ impl HelpWindow {
                         scroll = scroll.vertical_scroll_offset(0.0);
                     }
                     let result = scroll.show(ui, |ui| {
+                        ui.style_mut().interaction.selectable_labels = true;
                         let note = if self.profile == documents::Profile::PlusPlus {
                             "Polished Map++ 2.7.1 reference — NG parity is in progress."
                         } else {

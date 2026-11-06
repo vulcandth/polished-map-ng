@@ -825,30 +825,16 @@ rasterization or mnemonic-navigation parity. Those remain separate work.
 
 ## Source Theme submenu for the initial supported themes
 
-View > Theme replaces the temporary Dark appearance checkbox, following
-`Main_Window::initialize`, `greybird_theme_cb` and `dark_theme_cb`. The parent
-keeps its source position/divider and blank image column; Greybird and Dark are
-mutually exclusive radio rows in source order. The other ten upstream themes
-remain deferred under the accepted initial two-theme scope.
+Historical implementation evidence: the initial port reproduced the source
+Greybird/Dark submenu using `Main_Window::initialize`, `greybird_theme_cb` and
+`dark_theme_cb`. M8 supersedes that two-entry submenu with Dark Theme, as requested
+in the November 1 review. The other ten upstream themes remain deferred.
 
-The callbacks change the shared UI theme and redraw existing icon variants;
-they do not reload palettes or modify map data/history. Tests exercise pointer
-and keyboard activation (including selecting the current theme), checked-state
-exclusivity, close-on-selection, empty editor use, modal disabling, preservation
-of unsaved map and RGB8 palette edits and stable map textures. Preference tests
-save via `App::save`, reconstruct the editor and check the selected radio and
-startup theme, retaining the existing v1 `dark` boolean. Startup is checked
-inside the eframe creation callback before the test harness overrides theme.
-
-Reviewed snapshots cover both radio selections and the changed View row in
-Windows-style, Unix/Dark at 2× and Mac-shortcut menus. Formatting, workspace
-Clippy/tests and rustdoc pass locally; the GUI visual suite passes with 165 tests
-and four explicitly ignored host/reference integration tests. This change does not alter the
-existing reference-oracle contracts.
-
-These controls select the existing partial Greybird/Dark rendering. Complete
-native widget styling, native popup/window behavior, other themes and mnemonic
-navigation remain separate fidelity requirements.
+Current tests cover pointer/keyboard toggling, checked state, close-on-selection,
+empty-editor use, modal guards, preservation of unsaved map/palette edits and
+stable map textures. Preference tests save/reconstruct the editor and check the
+startup theme, retaining the existing v1 `dark` boolean. See the
+[review disposition](#november-1-upstream-review) for current verification status.
 
 ## Map window title and Print filename
 
@@ -3198,3 +3184,53 @@ The shared modifier-timing change passes Windows format, workspace Clippy with
 warnings denied, workspace tests, rustdoc and the production native-adapter
 graph check. A workspace test build initially encountered the running Windows
 executable's file lock; it passed after the native session exited cleanly.
+
+## November 1 upstream review
+
+M8 follows the November 1 Windows tester review, read through its final message
+and attachments. Status below distinguishes diagnosed issues from verified fixes.
+The user selected reviewed fixes now and future-feature planning on November 6.
+
+| Finding | Disposition and acceptance |
+|---|---|
+| Quick Alt mnemonics | Shared plusplus fix carried over; master regression and native quick Alt+F pass. Native testing also exposed the same frame-final modifier bug in About/Print/F10; these now match per-event modifiers exactly and have press/release regressions. Native quick Ctrl+/ opens About after the fix. |
+| Ctrl+Shift+digit cannot clear bindings | Normalize shifted physical digits only after editor text/modal guards; all-digit regression and native Ctrl+1 then Ctrl+Shift+1 pass. |
+| Ctrl+- shrinks the whole UI without a matching zoom-in | Disabled implicit egui keyboard zoom and restore normal UI zoom at startup; regression and native Ctrl+-/Ctrl+= checks pass. A startup regression preserves 2× native DPI. |
+| Selectable placeholder labels | Ordinary labels no longer select; About credits, Help and errors explicitly retain selection. Automated regression suite passes. |
+| Project-folder chooser and bottom padding | Native folder chooser and bottom margin implemented; Windows folder selection refreshed the roof inventory. Cancellation retains the draft. |
+| Small native dropdown windows | 300-point native minimum for Open/New and asset selectors; Windows Open and Change Roof lists expose eight or more rows, scroll and select later entries. |
+| Theme submenu | Dark Theme checkbox implemented; keyboard/pointer, dirty-data preservation and preference restart regressions pass. |
+| About URLs | Four links emit their exact browser URLs in headless tests; credits remain selectable. |
+| Scrollbar contrast | Widget background fills implemented; reviewed light/dark snapshots preserve scrollbar width and geometry. |
+| Portable assets | An isolated Windows executable launched with icons and no adjacent assets. Binary packaging now retains asset notices only; full artwork remains in matching source. Packaging regression checks notice bytes and font license. |
+| Executable size | Previous packages already used release builds: Windows GUI 18,750,464 bytes; Linux GUI 26,835,744 bytes. Added symbol stripping while retaining thin LTO and codegen-units=1. New package measurements pending. |
+| Window-size persistence and recent shortcut | Positive tester observations; retain behavior in regression verification. |
+| Future features | I3 owns expanded undo/events/zoom/sidebar, connection navigation and update checks. Excluded from M8 by user direction. |
+
+Project options are session discovery overrides; application preferences use the
+NG settings store described in [preferences](preferences.md), not an upstream
+`.cfg` compatibility promise. New tester packages remain development builds;
+M5–M7 and clean-machine platform acceptance remain open.
+
+Windows review checks ran on Windows 11 25H2 (26220.9757), using an isolated
+executable and an ignored synthetic 20×18 master map with generated graphics.
+No game fixtures are distributed. The map opened with selected assets, the
+reviewed shortcuts behaved correctly and exit completed without a save prompt.
+These focused checks do not close native acceptance on other platforms.
+
+The first WSL snapshot attempt crashed in its default graphics backend; rerunning
+with Vulkan completed. Inspected differences cover scrollbar fills, About links,
+Map Options bottom spacing and the Dark Theme menu row. All inspected snapshots pass. The remaining menu-pixel assertion needed to
+distinguish checkbox rows and preserve a half-point anchor at 2× DPI; the targeted
+pixel check now passes. Final cross-platform CI and packaging remain pending;
+compilation is not native acceptance.
+
+### Plusplus backport of M8
+
+The shared changes from master candidate `73c0e362ead36be8b8a44c0e7b999ed187b8ac17`
+are applied to the separate plusplus branch. Conflict resolution retains the
+plusplus 512-tile checkbox, profile-specific About/Help identity, isolated
+preferences, and two-profile native-key regression. Windows workspace formatting,
+Clippy, tests, rustdoc, native-feature graph and packaging-notice tests pass.
+Linux visual and cross-platform CI verification are pending. PP3/PP4 native and
+original-application acceptance remain open; this backport does not advance them.

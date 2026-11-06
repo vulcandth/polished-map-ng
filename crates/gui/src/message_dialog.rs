@@ -150,6 +150,7 @@ fn render(
             |ui| {
                 ui.add(
                     egui::Label::new(egui::RichText::new(message).font(font))
+                        .selectable(true)
                         .wrap()
                         .halign(egui::Align::Min),
                 );
