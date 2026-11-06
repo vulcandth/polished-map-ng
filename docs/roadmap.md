@@ -11,7 +11,7 @@ and design decisions in [architecture](architecture.md).
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | In progress — parked for M8 verification | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
+| 2. Plusplus parity | In progress — parked with M8 fixes applied | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
@@ -25,10 +25,10 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Complete M8 shared-fix backport verification while the master review
-candidate is packaged. Then resume PP3 native acceptance and PP4 original-app
-interoperability; master M5–M7 gates remain open. The plusplus implementation is
-parked at its existing checkpoint until this backport is verified.
+**Next:** Collect tester feedback on the [November 6 development build](releases.md#development-packages)
+and continue M5 settings lifecycle and M6–M7 native/application acceptance.
+Plusplus is parked with the M8 backport applied; resume PP3 native workflows and
+PP4 original-application interoperability when returning to that branch.
 The remaining M4 aesthetic matching is
 **deferred by user direction (2026-10-30)** after the palette-slider work;
 resume M4 only to fix a functional issue. Exact original fonts are also deferred
@@ -60,12 +60,12 @@ adding improvements. Each completed group below still participates in M7.
 
 ### Active review follow-up
 
-- [ ] **M8 (in progress) — Upstream tester review:** resolve the November 1
-  input, dialog and usability findings; verify portable packaging and measure
-  release size; publish refreshed Windows/Linux/macOS development builds with
-  matching source/licenses; backport shared fixes to the separate plusplus branch.
-  Acceptance: regression checks, focused native verification and successful
-  four-target packaging. Evidence: [review disposition](compatibility.md#november-1-upstream-review).
+- [x] **M8 — Upstream tester review:** reviewed input/dialog/usability fixes,
+  portable assets and measured release size are verified. Refreshed four-target
+  development packages and matching source/licenses are published. Shared fixes
+  are backported to `codex/plusplus-port`; Windows workspace and Linux visual
+  regressions pass. Native master milestone acceptance remains M5–M7.
+  Evidence: [review disposition](compatibility.md#november-1-upstream-review).
 
 ### Implemented work
 

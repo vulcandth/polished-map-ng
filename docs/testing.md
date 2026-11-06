@@ -6,7 +6,7 @@ and remaining aesthetic matching are deferred, including the approved palette
 slider appearance. Plusplus support is not ready for acceptance testing.
 
 Download a package and its `.sha256` from the
-[development prerelease](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-10-31-9a6f607):
+[development prerelease](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-06-73c0e36):
 
 | Platform | Package suffix | Start the editor |
 |---|---|---|

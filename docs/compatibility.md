@@ -3201,9 +3201,10 @@ The user selected reviewed fixes now and future-feature planning on November 6.
 | Small native dropdown windows | 300-point native minimum for Open/New and asset selectors; Windows Open and Change Roof lists expose eight or more rows, scroll and select later entries. |
 | Theme submenu | Dark Theme checkbox implemented; keyboard/pointer, dirty-data preservation and preference restart regressions pass. |
 | About URLs | Four links emit their exact browser URLs in headless tests; credits remain selectable. |
-| Scrollbar contrast | Widget background fills implemented; reviewed light/dark snapshots preserve scrollbar width and geometry. |
+| Scrollbar contrast | Widget background fills implemented; reviewed light/dark snapshots preserve scrollbar width and geometry. The suggested custom hover-outline painting remains deferred with M4. |
 | Portable assets | An isolated Windows executable launched with icons and no adjacent assets. Binary packaging now retains asset notices only; full artwork remains in matching source. Packaging regression checks notice bytes and font license. |
-| Executable size | Previous packages already used release builds: Windows GUI 18,750,464 bytes; Linux GUI 26,835,744 bytes. Added symbol stripping while retaining thin LTO and codegen-units=1. New package measurements pending. |
+| Original XPM files | Retained as source/provenance; runtime uses embedded pixels and does not need XPM or PNG neighbors. |
+| Executable size | Previous packages already used release builds: Windows GUI 18,750,464 bytes; Linux GUI 26,835,744 bytes. Added symbol stripping while retaining thin LTO and codegen-units=1. New measured sizes and successful package evidence are in [releases](releases.md#development-binary-size). |
 | Window-size persistence and recent shortcut | Positive tester observations; retain behavior in regression verification. |
 | Future features | I3 owns expanded undo/events/zoom/sidebar, connection navigation and update checks. Excluded from M8 by user direction. |
 
@@ -3220,10 +3221,11 @@ These focused checks do not close native acceptance on other platforms.
 
 The first WSL snapshot attempt crashed in its default graphics backend; rerunning
 with Vulkan completed. Inspected differences cover scrollbar fills, About links,
-Map Options bottom spacing and the Dark Theme menu row. All inspected snapshots pass. The remaining menu-pixel assertion needed to
-distinguish checkbox rows and preserve a half-point anchor at 2× DPI; the targeted
-pixel check now passes. Final cross-platform CI and packaging remain pending;
-compilation is not native acceptance.
+Map Options bottom spacing and the Dark Theme menu row. All inspected snapshots
+pass. The remaining menu-pixel assertion needed to distinguish checkbox rows and preserve a half-point anchor at 2× DPI; the targeted
+pixel check now passes. Master [CI](https://github.com/vulcandth/polished-map-ng/actions/runs/42297779471)
+and [packaging](https://github.com/vulcandth/polished-map-ng/actions/runs/42297818324)
+passed for the published candidate. Compilation is not native acceptance.
 
 ### Plusplus backport of M8
 
@@ -3232,5 +3234,8 @@ are applied to the separate plusplus branch. Conflict resolution retains the
 plusplus 512-tile checkbox, profile-specific About/Help identity, isolated
 preferences, and two-profile native-key regression. Windows workspace formatting,
 Clippy, tests, rustdoc, native-feature graph and packaging-notice tests pass.
-Linux visual and cross-platform CI verification are pending. PP3/PP4 native and
+The Linux visual suite passes (299 tests, seven explicitly ignored integration
+checks). [Cross-platform CI](https://github.com/vulcandth/polished-map-ng/actions/runs/42298610282)
+passed all eight jobs, including Windows/Linux/macOS, source-reference,
+real-project, dependency, MSRV and visual checks. PP3/PP4 native and
 original-application acceptance remain open; this backport does not advance them.
