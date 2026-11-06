@@ -72,7 +72,8 @@ exist from day one; a partial slice is not a completed parity milestone.
   prioritized M8 master review fixes and refreshed tester builds, followed by
   backporting shared fixes to `codex/plusplus-port`. Fix reviewed usability issues
   now and plan the feature wishlist after parity. Do not resume general visual
-  matching merely to close M4.
+  matching merely to close M4. The user then resumed PP3/PP4 functionality and
+  acceptance work after the verified M8 backport; keep master acceptance open.
   Preserve layout/sizing and separate plusplus entry points; reuse shared backend/platform code.
   Preserve the approved exception in `docs/deviations.md` and roadmap status.
 - The user prefers the earlier rounded egui palette sliders (2026-10-31).

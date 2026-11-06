@@ -1,5 +1,25 @@
 # Native adapter source notices
 
+## arboard 3.7.0
+
+Source: <https://github.com/1Password/arboard> and the immutable Cargo archive
+identified in [sources.json](sources.json). All original sources, metadata,
+[MIT](arboard-3.7.0/LICENSE-MIT.txt) and [Apache-2.0](arboard-3.7.0/LICENSE-APACHE.txt)
+licenses are retained.
+
+Modified for Polished Map NG on 2026-11-06, under MIT OR Apache-2.0:
+
+- Accept Linux `image/bmp` clipboard offers from FLTK, preferring `image/png`
+  when available. X11 selects the decoder from the requested target; Wayland
+  falls back only when PNG is unavailable. Invalid PNG does not silently select
+  another payload. Enable the existing image crate's BMP decoder on Linux.
+- Use the current `image::ImageReader` spelling in image readers.
+
+The [isolated X11 test](../crates/gui/tests/clipboard_images.rs) exercises the
+production reader with an independent clipboard owner, exact RGB vectors,
+PNG precedence, corrupt data and excessive BMP dimensions. Integrated Wayland
+clipboard acceptance remains separate.
+
 ## winit 0.30.13
 
 Source: <https://github.com/rust-windowing/winit> and the immutable Cargo archive

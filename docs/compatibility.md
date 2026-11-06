@@ -3172,11 +3172,14 @@ no pinned project or game graphics were edited or redistributed.
   rebuilding. The Recent submenu then opened the saved map through the normal
   options/load path. This verifies this native key route, not every shortcut.
 
-These checks cover a synthetic Windows map/tile workflow and native clipboard
-roundtrip within NG. Block attributes/collisions, roof/palette/event editing,
-Print/export, dirty/conflict cancellation, inter-application clipboard exchange,
-external capture/drop, placement and mixed-DPI checks remain in PP3. Linux/macOS
-integrated workflows and original-application save/reopen remain open. Existing
+This initial pass covered a synthetic Windows map/tile workflow and native
+clipboard roundtrip within NG. The [expanded native pass](#plusplus-expanded-native-acceptance)
+now supplies block/roof/palette/event/conflict and original-application evidence.
+At the end of the initial pass, block attributes/collisions, roof/palette/event
+editing, Print/export, dirty/conflict cancellation, inter-application clipboard
+exchange, external capture/drop, placement and mixed-DPI checks were still open.
+Linux/macOS integrated workflows and original-application save/reopen were also
+unverified. The expanded pass below records the current evidence and limits. Existing
 headless/source/real-project suites retain their separate evidence; this native
 check does not close PP3 or PP4 or resume deferred aesthetics.
 
@@ -3184,6 +3187,58 @@ The shared modifier-timing change passes Windows format, workspace Clippy with
 warnings denied, workspace tests, rustdoc and the production native-adapter
 graph check. A workspace test build initially encountered the running Windows
 executable's file lock; it passed after the native session exited cleanly.
+
+## Plusplus expanded native acceptance
+
+PP3/PP4 resumed on 2026-11-06 after the M8 backport at `9c4c05a`.
+Windows checks used Windows 11 25H2 (26220.9757), the rebuilt separate launcher,
+and a disposable copy of the earlier synthetic 8×6 project. Reference checks
+used the pinned plusplus `27c1f84` application built with g++ 11.4.0, `-O2`,
+and pinned FLTK 1.4.5 on Ubuntu 22.04.5 / WSL2 6.18.58.1, through WSLg X11.
+Original source files were unmodified; objects/binaries and fixture outputs are
+ignored scratch data. FLTK used Xft, with Cairo/Pango and Wayland disabled.
+This is an actual original-application check, not only extracted functions.
+
+| Workflow | Observed evidence |
+|---|---|
+| Block attributes and paired persistence | Native right-click editor accepted RED, X flip and priority on occurrence 0, plus collision quadrant 0 = 1. Save changed exactly attribute byte 0 to `0xA1` and collision byte 0 to `1`; unrelated files retained their bytes. Original plusplus reopened and picked the same flags and collision. |
+| Original edits and conflict protection | Original plusplus added Y flip to occurrence 1 and saved `0xE1`. NG's existing session attempted a different collision edit: Save rejected the externally changed attributes and left **all** paired files intact, including collision = 1. Cancel Close retained the session; explicit discard and Recent reopened saved files. |
+| Roof editor/save/reopen | Native pixel edit on initial tile `$0:10` wrote a 24×24 PNG with only pixel `(0,16)` black, preserving 2bpp input. This follows the original reversed display rows. Original plusplus reopened the PNG and displayed the same pixel in `$0:10`. |
+| Palette session and export | Hex `123456` remained exact in the editor with RGB5 channels 2/6/10. Enter applied without closing. Export produced six eight-palette sets with Custom gray starting `RGB 02,06,10`; palette export is separate from map Save. |
+| Event movement/options/save | Drag moved `pokemon_event` from `(0,0)` to `(2,2)`; native options accepted suffix `, EEVEE`. Independent bytes are `\tpokemon_event  2,  2, EEVEE\r\n`. Original plusplus reopened the moved marker and fields. Its Linux text reader also exposes the existing CR as `^M`; NG preserves the fixture's CRLF rather than rewriting unrelated line endings. |
+| Print export | All five options were toggled, the native save chooser used the map-derived PNG name, and export produced an RGB 256×192 image with success feedback. Full overlay pixel comparison and Print clipboard exchange remain acceptance work. |
+| Image clipboard | NG Windows roof image copy and Ctrl+Shift+V worked on a distinct tile; cancel discarded that draft. Original Linux copy/paste also worked locally. Original → NG on the same Linux X11 desktop exposed the BMP transport gap described below. Cross Windows/WSLg image transfer was unsuccessful in either direction and is not counted as native OS interoperability acceptance. |
+
+The original's WSLg modal surfaces occasionally captured black until moved;
+redrawing exposed their controls. That observation is environment/reference
+behavior, not a reason to change NG styling. Exact original fonts remain deferred.
+
+### Linux clipboard BMP interoperability
+
+FLTK `src/Fl_x.cxx` at the pinned toolkit commit advertises only `image/bmp`
+for image selections. Locked arboard 3.7.0 requested only `image/png`, causing
+native Paste to do nothing even with both apps on the same X11 desktop.
+The [audited patch](../vendor/patches/arboard-3.7.0.patch) adds BMP fallback to
+X11 and Wayland readers and enables the existing BMP decoder. PNG remains first;
+decoding failure is an error rather than permission to select another payload.
+Output formats and Windows/macOS transport behavior are unchanged.
+
+The [independent X11 owner test](../crates/gui/tests/clipboard_images.rs) passes
+under isolated Xvfb: exact 24-bit BMP red/green pixels, PNG precedence, malformed
+BMP/PNG, excessive dimensions and unavailable content. The production feature
+graph requires the patched reader and PNG/BMP support without dev dependencies.
+CI runs the probe on its own server. Post-fix native X11 verification passed in
+both directions: original BMP → NG Ctrl+Shift+V into tile `$0:11`, and NG PNG →
+original Paste into `$0:12`. Saving from NG produced exactly two black pixels
+at `(0,16)` and `(8,16)` in the 24×24 roof PNG; all other 574 pixels stayed white.
+The reverse-reference draft was canceled without overwriting NG's saved file.
+Windows format/Clippy/workspace tests/rustdoc and production graph pass; Linux
+Clippy and the independent X11 probe pass. Cross-platform CI remains pending.
+
+PP3 remains open for integrated cross-application clipboard, capture/drop,
+placement/DPI and complete Linux/macOS workflows. PP4 remains open for the pinned
+Polished Crystal full-application edit/save/reopen matrix and master regressions.
+Synthetic native workflows do not establish real-project parity.
 
 ## November 1 upstream review
 

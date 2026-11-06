@@ -30,5 +30,8 @@ polished-map-platform = { version = "0.1.0", path = "../platform" }
 egui_kittest.workspace = true
 tempfile.workspace = true
 
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+x11rb = "0.13"
+
 [lints]
 workspace = true

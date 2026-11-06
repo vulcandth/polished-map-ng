@@ -358,3 +358,8 @@ Plusplus's expanded block/raw-tile list panning adapts `widgets.cpp::Workspace`
 and the list setup in `block-window.cpp`/`tileset-window.cpp` at the pinned
 plusplus revision, under LGPL-3.0-only. It reuses the existing gesture adapter
 and source frame calculations without introducing FLTK widget painting.
+
+Linux clipboard image interoperability uses a narrowly patched arboard 3.7.0,
+under its original MIT OR Apache-2.0 terms. The patch accepts FLTK's BMP offers
+while preserving PNG preference. Original licenses, immutable archive hashes
+and complete patch records are retained in [vendor notices](vendor/NOTICE.md).

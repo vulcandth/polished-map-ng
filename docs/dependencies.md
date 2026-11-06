@@ -103,7 +103,13 @@ explicit image-paste button/shortcut. egui exposes image-copy output and incomin
 paste events but no request to read an image on button click. Image/Wayland data
 control features reuse the locked egui-winit stack, but the direct dependency
 makes Windows clipboard packages reachable in the license audit. Clipboard
-reads occur only on that user action; native transport still needs platform checks.
+reads occur only on that user action. The pinned local arboard patch adds Linux
+BMP fallback for original FLTK clipboard images, preserving PNG preference and
+the existing Windows dependency versions. It adds no registry package; x11rb
+is also a GUI dev dependency for an independent selection-owner regression.
+See [patch notices](../vendor/NOTICE.md#arboard-370) and
+[native acceptance](compatibility.md#plusplus-expanded-native-acceptance).
+Wayland and remaining desktop transport acceptance stay open.
 
 Windows clipboard dependencies `clipboard-win` 5.4.3 and `error-code` 3.4.0
 declare the Boost Software License 1.0 (BSL-1.0). The

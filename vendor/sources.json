@@ -1148,6 +1148,126 @@
           "original_sha256": "38ea5334250dcdd5f7480dd4bf30fbe060ac34d41fa21399c4528dff3d561f5c"
         }
       }
+    },
+    {
+      "name": "arboard",
+      "version": "3.7.0",
+      "license": "MIT OR Apache-2.0",
+      "directory": "arboard-3.7.0",
+      "archive_sha256": "aeb9553e62312c8756a5979254fc6d7da8bbeb5986a1e17037fab932f7037917",
+      "archive_url": "https://static.crates.io/crates/arboard/arboard-3.7.0.crate",
+      "patch": "patches/arboard-3.7.0.patch",
+      "patch_sha256": "4519b0c2b6a90a9d246a6735c4c3f1f181334a7c9d4fb31d652aacd5d60c1a61",
+      "files": {
+        ".cargo_vcs_info.json": {
+          "sha256": "559849605b4f3fd137de05d9e99c64e62ba44abdfd5a4d03d86db2af13307b2a",
+          "original_sha256": "559849605b4f3fd137de05d9e99c64e62ba44abdfd5a4d03d86db2af13307b2a"
+        },
+        ".github/dependabot.yml": {
+          "sha256": "f636a3ecd6930fa9deb042374f5ca01eba3ed904cda78eb7c2eff76c08e93e95",
+          "original_sha256": "f636a3ecd6930fa9deb042374f5ca01eba3ed904cda78eb7c2eff76c08e93e95"
+        },
+        ".github/workflows/test.yml": {
+          "sha256": "339747644f9a95fcfb8e2de42be419aba0ce060a04d2b1fdbc1bf3fe18fdeab5",
+          "original_sha256": "339747644f9a95fcfb8e2de42be419aba0ce060a04d2b1fdbc1bf3fe18fdeab5"
+        },
+        ".gitignore": {
+          "sha256": "133fa1b699f049ea2d86c681a9435ec07a56cd7b5398f864e88d4f4172b184e7",
+          "original_sha256": "133fa1b699f049ea2d86c681a9435ec07a56cd7b5398f864e88d4f4172b184e7"
+        },
+        "Cargo.lock": {
+          "sha256": "c47bd143d6f936482209ec0dfd5ecea4f37815a2e82f0b423215c025e474e9be",
+          "original_sha256": "c47bd143d6f936482209ec0dfd5ecea4f37815a2e82f0b423215c025e474e9be"
+        },
+        "Cargo.toml": {
+          "sha256": "1175d1cefbe0a54e461482514cf98d1d36880762fc786764cd12a8ed68b48163",
+          "original_sha256": "b582ac4fbd0fa318993a683ba0f95e684fa4a2d613cace1bb22445caf5258a91"
+        },
+        "Cargo.toml.orig": {
+          "sha256": "b2e1786c45389e1b5a3dd453377a262e1e83a27923b84dc089e21466df9c77d8",
+          "original_sha256": "32455cbed02db3d6637be0bc455f7faca79f5f23deeff5fd8247265642b4037a"
+        },
+        "LICENSE-APACHE.txt": {
+          "sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594",
+          "original_sha256": "0d542e0c8804e39aa7f37eb00da5a762149dc682d7829451287e11b938e94594"
+        },
+        "LICENSE-MIT.txt": {
+          "sha256": "f35468024534e0f4f16bb94cd0e88c87fbd1314f919c2645a07d350fb77b40c0",
+          "original_sha256": "f35468024534e0f4f16bb94cd0e88c87fbd1314f919c2645a07d350fb77b40c0"
+        },
+        "README.md": {
+          "sha256": "ac2d2710083cc55f593ed16697677d301a4d897b07d2761b5c46bedb433ba8e9",
+          "original_sha256": "ac2d2710083cc55f593ed16697677d301a4d897b07d2761b5c46bedb433ba8e9"
+        },
+        "examples/daemonize.rs": {
+          "sha256": "be9cd22867387c8f51597c80b7cb46245da789e2ae7783c2a4841a910f08381d",
+          "original_sha256": "be9cd22867387c8f51597c80b7cb46245da789e2ae7783c2a4841a910f08381d"
+        },
+        "examples/get_image.rs": {
+          "sha256": "55864735cadb2d408041e44f28578e8f25ded8a3267c33febc50aa877a57e07c",
+          "original_sha256": "55864735cadb2d408041e44f28578e8f25ded8a3267c33febc50aa877a57e07c"
+        },
+        "examples/hello_world.rs": {
+          "sha256": "54e85b8e50c6c2b64d93dc36ea8410a1be9fed31c9329298377e53d927649a16",
+          "original_sha256": "54e85b8e50c6c2b64d93dc36ea8410a1be9fed31c9329298377e53d927649a16"
+        },
+        "examples/set_get_html.rs": {
+          "sha256": "e05fa3b9a51853edd69fb72d1bfe0aa62cbc2911edb319d7bc51760fbd0d6757",
+          "original_sha256": "e05fa3b9a51853edd69fb72d1bfe0aa62cbc2911edb319d7bc51760fbd0d6757"
+        },
+        "examples/set_image.rs": {
+          "sha256": "29dc6ff6805aa1381307b843fcbe5d56d8c6b5086c72eddef3a3fd3eaf2d5a82",
+          "original_sha256": "29dc6ff6805aa1381307b843fcbe5d56d8c6b5086c72eddef3a3fd3eaf2d5a82"
+        },
+        "examples/wait-once.rs": {
+          "sha256": "58f2c31a65c8968f0bff36decc17b9a1db1d07346697831a0df623d71a519c14",
+          "original_sha256": "58f2c31a65c8968f0bff36decc17b9a1db1d07346697831a0df623d71a519c14"
+        },
+        "rustfmt.toml": {
+          "sha256": "1100d9ad5b0f2e9b5608fb1e22a0598b9cb6bae147188c83be2f5b0b41e83e7a",
+          "original_sha256": "1100d9ad5b0f2e9b5608fb1e22a0598b9cb6bae147188c83be2f5b0b41e83e7a"
+        },
+        "src/common.rs": {
+          "sha256": "247d4f33960701fb1ca854de900894631e0af4de5a13cbf1ab72616228c68b4b",
+          "original_sha256": "247d4f33960701fb1ca854de900894631e0af4de5a13cbf1ab72616228c68b4b"
+        },
+        "src/lib.rs": {
+          "sha256": "e08fb203b64aba1fbc457e6c58dc3ef7cedc2bbbe17bb74ce5b51792df7dd326",
+          "original_sha256": "e08fb203b64aba1fbc457e6c58dc3ef7cedc2bbbe17bb74ce5b51792df7dd326"
+        },
+        "src/platform/linux/mod.rs": {
+          "sha256": "e0d18e217cf4a9a2f5de611ab9a3911de5993926b373558e7c2691530c5bd913",
+          "original_sha256": "e0d18e217cf4a9a2f5de611ab9a3911de5993926b373558e7c2691530c5bd913"
+        },
+        "src/platform/linux/wayland.rs": {
+          "sha256": "98ce33bb3e07b76c9b361c2167ae32f6cc2fc00b2bcbb337fb948a5b0823c649",
+          "original_sha256": "bfeb7c63b36b871de6af27ed7646fe5cf0a9518d9c86831c2b45a8afd74fbe55"
+        },
+        "src/platform/linux/x11.rs": {
+          "sha256": "80f3e971474f61a23cc94b047ef4ec997800bb8959cee8200ebbaa3aad8c91e8",
+          "original_sha256": "f6076b753597cb1d3cdaa90e09083c988b491d96272c94e493f55822ded444c3"
+        },
+        "src/platform/mod.rs": {
+          "sha256": "cbc77d20c42d56d4468288b0720b118571eef8952a94848e5a87cfc47c37c4c4",
+          "original_sha256": "cbc77d20c42d56d4468288b0720b118571eef8952a94848e5a87cfc47c37c4c4"
+        },
+        "src/platform/osx.rs": {
+          "sha256": "29c960fcd0ed4e2de12785085f3c7739b80e74190880f9f71494112c07dd8d3b",
+          "original_sha256": "da9c443c9b752dcbe1b769cb92344e14182256f27863bfb6e79869bf5d4db87b"
+        },
+        "src/platform/windows.rs": {
+          "sha256": "bbc0a5a0fdfa3a79c3745b73793eb97bcbe28bd889185ae02971c19e2ce23423",
+          "original_sha256": "bbc0a5a0fdfa3a79c3745b73793eb97bcbe28bd889185ae02971c19e2ce23423"
+        },
+        "tools/debugger.entitlements": {
+          "sha256": "d0f0a8981f3ce55694fe0f02781fc34ce986eabb4d274d75b8b087a5428d5bc6",
+          "original_sha256": "d0f0a8981f3ce55694fe0f02781fc34ce986eabb4d274d75b8b087a5428d5bc6"
+        },
+        "tools/run_with_leaks.sh": {
+          "sha256": "1c9a7fb692150d646f4c7bc4936ee9f597b1c86815747305098ddb7378bf7230",
+          "original_sha256": "1c9a7fb692150d646f4c7bc4936ee9f597b1c86815747305098ddb7378bf7230"
+        }
+      }
     }
   ]
 }

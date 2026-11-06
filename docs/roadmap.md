@@ -11,7 +11,7 @@ and design decisions in [architecture](architecture.md).
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | In progress — parked with M8 fixes applied | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
+| 2. Plusplus parity | **In progress — active milestone** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
@@ -25,10 +25,11 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Collect tester feedback on the [November 6 development build](releases.md#development-packages)
-and continue M5 settings lifecycle and M6–M7 native/application acceptance.
-Plusplus is parked with the M8 backport applied; resume PP3 native workflows and
-PP4 original-application interoperability when returning to that branch.
+**Next:** Complete PP3 native editing, dialog, clipboard and save/conflict
+workflows, then PP4 original-application interoperability using the pinned
+Polished Crystal fixture. The user resumed plusplus after the M8 backport.
+Master M5–M7 acceptance remains open on the
+[November 6 development build](releases.md#development-packages).
 The remaining M4 aesthetic matching is
 **deferred by user direction (2026-10-30)** after the palette-slider work;
 resume M4 only to fix a functional issue. Exact original fonts are also deferred
@@ -238,10 +239,14 @@ Do not expose automatic profile switching until the unified-editor milestone.
   The [menu/default review](compatibility.md#plusplus-gui-source-reconciliation)
   and automated workflow/geometry checks are implemented. Initial
   [Windows native map/tile save/reopen and clipboard checks](compatibility.md#plusplus-windows-native-workflow-checks)
-  pass; the shared quick-Alt menu failure they exposed is fixed. Complete native
+  pass; the shared quick-Alt menu failure they exposed is fixed. The
+  [expanded native pass](compatibility.md#plusplus-expanded-native-acceptance)
+  covers block/roof/palette/event/conflict and original-app reopen workflows.
+  The Linux BMP clipboard fix passes independent X11 and bidirectional
+  original-app clipboard checks; cross-platform CI is pending. Complete native
   workflows, integrated window/dialog/clipboard behavior and desktop acceptance
   remain. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
-- [ ] **PP4 — Acceptance:** Differential and real-project edit/save/reopen tests
+- [ ] **PP4 (in progress) — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every
   remaining difference resolved or explicitly approved. Backend roundtrips alone
   do not establish application parity.

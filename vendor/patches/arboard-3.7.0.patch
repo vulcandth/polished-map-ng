@@ -1,0 +1,102 @@
+--- a/arboard-3.7.0/Cargo.toml
++++ b/arboard-3.7.0/Cargo.toml
+@@ -81,7 +81,7 @@
+ 
+ [target.'cfg(all(unix, not(any(target_os="macos", target_os="android", target_os="emscripten"))))'.dependencies.image]
+ version = "0.25"
+-features = ["png"]
++features = ["png", "bmp"]
+ optional = true
+ default-features = false
+ 
+--- a/arboard-3.7.0/Cargo.toml.orig
++++ b/arboard-3.7.0/Cargo.toml.orig
+@@ -82,7 +82,7 @@
+ x11rb = { version = "0.13" }
+ wl-clipboard-rs = { version = "0.9.3", optional = true }
+ image = { version = "0.25", optional = true, default-features = false, features = [
+-    "png",
++    "png", "bmp",
+ ] }
+ parking_lot = "0.12"
+ percent-encoding = "2.3.1"
+--- a/arboard-3.7.0/src/platform/linux/wayland.rs
++++ b/arboard-3.7.0/src/platform/linux/wayland.rs
+@@ -192,10 +192,8 @@
+ 	) -> Result<ImageData<'static>, Error> {
+ 		use std::io::Cursor;
+ 
+-		handle_clipboard_read(selection, paste::MimeType::Specific(MIME_PNG), |buffer| {
+-			let image = image::io::Reader::new(Cursor::new(buffer))
+-				.with_guessed_format()
+-				.map_err(|_| Error::ConversionFailure)?
++		let decode = |format, buffer| {
++			let image = image::ImageReader::with_format(Cursor::new(buffer), format)
+ 				.decode()
+ 				.map_err(|_| Error::ConversionFailure)?;
+ 			let image = image.into_rgba8();
+@@ -205,7 +203,18 @@
+ 				height: image.height() as usize,
+ 				bytes: image.into_raw().into(),
+ 			})
+-		})
++		};
++		// Native FLTK and XWayland transfers may expose BMP without PNG.
++		match handle_clipboard_read(selection, paste::MimeType::Specific(MIME_PNG), |buffer| {
++			decode(image::ImageFormat::Png, buffer)
++		}) {
++			Err(Error::ContentNotAvailable) => {
++				handle_clipboard_read(selection, paste::MimeType::Specific("image/bmp"), |buffer| {
++					decode(image::ImageFormat::Bmp, buffer)
++				})
++			}
++			result => result,
++		}
+ 	}
+ 
+ 	#[cfg(feature = "image-data")]
+--- a/arboard-3.7.0/src/platform/linux/x11.rs
++++ b/arboard-3.7.0/src/platform/linux/x11.rs
+@@ -84,6 +84,7 @@
+ 		URI_LIST: b"text/uri-list",
+ 
+ 		PNG_MIME: b"image/png",
++		BMP_MIME: b"image/bmp",
+ 		X_KDE_PASSWORDMANAGERHINT: KDE_EXCLUSION_MIME.as_bytes(),
+ 
+ 		// This is just some random name for the property on our window, into which
+@@ -1045,12 +1046,17 @@
+ 
+ 	#[cfg(feature = "image-data")]
+ 	pub(crate) fn get_image(&self, selection: LinuxClipboardKind) -> Result<ImageData<'static>> {
+-		let formats = [self.inner.atoms.PNG_MIME];
+-		let bytes = self.inner.read(&formats, selection)?.bytes;
+-
+-		let cursor = std::io::Cursor::new(&bytes);
+-		let mut reader = image::io::Reader::new(cursor);
+-		reader.set_format(image::ImageFormat::Png);
++		// FLTK 1.4 publishes image/bmp only. Prefer PNG when both are offered.
++		let formats = [self.inner.atoms.PNG_MIME, self.inner.atoms.BMP_MIME];
++		let data = self.inner.read(&formats, selection)?;
++
++		let cursor = std::io::Cursor::new(&data.bytes);
++		let mut reader = image::ImageReader::new(cursor);
++		reader.set_format(if data.format == self.inner.atoms.PNG_MIME {
++			image::ImageFormat::Png
++		} else {
++			image::ImageFormat::Bmp
++		});
+ 		let image = match reader.decode() {
+ 			Ok(img) => img.into_rgba8(),
+ 			Err(_e) => return Err(Error::ConversionFailure),
+--- a/arboard-3.7.0/src/platform/osx.rs
++++ b/arboard-3.7.0/src/platform/osx.rs
+@@ -234,7 +234,7 @@
+ 			// SAFETY: The data is not modified while in use here.
+ 			let data = Cursor::new(unsafe { image_data.as_bytes_unchecked() });
+ 
+-			let reader = image::io::Reader::with_format(data, image::ImageFormat::Tiff);
++			let reader = image::ImageReader::with_format(data, image::ImageFormat::Tiff);
+ 			reader.decode().map_err(|_| Error::ConversionFailure)
+ 		})?;
+ 

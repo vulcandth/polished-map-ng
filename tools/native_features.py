@@ -45,11 +45,12 @@ def main():
         required["egui-winit"].update({"smithay-clipboard", "wayland"})
         required["winit"] = {"wayland", "x11"}
         required["arboard"].add("wayland-data-control")
+        required["image"] = {"png", "bmp"}
         required["smithay-clipboard"] = set()
     errors = []
     if "linux" in target and "sctk-adwaita" in packages.get("winit", set()):
         errors.append("Wayland opacity requires the adapted fallback client frame, not sctk-adwaita")
-    for name, version in {"winit": "0.30.13", "egui-winit": "0.37.0", "eframe": "0.37.0"}.items():
+    for name, version in {"winit": "0.30.13", "egui-winit": "0.37.0", "eframe": "0.37.0", "arboard": "3.7.0"}.items():
         entries = [line.split("|", 1)[0] for line in graph.splitlines() if line.startswith(name + " ")]
         if not entries or any(not entry.startswith(f"{name} v{version} ")
                               or f"/vendor/{name}-{version}" not in entry.replace("\\", "/")

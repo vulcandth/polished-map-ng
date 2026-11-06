@@ -1,6 +1,7 @@
 # Pinned native window adapters
 
-These are the original Cargo archives for winit 0.30.13, egui-winit 0.37.0 and eframe 0.37.0,
+These are the original Cargo archives for winit 0.30.13, egui-winit 0.37.0,
+eframe 0.37.0 and arboard 3.7.0,
 with the changes listed in [NOTICE](NOTICE.md). The root Cargo patch table keeps
 eframe, its renderer and the editor on the same audited adapter instances.
 
@@ -15,7 +16,7 @@ the original MIT license; see [NOTICE](NOTICE.md).
 
 Run `python tools/vendor_sources.py` from the repository root. To verify the
 pristine inputs too, supply `--archives` pointing to a directory containing the
-three original `.crate` files plus `smithay-client-toolkit-0.19.2.crate`.
+four original `.crate` files plus `smithay-client-toolkit-0.19.2.crate`.
 After deliberately editing a patch, use
 `--refresh --archives DIR`, review the regenerated patch and manifest, then run
 the ordinary verification and workspace checks. Do not refresh automatically in
@@ -53,7 +54,7 @@ requests on a private socket, including compositors without xdg-dialog. Windows
 and macOS run the example on the main thread with every window hidden. These
 checks do not establish integrated desktop placement, focus or DPI behavior.
 
-Keep these patches focused on native transfer/opacity/modal integration and
+Keep these patches focused on native clipboard/transfer/opacity/modal integration and
 window-lifecycle correctness. Re-evaluate them
 when a compatible egui/winit release supplies these capabilities; remove them only
 after the same behavioral gates pass. Preserve upstream copyrights and license
