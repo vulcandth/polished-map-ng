@@ -37,6 +37,10 @@ The matching complete source archive and REBUILD.md support rebuilding/relinking
 
 Focus testing on:
 
+- Reviewed shortcuts: Ctrl+digit assignment, Ctrl+Shift+digit clearing, map zoom,
+  quick Alt menu access, and About/Print shortcuts.
+- Project-folder Browse, long roof/tileset dropdowns, Dark Theme and About links.
+
 - Open/discover real master-compatible projects, edit maps/blocks/tiles/palettes/
   roofs/events, undo/redo, save, reopen, and compare intended changes in Git.
 - Missing/malformed files, unsaved changes, save conflicts, close and exit guards.

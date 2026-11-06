@@ -23,8 +23,9 @@ When no valid factor pair or metadata size exists, width/height controls start
 at 10×9. Headless opens still require explicit dimensions when metadata is absent.
 Tileset choices show the project's discovered graphics, including numbered labels
 and compound names. Roof choices start at `(none)`; the control is disabled when
-no roofs exist. Expand Project options to change Project folder, then use Reload
-project options before opening. An empty tileset inventory disables OK. Enter
+no roofs exist. Expand Project options and use Browse… to choose a project
+folder and refresh its choices. If typing the folder manually, use Reload project
+options before opening. Canceling the chooser keeps the existing folder. An empty tileset inventory disables OK. Enter
 accepts valid options unless a numeric field is being edited; there it commits
 the number first. Escape closes an open dropdown first, then cancels the dialog.
 The project

@@ -16,6 +16,28 @@ const KEYS: [egui::Key; 10] = [
     egui::Key::Num9,
 ];
 
+/// FLTK shortcuts use the unshifted digit. Winit may instead report `!` or
+/// another layout's punctuation as the logical key. Only normalize editor
+/// shortcuts, after the text-focus/modal guard; never rewrite text entry.
+pub(super) fn normalize_shifted_digits(ctx: &egui::Context) {
+    ctx.input_mut(|input| {
+        for event in &mut input.events {
+            if let egui::Event::Key {
+                key,
+                physical_key: Some(physical),
+                modifiers,
+                ..
+            } = event
+                && modifiers.shift
+                && !KEYS.contains(key)
+                && KEYS.contains(physical)
+            {
+                *key = *physical;
+            }
+        }
+    });
+}
+
 #[derive(Default)]
 pub(super) struct BlockHotkeys([Option<u8>; 10]);
 

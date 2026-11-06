@@ -127,22 +127,28 @@ pub(crate) fn begin(ctx: &Context) {
 
 fn consume(ctx: &Context, key: Mnemonic, require_alt: bool) -> bool {
     ctx.input_mut(|i| {
-        if i.modifiers.ctrl || i.modifiers.command || (require_alt && !i.modifiers.alt) {
-            return false;
-        }
         let consumed = match key {
+            // A complete native chord can arrive between frames. Match the
+            // modifiers on its pressed event, not the final state after release.
+            // consume_key also rejects Ctrl/Command shortcuts and allows Shift
+            // for upper-case letters, as the original menu handler does.
             Mnemonic::Key(key) => i.consume_key(
-                if i.modifiers.alt {
+                if require_alt {
                     Modifiers::ALT
                 } else {
                     Modifiers::NONE
                 },
                 key,
             ),
-            Mnemonic::Text(c) => i
-                .events
-                .iter()
-                .any(|e| matches!(e, Event::Text(t) if t.starts_with(c))),
+            // Text events have no modifier payload (Unicode recent-file keys).
+            Mnemonic::Text(c) => {
+                !i.modifiers.ctrl
+                    && !i.modifiers.command
+                    && (!require_alt || i.modifiers.alt)
+                    && i.events
+                        .iter()
+                        .any(|e| matches!(e, Event::Text(t) if t.starts_with(c)))
+            }
         };
         if consumed {
             // Native backends can report both a key and text for one stroke.

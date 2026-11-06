@@ -28,9 +28,9 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Drag and Drop | On; internal block, tile, roof and palette transfers |
 | Print Grid, IDs, Priority, Events, Warp IDs | All off; independent of editor view flags |
 
-The Theme submenu retains the existing v1 `dark` boolean (false for Greybird,
+The Dark Theme checkbox retains the existing v1 `dark` boolean (false for Greybird,
 true for Dark), so earlier settings need no migration. Choosing either theme
-updates its radio mark and the shared UI style without changing document colors.
+updates its check mark and the shared UI style without changing document colors.
 
 The three auto-load toggles affect subsequent opens, not the current document.
 Special palettes and roof colors are independent; turning either off skips

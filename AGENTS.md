@@ -67,8 +67,12 @@ exist from day one; a partial slice is not a completed parity milestone.
   in `docs/deviations.md`. Never silently convert formats or rewrite unrelated ASM.
 - Initial themes are upstream default light and dark. Other themes are deferred.
 - The user deferred original-font matching and remaining M4 aesthetics on
-  2026-10-30 after the palette-slider work. Follow M5–M7 next; fix functional
-  issues as found, but do not resume visual matching merely to close M4.
+  2026-10-30 after the palette-slider work. Separate plusplus work was authorized
+  on October 31 while master acceptance remains open. On November 6 the user
+  prioritized M8 master review fixes and refreshed tester builds, followed by
+  backporting shared fixes to `codex/plusplus-port`. Fix reviewed usability issues
+  now and plan the feature wishlist after parity. Do not resume general visual
+  matching merely to close M4.
   Preserve the approved exception in `docs/deviations.md` and roadmap status.
 - The user prefers the earlier rounded egui palette sliders (2026-10-31).
   Preserve that appearance and the retained functional fixes; do not restore

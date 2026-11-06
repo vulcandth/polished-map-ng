@@ -292,6 +292,9 @@ fn native_editor_and_option_families_close_through_their_cancel_paths() {
         if family == "block-count" {
             assert_eq!(size, Vec2::new(194.0, 80.0));
         }
+        if family == "map-options" {
+            assert!(size.y >= 300.0, "native choices need popup space");
+        }
         assert!(size.x > 0.0 && size.y > 0.0);
         renderer.borrow_mut().inputs.insert(id, close(id));
         frame(&ctx, &mut editor);

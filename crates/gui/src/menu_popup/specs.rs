@@ -50,7 +50,7 @@ pub(super) fn group(name: &str) -> &'static [Spec<'static>] {
         "View" => {
             const {
                 &[
-                    Spec::new("Theme", Submenu, "", true).mnemonic(egui::Key::T),
+                    Spec::new("Dark Theme", Check, "", true).mnemonic(egui::Key::T),
                     Spec::new("Grid", Check, "C+G", false).mnemonic(egui::Key::G),
                     Spec::new("Rulers", Check, "CS+R", false).mnemonic(egui::Key::R),
                     Spec::new("Zoom", Check, "C+=", false).mnemonic(egui::Key::Z),
@@ -63,16 +63,6 @@ pub(super) fn group(name: &str) -> &'static [Spec<'static>] {
                     Spec::new("Palettes", Submenu, "", true).mnemonic(egui::Key::L),
                     Spec::new("Transparent", Check, "F10", false).mnemonic(egui::Key::A),
                     Spec::new("Full Screen", Check, "F11", false).mnemonic(egui::Key::S),
-                ]
-            }
-        }
-        "Theme" => {
-            // Accepted initial theme scope: preserve source order among the
-            // supported choices; other upstream themes remain deferred.
-            const {
-                &[
-                    Spec::new("Greybird", Radio, "", false).mnemonic(egui::Key::G),
-                    Spec::new("Dark", Radio, "", false).mnemonic(egui::Key::D),
                 ]
             }
         }

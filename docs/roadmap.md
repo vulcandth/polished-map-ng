@@ -10,8 +10,8 @@ and design decisions in [architecture](architecture.md).
 | Milestone | Status | What that means |
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
-| 1. Master parity | **In progress — active milestone** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | Not started | Expanded-profile port and compatible Polished Crystal acceptance remain. |
+| 1. Master parity | **In progress — active milestone** | M8 addresses the November 1 upstream review before refreshed tester builds; native/application acceptance remains. |
+| 2. Plusplus parity | In progress — parked on a separate branch | Implementation and initial Windows workflow checks are checkpointed at `5248aea` on `codex/plusplus-port`; original-application and remaining native acceptance remain. |
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
@@ -25,8 +25,9 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Verify M5 native settings storage/restart/shutdown, then execute M6–M7
-on the published [development candidate](releases.md#development-packages).
+**Next:** Complete M8 review fixes and refreshed development packages, then
+backport applicable fixes to `codex/plusplus-port`. Continue M5–M7 acceptance
+on the refreshed [development candidate](releases.md#development-packages).
 Both audited master functional gaps are fixed; the remaining gates are verification.
 See the [master testing-readiness audit](compatibility.md#master-testing-readiness)
 for the distinction between missing functionality and testing gates.
@@ -37,7 +38,8 @@ to later manual review. See the [approved scope exception](deviations.md#remaini
 M3's implementation and isolated native protocol checks are in place; integrated
 file-manager, compositor, clipboard and mixed-DPI behavior remains open in M6.
 M1 inventory/discovery/save feedback and M2 original artwork are complete.
-Do not advance to plusplus until M7 passes with the approved exceptions recorded.
+The user authorized separate plusplus work on October 31 before M7 acceptance,
+then prioritized master review fixes and new tester builds on November 6.
 
 ## Foundation — bootstrap complete
 
@@ -57,6 +59,15 @@ Do not advance to plusplus until M7 passes with the approved exceptions recorded
 Target: the immutable master revision in [upstream.lock.toml](../upstream.lock.toml),
 with compatible pinned pokecrystal. Preserve safe valid-input behavior before
 adding improvements. Each completed group below still participates in M7.
+
+### Active review follow-up
+
+- [ ] **M8 (in progress) — Upstream tester review:** resolve the November 1
+  input, dialog and usability findings; verify portable packaging and measure
+  release size; publish refreshed Windows/Linux/macOS development builds with
+  matching source/licenses; backport shared fixes to the separate plusplus branch.
+  Acceptance: regression checks, focused native verification and successful
+  four-target packaging. Evidence: [review disposition](compatibility.md#november-1-upstream-review).
 
 ### Implemented work
 
@@ -185,19 +196,21 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
   [deviations](deviations.md); record final evidence in [compatibility](compatibility.md).
   Passing codec or synthetic GUI tests alone is insufficient.
 
-## 2. Plusplus parity — not started
+## 2. Plusplus parity — in progress, parked separately
 
-Begins after M7. Preserve all master acceptance fixtures.
+Work is checkpointed on `codex/plusplus-port` at `5248aea`; these completions
+refer to that branch, not functionality in the current master executable.
+[Checkpoint evidence](https://github.com/vulcandth/polished-map-ng/blob/5248aea/docs/compatibility.md#plusplus-source-audit).
+Keep entry points and preferences separate until U1–U3.
 
-- [ ] **PP1:** Inventory differences at the pinned plusplus revision and pin a
-  compatible Polished Crystal project with an independently audited fixture policy.
-- [ ] **PP2:** Implement expanded tile counts/banks, per-block attributes,
-  flips, priority, palette/discovery rules and serialization. Keep map IDs byte-sized.
-- [ ] **PP3:** Port branch-specific controls, dialogs, defaults and rendering
-  with the same geometry, asset and native verification standards as master.
-- [ ] **PP4 — Acceptance:** Differential and real-project edit/save/reopen tests
-  pass against original plusplus, with master regressions still green and every
-  remaining difference resolved or explicitly approved.
+- [x] **PP1:** Source inventory and compatible Polished Crystal fixture policy.
+- [x] **PP2:** Expanded graphics, attributes, codecs, discovery, events and saves,
+  with source comparisons and real-project backend tests.
+- [ ] **PP3 (in progress):** Branch-specific GUI is implemented and initial
+  Windows map/tile/clipboard save/reopen checks pass. Complete integrated native
+  workflow acceptance after M8 shared fixes are backported.
+- [ ] **PP4 — Acceptance:** Complete original-application differential and
+  real-project edit/save/reopen acceptance, preserving master regressions.
 
 ## 3. Unified editor — not started
 
@@ -240,8 +253,11 @@ refactoring from deliberately changed user behavior.
 - [ ] **I2:** Add a shared egui RGB/HSV graphical picker on Linux, macOS and
   Windows, retaining exact RGB8 edits and RGB5 controls/export. Parity currently
   targets upstream's Windows native chooser and RGB/hex controls on all OSes.
-- [ ] **I3:** Evaluate remaining themes, expanded undo, newer project conventions
-  and usability/format-preservation improvements as separately scoped proposals.
+- [ ] **I3:** Evaluate remaining themes, all-domain undo, adding/removing events,
+  field-specific event controls, additional map zoom levels, a movable blocks
+  sidebar, map-connection navigation, update checks and newer project conventions
+  as separately scoped proposals. The November 6 direction defers this wishlist
+  until after parity; it is not part of M8 tester builds.
 - [ ] **I4 — Acceptance:** Each chosen change has a stated benefit, appropriate
   regression/benchmark evidence and documented intentional differences. Unselected
   proposals are explicitly deferred rather than silently expanding scope.

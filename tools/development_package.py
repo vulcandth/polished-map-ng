@@ -94,8 +94,12 @@ def common(destination, info):
         shutil.copy2(name, destination / name)
     shutil.copytree("LICENSES", destination / "LICENSES", dirs_exist_ok=True)
     shutil.copytree("docs", destination / "docs", dirs_exist_ok=True)
-    # Original source art, converted pixels and notices travel with the binaries.
-    shutil.copytree("crates/gui/assets", destination / "crates/gui/assets", dirs_exist_ok=True)
+    # Fonts, icons and Help are embedded. Keep their notices with binaries;
+    # original art and converted pixels belong in the matching source archive.
+    for notice in sorted(Path("crates/gui/assets").rglob("NOTICE.md")):
+        target = destination / notice
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(notice, target)
     shutil.copy2("docs/rebuild.md", destination / "REBUILD.md")
     shutil.copy2("docs/testing.md", destination / "TESTING.md")
     (destination / "BUILD-INFO.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")

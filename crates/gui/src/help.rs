@@ -199,6 +199,7 @@ impl HelpWindow {
                         scroll = scroll.vertical_scroll_offset(0.0);
                     }
                     let result = scroll.show(ui, |ui| {
+                        ui.style_mut().interaction.selectable_labels = true;
                         ui.label(egui::RichText::new(REFERENCE_NOTE).size(13.0));
                         ui.add_space(8.0);
                         for block in document(self.windows_paths) {

@@ -15,6 +15,36 @@ fn wheel(h: &mut Harness<'_, Editor>, position: Pos2, delta: Vec2) {
 }
 
 #[test]
+fn startup_recovers_legacy_ui_zoom_without_overriding_native_dpi() {
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(800.0, 600.0))
+        .with_pixels_per_point(2.0)
+        .build_eframe(|cc| {
+            cc.egui_ctx.options_mut(|options| options.zoom_factor = 0.5);
+            Editor::new(cc)
+        });
+    h.run();
+    assert_eq!(h.ctx.zoom_factor(), 1.0);
+    assert_eq!(h.ctx.pixels_per_point(), 2.0);
+}
+
+#[test]
+fn default_egui_zoom_cannot_conflict_with_map_zoom_or_block_assignment() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    let scale = h.ctx.zoom_factor();
+    for key in [egui::Key::Minus, egui::Key::Num0] {
+        h.key_press_modifiers(egui::Modifiers::COMMAND, key);
+        h.run();
+        assert_eq!(h.ctx.zoom_factor(), scale);
+    }
+    let old = h.state().zoom;
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::Plus);
+    h.run();
+    assert_ne!(h.state().zoom, old);
+    assert_eq!(h.ctx.zoom_factor(), scale);
+}
+
+#[test]
 fn zoom_controls_scale_map_scroll_and_reset_sidebar_without_edits() {
     let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
     h.state_mut().apply(Command::Resize {

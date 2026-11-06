@@ -65,6 +65,32 @@ fn digit_events_assign_select_and_clear_without_editing_document() {
 }
 
 #[test]
+fn shifted_physical_digits_clear_bindings_even_when_logical_key_is_punctuation() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    // Winit exposes ! as a logical punctuation key; unsupported shifted symbols
+    // fall back to physical digits. Also exercise a layout that yields quotes.
+    for logical in [egui::Key::Exclamationmark, egui::Key::Quote] {
+        for (digit, physical) in KEYS.into_iter().enumerate() {
+            h.state_mut().block_hotkeys.assign(digit, 1);
+            let modifiers = egui::Modifiers::CTRL | egui::Modifiers::SHIFT;
+            h.input_mut().events.extend([
+                egui::Event::Key {
+                    key: logical,
+                    physical_key: Some(physical),
+                    pressed: true,
+                    repeat: false,
+                    modifiers,
+                },
+                egui::Event::ModifiersChanged(egui::Modifiers::NONE),
+            ]);
+            h.run();
+            assert_eq!(h.state().block_hotkeys.digit(1), None, "{physical:?}");
+        }
+    }
+    assert!(!h.state().is_modified());
+}
+
+#[test]
 fn per_event_modifiers_control_consumption_and_mac_command_is_not_control() {
     let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
     let editor = h.state_mut();

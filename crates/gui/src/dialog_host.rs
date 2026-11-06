@@ -212,6 +212,14 @@ pub(super) fn client(
             .layer_id(egui::LayerId::new(egui::Order::Middle, id))
             .max_rect(ctx.content_rect()),
     );
+    // egui popups cannot escape a native viewport. Source FLTK choices used
+    // separate windows, so tiny source clients need room for a scrollable list.
+    if ["open-options", "change-roof", "change-tileset"]
+        .iter()
+        .any(|name| id == egui::Id::unique(name))
+    {
+        ui.set_min_height(300.0);
+    }
     ui.painter()
         .rect_filled(ui.max_rect(), 0.0, ui.visuals().panel_fill);
     if egui_winit::modal_windows::is_blocked(ctx, ctx.viewport_id()) {
