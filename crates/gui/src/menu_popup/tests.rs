@@ -5,6 +5,58 @@ use egui_kittest::{
 };
 
 #[test]
+fn released_alt_in_the_same_native_frame_still_opens_both_profile_menus() {
+    for plusplus in [false, true] {
+        let mut h = Harness::builder()
+            .with_size(Vec2::new(800.0, 600.0))
+            .build_eframe(move |cc| {
+                if plusplus {
+                    Editor::new_plusplus(cc)
+                } else {
+                    Editor::new(cc)
+                }
+            });
+        // SendInput/native event queues can deliver the entire chord between
+        // frames. The pressed event retains Alt even though current modifiers
+        // are already empty when the editor processes the frame.
+        for (modifiers, opens) in [
+            (egui::Modifiers::NONE, false),
+            (egui::Modifiers::CTRL | egui::Modifiers::ALT, false),
+            (egui::Modifiers::COMMAND | egui::Modifiers::ALT, false),
+            (egui::Modifiers::ALT | egui::Modifiers::SHIFT, true),
+            (egui::Modifiers::ALT, true),
+        ] {
+            h.input_mut().events.extend([
+                egui::Event::ModifiersChanged(modifiers),
+                egui::Event::Key {
+                    key: egui::Key::F,
+                    physical_key: Some(egui::Key::F),
+                    pressed: true,
+                    repeat: false,
+                    modifiers,
+                },
+                egui::Event::Key {
+                    key: egui::Key::F,
+                    physical_key: Some(egui::Key::F),
+                    pressed: false,
+                    repeat: false,
+                    modifiers,
+                },
+                egui::Event::ModifiersChanged(egui::Modifiers::NONE),
+            ]);
+            h.run();
+            assert_eq!(
+                h.query_by_label("Save Map").is_some(),
+                opens,
+                "plusplus={plusplus}, {modifiers:?}"
+            );
+            h.key_press(egui::Key::Escape);
+            h.run();
+        }
+    }
+}
+
+#[test]
 fn mac_option_mnemonic_text_does_not_edit_the_previous_focused_field() {
     let mut h = Harness::builder()
         .with_size(Vec2::new(800.0, 600.0))
