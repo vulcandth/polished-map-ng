@@ -3020,12 +3020,18 @@ release outside the tile child left the draft unchanged. Native GRAY swatches
 exchanged `DEFFDE` and `ADADAD`, with selection/channel fields following the
 destination. Escape discarded both inspection drafts. Sidebar blocks 0 and 1
 swapped and refreshed the map; Cancel Exit preserved those unsaved block edits,
-then explicit discard exited cleanly. No Save or Export was performed.
+then explicit discard exited cleanly. No Save or Export was performed. The final
+`f8d2383` Windows build also opened the real-project map and swapped `$0:00` into
+`$0:01` in its native tile child; Escape discarded the draft and Alt+F4 exited
+without an unsaved prompt.
 
 Windows format, workspace Clippy/tests/rustdoc and the production native-adapter
-graph pass. Linux Clippy and the native build pass. File-manager drops, native
-middle-button capture, mixed-DPI transitions and interactive macOS acceptance
-remain open in PP3; aesthetics remain deferred.
+graph pass. Linux Clippy and the native build pass.
+[CI for `f8d2383`](https://github.com/vulcandth/polished-map-ng/actions/runs/42335358702)
+passes all eight jobs: Windows/Linux/macOS, reference comparisons, real-project
+workflows, MSRV, dependency/license audit and visuals with unchanged baselines.
+File-manager drops, native middle-button capture, mixed-DPI transitions and
+interactive macOS acceptance remain open in PP3; aesthetics remain deferred.
 
 ## Plusplus asset switching and tile options
 
