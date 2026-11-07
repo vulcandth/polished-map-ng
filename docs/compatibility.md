@@ -3378,8 +3378,11 @@ draft/close guards. This addresses usability, not font or decoration matching.
 The rebuilt X11 application still reports success after Copy; independent
 clipboard capture matches all 92,160 grid-baseline pixels and RGB SHA-256
 `c878560e03bbfc0e565a730337bd2a261f6c1405ba9e295ae708aec428b44283`.
-The Linux build and both native paths passed; cross-platform CI for these changes
-is pending. Compilation alone will not close native macOS/desktop acceptance.
+The Linux build and both native paths passed. Commit `9e528a0` passed all eight
+[cross-platform CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42323750246),
+including Windows/Linux/macOS tests and native probes, source-reference and
+real-project checks, visuals, MSRV and dependency auditing. These automated
+checks do not close interactive macOS or complete desktop acceptance.
 
 Full Wayland image transfer remains **unimplemented** when neither data-control
 nor X11 is available. The existing Smithay adapter supports standard-protocol
