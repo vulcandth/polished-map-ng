@@ -3094,7 +3094,11 @@ Export was performed in either fixed-build run.
 Windows format, workspace Clippy/tests/rustdoc and the production native graph
 pass. The Linux application build and compilation with the alternate Glow
 renderer pass. Vendor archives, patches and retained license records are checked
-against their pinned sources. PP3 retains direct-desktop pointer alignment,
+against their pinned sources.
+[CI for `4819c56`](https://github.com/vulcandth/polished-map-ng/actions/runs/42337976955)
+passes all eight jobs, including Windows/Linux/macOS, real-project/reference
+comparisons, MSRV, dependency/license audit and unchanged visual baselines.
+PP3 retains direct-desktop pointer alignment,
 mixed-DPI transitions, broader placement policy and macOS native acceptance.
 No aesthetic changes or screenshot baseline updates were made.
 
