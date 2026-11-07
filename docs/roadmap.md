@@ -28,8 +28,9 @@ and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive
 **Next:** Continue PP3 integrated desktop capture/drop, placement/focus/DPI and
 macOS native acceptance using the published
 [plusplus tester packages](releases.md#plusplus-development-packages)
-for all four build targets. Those packages include the verified
-[fullscreen restart fix](compatibility.md#native-wayland-window-restart).
+for all four build targets. The November 7 packages include the verified
+[fullscreen restart fix](compatibility.md#native-wayland-window-restart) and
+[frame keyboard-focus fix](compatibility.md#native-wayland-frame-focus-and-placement).
 The temporary-size dialog mapping defect from the
 [native 2× check](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
 is fixed; verify pointer alignment on a directly hosted compositor before

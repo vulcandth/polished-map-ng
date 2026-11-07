@@ -3174,6 +3174,10 @@ followed by `set_fullscreen`. After returning to normal size, another titlebar
 click followed by Alt+F opens File, and Exit returns code 0. Windows format,
 workspace Clippy/tests/rustdoc, Linux workspace Clippy, the production dependency
 graph and pinned vendor source/license checks pass. No visual baselines changed.
+[CI for `fc18238`](https://github.com/vulcandth/polished-map-ng/actions/runs/42344988501)
+passes all eight jobs; the Linux job executed the new frame-focus regression
+successfully. [Refreshed tester packages](releases.md#plusplus-development-packages)
+include the fix for all four build targets with verified matching source/licenses.
 
 When fullscreen hides the focused frame, this Weston instance sends keyboard
 leave without transferring focus to the root; a subsequent F11 produces no

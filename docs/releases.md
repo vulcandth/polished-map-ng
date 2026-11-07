@@ -81,10 +81,10 @@ successful native CLI smoke checks; record the workflow and release links here.
 
 ## Plusplus development packages
 
-The [2026-11-06 plusplus development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-06-10019ad)
-is published from `10019ad8e781ce8dc787f28cfbaa702b91785c08` for PP3/PP4 native
-acceptance. [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42342468720)
-and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42342490709)
+The [2026-11-07 plusplus development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-fc18238)
+is published from `fc182383afb05226f036baacf5da738b37ede966` for PP3/PP4 native
+acceptance. [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42344988501)
+and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42345012634)
 passed. The manual packaging workflow accepts `profile: plusplus`; the
 default remains `master`. Source and binaries record the selected profile in
 BUILD-INFO.json. Binary packaging inherits it from the matching source and rejects
@@ -97,7 +97,9 @@ preserving the guide's offline links in `docs/`.
 All five archives passed checksum, exact-commit/profile, executable
 architecture/mode, Mac bundle/signature-metadata and license checks. Tracked
 source matches the packaged commit, with offline Cargo source configuration
-appended for the archive's 453 locked registry sources. Each binary retains all 463 dependency
+appended for the archive's 453 locked registry sources. Every file listed in their
+Cargo vendor checksums matches, and each package checksum matches Cargo.lock.
+Each binary retains all 463 dependency
 license/attribution records. All ten published asset sizes and digests match the
 verified local files. The packaged CLI ran on each native build runner, locally
 on Windows, and under WSL Ubuntu with glibc 2.35. Both Mac jobs verified their
@@ -113,17 +115,17 @@ This candidate supersedes the [earlier November 6 plusplus build](https://github
 which could crash when restoring fullscreen on Wayland. The
 [startup ordering fix](compatibility.md#native-wayland-window-restart)
 passes native fullscreen/maximized restart and normal-size restoration checks,
-with an independent protocol regression. The downloaded Linux release binary
+with an independent protocol regression. The downloaded `10019ad` Linux release binary
 also opened successfully from the previously failing fullscreen settings,
 canceled Map Options and exited cleanly on isolated Weston. These checks do not
 close directly hosted desktop, mixed-DPI or macOS GUI acceptance.
 
-Follow-up PP3 acceptance found dropped keyboard shortcuts after a Wayland
-client-titlebar click. The [frame-focus fix](compatibility.md#native-wayland-frame-focus-and-placement)
-is verified in source and the local native build; it is not included in the
-`10019ad` packages above. In that candidate, click the client area to restore
-shortcuts after titlebar interaction. A refreshed candidate requires green CI
-and the same source/archive checks before publication.
+This candidate also supersedes [the `10019ad` build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-06-10019ad).
+It includes the [frame-focus fix](compatibility.md#native-wayland-frame-focus-and-placement)
+for keyboard shortcuts lost after a Wayland client-titlebar click. The independent
+protocol regression and native F11/Alt+F checks pass. The remaining compositor
+focus/placement limitations are recorded separately in that evidence; these
+packages do not close broader native acceptance.
 
 ## Final release gate
 
