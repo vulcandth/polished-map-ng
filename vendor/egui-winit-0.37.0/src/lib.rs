@@ -36,6 +36,7 @@ use raw_window_handle::HasDisplayHandle;
 
 /// Positioned file transfers supplied by Polished Map NG's pinned winit adapter.
 pub mod file_drop;
+pub mod image_clipboard;
 /// Whole-window opacity requests requiring the live native Wayland window.
 pub mod window_opacity;
 pub mod modal_windows;
@@ -1259,6 +1260,9 @@ impl State {
             #[cfg(not(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android")), feature = "wayland")))]
             { let _ = multiplier; Err("This native adapter is not using Wayland") }
         });
+        image_clipboard::dispatch_with(&self.egui_ctx, self.viewport_id, |image| {
+            self.clipboard.set_image(image)
+        });
 
         let egui::PlatformOutput {
             commands,
@@ -1281,7 +1285,9 @@ impl State {
                     self.clipboard.set_primary_text(text);
                 }
                 egui::OutputCommand::CopyImage(image) => {
-                    self.clipboard.set_image(&image);
+                    if let Err(reason) = self.clipboard.set_image(&image) {
+                        log::error!("arboard copy/cut error: {reason}");
+                    }
                 }
                 egui::OutputCommand::OpenUrl(open_url) => {
                     open_url_in_browser(&open_url.url);

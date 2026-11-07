@@ -70,6 +70,13 @@ pub(super) fn show(
     id: egui::ViewportId,
     mut content: impl FnMut(&egui::Context),
 ) {
+    // eframe maps the parent after its first frame is painted. Creating a
+    // transient before that commit lets a Wayland compositor center it on an
+    // unmapped, zero-sized parent, placing the form partly off screen.
+    if !ctx.embed_viewports() && ctx.cumulative_frame_nr() == 0 {
+        ctx.request_repaint();
+        return;
+    }
     let parent = ctx.viewport_id();
     let parent_rect = ctx.input(|i| i.viewport().inner_rect.or(i.viewport().outer_rect));
     let state = ctx

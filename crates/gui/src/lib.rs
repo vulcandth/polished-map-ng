@@ -198,6 +198,7 @@ pub struct Editor {
     textures: Vec<egui::TextureHandle>,
     loading: Option<mpsc::Receiver<LoadResult>>,
     print_worker: Option<mpsc::Receiver<Result<printing::PrintOutput, String>>>,
+    print_clipboard: Option<u64>,
     print_form: Option<printing::PrintForm>,
     print_options: polished_map_core::PrintOptions,
     print_request: Option<printing::PrintJob>,
@@ -297,6 +298,7 @@ impl Default for Editor {
             textures: Vec::new(),
             loading: None,
             print_worker: None,
+            print_clipboard: None,
             print_form: None,
             print_options: Default::default(),
             print_request: None,
@@ -1191,6 +1193,7 @@ impl Editor {
             .add_enabled(
                 self.loaded.is_some()
                     && self.print_worker.is_none()
+                    && self.print_clipboard.is_none()
                     && self.print_request.is_none(),
                 Button::new(Icon::Print, "Print…"),
             )
@@ -1875,6 +1878,7 @@ impl Editor {
             || self.print_form.is_some()
             || self.print_success.is_some()
             || self.print_worker.is_some()
+            || self.print_clipboard.is_some()
             || self.print_request.is_some()
             || self.open_form.is_some()
             || self.overworld_form.is_some()

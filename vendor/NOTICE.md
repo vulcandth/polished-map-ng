@@ -114,6 +114,12 @@ discarding lifecycle events, and native calls run outside egui's data lock.
 A further 2026-10-30 change retains cached normal geometry when saving a
 minimized window, preventing iconified dimensions from replacing its restore size.
 
+Additional modifications on 2026-11-06, under MIT OR Apache-2.0: acknowledge
+tracked image-copy requests only after the owned native clipboard returns a
+result. Keep one outstanding request/reply per viewport, reject replacement of
+pending work, and propagate unavailable-clipboard/write errors to the editor.
+Existing untracked egui image-copy commands retain error logging.
+
 ## eframe 0.37.0
 
 Source: <https://github.com/emilk/egui> and the Cargo archive identified in

@@ -110,6 +110,27 @@ fn close(id: ViewportId) -> RawInput {
 }
 
 #[test]
+fn native_startup_dialog_waits_for_the_parent_first_frame() {
+    let ctx = egui::Context::default();
+    let renderer = renderer(&ctx, 1.0);
+    let id = main_id("startup");
+    let mut calls = 0;
+    let mut first = ctx.run_ui(root_input(), |ui| {
+        show(ui.ctx(), id, |_| calls += 1);
+    });
+    assert_eq!(calls, 0);
+    assert!(!first.viewport_output.contains_key(&id));
+    assert!(renderer.borrow().builders.is_empty());
+    first.textures_delta.clear();
+    let mut second = ctx.run_ui(root_input(), |ui| {
+        show(ui.ctx(), id, |_| calls += 1);
+    });
+    second.textures_delta.clear();
+    assert_eq!(calls, 1);
+    assert!(renderer.borrow().builders.contains_key(&id));
+}
+
+#[test]
 fn native_resize_has_exact_client_and_close_cancels_without_changing_document() {
     for scale in [1.0, 2.0] {
         let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
@@ -178,6 +199,9 @@ fn nested_error_keeps_draft_and_suppresses_parent_keyboard_and_close() {
         .insert(parent, key(egui::Key::Enter));
     frame(&ctx, &mut editor);
     assert!(renderer.borrow().outputs.contains_key(&parent));
+    // The nested native error also waits for its parent viewport's first frame.
+    assert!(editor.error.is_some());
+    frame(&ctx, &mut editor);
     assert!(renderer.borrow().outputs.contains_key(&error_id()));
     assert!(egui_winit::modal_windows::is_blocked(&ctx, parent));
     assert_eq!(editor.resize_form.as_ref().unwrap().width, 17);

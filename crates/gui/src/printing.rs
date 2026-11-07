@@ -119,6 +119,7 @@ impl Editor {
     pub(super) fn prepare_print(&mut self) {
         if self.loaded.is_none()
             || self.print_worker.is_some()
+            || self.print_clipboard.is_some()
             || self.print_request.is_some()
             || self.print_form.is_some()
         {
@@ -291,6 +292,15 @@ impl Editor {
     }
 
     pub(super) fn poll_print(&mut self, ctx: &egui::Context) {
+        if let Some(id) = self.print_clipboard {
+            if let Some(result) =
+                egui_winit::image_clipboard::take_reply(ctx, egui::ViewportId::ROOT, id)
+            {
+                self.print_clipboard = None;
+                self.finish_print(result.map(|()| "Copied to clipboard!".into()));
+            }
+            return;
+        }
         let result = self
             .print_worker
             .as_ref()
@@ -306,17 +316,26 @@ impl Editor {
         };
         self.print_worker = None;
         match result {
-            Ok(output) => {
-                let message = match output {
-                    PrintOutput::Exported(path) => format!(
-                        "Printed {}!",
-                        path.file_name().unwrap_or_default().to_string_lossy()
-                    ),
-                    PrintOutput::Copied(image) => {
-                        ctx.copy_image(image);
-                        "Copied to clipboard!".into()
+            Ok(PrintOutput::Copied(image)) => {
+                match egui_winit::image_clipboard::request(ctx, egui::ViewportId::ROOT, image) {
+                    Ok(id) => {
+                        self.print_clipboard = Some(id);
+                        self.status = "Copying image…".into();
                     }
-                };
+                    Err(reason) => self.finish_print(Err(reason)),
+                }
+            }
+            Ok(PrintOutput::Exported(path)) => self.finish_print(Ok(format!(
+                "Printed {}!",
+                path.file_name().unwrap_or_default().to_string_lossy()
+            ))),
+            Err(reason) => self.finish_print(Err(reason)),
+        }
+    }
+
+    fn finish_print(&mut self, result: Result<String, String>) {
+        match result {
+            Ok(message) => {
                 self.status = message.clone();
                 self.print_success = Some(message);
             }

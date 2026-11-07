@@ -176,23 +176,21 @@ impl Clipboard {
         not(feature = "clipboard"),
         expect(clippy::needless_pass_by_ref_mut, clippy::unused_self)
     )]
-    pub fn set_image(&mut self, image: &egui::ColorImage) {
+    pub fn set_image(&mut self, image: &egui::ColorImage) -> Result<(), String> {
         #[cfg(all(
             not(any(target_os = "android", target_os = "ios")),
             feature = "arboard",
         ))]
         if let Some(clipboard) = &mut self.arboard {
-            if let Err(err) = clipboard.set_image(arboard_from_color_image(image)) {
-                log::error!("arboard copy/cut error: {err}");
-            }
+            clipboard
+                .set_image(arboard_from_color_image(image))
+                .map_err(|err| err.to_string())?;
             log::debug!("Copied image to clipboard");
-            return;
+            return Ok(());
         }
 
-        log::error!(
-            "Copying images is not supported. Enable the 'clipboard' feature of `egui-winit` to enable it."
-        );
         _ = image;
+        Err("The native image clipboard is unavailable on this display".into())
     }
 }
 

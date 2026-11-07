@@ -913,7 +913,7 @@
       "archive_sha256": "e4e449f4c4a2a60c7ccb4ba7fa4078417bfe1f9ddc03b5e05ce75748e33a70de",
       "archive_url": "https://static.crates.io/crates/egui-winit/egui-winit-0.37.0.crate",
       "patch": "patches/egui-winit-0.37.0.patch",
-      "patch_sha256": "431b783beed309230015c304e066f097f889069b7f9ca096fde24570fc3535bd",
+      "patch_sha256": "dff669795f64e0a09724317519a2dc0a226491ceebaa6d36e871d5579bdc3123",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "3eb2f5f41008d97f2800b00c5245f906e3f70c1c6258714d4e9d89d6f31a8b33",
@@ -944,7 +944,7 @@
           "original_sha256": "7a8ccbb9fbddf24243446291b8e5a4e6bddcb6b565602c9561581926d5ae362b"
         },
         "src/clipboard.rs": {
-          "sha256": "4c8f063b905aed4476a38c96af72cd325be39ba9b7a91d05b165ae48c9a53751",
+          "sha256": "b530a470788d37c85c3efdb2b97109039edecbbb0a10dc389a66b112a1ba25a1",
           "original_sha256": "4c8f063b905aed4476a38c96af72cd325be39ba9b7a91d05b165ae48c9a53751"
         },
         "src/dropped_file.rs": {
@@ -955,8 +955,12 @@
           "sha256": "be25ff8563afa65af4af6a97be7f4a9125f4efb7217e2bbef7d74707f96b6f57",
           "original_sha256": null
         },
+        "src/image_clipboard.rs": {
+          "sha256": "5f4f92cf8ae19a2a188e49fc91b92822da22016fe169a2f18627029e5af948bc",
+          "original_sha256": null
+        },
         "src/lib.rs": {
-          "sha256": "eeb404dd158af8e38cd6dcd42c6f9d5579a6c9919f54725180244dce79dc72cb",
+          "sha256": "8fdaa6e6c27ebcc7f2017bd6c4d9b4a26a42302d89609eff19950ac35b2730b9",
           "original_sha256": "d742b0d35e6b1248329f11fdc6d267c3f04cb93f1729fbe7b7ac074172d91c45"
         },
         "src/macos_scroll_momentum.rs": {

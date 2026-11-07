@@ -65,7 +65,10 @@ impl Editor {
                     }
                     if action(
                         ui,
-                        loaded && self.print_worker.is_none() && self.print_request.is_none(),
+                        loaded
+                            && self.print_worker.is_none()
+                            && self.print_clipboard.is_none()
+                            && self.print_request.is_none(),
                         "Print…",
                     ) {
                         self.prepare_print();

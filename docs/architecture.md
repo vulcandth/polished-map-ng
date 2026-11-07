@@ -391,3 +391,27 @@ an automatic retry loop. The protocol does not offer compositor-pixel feedback.
 The isolated Linux protocol probe checks actual requests and resource lifetime;
 compositor/GPU appearance, fullscreen and native preference acceptance remain
 open. Winit's boolean buffer transparency is not used as a substitute.
+
+## Standard Wayland image clipboard
+
+The native Wayland-only acceptance probe exposed a gap: arboard's optional
+data-control transport needs compositor support, and its X11 fallback is not
+available on a pure Wayland session. The existing Smithay adapter handles text
+through the standard data-device protocol on the GUI connection, but not images.
+Full image transfer on that protocol is planned PP3 work, not implemented support.
+
+Extend the existing connection-owned clipboard path for PNG and BMP MIME offers;
+prefer PNG and report malformed preferred data rather than silently switching
+formats. Retain focus/seat serials, clipboard ownership and source lifetime with
+the native event loop. Bound encoded bytes, decoded dimensions, outstanding
+transfers and receive time; handle seat removal, cancellation and nonresponsive
+owners without blocking editor input. Verify independent protocol peers and
+actual application exchange with X11 disabled. Headless core rendering must not
+gain a window or clipboard dependency.
+
+Print's native write acknowledgment is implemented separately: a bounded,
+viewport-scoped request/reply bridges the rendered image to egui-winit's existing
+clipboard owner. The editor reports success only after that adapter returns
+success and exposes errors without changing project data. This also prevents
+false success on clipboard failures outside Wayland. It does not implement the
+missing standard-protocol image transport or close native clipboard acceptance.

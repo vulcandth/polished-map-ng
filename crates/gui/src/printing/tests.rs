@@ -351,19 +351,10 @@ fn worker_output_handoff_success_errors_and_modal_close_guard() {
     h.state_mut()
         .dispatch_print(&ctx, |_| panic!("Copy must not open a picker"), run);
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
-    let copied = loop {
+    loop {
         h.step();
-        if let Some(image) = h
-            .output()
-            .platform_output
-            .commands
-            .iter()
-            .find_map(|c| match c {
-                egui::OutputCommand::CopyImage(image) => Some(image.clone()),
-                _ => None,
-            })
-        {
-            break image;
+        if h.state().print_clipboard.is_some() {
+            break;
         }
         assert!(
             std::time::Instant::now() < deadline,
@@ -371,13 +362,22 @@ fn worker_output_handoff_success_errors_and_modal_close_guard() {
             h.state().error
         );
         std::thread::sleep(std::time::Duration::from_millis(5));
-    };
-    assert_eq!(copied.size, [64, 32]);
+    }
+    assert!(h.state().print_success.is_none());
+    assert!(h.state().interaction_blocked());
+    h.state_mut().prepare_print();
+    assert!(h.state().print_form.is_none());
+    egui_winit::image_clipboard::dispatch_with(&ctx, egui::ViewportId::ROOT, |image| {
+        assert_eq!(image.size, [64, 32]);
+        Ok(())
+    });
+    h.step();
     assert_eq!(
         h.state().print_success.as_deref(),
         Some("Copied to clipboard!")
     );
     assert!(h.state().print_worker.is_none());
+    assert!(h.state().print_clipboard.is_none());
     h.remove_cursor();
     h.run();
     #[cfg(feature = "visual-tests")]
@@ -399,6 +399,78 @@ fn worker_output_handoff_success_errors_and_modal_close_guard() {
         h.state_mut().error = None;
     }
     assert!(!h.state().is_modified());
+}
+
+#[test]
+fn failed_native_image_copy_reports_error_and_can_retry_without_false_success() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    let ctx = h.ctx.clone();
+    for native_result in [
+        Err("The native image clipboard is unavailable".to_owned()),
+        Ok(()),
+    ] {
+        let (tx, rx) = mpsc::channel();
+        tx.send(Ok(PrintOutput::Copied(egui::ColorImage::filled(
+            [2, 1],
+            egui::Color32::RED,
+        ))))
+        .unwrap();
+        h.state_mut().print_worker = Some(rx);
+        h.step();
+        assert!(h.state().print_success.is_none());
+        assert!(h.state().print_clipboard.is_some());
+        let failed = native_result.is_err();
+        egui_winit::image_clipboard::dispatch_with(&ctx, egui::ViewportId::ROOT, |_| native_result);
+        egui_winit::image_clipboard::dispatch_with(&ctx, egui::ViewportId::ROOT, |_| {
+            panic!("copy dispatched twice")
+        });
+        h.step();
+        assert!(h.state().print_clipboard.is_none());
+        if failed {
+            assert_eq!(
+                h.state().error.as_deref(),
+                Some("The native image clipboard is unavailable")
+            );
+            assert!(h.state().print_success.is_none());
+            assert_eq!(h.state().status, "Print failed");
+            h.state_mut().error = None;
+        } else {
+            assert_eq!(
+                h.state().print_success.as_deref(),
+                Some("Copied to clipboard!")
+            );
+        }
+        assert!(!h.state().is_modified());
+    }
+}
+
+#[test]
+fn native_image_copy_replies_are_scoped_and_cannot_be_overwritten() {
+    use egui_winit::image_clipboard::{dispatch_with, request, take_reply};
+    let ctx = egui::Context::default();
+    let root = egui::ViewportId::ROOT;
+    let child = egui::ViewportId::from_hash_of("copy-child");
+    let image = egui::ColorImage::filled([1, 1], egui::Color32::BLUE);
+    let first = request(&ctx, root, image.clone()).unwrap();
+    assert!(request(&ctx, root, image.clone()).is_err());
+    assert!(take_reply(&ctx, root, first).is_none());
+    dispatch_with(&ctx, child, |_| panic!("wrong viewport"));
+    dispatch_with(&ctx, root, |copied| {
+        assert_eq!(copied.pixels, image.pixels);
+        Err("permission denied".into())
+    });
+    assert!(request(&ctx, root, image.clone()).is_err());
+    assert!(take_reply(&ctx, root, first + 1).is_none());
+    assert!(take_reply(&ctx, child, first).is_none());
+    assert_eq!(
+        take_reply(&ctx, root, first),
+        Some(Err("permission denied".into()))
+    );
+    assert!(take_reply(&ctx, root, first).is_none());
+    let second = request(&ctx, root, image).unwrap();
+    assert_ne!(first, second);
+    dispatch_with(&ctx, root, |_| Ok(()));
+    assert_eq!(take_reply(&ctx, root, second), Some(Ok(())));
 }
 
 #[test]

@@ -3206,7 +3206,7 @@ This is an actual original-application check, not only extracted functions.
 | Roof editor/save/reopen | Native pixel edit on initial tile `$0:10` wrote a 24×24 PNG with only pixel `(0,16)` black, preserving 2bpp input. This follows the original reversed display rows. Original plusplus reopened the PNG and displayed the same pixel in `$0:10`. |
 | Palette session and export | Hex `123456` remained exact in the editor with RGB5 channels 2/6/10. Enter applied without closing. Export produced six eight-palette sets with Custom gray starting `RGB 02,06,10`; palette export is separate from map Save. |
 | Event movement/options/save | Drag moved `pokemon_event` from `(0,0)` to `(2,2)`; native options accepted suffix `, EEVEE`. Independent bytes are `\tpokemon_event  2,  2, EEVEE\r\n`. Original plusplus reopened the moved marker and fields. Its Linux text reader also exposes the existing CR as `^M`; NG preserves the fixture's CRLF rather than rewriting unrelated line endings. |
-| Print export | All five options were toggled, the native save chooser used the map-derived PNG name, and export produced an RGB 256×192 image with success feedback. Full overlay pixel comparison and Print clipboard exchange remain acceptance work. |
+| Print export | All five options were toggled, the native save chooser used the map-derived PNG name, and export produced an RGB 256×192 image with success feedback. Subsequent full-image X11 comparisons are recorded [below](#native-plusplus-print-clipboard-comparison); native Wayland transfer remains open. |
 | Image clipboard | NG Windows roof image copy and Ctrl+Shift+V worked on a distinct tile; cancel discarded that draft. Original Linux copy/paste also worked locally. Original → NG on the same Linux X11 desktop exposed the BMP transport gap described below. Cross Windows/WSLg image transfer was unsuccessful in either direction and is not counted as native OS interoperability acceptance. |
 
 The original's WSLg modal surfaces occasionally captured black until moved;
@@ -3344,6 +3344,57 @@ glyph rasterization and backend-specific alpha rounding remain within the
 No new functional defect was found and no rendering code was changed to chase
 these differences. These are X11 application/clipboard checks, not native
 Wayland, Windows clipboard, macOS or complete desktop acceptance.
+
+### Plusplus Wayland image clipboard gap
+
+A native Wayland-only launch of the same plusplus binary, with `DISPLAY` unset
+and `WAYLAND_DISPLAY=wayland-0`, opened the disposable New Bark Town fixture.
+WSLg advertised `wl_data_device_manager` version 3 but no data-control extension.
+The production arboard reader failed after its data-control initialization fell
+back to unavailable X11. Native Print → Copy nevertheless displayed
+`Copied to clipboard!`: it acknowledged image rendering before egui-winit
+attempted the actual clipboard write. This is a functional defect, not deferred
+aesthetics or successful Wayland clipboard verification.
+
+Print now queues a viewport-scoped native image request and waits for its result.
+The existing clipboard owner performs the write; errors reach the editor instead
+of a success dialog. Pending copies block duplicate Print and document-changing
+actions. Automated regressions cover delayed success, failure/retry, unchanged
+documents, exactly-once dispatch, wrong-viewport/stale replies and preservation
+of an unconsumed result. Windows format, Clippy with warnings denied, workspace
+tests, rustdoc and the production native-adapter graph pass. Pinned vendor
+archive/patch verification and documentation checks also pass.
+
+The native Wayland retest now displays `The native image clipboard is unavailable
+on this display`, with no success dialog; acknowledgment returns to the unchanged
+10×9/248-block editor. A separate startup defect was also reproduced: Map Options
+could be created before eframe mapped its parent, centering the dialog partly
+off-screen on a zero-sized parent. The native host now defers child creation until
+the parent's first frame has completed. The rebuilt Wayland startup displays the
+complete 300×300 Map Options client at positive desktop coordinates, and Open
+reveals the parent normally. The same rule covers nested errors; automated native
+renderer tests verify one-frame deferral, subsequent creation and retained modal
+draft/close guards. This addresses usability, not font or decoration matching.
+The rebuilt X11 application still reports success after Copy; independent
+clipboard capture matches all 92,160 grid-baseline pixels and RGB SHA-256
+`c878560e03bbfc0e565a730337bd2a261f6c1405ba9e295ae708aec428b44283`.
+The Linux build and both native paths passed; cross-platform CI for these changes
+is pending. Compilation alone will not close native macOS/desktop acceptance.
+
+Full Wayland image transfer remains **unimplemented** when neither data-control
+nor X11 is available. The existing Smithay adapter supports standard-protocol
+text only. PP3 requires image MIME support on the GUI's existing Wayland
+connection, with bounded PNG/BMP transfers, focus/serial handling, ownership
+lifetime and visible errors. Error reporting alone does not satisfy that gate.
+See the [implementation direction](architecture.md#standard-wayland-image-clipboard).
+
+An isolated Ubuntu Thunar 4.16.10 and its libraries were unpacked under ignored
+scratch storage, with a private D-Bus session; no system packages were installed.
+Its real file-manager window opened the fixture directory. The available input
+tool rejected a cross-window drag outside the source bounds, and its activation
+restored a maximized WSLg window before the next attempt, invalidating the
+observed drop geometry. No successful desktop drop is claimed. That native gate
+remains open; protocol/headless tests are not a replacement for it.
 
 ## November 1 upstream review
 
