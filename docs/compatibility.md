@@ -3765,7 +3765,11 @@ Nineteen Linux snapshot differences were inspected before acceptance: caption
 text behind menus, square/centered swatches, mixed-font WRAM text and the four
 preview layouts. The WSL default graphics backend crashed before assertions;
 software Vulkan completed the suite with only these expected differences. The
-final accepted-baseline run and cross-platform CI remain pending. The earlier
+final accepted-baseline run passes (326 tests; seven explicit native/reference
+ignores). All eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42425455114)
+pass for `642f1ba`: Windows/Linux/macOS workspace and native adapter checks,
+MSRV, dependencies, upstream references, visual regressions and real-project
+integration. These checks close M9, not the broader native parity gates. The earlier
 development releases retain their immutable source; they do not contain M9.
 No new icon artwork or original-font matching is part of this work.
 The [future suggestions](architecture.md#november-7-future-suggestions) are

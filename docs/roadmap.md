@@ -25,8 +25,7 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Complete M9's November 7 review fixes and verification for both profiles,
-keeping future improvements separate. Then continue PP3 integrated desktop capture/drop, placement/focus/DPI and
+**Next:** Continue PP3 integrated desktop capture/drop, placement/focus/DPI and
 macOS native acceptance using the published
 [plusplus tester packages](releases.md#plusplus-development-packages)
 for all four build targets. The November 7 packages include the verified
@@ -72,14 +71,15 @@ Target: the immutable master revision in [upstream.lock.toml](../upstream.lock.t
 with compatible pinned pokecrystal. Preserve safe valid-input behavior before
 adding improvements. Each completed group below still participates in M7.
 
-### Active review follow-up
+### Review follow-up
 
-- [ ] **M9 (in progress) — November 7 tester review:** Correct priority alignment,
-  swatch geometry, empty-map guidance, WRAM label typography, first-launch theme
-  selection and Windows icon sizes in both profiles. Add the user-approved
-  roof/tileset previews with bounded, scrollable dropdowns. Acceptance requires focused
-  UI/geometry regressions, native Windows icon verification and workspace checks.
-  Record feature suggestions separately without implementing them.
+- [x] **M9 — November 7 tester review:** Priority alignment, swatch geometry,
+  empty-map guidance, WRAM typography, first-launch theme selection and Windows
+  multi-size icons are fixed for both launchers. User-approved roof/tileset
+  previews retain bounded, scrollable dropdowns. Focused input/geometry tests,
+  reviewed snapshots, native Windows inspection and all eight cross-platform CI
+  jobs pass. Future suggestions remain separately planned; broader native
+  acceptance stays open. These source fixes are not in the earlier dev packages.
   Evidence: [review disposition](compatibility.md#november-7-upstream-review).
 
 - [x] **M8 — Upstream tester review:** reviewed input/dialog/usability fixes,
@@ -137,8 +137,8 @@ adding improvements. Each completed group below still participates in M7.
   limitations, as explicitly selected by the user. Source hashes, decoded pixels,
   disabled/theme variants and 1×/2× bounds pass; reviewed snapshots preserve
   existing layout. Evidence: [artwork port](compatibility.md#original-toolbar-message-and-application-artwork),
-  [asset records](assets.md). Native icon delivery remains M4/P1; executable/bundle
-  resources remain P2.
+  [asset records](assets.md). Broader native icon delivery remains M4/P1; Windows
+  executable resources are covered by M9 and macOS bundle metadata remains P2.
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
   anchors, zero fill and source-compatible history boundaries.
 - [x] Graphics and project backend: 2bpp/LZ/CHR/PNG, metatiles, palette maps,
