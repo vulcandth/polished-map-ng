@@ -1802,8 +1802,8 @@ inspected. Formatting, workspace Clippy/tests/docs and visual-feature Clippy pas
 
 ## Current coverage matrix
 
-Implementation coverage is not completed application parity. Remaining work is
-tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
+Implementation coverage is not completed application parity. The [roadmap](roadmap.md)
+owns remaining implementation work and native acceptance gates.
 
 | Area | Reference | State / required evidence |
 |---|---|---|
@@ -1816,10 +1816,10 @@ tracked as M1–M7 and A1–A4 in the [roadmap](roadmap.md).
 | Block/tileset/roof/palette editors | master *-window.cpp | Drafts, pixel gestures, palette/priority attributes, clipboard operations, drag/copy, block count, asset switching and persistence implemented. Middle-release defaults and shared numeric input are implemented; native hosting is implemented; integrated window/clipboard verification remains pending |
 | Events / warp navigation | master event.cpp, map-events.cpp | Shared model, 22-macro parsing, preserved saves/CLI, overlays/options/dragging/warps, auto-load, resize, editor dispatch, shortcuts and Print overlays tested. Field modes/default-button behavior are implemented; native fonts, full gesture coverage and native workflows are pending |
 | Preferences, overlays, print/clipboard | master main-window.cpp | Twenty-eight implemented settings plus recent history restore/save with malformed-record protection; all five Print flags/Copy/Export, internal Drag and Drop and positioned external-drop routing implemented. The meta128 acknowledgment and read-only legacy import are implemented; native file-drop acceptance, storage/restart/placement and Print/clipboard parity remain pending |
-| Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | PP2 block/graphics/roof/map/palette/event backends are implemented with source comparisons and real-project roundtrips. Separate GUI integration and full application acceptance remain PP3–PP4; see [audit](#plusplus-source-audit) and [backend completion](#plusplus-events-and-script-persistence). |
+| Expanded tile/attribute profile | plusplus tile.cpp, metatileset.cpp | PP2 backends and separate PP3 GUI workflows are implemented with source comparisons, real-project roundtrips and [native/original-application evidence](#pinned-polished-crystal-application-interoperability). Integrated desktop capture/drop, placement/focus/DPI and macOS acceptance remain PP3–PP4; see [source reconciliation](#plusplus-gui-source-reconciliation) and [tester checks](testing-plusplus.md). |
 | Unified profile detection | both config.cpp variants | Pending |
 | Stable automation / batch recovery | new API | Block/collision and compound tileset preflight, backups and rollback tested; tileset CLI preview and hash-required apply; general batch journal discovery/replay and stable schemas pending |
-| Native packaging and runtime | all three OSes | Build/test CI and selected Windows/X11 opacity and installed-font checks exist; complete native runtime acceptance and distribution packages pending |
+| Native packaging and runtime | all three OSes | Separate [master and plusplus development packages](releases.md) with matching source/licenses are published for Windows, Linux, Apple Silicon and Intel Mac after cross-platform CI and archive verification. The recorded native checks do not close desktop, mixed-DPI, macOS GUI, clean-machine or final parity-release acceptance. |
 
 New tests must distinguish synthetic vectors, source-derived expectations, and
 actual C++ differential observations. A source-derived vector is not a run of
