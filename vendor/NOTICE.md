@@ -1,5 +1,25 @@
 # Native adapter source notices
 
+## smithay-clipboard 0.7.3
+
+Source: <https://github.com/Smithay/smithay-clipboard> and the immutable Cargo
+archive identified in [sources.json](sources.json). All original sources and the
+[MIT license](smithay-clipboard-0.7.3/LICENSE) are retained.
+
+Modified for Polished Map NG on 2026-11-06, under MIT: add asynchronous binary
+MIME selection transfers on the existing GUI connection. Retain input serials,
+per-source payloads and ownership; limit bytes, concurrent requests and transfer
+time; cancel receives on caller/seat teardown. The existing dependency is now
+pinned locally. Standalone adapter tests have their own locked upstream test
+requirements; they do not add dependencies to the production graph.
+
+The adapter can use the host window's retained selection offer for text and
+binary reads, preserving the existing standalone selection path.
+
+The [independent protocol probe](../tools/wayland_clipboard_probe.py) verifies
+fragmented binary transfer, MIME preference, source replacement and bounded
+failure handling. Integrated application checks remain separately recorded.
+
 ## arboard 3.7.0
 
 Source: <https://github.com/1Password/arboard> and the immutable Cargo archive
@@ -81,6 +101,11 @@ resources before surfaces. Original drawing, input and geometry remain intact.
 The production graph uses this fallback frame. The optional Adwaita frame is
 not adapted and explicitly rejects opacity while visible.
 
+Additional winit modifications on 2026-11-06, under Apache-2.0: retain clipboard
+offers per seat until replacement/teardown and expose the focused window's
+offer/MIME snapshot. File drops never consume or invalidate the active clipboard
+selection. MIME inventories are bounded to 64 names of at most 255 bytes.
+
 ## egui-winit 0.37.0
 
 Source: <https://github.com/emilk/egui> and the Cargo archive identified in
@@ -119,6 +144,13 @@ tracked image-copy requests only after the owned native clipboard returns a
 result. Keep one outstanding request/reply per viewport, reject replacement of
 pending work, and propagate unavailable-clipboard/write errors to the editor.
 Existing untracked egui image-copy commands retain error logging.
+
+Additional egui-winit modifications on 2026-11-06, under MIT OR Apache-2.0:
+route image Copy/Paste through the existing standard Wayland clipboard owner,
+encode/decode PNG and BMP off the GUI thread with image bounds, and deliver
+viewport-scoped completion/cancellation. Share the window adapter's retained
+selection with Smithay before native input/output dispatch. Other native backends
+retain arboard.
 
 ## eframe 0.37.0
 

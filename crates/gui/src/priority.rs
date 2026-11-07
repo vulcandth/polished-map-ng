@@ -199,19 +199,12 @@ mod tests {
             modifiers: egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
         });
         h.step();
-        let copied = h
-            .output()
-            .platform_output
-            .commands
-            .iter()
-            .find_map(|command| {
-                if let egui::OutputCommand::CopyImage(image) = command {
-                    Some(image)
-                } else {
-                    None
-                }
-            })
-            .expect("copy image output");
+        let mut copied = None;
+        egui_winit::image_clipboard::dispatch_with(&h.ctx, egui::ViewportId::ROOT, |image| {
+            copied = Some(image.clone());
+            Ok(())
+        });
+        let copied = copied.expect("image-copy shortcut must queue a native request");
         assert_eq!(copied.size, [8, 8]);
         assert!(
             copied.pixels.iter().all(|p| *p == Color32::BLACK),

@@ -53,6 +53,7 @@ pub struct WinitState {
 
     /// The seat state responsible for all sorts of input.
     pub seat_state: SeatState,
+    pub(crate) clipboard_selections: super::seat::file_drop::Selections,
     pub data_device_manager: Option<sctk::data_device_manager::DataDeviceManagerState>,
     pub dialog_manager: Option<super::types::dialog::XdgWmDialogV1>,
     pub alpha_modifier: Option<wayland_protocols::wp::alpha_modifier::v1::client::wp_alpha_modifier_v1::WpAlphaModifierV1>,
@@ -165,6 +166,7 @@ impl WinitState {
         let custom_cursor_pool = Arc::new(Mutex::new(SlotPool::new(2, &shm).unwrap()));
 
         Ok(Self {
+            clipboard_selections: Default::default(),
             registry_state,
             compositor_state: Arc::new(compositor_state),
             subcompositor_state: subcompositor_state.map(Arc::new),

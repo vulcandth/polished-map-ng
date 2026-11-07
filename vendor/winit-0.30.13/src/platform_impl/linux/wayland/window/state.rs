@@ -580,6 +580,10 @@ impl WindowState {
         true
     }
 
+    pub(crate) fn has_seat_focus(&self, seat: &ObjectId) -> bool {
+        self.seat_focus.contains(seat)
+    }
+
     /// Whether the window is focused by any seat.
     #[inline]
     pub fn has_focus(&self) -> bool {

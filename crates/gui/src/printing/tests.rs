@@ -177,12 +177,13 @@ fn command_shortcut_toolbar_and_default_button_share_print_workflow() {
     assert!(h.state().print_form.is_some());
     h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::C);
     h.run();
-    assert!(h.state().print_form.is_none());
+    assert!(h.state().print_form.is_some());
     assert!(matches!(
         h.state().print_request.as_ref().unwrap().destination,
         Destination::Clipboard
     ));
     h.state_mut().print_request = None;
+    h.state_mut().print_form = None;
     h.get_by_role_and_label(egui::Role::Button, "Print…")
         .click();
     h.run();
@@ -366,7 +367,12 @@ fn worker_output_handoff_success_errors_and_modal_close_guard() {
     assert!(h.state().print_success.is_none());
     assert!(h.state().interaction_blocked());
     h.state_mut().prepare_print();
-    assert!(h.state().print_form.is_none());
+    assert!(h.state().print_form.is_some());
+    // Repeated shortcuts cannot replace a pending copy or open a file picker.
+    h.key_press(egui::Key::Enter);
+    h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::C);
+    h.run();
+    assert!(h.state().print_request.is_none());
     egui_winit::image_clipboard::dispatch_with(&ctx, egui::ViewportId::ROOT, |image| {
         assert_eq!(image.size, [64, 32]);
         Ok(())
@@ -378,6 +384,7 @@ fn worker_output_handoff_success_errors_and_modal_close_guard() {
     );
     assert!(h.state().print_worker.is_none());
     assert!(h.state().print_clipboard.is_none());
+    assert!(h.state().print_form.is_none());
     h.remove_cursor();
     h.run();
     #[cfg(feature = "visual-tests")]
@@ -534,4 +541,32 @@ fn queued_print_retains_the_filename_of_the_document_it_captured() {
     );
     assert!(picker_called);
     assert!(h.state().print_worker.is_none());
+}
+
+#[test]
+fn escape_retains_pending_copy_until_native_result() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    h.state_mut().prepare_print();
+    h.run();
+    h.get_by_label("Copy").click();
+    h.run();
+    let ctx = h.ctx.clone();
+    h.state_mut().print_request = None;
+    let id = egui_winit::image_clipboard::request(
+        &ctx,
+        egui::ViewportId::ROOT,
+        egui::ColorImage::filled([1, 1], egui::Color32::WHITE),
+    )
+    .unwrap();
+    h.state_mut().print_clipboard = Some(id);
+    h.key_press(egui::Key::Escape);
+    h.run();
+    assert!(h.state().print_form.is_some());
+    assert_eq!(h.state().print_clipboard, Some(id));
+    egui_winit::image_clipboard::dispatch_with(&ctx, egui::ViewportId::ROOT, |_| Ok(()));
+    h.run();
+    assert!(h.state().print_form.is_none());
+    assert!(h.state().print_clipboard.is_none());
+    assert!(h.state().print_success.is_some());
+    assert!(!h.state().is_modified());
 }

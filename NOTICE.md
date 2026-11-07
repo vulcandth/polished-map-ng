@@ -363,3 +363,9 @@ Linux clipboard image interoperability uses a narrowly patched arboard 3.7.0,
 under its original MIT OR Apache-2.0 terms. The patch accepts FLTK's BMP offers
 while preserving PNG preference. Original licenses, immutable archive hashes
 and complete patch records are retained in [vendor notices](vendor/NOTICE.md).
+
+Standard Wayland image clipboard transport adapts smithay-clipboard 0.7.3 under
+MIT, with asynchronous PNG/BMP dispatch in the MIT OR Apache-2.0 egui-winit
+adapter. Original licenses, archive hashes and modification patches accompany
+these sources in [vendor notices](vendor/NOTICE.md). The Rust editor changes
+remain LGPL-3.0-only; native test probes contain generated images only.

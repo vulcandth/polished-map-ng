@@ -253,8 +253,15 @@
 +}
 --- a/winit-0.30.13/src/platform/wayland.rs
 +++ b/winit-0.30.13/src/platform/wayland.rs
-@@ -81,9 +81,23 @@
+@@ -79,11 +79,39 @@
+ ///
+ /// [`Window`]: crate::window::Window
  pub trait WindowExtWayland {
++    /// Snapshot the focused seat's selection on the window connection's data device.
++    /// Issue receive requests before dispatching more events: replacement or seat
++    /// removal invalidates this offer. Does not read or change clipboard contents.
++    fn clipboard_selection(&self) -> Option<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)>;
++
      /// Returns `xdg_toplevel` of the window or [`None`] if the window is X11 window.
      fn xdg_toplevel(&self) -> Option<NonNull<c_void>>;
 +
@@ -266,6 +273,15 @@
  }
  
  impl WindowExtWayland for Window {
++    fn clipboard_selection(&self) -> Option<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)> {
++        match &self.window {
++            #[cfg(x11_platform)]
++            crate::platform_impl::Window::X(_) => None,
++            #[cfg(wayland_platform)]
++            crate::platform_impl::Window::Wayland(window) => window.clipboard_selection(),
++        }
++    }
++
 +    fn set_whole_window_opacity(&self, multiplier: u32) -> Result<(), &'static str> {
 +        match &self.window {
 +            #[cfg(x11_platform)]
@@ -313,7 +329,7 @@
                  }
 --- a/winit-0.30.13/src/platform_impl/linux/wayland/seat/file_drop.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/wayland/seat/file_drop.rs
-@@ -0,0 +1,379 @@
+@@ -0,0 +1,399 @@
 +//! Receive-only file drops on winit's own Wayland connection and event queue.
 +//! Polished Map NG extension, Apache-2.0. Implements wl_data_device/offer's
 +//! lifecycle directly: dropped offers outlive leave/new-enter until EOF/cancel.
@@ -322,6 +338,7 @@
 +use std::io::{ErrorKind, Read};
 +use std::os::fd::{AsRawFd, OwnedFd};
 +use std::sync::atomic::{AtomicBool, Ordering};
++use std::sync::{Arc, Mutex};
 +use std::time::Duration;
 +
 +use crate::dpi::{LogicalPosition, PhysicalPosition};
@@ -349,7 +366,15 @@
 +const MAX_PENDING: usize = 16;
 +
 +#[derive(Debug)]
-+struct Offer(WlDataOffer);
++pub(crate) struct Offer(WlDataOffer);
++
++/// Most recently delivered selection per seat, shared by windows on this connection.
++pub(crate) type Selections = Arc<Mutex<Vec<(ObjectId, Offer)>>>;
++
++pub(crate) fn selection_snapshot(offer: &Offer) -> (WlDataOffer, Vec<String>) {
++    let mimes = offer.0.data::<OfferData>().unwrap().mimes.lock().unwrap().clone();
++    (offer.0.clone(), mimes)
++}
 +impl Drop for Offer {
 +    fn drop(&mut self) {
 +        self.0.destroy();
@@ -358,6 +383,7 @@
 +
 +#[derive(Debug, Default)]
 +pub(super) struct OfferData {
++    mimes: Mutex<Vec<String>>,
 +    uri_list: AtomicBool,
 +    copy: AtomicBool,
 +}
@@ -657,10 +683,14 @@
 +                    state.receive_file_drop(data.seat.clone(), hover);
 +                }
 +            }
-+            wl_data_device::Event::Selection { id: Some(id) } => {
-+                // This device never reads or replaces the clipboard selection.
-+                if let Some(device) = state.drop_device(&data.seat) {
-+                    device.take_offer(&id.id());
++            wl_data_device::Event::Selection { id } => {
++                let offer = id.and_then(|id| state.drop_device(&data.seat)?.take_offer(&id.id()));
++                let mut selections = state.clipboard_selections.lock().unwrap();
++                // Keep the selection until replacement. Weston treats destroying
++                // its last delivered offer as cancellation of the source.
++                selections.retain(|(seat, _)| seat != &data.seat);
++                if let Some(offer) = offer {
++                    selections.push((data.seat.clone(), offer));
 +                }
 +            }
 +            _ => {}
@@ -678,8 +708,14 @@
 +        _: &QueueHandle<Self>,
 +    ) {
 +        match event {
-+            wl_data_offer::Event::Offer { mime_type } if mime_type == MIME => {
-+                data.uri_list.store(true, Ordering::Relaxed);
++            wl_data_offer::Event::Offer { mime_type } => {
++                if mime_type == MIME {
++                    data.uri_list.store(true, Ordering::Relaxed);
++                }
++                let mut mimes = data.mimes.lock().unwrap();
++                if mimes.len() < 64 && mime_type.len() <= 255 && !mimes.contains(&mime_type) {
++                    mimes.push(mime_type);
++                }
 +            }
 +            wl_data_offer::Event::Action { dnd_action } => {
 +                data.copy.store(
@@ -699,7 +735,7 @@
  use crate::platform_impl::wayland::state::WinitState;
  
  mod keyboard;
-+mod file_drop;
++pub(crate) mod file_drop;
 +pub(crate) use file_drop::DropDevice;
  mod pointer;
  mod text_input;
@@ -729,27 +765,29 @@
      }
  
      fn remove_seat(
-@@ -214,6 +219,7 @@
+@@ -214,6 +219,8 @@
          _queue_handle: &QueueHandle<Self>,
          seat: WlSeat,
      ) {
++        self.clipboard_selections.lock().unwrap().retain(|(id, _)| id != &seat.id());
 +        self.cancel_file_drops(&seat.id());
          let _ = self.seats.remove(&seat.id());
          self.on_keyboard_destroy(&seat.id());
      }
 --- a/winit-0.30.13/src/platform_impl/linux/wayland/state.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/wayland/state.rs
-@@ -53,6 +53,9 @@
+@@ -53,6 +53,10 @@
  
      /// The seat state responsible for all sorts of input.
      pub seat_state: SeatState,
++    pub(crate) clipboard_selections: super::seat::file_drop::Selections,
 +    pub data_device_manager: Option<sctk::data_device_manager::DataDeviceManagerState>,
 +    pub dialog_manager: Option<super::types::dialog::XdgWmDialogV1>,
 +    pub alpha_modifier: Option<wayland_protocols::wp::alpha_modifier::v1::client::wp_alpha_modifier_v1::WpAlphaModifierV1>,
  
      /// The shm for software buffers, such as cursors.
      pub shm: Shm,
-@@ -142,10 +145,13 @@
+@@ -142,10 +146,13 @@
          let monitors = output_state.outputs().map(MonitorHandle::new).collect();
  
          let seat_state = SeatState::new(globals, queue_handle);
@@ -764,7 +802,13 @@
          }
  
          let (viewporter_state, fractional_scaling_manager) =
-@@ -164,6 +170,9 @@
+@@ -159,11 +166,15 @@
+         let custom_cursor_pool = Arc::new(Mutex::new(SlotPool::new(2, &shm).unwrap()));
+ 
+         Ok(Self {
++            clipboard_selections: Default::default(),
+             registry_state,
+             compositor_state: Arc::new(compositor_state),
              subcompositor_state: subcompositor_state.map(Arc::new),
              output_state,
              seat_state,
@@ -774,7 +818,7 @@
              shm,
              custom_cursor_pool,
  
-@@ -291,6 +300,11 @@
+@@ -291,6 +302,11 @@
              .lock()
              .unwrap()
              .configure(configure, &self.shm, &self.subcompositor_state);
@@ -1642,10 +1686,11 @@
 +}
 --- a/winit-0.30.13/src/platform_impl/linux/wayland/window/mod.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/wayland/window/mod.rs
-@@ -40,6 +40,11 @@
+@@ -40,6 +40,12 @@
  
  /// The Wayland window.
  pub struct Window {
++    clipboard_selections: super::seat::file_drop::Selections,
 +    // Destroy the hint before the SCTK toplevel. Older compositors still receive
 +    // set_parent; input filtering remains the application's responsibility.
 +    modal_hint: Mutex<Option<super::types::dialog::Dialog>>,
@@ -1654,7 +1699,7 @@
      /// Reference to the underlying SCTK window.
      window: SctkWindow,
  
-@@ -93,6 +98,7 @@
+@@ -93,6 +99,7 @@
          let xdg_activation =
              state.xdg_activation.as_ref().map(|activation_state| activation_state.global().clone());
          let display = event_loop_window_target.connection.display();
@@ -1662,19 +1707,27 @@
  
          let size: Size = attributes.inner_size.unwrap_or(LogicalSize::new(800., 600.).into());
  
-@@ -217,6 +223,8 @@
+@@ -217,6 +224,9 @@
          event_loop_awakener.ping();
  
          Ok(Self {
++            clipboard_selections: state.clipboard_selections.clone(),
 +            modal_hint: Mutex::new(None),
 +            dialog_manager,
              window,
              display,
              monitors,
-@@ -232,6 +240,25 @@
+@@ -232,6 +242,32 @@
          })
      }
  
++    pub(crate) fn clipboard_selection(&self) -> Option<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)> {
++        let state = self.window_state.lock().unwrap();
++        self.clipboard_selections.lock().unwrap().iter().rev()
++            .find(|(seat, _)| state.has_seat_focus(seat))
++            .map(|(_, offer)| super::seat::file_drop::selection_snapshot(offer))
++    }
++
 +    pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {
 +        if parent.is_some_and(|p| p.display != self.display) {
 +            return Err("Dialog and parent use different Wayland connections");
@@ -1697,7 +1750,7 @@
      pub(crate) fn xdg_toplevel(&self) -> Option<NonNull<c_void>> {
          NonNull::new(self.window.xdg_toplevel().id().as_ptr().cast())
      }
-@@ -414,6 +441,14 @@
+@@ -414,6 +450,14 @@
      #[inline]
      pub fn set_blur(&self, blur: bool) {
          self.window_state.lock().unwrap().set_blur(blur);
@@ -1771,7 +1824,18 @@
  
          if state_change_requires_resize || new_size != self.inner_size() {
              self.resize(new_size);
-@@ -1094,6 +1114,41 @@
+@@ -560,6 +580,10 @@
+         true
+     }
+ 
++    pub(crate) fn has_seat_focus(&self, seat: &ObjectId) -> bool {
++        self.seat_focus.contains(seat)
++    }
++
+     /// Whether the window is focused by any seat.
+     #[inline]
+     pub fn has_focus(&self) -> bool {
+@@ -1094,6 +1118,41 @@
          }
      }
  
@@ -1813,7 +1877,7 @@
      /// Set the window title to a new value.
      ///
      /// This will automatically truncate the title to something meaningful.
-@@ -1149,6 +1204,7 @@
+@@ -1149,6 +1208,7 @@
  
  impl Drop for WindowState {
      fn drop(&mut self) {

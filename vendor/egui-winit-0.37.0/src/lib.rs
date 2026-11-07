@@ -121,6 +121,7 @@ pub struct State {
     current_custom_cursor: Option<(usize, CustomCursor)>,
 
     clipboard: clipboard::Clipboard,
+    image_task: Option<(Option<u64>, clipboard::ImageTask)>,
 
     /// If `true`, mouse inputs will be treated as touches.
     /// Useful for debugging touch support in egui.
@@ -202,6 +203,7 @@ impl State {
             current_custom_cursor: None,
 
             clipboard,
+            image_task: None,
 
             simulate_touch_screen: false,
             pointer_touch_id: None,
@@ -326,6 +328,31 @@ impl State {
         &mut self.egui_input
     }
 
+    fn poll_image_clipboard(&mut self) {
+        if let Some((Some(id), _)) = &self.image_task {
+            if !image_clipboard::active(&self.egui_ctx, self.viewport_id, *id) {
+                self.image_task = None;
+            }
+        }
+        if self.image_task.is_none() {
+            if let Some((id, request)) = image_clipboard::take_request(&self.egui_ctx, self.viewport_id) {
+                self.image_task = Some((Some(id), self.clipboard.start_image(request)));
+            }
+        }
+        if let Some((id, task)) = &mut self.image_task {
+            if let Some(result) = self.clipboard.poll_image(task) {
+                if let Some(id) = *id {
+                    image_clipboard::finish(&self.egui_ctx, self.viewport_id, id, result);
+                } else if let Err(reason) = result {
+                    log::error!("Native image clipboard: {reason}");
+                }
+                self.image_task = None;
+            } else {
+                self.egui_ctx.request_repaint_after_for(std::time::Duration::from_millis(10), self.viewport_id);
+            }
+        }
+    }
+
     /// Prepare for a new frame by extracting the accumulated input,
     ///
     /// as well as setting [the time](egui::RawInput::time) and [screen rectangle](egui::RawInput::screen_rect).
@@ -372,6 +399,7 @@ impl State {
         event: &winit::event::WindowEvent,
     ) -> EventResponse {
         profiling::function_scope!(short_window_event_description(event));
+        self.clipboard.update_selection(window);
 
         #[cfg(feature = "accesskit")]
         if let Some(accesskit) = self.accesskit.as_mut() {
@@ -1260,9 +1288,7 @@ impl State {
             #[cfg(not(all(unix, not(any(target_os = "macos", target_os = "ios", target_os = "android")), feature = "wayland")))]
             { let _ = multiplier; Err("This native adapter is not using Wayland") }
         });
-        image_clipboard::dispatch_with(&self.egui_ctx, self.viewport_id, |image| {
-            self.clipboard.set_image(image)
-        });
+
 
         let egui::PlatformOutput {
             commands,
@@ -1285,8 +1311,10 @@ impl State {
                     self.clipboard.set_primary_text(text);
                 }
                 egui::OutputCommand::CopyImage(image) => {
-                    if let Err(reason) = self.clipboard.set_image(&image) {
-                        log::error!("arboard copy/cut error: {reason}");
+                    if self.image_task.is_none() {
+                        self.image_task = Some((None, self.clipboard.start_image(image_clipboard::Request::Copy(image))));
+                    } else {
+                        log::error!("An image clipboard request is already pending");
                     }
                 }
                 egui::OutputCommand::OpenUrl(open_url) => {
@@ -1295,6 +1323,8 @@ impl State {
             }
         }
 
+        self.clipboard.update_selection(window);
+        self.poll_image_clipboard();
         self.apply_cursor(window, event_loop, cursor_icon, cursor_image.as_ref());
 
         let allow_ime = ime.is_some();

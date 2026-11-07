@@ -81,6 +81,7 @@ class DropPeer(Peer):
 
     def start(self):
         assert self.device is not None
+        self.selection_cleared = False
         self.offer("clipboard", selection=True)
         payload = VALID
         if self.scenario == "invalid":
@@ -160,6 +161,8 @@ class DropPeer(Peer):
         elif call == "wl_data_offer.destroy":
             offer = self.offers[object_id]
             assert not offer["destroyed"], "Duplicate offer destruction"
+            if offer["label"] == "clipboard":
+                assert self.selection_cleared or self.scenario == "seat-removed" or self.closed, "File-drop adapter destroyed the live clipboard selection"
             offer["destroyed"] = True
             if self.scenario in ("ordered", "legacy", "overlap") and offer["label"] != "clipboard":
                 assert offer["eof"], "Accepted drop destroyed while its asynchronous read was pending"
@@ -180,10 +183,14 @@ class DropPeer(Peer):
                 # Wait for a native resize acknowledgment before closing below.
             elif all(o["destroyed"] for o in self.offers.values()):
                 self.close_window()
+            elif not self.selection_cleared and all(o["destroyed"] for o in self.offers.values() if o["label"] != "clipboard"):
+                self.selection_cleared = True
+                self.emit(self.device, "selection", 0)
+
         elif call in ("wl_data_device.set_selection", "wl_data_device.start_drag"):
             raise AssertionError("Receive-only adapter changed clipboard/drag ownership")
         elif call == "wl_surface.destroy" and object_id == self.root:
-            assert all(o["destroyed"] for o in self.offers.values()), "Window closed with outstanding drag resources"
+            assert all(o["destroyed"] for o in self.offers.values() if o["label"] != "clipboard"), "Window closed with outstanding drag resources"
 
     def tick(self):
         # The first write is deliberately incomplete. Until the Rust window

@@ -15,6 +15,10 @@ native-tests = []
 name = "native_preferences"
 required-features = ["native-tests"]
 
+[[example]]
+name = "native_image_clipboard"
+required-features = ["native-tests"]
+
 [dependencies]
 polished-map-core.workspace = true
 polished-map-project.workspace = true

@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::{ErrorKind, Read};
 use std::os::fd::{AsRawFd, OwnedFd};
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::dpi::{LogicalPosition, PhysicalPosition};
@@ -33,7 +34,15 @@ const MIME: &str = "text/uri-list";
 const MAX_PENDING: usize = 16;
 
 #[derive(Debug)]
-struct Offer(WlDataOffer);
+pub(crate) struct Offer(WlDataOffer);
+
+/// Most recently delivered selection per seat, shared by windows on this connection.
+pub(crate) type Selections = Arc<Mutex<Vec<(ObjectId, Offer)>>>;
+
+pub(crate) fn selection_snapshot(offer: &Offer) -> (WlDataOffer, Vec<String>) {
+    let mimes = offer.0.data::<OfferData>().unwrap().mimes.lock().unwrap().clone();
+    (offer.0.clone(), mimes)
+}
 impl Drop for Offer {
     fn drop(&mut self) {
         self.0.destroy();
@@ -42,6 +51,7 @@ impl Drop for Offer {
 
 #[derive(Debug, Default)]
 pub(super) struct OfferData {
+    mimes: Mutex<Vec<String>>,
     uri_list: AtomicBool,
     copy: AtomicBool,
 }
@@ -341,10 +351,14 @@ impl Dispatch<WlDataDevice, DeviceData> for WinitState {
                     state.receive_file_drop(data.seat.clone(), hover);
                 }
             }
-            wl_data_device::Event::Selection { id: Some(id) } => {
-                // This device never reads or replaces the clipboard selection.
-                if let Some(device) = state.drop_device(&data.seat) {
-                    device.take_offer(&id.id());
+            wl_data_device::Event::Selection { id } => {
+                let offer = id.and_then(|id| state.drop_device(&data.seat)?.take_offer(&id.id()));
+                let mut selections = state.clipboard_selections.lock().unwrap();
+                // Keep the selection until replacement. Weston treats destroying
+                // its last delivered offer as cancellation of the source.
+                selections.retain(|(seat, _)| seat != &data.seat);
+                if let Some(offer) = offer {
+                    selections.push((data.seat.clone(), offer));
                 }
             }
             _ => {}
@@ -362,8 +376,14 @@ impl Dispatch<WlDataOffer, OfferData> for WinitState {
         _: &QueueHandle<Self>,
     ) {
         match event {
-            wl_data_offer::Event::Offer { mime_type } if mime_type == MIME => {
-                data.uri_list.store(true, Ordering::Relaxed);
+            wl_data_offer::Event::Offer { mime_type } => {
+                if mime_type == MIME {
+                    data.uri_list.store(true, Ordering::Relaxed);
+                }
+                let mut mimes = data.mimes.lock().unwrap();
+                if mimes.len() < 64 && mime_type.len() <= 255 && !mimes.contains(&mime_type) {
+                    mimes.push(mime_type);
+                }
             }
             wl_data_offer::Event::Action { dnd_action } => {
                 data.copy.store(

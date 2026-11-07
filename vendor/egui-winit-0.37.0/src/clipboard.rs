@@ -1,3 +1,5 @@
+mod image_transfer;
+pub(crate) use image_transfer::ImageTask;
 use raw_window_handle::RawDisplayHandle;
 
 /// Handles interfacing with the OS clipboard.
@@ -28,6 +30,14 @@ pub struct Clipboard {
 }
 
 impl Clipboard {
+    pub(crate) fn update_selection(&mut self, _window: &winit::window::Window) {
+        #[cfg(all(feature = "smithay-clipboard", feature = "wayland", any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd", target_os = "netbsd", target_os = "openbsd")))]
+        if let Some(clipboard) = &mut self.smithay {
+            use winit::platform::wayland::WindowExtWayland;
+            clipboard.set_external_selection(_window.clipboard_selection());
+        }
+    }
+
     /// Construct a new instance.
     ///
     /// # Safety

@@ -79,6 +79,11 @@ impl<T> EventLoopBuilderExtWayland for EventLoopBuilder<T> {
 ///
 /// [`Window`]: crate::window::Window
 pub trait WindowExtWayland {
+    /// Snapshot the focused seat's selection on the window connection's data device.
+    /// Issue receive requests before dispatching more events: replacement or seat
+    /// removal invalidates this offer. Does not read or change clipboard contents.
+    fn clipboard_selection(&self) -> Option<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)>;
+
     /// Returns `xdg_toplevel` of the window or [`None`] if the window is X11 window.
     fn xdg_toplevel(&self) -> Option<NonNull<c_void>>;
 
@@ -90,6 +95,15 @@ pub trait WindowExtWayland {
 }
 
 impl WindowExtWayland for Window {
+    fn clipboard_selection(&self) -> Option<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)> {
+        match &self.window {
+            #[cfg(x11_platform)]
+            crate::platform_impl::Window::X(_) => None,
+            #[cfg(wayland_platform)]
+            crate::platform_impl::Window::Wayland(window) => window.clipboard_selection(),
+        }
+    }
+
     fn set_whole_window_opacity(&self, multiplier: u32) -> Result<(), &'static str> {
         match &self.window {
             #[cfg(x11_platform)]

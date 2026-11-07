@@ -47,6 +47,137 @@ fn menu(h: &mut Harness<'_, Editor>, item: &str) {
 }
 
 #[test]
+fn native_image_paste_waits_preserves_drafts_on_error_and_cancels_on_close() {
+    for roof in [false, true] {
+        let (_dir, mut h) = fixture();
+        open(&mut h, roof);
+        let ctx = h.ctx.clone();
+        let selected = h.state().tileset_form.as_ref().unwrap().selected;
+        let before = pixels(&h, selected);
+        h.state_mut()
+            .tileset_form
+            .as_mut()
+            .unwrap()
+            .paste_image(&ctx)
+            .unwrap();
+        let pending = h
+            .state()
+            .tileset_form
+            .as_ref()
+            .unwrap()
+            .pending_image
+            .as_ref()
+            .unwrap();
+        let (viewport, first) = (pending.viewport, pending.id);
+        h.key_press(egui::Key::Enter);
+        h.run();
+        assert!(
+            h.state().tileset_form.is_some(),
+            "pending paste must not accept a draft"
+        );
+        assert_eq!(pixels(&h, selected), before);
+        egui_winit::image_clipboard::dispatch_paste_with(&ctx, viewport, || {
+            Err("Clipboard timed out".into())
+        });
+        h.run();
+        assert_eq!(h.state().error.as_deref(), Some("Clipboard timed out"));
+        assert_eq!(pixels(&h, selected), before);
+        h.state_mut().error = None;
+        h.state_mut()
+            .tileset_form
+            .as_mut()
+            .unwrap()
+            .paste_image(&ctx)
+            .unwrap();
+        assert_ne!(
+            h.state()
+                .tileset_form
+                .as_ref()
+                .unwrap()
+                .pending_image
+                .as_ref()
+                .unwrap()
+                .id,
+            first
+        );
+        egui_winit::image_clipboard::dispatch_paste_with(&ctx, viewport, || {
+            Ok(Some(egui::ColorImage::filled([8, 8], egui::Color32::BLACK)))
+        });
+        h.run();
+        assert_eq!(pixels(&h, selected), [3; 64]);
+        h.state_mut()
+            .tileset_form
+            .as_mut()
+            .unwrap()
+            .paste_image(&ctx)
+            .unwrap();
+        let id = h
+            .state()
+            .tileset_form
+            .as_ref()
+            .unwrap()
+            .pending_image
+            .as_ref()
+            .unwrap()
+            .id;
+        h.key_press(egui::Key::Escape);
+        h.run();
+        assert!(h.state().tileset_form.is_none());
+        egui_winit::image_clipboard::dispatch_paste_with(&ctx, viewport, || {
+            panic!("closed editor requested clipboard data")
+        });
+        assert!(egui_winit::image_clipboard::take_paste_reply(&ctx, viewport, id).is_none());
+        assert!(egui_winit::image_clipboard::request_paste(&ctx, viewport).is_ok());
+    }
+}
+
+#[test]
+fn native_image_copy_waits_for_acknowledgment_and_reports_failure() {
+    let (_dir, mut h) = fixture();
+    open(&mut h, false);
+    let ctx = h.ctx.clone();
+    let before = pixels(&h, 0);
+    h.state_mut()
+        .tileset_form
+        .as_mut()
+        .unwrap()
+        .copy_image(&ctx)
+        .unwrap();
+    let viewport = h
+        .state()
+        .tileset_form
+        .as_ref()
+        .unwrap()
+        .pending_image
+        .as_ref()
+        .unwrap()
+        .viewport;
+    egui_winit::image_clipboard::dispatch_with(&ctx, viewport, |image| {
+        assert_eq!(image.size, [8, 8]);
+        let samples: Vec<_> = before
+            .iter()
+            .map(|h| [255, 85, 170, 0][usize::from(*h)])
+            .collect();
+        assert_eq!(
+            image.pixels.iter().map(|p| p.r()).collect::<Vec<_>>(),
+            samples
+        );
+        Err("Clipboard has no focus".into())
+    });
+    h.run();
+    assert_eq!(h.state().error.as_deref(), Some("Clipboard has no focus"));
+    assert_eq!(pixels(&h, 0), before);
+    assert!(
+        h.state()
+            .tileset_form
+            .as_ref()
+            .unwrap()
+            .pending_image
+            .is_none()
+    );
+}
+
+#[test]
 fn raw_sheet_middle_pan_clamps_without_selecting_swapping_or_editing() {
     for scale in [1.0, 2.0] {
         for expanded in [false, true] {
@@ -415,19 +546,12 @@ fn shared_pixel_gestures_clipboard_and_roof_order_retain_raw_semantics() {
             modifiers: egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
         });
         h.step();
-        let copied = h
-            .output()
-            .platform_output
-            .commands
-            .iter()
-            .find_map(|c| {
-                if let egui::OutputCommand::CopyImage(i) = c {
-                    Some(i)
-                } else {
-                    None
-                }
-            })
-            .unwrap();
+        let mut copied = None;
+        egui_winit::image_clipboard::dispatch_with(&h.ctx, egui::ViewportId::ROOT, |image| {
+            copied = Some(image.clone());
+            Ok(())
+        });
+        let copied = copied.expect("image-copy shortcut must queue a native request");
         assert_eq!(copied.size, [8, 8]);
         assert_eq!(copied.pixels[0].to_array(), [85, 85, 85, 255]);
         assert_eq!(copied.pixels[1].to_array(), [0, 0, 0, 255]);

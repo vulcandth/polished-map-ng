@@ -1,0 +1,1559 @@
+--- a/smithay-clipboard-0.7.3/Cargo.lock
++++ b/smithay-clipboard-0.7.3/Cargo.lock
+@@ -3,31 +3,25 @@
+ version = 4
+ 
+ [[package]]
+-name = "autocfg"
+-version = "1.1.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "d468802bab17cbc0cc575e9b053f41e72aa36bfa6b7f55e3529ffa43161b97fa"
+-
+-[[package]]
+ name = "bitflags"
+-version = "2.5.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "cf4b9d6a944f767f8e5e0db018570623c85f3d925ac718db4e06d0187adb21c1"
++version = "2.13.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "3ded4057c258ba199e2d26386d3af3780957ecaee6c4ef4041c6b4b8b97c0b06"
+ 
+ [[package]]
+ name = "bytemuck"
+-version = "1.15.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "5d6d68c57235a3a081186990eca2867354726650f42f7516ca50c28d6281fd15"
++version = "1.25.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "95832e849adfb21180ccb6826a99da14e5d266ae5c2e668e1602cf234f153797"
+ dependencies = [
+  "bytemuck_derive",
+ ]
+ 
+ [[package]]
+ name = "bytemuck_derive"
+-version = "1.6.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "4da9a32f3fed317401fa3c862968128267c3106685286e15d5aaa3d7389c2f60"
++version = "1.12.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "6a1f896587b6f2c069c73d2f0913e2d590c3990285cd2f0b6aa02b786b4c679c"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+@@ -36,14 +30,13 @@
+ 
+ [[package]]
+ name = "calloop"
+-version = "0.14.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "cb9f6e1368bd4621d2c86baa7e37de77a938adf5221e5dd3d6133340101b309e"
++version = "0.14.5"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "43b32313e937c8721c9d17ee9bf60699a6402b4b7c2cb6ac1bee0ffcaa4b4e5e"
+ dependencies = [
+  "bitflags",
+  "polling",
+- "rustix 1.1.2",
+- "slab",
++ "rustix",
+  "tracing",
+ ]
+ 
+@@ -54,37 +47,41 @@
+ checksum = "138efcf0940a02ebf0cc8d1eff41a1682a46b431630f4c52450d6265876021fa"
+ dependencies = [
+  "calloop",
+- "rustix 1.1.2",
++ "rustix",
+  "wayland-backend",
+  "wayland-client",
+ ]
+ 
+ [[package]]
+ name = "cc"
+-version = "1.0.90"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "8cd6604a82acf3039f1144f54b8eb34e91ffba622051189e71b781822d5ee1f5"
++version = "1.10.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "86e055fa6e3e40ad6187ba25b6855eeb635d5271f8e0f0e1e9a5826b8d75bea0"
++dependencies = [
++ "find-msvc-tools",
++ "shlex",
++]
+ 
+ [[package]]
+ name = "cfg-if"
+-version = "1.0.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
++version = "1.0.5"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
+ 
+ [[package]]
+ name = "concurrent-queue"
+-version = "2.4.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "d16048cd947b08fa32c24458a22f5dc5e835264f689f4f5653210c69fd107363"
++version = "2.5.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "4ca0197aee26d1ae37445ee532fefce43251d24cc7c166799f4d46817f1d3973"
+ dependencies = [
+  "crossbeam-utils",
+ ]
+ 
+ [[package]]
+ name = "crossbeam-utils"
+-version = "0.8.19"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "248e3bacc7dc6baa3b21e405ee045c3047101a49145e7e9eca583ab4c2ca5345"
++version = "0.8.23"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a31eee39dddec8330830986fcd7625edb5a24ec90ea038215273bbc3adb08ac6"
+ 
+ [[package]]
+ name = "cursor-icon"
+@@ -94,18 +91,18 @@
+ 
+ [[package]]
+ name = "dlib"
+-version = "0.5.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "330c60081dcc4c72131f8eb70510f1ac07223e5d4163db481a04a0befcffa412"
++version = "0.5.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "ab8ecd87370524b461f8557c119c405552c396ed91fc0a8eec68679eab26f94a"
+ dependencies = [
+  "libloading",
+ ]
+ 
+ [[package]]
+ name = "downcast-rs"
+-version = "1.2.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "9ea835d29036a4087793836fa931b08837ad5e957da9e23886b29586fb9b6650"
++version = "1.2.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "75b325c5dbd37f80359721ad39aca5a29fb04c89279657cffdda8736d0c0b9d2"
+ 
+ [[package]]
+ name = "errno"
+@@ -114,141 +111,134 @@
+ checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
+ dependencies = [
+  "libc",
+- "windows-sys",
+-]
++ "windows-sys 0.52.0",
++]
++
++[[package]]
++name = "find-msvc-tools"
++version = "0.1.15"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "1c66915cc5391097de7a2b0b972e8505aa33c0df401fd3a6811dbdb32881ba48"
++
++[[package]]
++name = "hermit-abi"
++version = "0.5.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "e17592d60ebacc7d5e169f4663c5f84f9161cc90328abcfe8456f41e4dfcb284"
+ 
+ [[package]]
+ name = "libc"
+-version = "0.2.172"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "d750af042f7ef4f724306de029d18836c26c1765a54a6a3f094cbd23a7267ffa"
++version = "0.2.191"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "65cd87c9a6d60536580b316ad985726104730a5151c99845f2490428ef91240a"
+ 
+ [[package]]
+ name = "libloading"
+-version = "0.8.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "0c2a198fb6b0eada2a8df47933734e6d35d350665a33a3593d7164fa52c75c19"
++version = "0.8.9"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "d7c4b02199fee7c5d21a5ae7d8cfa79a6ef5bb2fc834d6e9058e89c825efdc55"
+ dependencies = [
+  "cfg-if",
+- "windows-targets",
++ "windows-link",
+ ]
+ 
+ [[package]]
+ name = "linux-raw-sys"
+-version = "0.4.13"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "01cda141df6706de531b6c46c3a33ecca755538219bd484262fa09410c13539c"
+-
+-[[package]]
+-name = "linux-raw-sys"
+-version = "0.11.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "df1d3c3b53da64cf5760482273a98e575c651a67eec7f77df96b5b642de8f039"
++version = "0.12.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "32a66949e030da00e8c7d4434b251670a91556f4144941d37452769c25d58a53"
+ 
+ [[package]]
+ name = "log"
+-version = "0.4.21"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
++version = "0.4.34"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
+ 
+ [[package]]
+ name = "memchr"
+-version = "2.7.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "523dc4f511e55ab87b694dc30d0f820d60906ef06413f93d4d7a1385599cc149"
++version = "2.8.3"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
+ 
+ [[package]]
+ name = "memmap2"
+-version = "0.9.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "fe751422e4a8caa417e13c3ea66452215d7d63e19e604f4980461212f3ae1322"
++version = "0.9.12"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "6b0ca1155a9ecc25aa12e8313a119f32edf0255fea2f44839c4ac0a12b2ac157"
+ dependencies = [
+  "libc",
+ ]
+ 
+ [[package]]
+ name = "once_cell"
+-version = "1.19.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
++version = "1.21.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
+ 
+ [[package]]
+ name = "pin-project-lite"
+-version = "0.2.13"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "8afb450f006bf6385ca15ef45d71d2288452bc3683ce2e2cacc0d18e4be60b58"
++version = "0.2.17"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a89322df9ebe1c1578d689c92318e070967d1042b512afbe49518723f4e6d5cd"
+ 
+ [[package]]
+ name = "pkg-config"
+-version = "0.3.30"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
++version = "0.3.34"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "f6b464fbc74e149a392436b17d523f769e057cb6877f6a5c4618bc6f11800548"
+ 
+ [[package]]
+ name = "polling"
+-version = "3.5.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "24f040dee2588b4963afb4e420540439d126f73fdacf4a9c486a96d840bac3c9"
++version = "3.11.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "5d0e4f59085d47d8241c88ead0f274e8a0cb551f3625263c05eb8dd897c34218"
+ dependencies = [
+  "cfg-if",
+  "concurrent-queue",
++ "hermit-abi",
+  "pin-project-lite",
+- "rustix 0.38.32",
+- "tracing",
+- "windows-sys",
++ "rustix",
++ "windows-sys 0.61.2",
+ ]
+ 
+ [[package]]
+ name = "proc-macro2"
+-version = "1.0.103"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "5ee95bc4ef87b8d5ba32e8b7714ccc834865276eab0aed5c9958d00ec45f49e8"
++version = "1.0.107"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "985e7ec9bb745e6ce6535b544d84d6cd6f7ad8bd711c398938ae983b91a766d9"
+ dependencies = [
+  "unicode-ident",
+ ]
+ 
+ [[package]]
+ name = "quick-xml"
+-version = "0.37.5"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "331e97a1af0bf59823e6eadffe373d7b27f485be8748f71471c662c1f269b7fb"
++version = "0.41.0"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "e660451e55124f798a69a5af3f49ccfbefbd41910eefd25caf2393e1f3473ec1"
+ dependencies = [
+  "memchr",
+ ]
+ 
+ [[package]]
+ name = "quote"
+-version = "1.0.35"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "291ec9ab5efd934aaf503a6466c5d5251535d108ee747472c3977cc5acc868ef"
++version = "1.0.47"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "1fbf4db142a473a8d80c26bbf18454ed458bf8d26c8219c331daecfdbd079001"
+ dependencies = [
+  "proc-macro2",
+ ]
+ 
+ [[package]]
+ name = "rustix"
+-version = "0.38.32"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "65e04861e65f21776e67888bfbea442b3642beaa0138fdb1dd7a84a52dffdb89"
++version = "1.1.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "e5e76742e5294153d4dde1207dbec5bdd81eef6fabdc0d2118babadabfd858aa"
+ dependencies = [
+  "bitflags",
+  "errno",
+  "libc",
+- "linux-raw-sys 0.4.13",
+- "windows-sys",
+-]
+-
+-[[package]]
+-name = "rustix"
+-version = "1.1.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "cd15f8a2c5551a84d56efdc1cd049089e409ac19a3072d5037a17fd70719ff3e"
+-dependencies = [
+- "bitflags",
+- "errno",
+- "libc",
+- "linux-raw-sys 0.11.0",
+- "windows-sys",
++ "linux-raw-sys",
++ "windows-sys 0.52.0",
+ ]
+ 
+ [[package]]
+@@ -258,19 +248,16 @@
+ checksum = "e1cf6437eb19a8f4a6cc0f7dca544973b0b78843adbfeb3683d1a94a0024a294"
+ 
+ [[package]]
+-name = "slab"
+-version = "0.4.9"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "8f92a496fb766b417c996b9c5e57daf2f7ad3b0bebe1ccfca4856390e3d3bb67"
+-dependencies = [
+- "autocfg",
+-]
++name = "shlex"
++version = "2.0.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
+ 
+ [[package]]
+ name = "smallvec"
+-version = "1.13.2"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
++version = "1.16.4"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "d0d5d4b1981b8bbbb7aed204cae5726d683d5d6ac7e74ec54122ea28f315e7c8"
+ 
+ [[package]]
+ name = "smithay-client-toolkit"
+@@ -287,7 +274,7 @@
+  "log",
+  "memmap2",
+  "pkg-config",
+- "rustix 1.1.2",
++ "rustix",
+  "thiserror",
+  "wayland-backend",
+  "wayland-client",
+@@ -313,9 +300,9 @@
+ 
+ [[package]]
+ name = "syn"
+-version = "2.0.108"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "da58917d35242480a05c2897064da0a80589a2a0476c9a3f2fdc83b53502e917"
++version = "3.0.9"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "d78c8dee4c7bf0e14673097256fed6142ce9d3b85a408189d07482442145823b"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+@@ -324,18 +311,18 @@
+ 
+ [[package]]
+ name = "thiserror"
+-version = "2.0.17"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "f63587ca0f12b72a0600bcba1d40081f830876000bb46dd2337a3051618f4fc8"
++version = "2.0.21"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "09e52cb86a36cede5cb101bf8908837b3e4c6e5e59fe7fd85c23fb56200d189e"
+ dependencies = [
+  "thiserror-impl",
+ ]
+ 
+ [[package]]
+ name = "thiserror-impl"
+-version = "2.0.17"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3ff15c8ecd7de3849db632e14d18d2571fa09dfc5ed93479bc4485c7a517c913"
++version = "2.0.21"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "fe5197923287db20a58125f0bc85c062f7f2c892de97b18c356f9efb14b28524"
+ dependencies = [
+  "proc-macro2",
+  "quote",
+@@ -344,9 +331,9 @@
+ 
+ [[package]]
+ name = "tracing"
+-version = "0.1.40"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c3523ab5a71916ccf420eebdf5521fcef02141234bbc0b8a49f2fdc4544364ef"
++version = "0.1.44"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "63e71662fa4b2a2c3a26f570f037eb95bb1f85397f3cd8076caed2f026a6d100"
+ dependencies = [
+  "log",
+  "pin-project-lite",
+@@ -355,25 +342,25 @@
+ 
+ [[package]]
+ name = "tracing-core"
+-version = "0.1.32"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c06d3da6113f116aaee68e4d601191614c9053067f9ab7f6edbcb161237daa54"
++version = "0.1.36"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "db97caf9d906fbde555dd62fa95ddba9eecfd14cb388e4f491a66d74cd5fb79a"
+ 
+ [[package]]
+ name = "unicode-ident"
+-version = "1.0.12"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "3354b9ac3fae1ff6755cb6db53683adb661634f67557942dea4facebec0fee4b"
++version = "1.0.27"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
+ 
+ [[package]]
+ name = "wayland-backend"
+-version = "0.3.11"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "673a33c33048a5ade91a6b139580fa174e19fb0d23f396dca9fa15f2e1e49b35"
++version = "0.3.17"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "38a91b4eaddff87b1cd1074985e3713da4af2c49742d1b356b2c01670a67a078"
+ dependencies = [
+  "cc",
+  "downcast-rs",
+- "rustix 1.1.2",
++ "rustix",
+  "scoped-tls",
+  "smallvec",
+  "wayland-sys",
+@@ -381,12 +368,12 @@
+ 
+ [[package]]
+ name = "wayland-client"
+-version = "0.31.11"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "c66a47e840dc20793f2264eb4b3e4ecb4b75d91c0dd4af04b456128e0bdd449d"
+-dependencies = [
+- "bitflags",
+- "rustix 1.1.2",
++version = "0.31.15"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "e3c36a0f861ad76d0901f2800b46321410d9f73f2ea88aac0650d86c32688073"
++dependencies = [
++ "bitflags",
++ "rustix",
+  "wayland-backend",
+  "wayland-scanner",
+ ]
+@@ -404,20 +391,20 @@
+ 
+ [[package]]
+ name = "wayland-cursor"
+-version = "0.31.1"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "71ce5fa868dd13d11a0d04c5e2e65726d0897be8de247c0c5a65886e283231ba"
+-dependencies = [
+- "rustix 0.38.32",
++version = "0.31.14"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "4a52d18780be9b1314328a3de5f930b73d2200112e3849ca6cb11822793fb34d"
++dependencies = [
++ "rustix",
+  "wayland-client",
+  "xcursor",
+ ]
+ 
+ [[package]]
+ name = "wayland-protocols"
+-version = "0.32.9"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "efa790ed75fbfd71283bd2521a1cfdc022aabcc28bdcff00851f9e4ae88d9901"
++version = "0.32.13"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "23d0c813de3daa2ed6520af85a3bd49b0e722a3078506899aa9686fea58dc4b6"
+ dependencies = [
+  "bitflags",
+  "wayland-backend",
+@@ -440,9 +427,9 @@
+ 
+ [[package]]
+ name = "wayland-protocols-misc"
+-version = "0.3.9"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "2dfe33d551eb8bffd03ff067a8b44bb963919157841a99957151299a6307d19c"
++version = "0.3.12"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "6e9567599ef23e09b8dad6e429e5738d4509dfc46b3b21f32841a304d16b29c8"
+ dependencies = [
+  "bitflags",
+  "wayland-backend",
+@@ -453,9 +440,9 @@
+ 
+ [[package]]
+ name = "wayland-protocols-wlr"
+-version = "0.3.3"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "fd993de54a40a40fbe5601d9f1fbcaef0aebcc5fda447d7dc8f6dcbaae4f8953"
++version = "0.3.12"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "eb04e52f7836d7c7976c78ca0250d61e33873c34156a2a1fc9474828ec268234"
+ dependencies = [
+  "bitflags",
+  "wayland-backend",
+@@ -466,9 +453,9 @@
+ 
+ [[package]]
+ name = "wayland-scanner"
+-version = "0.31.7"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "54cb1e9dc49da91950bdfd8b848c49330536d9d1fb03d4bfec8cae50caa50ae3"
++version = "0.31.11"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "338e30461b3a2b67d70eb30a6d89f8e0c93a833e07d2ae89085cd070c4a00ac0"
+ dependencies = [
+  "proc-macro2",
+  "quick-xml",
+@@ -477,9 +464,9 @@
+ 
+ [[package]]
+ name = "wayland-sys"
+-version = "0.31.7"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "34949b42822155826b41db8e5d0c1be3a2bd296c747577a43a3e6daefc296142"
++version = "0.31.11"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "d8eab23fefc9e41f8e841df4a9c707e8a8c4ed26e944ef69297184de2785e3be"
+ dependencies = [
+  "dlib",
+  "log",
+@@ -488,6 +475,12 @@
+ ]
+ 
+ [[package]]
++name = "windows-link"
++version = "0.2.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "f0805222e57f7521d6a62e36fa9163bc891acd422f971defe97d64e70d0a4fe5"
++
++[[package]]
+ name = "windows-sys"
+ version = "0.52.0"
+ source = "registry+https://github.com/rust-lang/crates.io-index"
+@@ -497,14 +490,24 @@
+ ]
+ 
+ [[package]]
++name = "windows-sys"
++version = "0.61.2"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "ae137229bcbd6cdf0f7b80a31df61766145077ddf49416a728b02cb3921ff3fc"
++dependencies = [
++ "windows-link",
++]
++
++[[package]]
+ name = "windows-targets"
+-version = "0.52.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "7dd37b7e5ab9018759f893a1952c9420d060016fc19a472b4bb20d1bdd694d1b"
++version = "0.52.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "9b724f72796e036ab90c1021d4780d4d3d648aca59e491e6b98e725b84e99973"
+ dependencies = [
+  "windows_aarch64_gnullvm",
+  "windows_aarch64_msvc",
+  "windows_i686_gnu",
++ "windows_i686_gnullvm",
+  "windows_i686_msvc",
+  "windows_x86_64_gnu",
+  "windows_x86_64_gnullvm",
+@@ -513,51 +516,57 @@
+ 
+ [[package]]
+ name = "windows_aarch64_gnullvm"
+-version = "0.52.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "bcf46cf4c365c6f2d1cc93ce535f2c8b244591df96ceee75d8e83deb70a9cac9"
++version = "0.52.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "32a4622180e7a0ec044bb555404c800bc9fd9ec262ec147edd5989ccd0c02cd3"
+ 
+ [[package]]
+ name = "windows_aarch64_msvc"
+-version = "0.52.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "da9f259dd3bcf6990b55bffd094c4f7235817ba4ceebde8e6d11cd0c5633b675"
++version = "0.52.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "09ec2a7bb152e2252b53fa7803150007879548bc709c039df7627cabbd05d469"
+ 
+ [[package]]
+ name = "windows_i686_gnu"
+-version = "0.52.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "b474d8268f99e0995f25b9f095bc7434632601028cf86590aea5c8a5cb7801d3"
++version = "0.52.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "8e9b5ad5ab802e97eb8e295ac6720e509ee4c243f69d781394014ebfe8bbfa0b"
++
++[[package]]
++name = "windows_i686_gnullvm"
++version = "0.52.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "0eee52d38c090b3caa76c563b86c3a4bd71ef1a819287c19d586d7334ae8ed66"
+ 
+ [[package]]
+ name = "windows_i686_msvc"
+-version = "0.52.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "1515e9a29e5bed743cb4415a9ecf5dfca648ce85ee42e15873c3cd8610ff8e02"
++version = "0.52.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "240948bc05c5e7c6dabba28bf89d89ffce3e303022809e73deaefe4f6ec56c66"
+ 
+ [[package]]
+ name = "windows_x86_64_gnu"
+-version = "0.52.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "5eee091590e89cc02ad514ffe3ead9eb6b660aedca2183455434b93546371a03"
++version = "0.52.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "147a5c80aabfbf0c7d901cb5895d1de30ef2907eb21fbbab29ca94c5b08b1a78"
+ 
+ [[package]]
+ name = "windows_x86_64_gnullvm"
+-version = "0.52.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "77ca79f2451b49fa9e2af39f0747fe999fcda4f5e241b2898624dca97a1f2177"
++version = "0.52.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "24d5b23dc417412679681396f2b49f3de8c1473deb516bd34410872eff51ed0d"
+ 
+ [[package]]
+ name = "windows_x86_64_msvc"
+-version = "0.52.4"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "32b752e52a2da0ddfbdbcc6fceadfeede4c939ed16d13e648833a61dfb611ed8"
++version = "0.52.6"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "589f6da84c646204747d1270a2a5661ea66ed1cced2631d546fdfb155959f9ec"
+ 
+ [[package]]
+ name = "xcursor"
+-version = "0.3.5"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "6a0ccd7b4a5345edfcd0c3535718a4e9ff7798ffc536bb5b5a0e26ff84732911"
++version = "0.3.11"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "163b33ed8786455e2fa5d72f554057ce3f3182425434f756cd39c99839d88e23"
+ 
+ [[package]]
+ name = "xkbcommon"
+@@ -572,9 +581,9 @@
+ 
+ [[package]]
+ name = "xkeysym"
+-version = "0.2.0"
+-source = "registry+https://github.com/rust-lang/crates.io-index"
+-checksum = "054a8e68b76250b253f671d1268cb7f1ae089ec35e195b2efb2a4e9a836d0621"
++version = "0.2.1"
++source = "registry+https://github.com/rust-lang/crates.io-index"
++checksum = "b9cc00251562a284751c9973bace760d86c0276c471b4be569fe6b068ee97a56"
+ dependencies = [
+  "bytemuck",
+ ]
+--- a/smithay-clipboard-0.7.3/Cargo.toml
++++ b/smithay-clipboard-0.7.3/Cargo.toml
+@@ -68,3 +68,6 @@
+ ]
+ default-features = false
+ package = "smithay-client-toolkit"
++
++# Keep standalone adapter tests independent of an enclosing checkout.
++[workspace]
+--- a/smithay-clipboard-0.7.3/src/lib.rs
++++ b/smithay-clipboard-0.7.3/src/lib.rs
+@@ -9,16 +9,22 @@
+ use std::sync::mpsc::{self, Receiver};
+ 
+ use sctk::reexports::calloop::channel::{self, Sender};
++use sctk::reexports::client::backend::Backend;
++use sctk::reexports::client::protocol::wl_data_offer::WlDataOffer;
+ use sctk::reexports::client::Connection;
+-use sctk::reexports::client::backend::Backend;
+ 
+ mod mime;
+ mod state;
+ mod worker;
+ 
++pub use state::binary::{Selection, Transfer, MAX_BYTES};
++use std::sync::{atomic::AtomicUsize, Arc};
++
+ /// Access to a Wayland clipboard.
+ pub struct Clipboard {
+     request_sender: Sender<worker::Command>,
++    outstanding: Arc<AtomicUsize>,
++    external_offer: Option<Option<WlDataOffer>>,
+     request_receiver: Receiver<Result<String>>,
+     clipboard_thread: Option<std::thread::JoinHandle<()>>,
+ }
+@@ -43,7 +49,47 @@
+         let name = String::from("smithay-clipboard");
+         let clipboard_thread = worker::spawn(name, connection, rx_chan, clipboard_reply_sender);
+ 
+-        Self { request_receiver, request_sender, clipboard_thread }
++        Self {
++            request_receiver,
++            request_sender,
++            clipboard_thread,
++            outstanding: Arc::default(),
++            external_offer: None,
++        }
++    }
++
++    /// Use the selection retained by the host window adapter, on the same display.
++    /// This avoids competing receive offers when a compositor supports only the
++    /// last offer sent to a client. `None` explicitly represents an empty selection.
++    pub fn set_external_selection(&mut self, selection: Option<(WlDataOffer, Vec<String>)>) {
++        let offer = selection.as_ref().map(|(offer, _)| offer.clone());
++        if self.external_offer.as_ref() == Some(&offer) {
++            return;
++        }
++        self.external_offer = Some(offer);
++        let _ = self.request_sender.send(worker::Command::ExternalSelection(selection));
++    }
++
++    /// Request binary data without blocking the GUI. MIME types are tried in order;
++    /// a matching offer is selected once, with no fallback after transfer failure.
++    pub fn load_bytes(&self, mimes: Vec<String>) -> Result<Transfer<Selection>> {
++        state::binary::validate_mimes(&mimes)?;
++        let (transfer, reply) = state::binary::pair(&self.outstanding)?;
++        self.request_sender
++            .send(worker::Command::LoadBytes(mimes, reply))
++            .map_err(|_| std::io::Error::other("clipboard worker stopped"))?;
++        Ok(transfer)
++    }
++
++    /// Advertise exact MIME representations on the focused seat. Completion means
++    /// the request was issued, not that another application has read the data.
++    pub fn store_bytes(&self, payload: Vec<(String, Vec<u8>)>) -> Result<Transfer<()>> {
++        state::binary::validate_payload(&payload)?;
++        let (transfer, reply) = state::binary::pair(&self.outstanding)?;
++        self.request_sender
++            .send(worker::Command::StoreBytes(payload, reply))
++            .map_err(|_| std::io::Error::other("clipboard worker stopped"))?;
++        Ok(transfer)
+     }
+ 
+     /// Load clipboard data.
+--- a/smithay-clipboard-0.7.3/src/state.rs
++++ b/smithay-clipboard-0.7.3/src/state.rs
+@@ -1,3 +1,4 @@
++pub(crate) mod binary;
+ use std::borrow::Cow;
+ use std::collections::HashMap;
+ use std::io::{Error, ErrorKind, Read, Result, Write};
+@@ -10,9 +11,9 @@
+ use sctk::data_device_manager::data_offer::{DataOfferError, DataOfferHandler, DragOffer};
+ use sctk::data_device_manager::data_source::{CopyPasteSource, DataSourceHandler};
+ use sctk::data_device_manager::{DataDeviceManagerState, WritePipe};
+-use sctk::primary_selection::PrimarySelectionManagerState;
+ use sctk::primary_selection::device::{PrimarySelectionDevice, PrimarySelectionDeviceHandler};
+ use sctk::primary_selection::selection::{PrimarySelectionSource, PrimarySelectionSourceHandler};
++use sctk::primary_selection::PrimarySelectionManagerState;
+ use sctk::registry::{ProvidesRegistryState, RegistryState};
+ use sctk::seat::pointer::{PointerData, PointerEvent, PointerEventKind, PointerHandler};
+ use sctk::seat::{Capability, SeatHandler, SeatState};
+@@ -37,9 +38,13 @@
+ };
+ use wayland_backend::client::ObjectId;
+ 
+-use crate::mime::{ALLOWED_MIME_TYPES, MimeType, normalize_to_lf};
++use crate::mime::{normalize_to_lf, MimeType, ALLOWED_MIME_TYPES};
+ 
+ pub struct State {
++    pub(crate) external_selection: Option<
++        Option<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)>,
++    >,
++    pub(crate) binary: binary::BinaryState,
+     pub primary_selection_manager_state: Option<PrimarySelectionManagerState>,
+     pub data_device_manager_state: Option<DataDeviceManagerState>,
+     pub reply_tx: Sender<Result<String>>,
+@@ -89,6 +94,8 @@
+         }
+ 
+         Some(Self {
++            binary: Default::default(),
++            external_selection: None,
+             registry_state: RegistryState::new(globals),
+             primary_selection_content: Rc::from([]),
+             data_selection_content: Rc::from([]),
+@@ -154,6 +161,21 @@
+         }
+ 
+         let (read_pipe, mime_type) = match ty {
++            SelectionTarget::Clipboard if self.external_selection.is_some() => {
++                let (offer, mimes) = self
++                    .external_selection
++                    .as_ref()
++                    .unwrap()
++                    .as_ref()
++                    .ok_or_else(|| Error::new(ErrorKind::NotFound, "selection is empty"))?;
++                if !offer.is_alive() {
++                    return Err(Error::other("clipboard selection changed"));
++                }
++                let mime = MimeType::find_allowed(mimes).ok_or_else(|| {
++                    Error::new(ErrorKind::NotFound, "supported mime-type is not found")
++                })?;
++                (sctk::data_device_manager::data_offer::receive(offer, mime.to_string())?, mime)
++            },
+             SelectionTarget::Clipboard => {
+                 let selection = seat
+                     .data_device
+@@ -329,6 +351,9 @@
+         let seat_state = self.seats.get_mut(&seat.id()).unwrap();
+         match capability {
+             Capability::Keyboard => {
++                self.binary.cancel_seat(&seat.id());
++                seat_state.has_focus = false;
++                seat_state.latest_serial = 0;
+                 seat_state.data_device = None;
+                 seat_state.primary_device = None;
+ 
+@@ -350,6 +375,7 @@
+     }
+ 
+     fn remove_seat(&mut self, _: &Connection, _: &QueueHandle<Self>, seat: WlSeat) {
++        self.binary.cancel_seat(&seat.id());
+         self.seats.remove(&seat.id());
+     }
+ }
+@@ -415,14 +441,17 @@
+         &mut self,
+         _: &Connection,
+         _: &QueueHandle<Self>,
+-        _: &WlDataSource,
++        source: &WlDataSource,
+         mime: String,
+         write_pipe: WritePipe,
+     ) {
+-        self.send_request(SelectionTarget::Clipboard, write_pipe, mime)
++        if let Some(pipe) = self.binary.send(source, &mime, write_pipe) {
++            self.send_request(SelectionTarget::Clipboard, pipe, mime);
++        }
+     }
+ 
+     fn cancelled(&mut self, _: &Connection, _: &QueueHandle<Self>, deleted: &WlDataSource) {
++        self.binary.cancelled(deleted);
+         self.data_sources.retain(|source| source.inner() != deleted)
+     }
+ 
+@@ -525,6 +554,7 @@
+             WlKeyboardEvent::Enter { serial, .. } => {
+                 seat_state.latest_serial = serial;
+                 seat_state.has_focus = true;
++                state.latest_seat = Some(data.clone());
+             },
+             WlKeyboardEvent::Leave { .. } => {
+                 seat_state.latest_serial = 0;
+--- a/smithay-clipboard-0.7.3/src/state/binary.rs
++++ b/smithay-clipboard-0.7.3/src/state/binary.rs
+@@ -0,0 +1,354 @@
++//! Bounded binary selection transfers on the existing GUI connection.
++//! Polished Map NG adaptation, 2026-11-06; MIT, like smithay-clipboard.
++use super::*;
++use sctk::data_device_manager::ReadPipe;
++use std::sync::{
++    atomic::{AtomicBool, AtomicUsize, Ordering},
++    mpsc, Arc,
++};
++use std::time::{Duration, Instant};
++
++/// Maximum encoded selection size (64 MiB), including all advertised formats.
++pub const MAX_BYTES: usize = 64 * 1024 * 1024;
++const MAX_TRANSFERS: usize = 16;
++const TIMEOUT: Duration = Duration::from_secs(10);
++const QUANTUM: usize = 256 * 1024;
++
++/// One selected MIME representation. No text conversion is performed.
++#[derive(Debug, PartialEq, Eq)]
++pub struct Selection {
++    /// MIME type selected in the caller's preference order.
++    pub mime: String,
++    /// The exact bytes received, bounded by [`MAX_BYTES`].
++    pub bytes: Vec<u8>,
++}
++
++/// Nonblocking reply. Dropping it cancels any outstanding receive.
++pub struct Transfer<T> {
++    rx: mpsc::Receiver<Result<T>>,
++    ticket: Arc<Ticket>,
++}
++
++impl<T> Transfer<T> {
++    /// Returns `None` while the request is pending. Consume a completed result once.
++    pub fn poll(&self) -> Option<Result<T>> {
++        match self.rx.try_recv() {
++            Ok(value) => Some(value),
++            Err(mpsc::TryRecvError::Empty) => None,
++            Err(mpsc::TryRecvError::Disconnected) => {
++                Some(Err(Error::other("clipboard worker stopped")))
++            },
++        }
++    }
++}
++
++impl<T> Drop for Transfer<T> {
++    fn drop(&mut self) {
++        self.ticket.cancelled.store(true, Ordering::Release);
++    }
++}
++
++struct Ticket {
++    cancelled: AtomicBool,
++    outstanding: Arc<AtomicUsize>,
++    deadline: Instant,
++}
++impl Drop for Ticket {
++    fn drop(&mut self) {
++        self.outstanding.fetch_sub(1, Ordering::AcqRel);
++    }
++}
++
++pub(crate) struct Reply<T> {
++    tx: mpsc::Sender<Result<T>>,
++    ticket: Arc<Ticket>,
++}
++impl<T> Reply<T> {
++    fn invalid(&self) -> Option<Error> {
++        if self.ticket.cancelled.load(Ordering::Acquire) {
++            Some(Error::new(ErrorKind::Interrupted, "clipboard request cancelled"))
++        } else if Instant::now() >= self.ticket.deadline {
++            Some(Error::new(ErrorKind::TimedOut, "clipboard transfer timed out"))
++        } else {
++            None
++        }
++    }
++    pub(crate) fn finish(self, result: Result<T>) {
++        let _ = self.tx.send(result);
++    }
++}
++
++pub(crate) fn pair<T>(outstanding: &Arc<AtomicUsize>) -> Result<(Transfer<T>, Reply<T>)> {
++    outstanding
++        .fetch_update(Ordering::AcqRel, Ordering::Acquire, |n| (n < MAX_TRANSFERS).then_some(n + 1))
++        .map_err(|_| Error::new(ErrorKind::WouldBlock, "too many clipboard requests"))?;
++    let ticket = Arc::new(Ticket {
++        cancelled: AtomicBool::new(false),
++        outstanding: outstanding.clone(),
++        deadline: Instant::now() + TIMEOUT,
++    });
++    let (tx, rx) = mpsc::channel();
++    Ok((Transfer { rx, ticket: ticket.clone() }, Reply { tx, ticket }))
++}
++
++pub(crate) fn validate_mimes(mimes: &[String]) -> Result<()> {
++    if mimes.is_empty()
++        || mimes.len() > 16
++        || mimes.iter().any(|m| {
++            m.is_empty() || m.len() > 255 || m.bytes().any(|c| c == 0 || c.is_ascii_control())
++        })
++    {
++        return Err(Error::new(ErrorKind::InvalidInput, "invalid clipboard MIME list"));
++    }
++    Ok(())
++}
++
++pub(crate) fn validate_payload(payload: &[(String, Vec<u8>)]) -> Result<()> {
++    validate_mimes(&payload.iter().map(|(m, _)| m.clone()).collect::<Vec<_>>())?;
++    let mut total = 0usize;
++    for (i, (mime, bytes)) in payload.iter().enumerate() {
++        if payload[..i].iter().any(|(m, _)| m == mime) {
++            return Err(Error::new(ErrorKind::InvalidInput, "duplicate clipboard MIME type"));
++        }
++        total = total
++            .checked_add(bytes.len())
++            .ok_or_else(|| Error::other("clipboard size overflow"))?;
++        if total > MAX_BYTES {
++            return Err(Error::other("clipboard exceeds 64 MiB"));
++        }
++    }
++    Ok(())
++}
++
++struct Source {
++    source: CopyPasteSource,
++    seat: ObjectId,
++    payload: Vec<(String, Rc<[u8]>)>,
++}
++struct Receive {
++    pipe: ReadPipe,
++    seat: ObjectId,
++    mime: String,
++    bytes: Vec<u8>,
++    reply: Reply<Selection>,
++}
++struct Send {
++    pipe: WritePipe,
++    seat: ObjectId,
++    bytes: Rc<[u8]>,
++    offset: usize,
++    deadline: Instant,
++}
++
++#[derive(Default)]
++pub(crate) struct BinaryState {
++    sources: Vec<Source>,
++    receives: Vec<Receive>,
++    sends: Vec<Send>,
++}
++
++impl BinaryState {
++    pub(crate) fn active(&self) -> bool {
++        !self.receives.is_empty() || !self.sends.is_empty()
++    }
++
++    pub(crate) fn cancel_seat(&mut self, seat: &ObjectId) {
++        self.sources.retain(|s| &s.seat != seat);
++        self.sends.retain(|s| &s.seat != seat);
++        let mut i = 0;
++        while i < self.receives.len() {
++            if &self.receives[i].seat == seat {
++                self.receives.swap_remove(i).reply.finish(Err(Error::other("clipboard seat lost")));
++            } else {
++                i += 1;
++            }
++        }
++    }
++
++    pub(crate) fn cancelled(&mut self, source: &WlDataSource) {
++        self.sources.retain(|s| s.source.inner() != source);
++    }
++
++    /// Returns the pipe only if this is not one of our binary sources.
++    pub(crate) fn send(
++        &mut self,
++        source: &WlDataSource,
++        mime: &str,
++        pipe: WritePipe,
++    ) -> Option<WritePipe> {
++        let Some(source) = self.sources.iter().find(|s| s.source.inner() == source) else {
++            return Some(pipe);
++        };
++        if self.sends.len() >= MAX_TRANSFERS {
++            return None;
++        }
++        let (_, bytes) = source.payload.iter().find(|(m, _)| m == mime)?;
++        if set_non_blocking(pipe.as_raw_fd()).is_err() {
++            return None;
++        }
++        self.sends.push(Send {
++            pipe,
++            seat: source.seat.clone(),
++            bytes: bytes.clone(),
++            offset: 0,
++            deadline: Instant::now() + TIMEOUT,
++        });
++        None
++    }
++
++    pub(crate) fn tick(&mut self) {
++        let mut i = 0;
++        while i < self.receives.len() {
++            let receive = &mut self.receives[i];
++            let result = receive
++                .reply
++                .invalid()
++                .map(Err)
++                .or_else(|| read_chunk(&mut receive.pipe, &mut receive.bytes));
++            if let Some(result) = result {
++                let receive = self.receives.swap_remove(i);
++                receive.reply.finish(
++                    result.map(|()| Selection { mime: receive.mime, bytes: receive.bytes }),
++                );
++            } else {
++                i += 1;
++            }
++        }
++        self.sends.retain_mut(|send| {
++            Instant::now() < send.deadline
++                && write_chunk(&mut send.pipe, &send.bytes, &mut send.offset).is_none()
++        });
++    }
++}
++
++// Limit work per dispatch even for an always-ready peer; never block the event queue.
++fn read_chunk(pipe: &mut impl Read, bytes: &mut Vec<u8>) -> Option<Result<()>> {
++    let mut buffer = [0u8; 8192];
++    let mut count = 0;
++    while count < QUANTUM {
++        match pipe.read(&mut buffer) {
++            Ok(0) => return Some(Ok(())),
++            Ok(n) => {
++                if n > MAX_BYTES - bytes.len() {
++                    return Some(Err(Error::other("clipboard exceeds 64 MiB")));
++                }
++                bytes.extend_from_slice(&buffer[..n]);
++                count += n;
++            },
++            Err(e) if e.kind() == ErrorKind::WouldBlock => return None,
++            Err(e) if e.kind() == ErrorKind::Interrupted => return None,
++            Err(e) => return Some(Err(e)),
++        }
++    }
++    None
++}
++
++fn write_chunk(pipe: &mut impl Write, bytes: &[u8], offset: &mut usize) -> Option<Result<()>> {
++    let end = bytes.len().min(offset.saturating_add(QUANTUM));
++    while *offset < end {
++        match pipe.write(&bytes[*offset..end]) {
++            Ok(0) => {
++                return Some(Err(Error::new(ErrorKind::WriteZero, "clipboard receiver stopped")));
++            },
++            Ok(n) => *offset += n,
++            Err(e) if e.kind() == ErrorKind::WouldBlock || e.kind() == ErrorKind::Interrupted => {
++                return None;
++            },
++            Err(e) => return Some(Err(e)),
++        }
++    }
++    (*offset == bytes.len()).then_some(Ok(()))
++}
++
++impl State {
++    pub(crate) fn store_binary(&mut self, payload: Vec<(String, Vec<u8>)>, reply: Reply<()>) {
++        if let Some(err) = reply.invalid() {
++            reply.finish(Err(err));
++            return;
++        }
++        let result = (|| {
++            validate_payload(&payload)?;
++            if self.binary.sources.len() >= MAX_TRANSFERS {
++                return Err(Error::other("too many clipboard sources"));
++            }
++            let id = self.latest_seat.as_ref().ok_or_else(|| Error::other("no clipboard seat"))?;
++            let seat = self.seats.get(id).ok_or_else(|| Error::other("clipboard seat lost"))?;
++            if !seat.has_focus {
++                return Err(Error::other("client does not have clipboard focus"));
++            }
++            let device = seat
++                .data_device
++                .as_ref()
++                .ok_or_else(|| Error::other("clipboard data device unavailable"))?;
++            let manager = self
++                .data_device_manager_state
++                .as_ref()
++                .ok_or_else(|| Error::other("clipboard data-device protocol unavailable"))?;
++            let source = manager
++                .create_copy_paste_source(&self.queue_handle, payload.iter().map(|(m, _)| m));
++            source.set_selection(device, seat.latest_serial);
++            self.binary.sources.push(Source {
++                source,
++                seat: id.clone(),
++                payload: payload.into_iter().map(|(m, b)| (m, Rc::from(b))).collect(),
++            });
++            Ok(())
++        })();
++        reply.finish(result);
++    }
++
++    pub(crate) fn load_binary(&mut self, mimes: Vec<String>, reply: Reply<Selection>) {
++        if let Some(err) = reply.invalid() {
++            reply.finish(Err(err));
++            return;
++        }
++        let result = (|| {
++            validate_mimes(&mimes)?;
++            if self.binary.receives.len() >= MAX_TRANSFERS {
++                return Err(Error::other("too many clipboard receives"));
++            }
++            let id = self.latest_seat.as_ref().ok_or_else(|| Error::other("no clipboard seat"))?;
++            let seat = self.seats.get(id).ok_or_else(|| Error::other("clipboard seat lost"))?;
++            if !seat.has_focus {
++                return Err(Error::other("client does not have clipboard focus"));
++            }
++            let (mime, pipe) = if let Some(selection) = &self.external_selection {
++                let (offer, offered) = selection.as_ref().ok_or_else(|| {
++                    Error::new(ErrorKind::NotFound, "clipboard selection is empty")
++                })?;
++                if !offer.is_alive() {
++                    return Err(Error::other("clipboard selection changed"));
++                }
++                let mime =
++                    mimes.iter().find(|m| offered.contains(m)).cloned().ok_or_else(|| {
++                        Error::new(ErrorKind::NotFound, "clipboard has no requested MIME type")
++                    })?;
++                let pipe = sctk::data_device_manager::data_offer::receive(offer, mime.clone())?;
++                (mime, pipe)
++            } else {
++                let offer =
++                    seat.data_device.as_ref().and_then(|d| d.data().selection_offer()).ok_or_else(
++                        || Error::new(ErrorKind::NotFound, "clipboard selection is empty"),
++                    )?;
++                let mime = offer
++                    .with_mime_types(|offered| mimes.iter().find(|m| offered.contains(m)).cloned())
++                    .ok_or_else(|| {
++                        Error::new(ErrorKind::NotFound, "clipboard has no requested MIME type")
++                    })?;
++                let pipe = offer.receive(mime.clone()).map_err(|e| Error::other(e.to_string()))?;
++                (mime, pipe)
++            };
++            set_non_blocking(pipe.as_raw_fd())?;
++            Ok((id.clone(), mime, pipe))
++        })();
++        match result {
++            Ok((seat, mime, pipe)) => {
++                self.binary.receives.push(Receive { pipe, seat, mime, bytes: Vec::new(), reply })
++            },
++            Err(err) => reply.finish(Err(err)),
++        }
++    }
++}
++
++#[cfg(test)]
++mod tests;
+--- a/smithay-clipboard-0.7.3/src/state/binary/tests.rs
++++ b/smithay-clipboard-0.7.3/src/state/binary/tests.rs
+@@ -0,0 +1,247 @@
++use super::*;
++use sctk::reexports::client::globals::{registry_queue_init, GlobalListContents};
++use sctk::reexports::client::protocol::{wl_compositor, wl_registry, wl_surface};
++use sctk::reexports::client::{delegate_noop, Connection, Dispatch};
++use std::os::unix::net::UnixStream;
++
++#[test]
++fn cancellation_and_request_budget_survive_queued_commands() {
++    let count = Arc::new(AtomicUsize::new(0));
++    let pairs: Vec<_> = (0..MAX_TRANSFERS).map(|_| pair::<()>(&count).unwrap()).collect();
++    assert!(pair::<()>(&count).is_err());
++    let (transfer, reply) = pairs.into_iter().next().unwrap();
++    drop(transfer);
++    assert_eq!(reply.invalid().unwrap().kind(), ErrorKind::Interrupted);
++    assert_eq!(count.load(Ordering::Acquire), 1);
++    drop(reply);
++    assert_eq!(count.load(Ordering::Acquire), 0);
++}
++
++#[test]
++fn bounded_nonblocking_fragmented_binary_transfer() {
++    let payload: Vec<_> = (0..QUANTUM * 3 + 23).map(|i| (i % 251) as u8).collect();
++    let (mut reader, writer) = UnixStream::pair().unwrap();
++    reader.set_nonblocking(true).unwrap();
++    writer.set_nonblocking(true).unwrap();
++    let mut received = Vec::new();
++    let mut offset = 0;
++    assert!(read_chunk(&mut reader, &mut received).is_none());
++    let mut writer = Some(writer);
++    let until = Instant::now() + Duration::from_secs(3);
++    loop {
++        assert!(Instant::now() < until);
++        if let Some(pipe) = &mut writer {
++            if let Some(done) = write_chunk(pipe, &payload, &mut offset) {
++                done.unwrap();
++                writer = None;
++            }
++        }
++        if let Some(done) = read_chunk(&mut reader, &mut received) {
++            done.unwrap();
++            break;
++        }
++    }
++    assert_eq!(received, payload);
++    let mut full = vec![0; MAX_BYTES];
++    assert!(read_chunk(&mut &b"x"[..], &mut full).unwrap().is_err());
++    assert_eq!(full.len(), MAX_BYTES);
++    struct Zero;
++    impl Write for Zero {
++        fn write(&mut self, _: &[u8]) -> Result<usize> {
++            Ok(0)
++        }
++        fn flush(&mut self) -> Result<()> {
++            Ok(())
++        }
++    }
++    assert_eq!(
++        write_chunk(&mut Zero, b"x", &mut 0).unwrap().unwrap_err().kind(),
++        ErrorKind::WriteZero
++    );
++}
++
++#[test]
++fn payload_validation_rejects_ambiguous_or_unbounded_offers() {
++    assert!(
++        validate_payload(&[("image/png".into(), vec![]), ("image/png".into(), vec![])]).is_err()
++    );
++    assert!(validate_mimes(&["image/png\0text/plain".into()]).is_err());
++    assert!(validate_mimes(&vec!["image/png".into(); 17]).is_err());
++    assert!(validate_payload(&[("image/png".into(), vec![0; MAX_BYTES + 1])]).is_err());
++}
++
++#[derive(Default)]
++struct Client {
++    offers: Vec<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)>,
++    selected: Option<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)>,
++}
++use sctk::reexports::client::protocol::{
++    wl_data_device, wl_data_device_manager, wl_data_offer, wl_seat,
++};
++delegate_noop!(Client: ignore wl_data_device_manager::WlDataDeviceManager);
++delegate_noop!(Client: ignore wl_seat::WlSeat);
++impl Dispatch<wl_data_device::WlDataDevice, ()> for Client {
++    fn event(
++        state: &mut Self,
++        _: &wl_data_device::WlDataDevice,
++        event: wl_data_device::Event,
++        _: &(),
++        _: &Connection,
++        _: &QueueHandle<Self>,
++    ) {
++        match event {
++            wl_data_device::Event::DataOffer { id } => state.offers.push((id, vec![])),
++            wl_data_device::Event::Selection { id } => {
++                state.selected =
++                    state.offers.iter().find(|(offer, _)| Some(offer) == id.as_ref()).cloned()
++            },
++            _ => (),
++        }
++    }
++    sctk::reexports::client::event_created_child!(Client, wl_data_device::WlDataDevice, [0 => (wl_data_offer::WlDataOffer, ())]);
++}
++impl Dispatch<wl_data_offer::WlDataOffer, ()> for Client {
++    fn event(
++        state: &mut Self,
++        offer: &wl_data_offer::WlDataOffer,
++        event: wl_data_offer::Event,
++        _: &(),
++        _: &Connection,
++        _: &QueueHandle<Self>,
++    ) {
++        if let wl_data_offer::Event::Offer { mime_type } = event {
++            state.offers.iter_mut().find(|(id, _)| id == offer).unwrap().1.push(mime_type);
++        }
++    }
++}
++impl Dispatch<wl_registry::WlRegistry, GlobalListContents> for Client {
++    fn event(
++        _: &mut Self,
++        _: &wl_registry::WlRegistry,
++        _: wl_registry::Event,
++        _: &GlobalListContents,
++        _: &Connection,
++        _: &QueueHandle<Self>,
++    ) {
++    }
++}
++delegate_noop!(Client: ignore wl_compositor::WlCompositor);
++delegate_noop!(Client: ignore wl_surface::WlSurface);
++
++fn wait<T>(transfer: Transfer<T>) -> Result<T> {
++    let deadline = Instant::now() + Duration::from_secs(12);
++    loop {
++        if let Some(result) = transfer.poll() {
++            return result;
++        }
++        assert!(Instant::now() < deadline, "binary request never completed");
++        std::thread::sleep(Duration::from_millis(2));
++    }
++}
++
++#[test]
++#[ignore = "tools/wayland_clipboard_probe.py supplies an isolated protocol peer"]
++fn native_wayland_binary_clipboard() {
++    let scenario = std::env::var("POLISHED_MAP_WAYLAND_CLIPBOARD_PROBE").unwrap();
++    let connection = Connection::connect_to_env().unwrap();
++    let (globals, mut queue) = registry_queue_init::<Client>(&connection).unwrap();
++    let compositor: wl_compositor::WlCompositor = globals.bind(&queue.handle(), 1..=4, ()).unwrap();
++    let surface = compositor.create_surface(&queue.handle(), ());
++    surface.commit();
++    connection.flush().unwrap();
++    // SAFETY: the original connection outlives this adapter and is not dispatched
++    // or destroyed concurrently. The adapter owns a separate queue on that connection.
++    let mut clipboard = unsafe { crate::Clipboard::new(connection.backend().display_ptr().cast()) };
++    let ready_deadline = Instant::now() + Duration::from_secs(3);
++    loop {
++        match wait(clipboard.load_bytes(vec!["application/x-ready".into()]).unwrap()) {
++            Ok(selection) => {
++                assert_eq!(selection.bytes, b"ready");
++                break;
++            },
++            Err(_) => {
++                assert!(Instant::now() < ready_deadline, "seat did not receive focus");
++                std::thread::sleep(Duration::from_millis(5));
++            },
++        }
++    }
++    let mut host = Client::default();
++    if scenario == "external-png" {
++        let manager: wl_data_device_manager::WlDataDeviceManager =
++            globals.bind(&queue.handle(), 1..=3, ()).unwrap();
++        let seat: wl_seat::WlSeat = globals.bind(&queue.handle(), 1..=7, ()).unwrap();
++        let _device = manager.get_data_device(&seat, &queue.handle(), ());
++        queue.roundtrip(&mut host).unwrap();
++        clipboard.set_external_selection(Some(host.selected.clone().unwrap()));
++    } else if scenario == "external-empty" {
++        clipboard.set_external_selection(None);
++        assert_eq!(clipboard.load().unwrap_err().kind(), ErrorKind::NotFound);
++    }
++    if scenario == "copy" || scenario == "source-snapshot" {
++        let payload: Vec<_> = (0..700_013).map(|i| (i % 251) as u8).collect();
++        wait(
++            clipboard
++                .store_bytes(vec![
++                    ("image/png".into(), payload),
++                    ("image/bmp".into(), b"BMP payload".to_vec()),
++                ])
++                .unwrap(),
++        )
++        .unwrap();
++        if scenario == "source-snapshot" {
++            wait(
++                clipboard
++                    .store_bytes(vec![("image/png".into(), b"new selection".to_vec())])
++                    .unwrap(),
++            )
++            .unwrap();
++        }
++        // The peer installs this acknowledgment selection only after it has read
++        // every advertised representation from the original source.
++        loop {
++            if let Ok(value) =
++                wait(clipboard.load_bytes(vec!["application/x-done".into()]).unwrap())
++            {
++                assert_eq!(value.bytes, b"done");
++                break;
++            }
++            assert!(Instant::now() < ready_deadline + Duration::from_secs(8));
++            std::thread::sleep(Duration::from_millis(5));
++        }
++    } else if scenario == "cancel" {
++        let transfer = clipboard.load_bytes(vec!["image/png".into()]).unwrap();
++        std::thread::sleep(Duration::from_millis(30));
++        drop(transfer);
++        std::thread::sleep(Duration::from_millis(30));
++    } else {
++        let transfer = clipboard.load_bytes(vec!["image/png".into(), "image/bmp".into()]).unwrap();
++        let result = wait(transfer);
++        match scenario.as_str() {
++            "png" | "bmp" | "external-png" => {
++                let selection = result.unwrap();
++                assert_eq!(
++                    selection.mime,
++                    format!("image/{}", if scenario == "bmp" { "bmp" } else { "png" })
++                );
++                assert_eq!(
++                    selection.bytes,
++                    (0..700_013).map(|i| (i % 251) as u8).collect::<Vec<_>>()
++                );
++            },
++            "no-mime" | "external-empty" => {
++                assert_eq!(result.unwrap_err().kind(), ErrorKind::NotFound)
++            },
++            "timeout" => assert_eq!(result.unwrap_err().kind(), ErrorKind::TimedOut),
++            "oversize" | "seat-removed" => {
++                assert!(result.is_err());
++            },
++            _ => panic!("unknown scenario"),
++        }
++    }
++    drop(clipboard);
++    for (offer, _) in host.offers {
++        offer.destroy();
++    }
++    surface.destroy();
++    connection.flush().unwrap();
++}
+--- a/smithay-clipboard-0.7.3/src/worker.rs
++++ b/smithay-clipboard-0.7.3/src/worker.rs
+@@ -2,10 +2,10 @@
+ use std::sync::mpsc::Sender;
+ 
+ use sctk::reexports::calloop::channel::Channel;
+-use sctk::reexports::calloop::{EventLoop, channel};
++use sctk::reexports::calloop::{channel, EventLoop};
+ use sctk::reexports::calloop_wayland_source::WaylandSource;
++use sctk::reexports::client::globals::registry_queue_init;
+ use sctk::reexports::client::Connection;
+-use sctk::reexports::client::globals::registry_queue_init;
+ 
+ use crate::state::{SelectionTarget, State};
+ 
+@@ -26,8 +26,12 @@
+ }
+ 
+ /// Clipboard worker thread command.
+-#[derive(Eq, PartialEq)]
+ pub enum Command {
++    ExternalSelection(
++        Option<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)>,
++    ),
++    StoreBytes(Vec<(String, Vec<u8>)>, crate::state::binary::Reply<()>),
++    LoadBytes(Vec<String>, crate::state::binary::Reply<crate::Selection>),
+     /// Store data to a clipboard.
+     Store(String),
+     /// Store data to a primary selection.
+@@ -64,6 +68,11 @@
+         .insert_source(rx_chan, |event, _, state| {
+             if let channel::Event::Msg(event) = event {
+                 match event {
++                    Command::ExternalSelection(selection) => {
++                        state.external_selection = Some(selection)
++                    },
++                    Command::StoreBytes(payload, reply) => state.store_binary(payload, reply),
++                    Command::LoadBytes(mimes, reply) => state.load_binary(mimes, reply),
+                     Command::StorePrimary(contents) => {
+                         state.store_selection(SelectionTarget::Primary, contents);
+                     },
+@@ -94,8 +103,10 @@
+     WaylandSource::new(connection, event_queue).insert(loop_handle).unwrap();
+ 
+     loop {
+-        if event_loop.dispatch(None, &mut state).is_err() || state.exit {
++        let timeout = state.binary.active().then_some(std::time::Duration::from_millis(10));
++        if event_loop.dispatch(timeout, &mut state).is_err() || state.exit {
+             break;
+         }
++        state.binary.tick();
+     }
+ }

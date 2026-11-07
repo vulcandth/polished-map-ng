@@ -25,10 +25,9 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Resolve PP3's discovered native Wayland image-clipboard gap: Copy and
-Paste must work through the standard data-device protocol without X11 or the
-optional data-control extension. Then continue integrated desktop capture/drop,
-placement/DPI and macOS native acceptance. PP4's
+**Next:** Continue PP3 integrated desktop capture/drop, placement/focus/DPI and
+macOS native acceptance. Standard Wayland image Copy/Paste now has independent
+protocol checks and native two-process exchange without X11 or data-control. PP4's
 standalone graphics and Linux original-application Print comparisons now have
 native evidence; its acceptance gate remains open alongside PP3. The user
 resumed plusplus after the M8 backport.
@@ -253,10 +252,10 @@ Do not expose automatic profile switching until the unified-editor milestone.
   workflows, integrated window/dialog/clipboard behavior and desktop acceptance
   remain. The [Wayland-only probe](compatibility.md#plusplus-wayland-image-clipboard-gap)
   exposed missing image transfer without data-control/X11 and false Print copy
-  success. Native acknowledgment and first-frame dialog visibility fixes pass
-  native Wayland/X11 checks; complete standard Wayland
-  PNG/BMP transfer, bounded failure handling and actual application exchange
-  before accepting this workflow. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
+  success. Native acknowledgment, focused asynchronous publication and retained
+  clipboard offers now pass protocol and native exchange checks. Standard
+  Wayland PNG/BMP transport and bounded failures are implemented; broader
+  desktop/placement/focus/DPI and macOS acceptance remain open. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 (in progress) — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every
   remaining difference resolved or explicitly approved. Backend roundtrips alone

@@ -484,6 +484,13 @@ pending drop is rejected without replacing earlier accepted transfers. These
 limits keep external input from blocking the UI or growing
 memory indefinitely; ordinary map-file drops retain upstream's first-file rule.
 
+Standard Wayland image selections are limited to 64 MiB encoded, 8192 pixels
+per axis and 16 Mi decoded pixels. At most sixteen binary transfers/sources and
+four image codec workers may be active, and pipe transfers time out after ten
+seconds. The window adapter retains at most 64 MIME names of 255 bytes per offer.
+Errors preserve the current draft. These defensive limits replace unbounded
+external image processing; ordinary tile and map images are unaffected.
+
 The receive-only Wayland adapter owns dropped offers through completion rather
 than using SCTK's hover lifetime. This prevents a later enter/leave from destroying
 an accepted offer while its asynchronous read is still pending. Closing the

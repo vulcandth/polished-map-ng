@@ -40,6 +40,7 @@ pub use state::WindowState;
 
 /// The Wayland window.
 pub struct Window {
+    clipboard_selections: super::seat::file_drop::Selections,
     // Destroy the hint before the SCTK toplevel. Older compositors still receive
     // set_parent; input filtering remains the application's responsibility.
     modal_hint: Mutex<Option<super::types::dialog::Dialog>>,
@@ -223,6 +224,7 @@ impl Window {
         event_loop_awakener.ping();
 
         Ok(Self {
+            clipboard_selections: state.clipboard_selections.clone(),
             modal_hint: Mutex::new(None),
             dialog_manager,
             window,
@@ -238,6 +240,13 @@ impl Window {
             window_requests,
             window_events_sink,
         })
+    }
+
+    pub(crate) fn clipboard_selection(&self) -> Option<(sctk::reexports::client::protocol::wl_data_offer::WlDataOffer, Vec<String>)> {
+        let state = self.window_state.lock().unwrap();
+        self.clipboard_selections.lock().unwrap().iter().rev()
+            .find(|(seat, _)| state.has_seat_focus(seat))
+            .map(|(_, offer)| super::seat::file_drop::selection_snapshot(offer))
     }
 
     pub(crate) fn set_modal_parent(&self, parent: Option<&Self>) -> Result<(), &'static str> {

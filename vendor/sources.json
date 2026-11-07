@@ -9,7 +9,7 @@
       "archive_sha256": "a6755fa58a9f8350bd1e472d4c3fcc25f824ec358933bba33306d0b63df5978d",
       "archive_url": "https://static.crates.io/crates/winit/winit-0.30.13.crate",
       "patch": "patches/winit-0.30.13.patch",
-      "patch_sha256": "c3f478b6ef4c1ae8efbfab41b173cea2b911d294cdd6a5d7e4020b3028e29f64",
+      "patch_sha256": "610ce22738e0d28cc812448888677aa384c8070ba20fb6fb4c57c4417c0ef4f2",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "b8b2549c91dbf3dc4087197a6be89ab5acb5511c2d1eadc7349c249f646047bb",
@@ -296,7 +296,7 @@
           "original_sha256": "c2b3ba714649268109ab48ef5cc7dddd7dab0198518987f8735c174fe6b2c5b8"
         },
         "src/platform/wayland.rs": {
-          "sha256": "a584b606ac14012d40355af563c3e2a347e7349e878cad050180c257a704ff28",
+          "sha256": "0271018eea98c1eadf13d37b9bca734499ec5707282dfcf444c34dcdcf3e2d72",
           "original_sha256": "4fd4601c7733275031f14c40d33caca8e493197c40bc721fdd055297f9690d00"
         },
         "src/platform/web.rs": {
@@ -396,7 +396,7 @@
           "original_sha256": "14982bc1e6ba130eb2c3d0da790905d28075cd1cec215b6f74e560fa449f5421"
         },
         "src/platform_impl/linux/wayland/seat/file_drop.rs": {
-          "sha256": "c723cce7709e365bb7740e5a7ca35cec5fd82075bca3eff7851c78e45546fe5e",
+          "sha256": "2001e1518eb461533783237eeae530ba46250771d47e82a6d2ad17f2c896a3be",
           "original_sha256": null
         },
         "src/platform_impl/linux/wayland/seat/keyboard/mod.rs": {
@@ -404,7 +404,7 @@
           "original_sha256": "dd20e74809b3a7987864bc5cabdbeaf62a8474400ddbc4fc86188ed7a84dea62"
         },
         "src/platform_impl/linux/wayland/seat/mod.rs": {
-          "sha256": "510db8bc612f806e588b2cb2f874b96c3fcca727e60448edefb91c9f6ab73707",
+          "sha256": "2e9e6db0fcc589b69089f42a94f4115de9964c54c4b8997322dfdefd128cc963",
           "original_sha256": "70bbd2a8c43a898f4cb2580d38c4f14e478e7331ab65d2e115feb0377fe2fc44"
         },
         "src/platform_impl/linux/wayland/seat/pointer/mod.rs": {
@@ -424,7 +424,7 @@
           "original_sha256": "dd16a75607cab3ba5723ad6b7a2ad6dd09fa2a63fffa57622367f137ea5d3987"
         },
         "src/platform_impl/linux/wayland/state.rs": {
-          "sha256": "e35ce2d0e1b7613b969ef1bee6dfe30759508806fa47dcefdeed747532a44ad5",
+          "sha256": "aded47c9923083e1752f166fe0caf2cc97eee11842114a3ae7d4a3597263e23f",
           "original_sha256": "18beef206a1d0a1cf72ac65b1cefb4984bc204ca0638ecbbe2cb2c8d316422c9"
         },
         "src/platform_impl/linux/wayland/types/alpha_modifier.rs": {
@@ -464,11 +464,11 @@
           "original_sha256": "8d0fd39c97c6eb19b8231df20624777feca1aa45bb38692ab498e37e42aa5bab"
         },
         "src/platform_impl/linux/wayland/window/mod.rs": {
-          "sha256": "a9030d041abcc2696229fee46379af8d2b836a54906eefd478d54f2cc5bad447",
+          "sha256": "c0920bdc87ef6a12c9386bdf963771ff4e6360c6cdb932728bfc4a80eaacbde3",
           "original_sha256": "30b6c00aa143046e4b1d7277e5fd08ae7ef7f7f084b0c0e62c89e0dda8a5c6c2"
         },
         "src/platform_impl/linux/wayland/window/state.rs": {
-          "sha256": "55d96e87690cc1805fcd6b6f2a50b1153081739639d8c0dd2ec24d069207c302",
+          "sha256": "4ed245c263834b4b3a2db38eaa10d31255143d30b73afe997afaa42d74f8ce9c",
           "original_sha256": "d09f9c19235a36d0a0068eb82428a27e3a4f318f31925368e573310ae791030a"
         },
         "src/platform_impl/linux/x11/activation.rs": {
@@ -913,7 +913,7 @@
       "archive_sha256": "e4e449f4c4a2a60c7ccb4ba7fa4078417bfe1f9ddc03b5e05ce75748e33a70de",
       "archive_url": "https://static.crates.io/crates/egui-winit/egui-winit-0.37.0.crate",
       "patch": "patches/egui-winit-0.37.0.patch",
-      "patch_sha256": "dff669795f64e0a09724317519a2dc0a226491ceebaa6d36e871d5579bdc3123",
+      "patch_sha256": "5af046c76848e659aaf561d681388876ed6c1af51fd63a9f2f42b53f9473d062",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "3eb2f5f41008d97f2800b00c5245f906e3f70c1c6258714d4e9d89d6f31a8b33",
@@ -924,7 +924,7 @@
           "original_sha256": "74924bc36722688d9b5b9cb40b5691e8de796d5195139805f25b44ae582263ff"
         },
         "Cargo.toml": {
-          "sha256": "4b2b033fd1fa6c163698b363e7ee2df3ae0d5234a0a17c98053a95a8b77271d0",
+          "sha256": "97773523d3b41d60453919f86ab77bdf878e93ea339383c4fbd239a1a234b6e8",
           "original_sha256": "4b2b033fd1fa6c163698b363e7ee2df3ae0d5234a0a17c98053a95a8b77271d0"
         },
         "Cargo.toml.orig": {
@@ -944,8 +944,12 @@
           "original_sha256": "7a8ccbb9fbddf24243446291b8e5a4e6bddcb6b565602c9561581926d5ae362b"
         },
         "src/clipboard.rs": {
-          "sha256": "b530a470788d37c85c3efdb2b97109039edecbbb0a10dc389a66b112a1ba25a1",
+          "sha256": "2fe2df4d3fda4816a1efc184f0001ece8d32433b0d910625e76e86e3ff8e632c",
           "original_sha256": "4c8f063b905aed4476a38c96af72cd325be39ba9b7a91d05b165ae48c9a53751"
+        },
+        "src/clipboard/image_transfer.rs": {
+          "sha256": "aed2d7f15c82ef3417829397ca07385eb97a900fc3481261b3c4aa5a64914515",
+          "original_sha256": null
         },
         "src/dropped_file.rs": {
           "sha256": "8c5b2e67f09233bea2b515d94215d9f699f787d94461576422fd8356420804c9",
@@ -956,11 +960,11 @@
           "original_sha256": null
         },
         "src/image_clipboard.rs": {
-          "sha256": "5f4f92cf8ae19a2a188e49fc91b92822da22016fe169a2f18627029e5af948bc",
+          "sha256": "ee735bcea45df1766bc15c7748136b23bf20ed9f7130a5a2997c0a9cd46a9c8c",
           "original_sha256": null
         },
         "src/lib.rs": {
-          "sha256": "8fdaa6e6c27ebcc7f2017bd6c4d9b4a26a42302d89609eff19950ac35b2730b9",
+          "sha256": "8e3ffb968a9839c1d7e6bec232f396320a4c61b55b6c8438bfe878f510c4f5fd",
           "original_sha256": "d742b0d35e6b1248329f11fdc6d267c3f04cb93f1729fbe7b7ac074172d91c45"
         },
         "src/macos_scroll_momentum.rs": {
@@ -1270,6 +1274,94 @@
         "tools/run_with_leaks.sh": {
           "sha256": "1c9a7fb692150d646f4c7bc4936ee9f597b1c86815747305098ddb7378bf7230",
           "original_sha256": "1c9a7fb692150d646f4c7bc4936ee9f597b1c86815747305098ddb7378bf7230"
+        }
+      }
+    },
+    {
+      "name": "smithay-clipboard",
+      "version": "0.7.3",
+      "license": "MIT",
+      "directory": "smithay-clipboard-0.7.3",
+      "archive_sha256": "71704c03f739f7745053bde45fa203a46c58d25bc5c4efba1d9a60e9dba81226",
+      "archive_url": "https://static.crates.io/crates/smithay-clipboard/smithay-clipboard-0.7.3.crate",
+      "patch": "patches/smithay-clipboard-0.7.3.patch",
+      "patch_sha256": "e883b6121c2809e6a0bd2dd1dd45b6f06618624e3ce7477ca4e0d0a1ed934cbb",
+      "files": {
+        ".cargo_vcs_info.json": {
+          "sha256": "b2e4f63f101101fbe47f79e4bc4cc2fe549184a70be3af61db33be5beaa8e8d8",
+          "original_sha256": "b2e4f63f101101fbe47f79e4bc4cc2fe549184a70be3af61db33be5beaa8e8d8"
+        },
+        ".github/workflows/ci.yml": {
+          "sha256": "10a99bc4f48216111ccd6d442b1e6c6c76ba09608c1e057ee19ecf7917053873",
+          "original_sha256": "10a99bc4f48216111ccd6d442b1e6c6c76ba09608c1e057ee19ecf7917053873"
+        },
+        ".github/workflows/docs.yml": {
+          "sha256": "f40e3e73a8a278e252c7a2e936bfab35a95709b8eb65c78cec3473df68b411f9",
+          "original_sha256": "f40e3e73a8a278e252c7a2e936bfab35a95709b8eb65c78cec3473df68b411f9"
+        },
+        ".gitignore": {
+          "sha256": "6b937008e0a58a438c32574627db6961a4d2aff4bf5c703d4e45cb56ef3b168a",
+          "original_sha256": "6b937008e0a58a438c32574627db6961a4d2aff4bf5c703d4e45cb56ef3b168a"
+        },
+        "CHANGELOG.md": {
+          "sha256": "a61e4a55886233d02e4855bba024e584ad8119abee636cbeb32927817215615e",
+          "original_sha256": "a61e4a55886233d02e4855bba024e584ad8119abee636cbeb32927817215615e"
+        },
+        "Cargo.lock": {
+          "sha256": "436bc2b878dffca1a1c4813fb4eb5d874671402a0f3fb9f4ed156ae6d2baf61d",
+          "original_sha256": "67e58ea42a92f2ea5e182ee7644b4ed640839a03966aae39421f8f254d52f118"
+        },
+        "Cargo.toml": {
+          "sha256": "804ea8dbaf1b6e071c924e2bed936387527feadf1ebff478dcfdc3533386e006",
+          "original_sha256": "9f7a1d198a1385bfe35775e3c8d335d93cc31ea8d2ce15f189bebb0c42a99c98"
+        },
+        "Cargo.toml.orig": {
+          "sha256": "976fb6f80a01f50e67cf8a7f6aa601246020ddb5e9476cf47d141030f590c481",
+          "original_sha256": "976fb6f80a01f50e67cf8a7f6aa601246020ddb5e9476cf47d141030f590c481"
+        },
+        "LICENSE": {
+          "sha256": "21c2bc064d4ad1bba2a66c6b6d111b859a616283687a11f7a32c1350814542c9",
+          "original_sha256": "21c2bc064d4ad1bba2a66c6b6d111b859a616283687a11f7a32c1350814542c9"
+        },
+        "README.md": {
+          "sha256": "0e1ce2826c6c74cb98922009fa2dfb6bcd142c774610c6603b9ae7f0c275fde1",
+          "original_sha256": "0e1ce2826c6c74cb98922009fa2dfb6bcd142c774610c6603b9ae7f0c275fde1"
+        },
+        "doc_index.html": {
+          "sha256": "9191616fd8ecaef1615eda8a0f9cd36bf75eb4e5f20e24db8852faf07123dfcc",
+          "original_sha256": "9191616fd8ecaef1615eda8a0f9cd36bf75eb4e5f20e24db8852faf07123dfcc"
+        },
+        "examples/clipboard.rs": {
+          "sha256": "771a50a8458fc4bb74dd0895220e3b7ed8ce95dae601a342a2ae273fcbb2c09a",
+          "original_sha256": "771a50a8458fc4bb74dd0895220e3b7ed8ce95dae601a342a2ae273fcbb2c09a"
+        },
+        "rustfmt.toml": {
+          "sha256": "a0b3513964ccc1f72d7671376c1a2f073df01aad4b91bf99f0060fbe9dc88034",
+          "original_sha256": "a0b3513964ccc1f72d7671376c1a2f073df01aad4b91bf99f0060fbe9dc88034"
+        },
+        "src/lib.rs": {
+          "sha256": "71c8238b601ea7b9e8aaa50a0b327b7a0acc93024b56625d93bf07738542f002",
+          "original_sha256": "ad96abaf7bf9c0a2d23de711823ac3e80065467e4b3453d160f3ea09481d9858"
+        },
+        "src/mime.rs": {
+          "sha256": "2d42f2c147d6ae93d53197f1eda57335f64e9af71e507415c3e89369a22cf0ce",
+          "original_sha256": "2d42f2c147d6ae93d53197f1eda57335f64e9af71e507415c3e89369a22cf0ce"
+        },
+        "src/state.rs": {
+          "sha256": "2b785c00d9bf0e22adbaf38aaf0fe6d69de595fa3a722f96d32f9c87b85f5fd7",
+          "original_sha256": "7c5e872387b7ebdbe061c667e7fb09ce3771e26572ae6a2a349fa6bdedf456e3"
+        },
+        "src/state/binary.rs": {
+          "sha256": "b4284e02d09b3e4d3ae2c79bbaee58b7fedbac3cf9b95dbfac304ded14644ee0",
+          "original_sha256": null
+        },
+        "src/state/binary/tests.rs": {
+          "sha256": "bf8d2636861634dd141166230a50a2568cb175e11825ea70f362f71f28cc161c",
+          "original_sha256": null
+        },
+        "src/worker.rs": {
+          "sha256": "b4bc8538dff66e5b18858d17baf31d3d3fa032feb4ce24434bba0e8d42221f9d",
+          "original_sha256": "3d9665e4794af1fae8f427a73333f88b9d1f78f142f9e2144eac6d3df73d47f1"
         }
       }
     }

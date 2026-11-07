@@ -139,7 +139,8 @@ rules or disable accessibility merely to obtain a green dependency check.
 
 ## Pinned native adapter patches
 
-The workspace patches winit 0.30.13, egui-winit 0.37.0 and eframe 0.37.0 from local, audited
+The workspace patches winit 0.30.13, egui-winit 0.37.0, eframe 0.37.0,
+arboard 3.7.0 and smithay-clipboard 0.7.3 from local, audited
 source trees. This supplies complete file transfers without migrating eframe
 to an incompatible prerelease windowing API. The GUI's direct egui-winit
 dependency disables defaults and shares the features already selected by eframe.
@@ -181,3 +182,9 @@ package authors and declared license expressions are retained in the generated
 inventory. The egui release-tag fallback and dispatch's published MIT declaration
 are distinguished from notices retrieved at crate VCS revisions. Packaging rejects
 changed supplement hashes and registry dependencies with no collected notices.
+
+Standard Wayland image transfer extends the already-resolved Smithay adapter;
+no production package version was added. Egui-winit explicitly enables the
+existing image crate's PNG/BMP features for asynchronous codecs. The standalone
+Smithay protocol test uses its own lockfile and upstream test-only xkbcommon
+0.8.0 requirement; it is outside the production graph.

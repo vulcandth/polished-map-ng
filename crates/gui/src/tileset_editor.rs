@@ -35,12 +35,24 @@ pub(super) struct TilesetForm {
     drag: Option<u16>,
     last_pixel: Option<usize>,
     paste_handled: bool,
+    pending_image: Option<PendingImage>,
     swap_held: bool,
     pub(super) windows_buttons: bool,
     #[cfg(test)]
     pub(super) bounds: Rect,
     #[cfg(test)]
     client_bounds: Rect,
+}
+
+struct PendingImage {
+    ctx: egui::Context,
+    viewport: egui::ViewportId,
+    id: u64,
+}
+impl Drop for PendingImage {
+    fn drop(&mut self) {
+        egui_winit::image_clipboard::cancel(&self.ctx, self.viewport, self.id);
+    }
 }
 
 impl TilesetForm {
@@ -110,7 +122,10 @@ impl TilesetForm {
         Ok(())
     }
 
-    fn copy_image(&self, ctx: &egui::Context) {
+    fn copy_image(&mut self, ctx: &egui::Context) -> Result<(), String> {
+        if self.pending_image.is_some() {
+            return Ok(());
+        }
         // Tile::draw_for_clipboard deliberately exports monochrome samples.
         let pixels: Vec<_> = self
             .draft
@@ -118,7 +133,19 @@ impl TilesetForm {
             .iter()
             .flat_map(|&h| [[255, 85, 170, 0][usize::from(h)]; 3])
             .collect();
-        ctx.copy_image(egui::ColorImage::from_rgb([8, 8], &pixels));
+        // The root clipboard owner outlives this draft's native child window.
+        let viewport = egui::ViewportId::ROOT;
+        let id = egui_winit::image_clipboard::request(
+            ctx,
+            viewport,
+            egui::ColorImage::from_rgb([8, 8], &pixels),
+        )?;
+        self.pending_image = Some(PendingImage {
+            ctx: ctx.clone(),
+            viewport,
+            id,
+        });
+        Ok(())
     }
 
     fn import_rgb(&mut self, width: usize, height: usize, pixels: Vec<u8>) -> Result<(), String> {
@@ -133,29 +160,53 @@ impl TilesetForm {
         })
     }
 
-    fn paste_image(&mut self) -> Result<(), String> {
-        // egui exposes image-copy output but no image-paste request command.
-        // Read only on the original image-paste button/shortcut, never on polling.
-        let mut clipboard = arboard::Clipboard::new().map_err(|e| e.to_string())?;
-        let image = match clipboard.get_image() {
-            Ok(image) => image,
-            Err(arboard::Error::ContentNotAvailable) => return Ok(()),
-            Err(e) => return Err(e.to_string()),
-        };
-        if image.width > 2048 || image.height > 2048 {
-            return Err("Clipboard image exceeds 2048×2048".into());
+    fn paste_image(&mut self, ctx: &egui::Context) -> Result<(), String> {
+        if self.pending_image.is_some() {
+            return Ok(());
         }
-        let pixels = image
-            .bytes
-            .as_chunks::<4>()
-            .0
-            .iter()
-            .flat_map(|p| [p[0], p[1], p[2]])
-            .collect();
-        self.import_rgb(image.width, image.height, pixels)
+        let viewport = ctx.viewport_id();
+        let id = egui_winit::image_clipboard::request_paste(ctx, viewport)?;
+        self.pending_image = Some(PendingImage {
+            ctx: ctx.clone(),
+            viewport,
+            id,
+        });
+        Ok(())
+    }
+
+    fn poll_image(&mut self) -> Result<(), String> {
+        let Some(pending) = &self.pending_image else {
+            return Ok(());
+        };
+        let Some(result) = egui_winit::image_clipboard::take_paste_reply(
+            &pending.ctx,
+            pending.viewport,
+            pending.id,
+        ) else {
+            return Ok(());
+        };
+        self.pending_image = None;
+        if let Some(image) = result? {
+            if image.width() > 2048 || image.height() > 2048 {
+                return Err("Clipboard image exceeds 2048×2048".into());
+            }
+            let pixels = image
+                .pixels
+                .iter()
+                .flat_map(|c| {
+                    let rgba = c.to_srgba_unmultiplied();
+                    [rgba[0], rgba[1], rgba[2]]
+                })
+                .collect();
+            self.import_rgb(image.width(), image.height(), pixels)?;
+        }
+        Ok(())
     }
 
     fn shortcuts(&mut self, ctx: &egui::Context) -> Result<(), String> {
+        if self.pending_image.is_some() {
+            return Ok(());
+        }
         let events = ctx.input(|i| i.events.clone());
         for event in events {
             match event {
@@ -207,8 +258,8 @@ impl TilesetForm {
                     }
                     if modifiers.command && !modifiers.alt {
                         match (key, modifiers.shift) {
-                            (egui::Key::C, true) => self.copy_image(ctx),
-                            (egui::Key::V, true) => self.paste_image()?,
+                            (egui::Key::C, true) => self.copy_image(ctx)?,
+                            (egui::Key::V, true) => self.paste_image(ctx)?,
                             (egui::Key::C, false) => self.copy()?,
                             (egui::Key::V, false) => {
                                 self.paste()?;
@@ -251,6 +302,9 @@ impl TilesetForm {
                     }
                 }
                 _ => {}
+            }
+            if self.pending_image.is_some() {
+                break;
             }
         }
         Ok(())
@@ -315,6 +369,7 @@ impl Editor {
             drag: None,
             last_pixel: None,
             paste_handled: false,
+            pending_image: None,
             swap_held: false,
             windows_buttons: cfg!(target_os = "windows"),
             #[cfg(test)]
@@ -487,7 +542,11 @@ impl Editor {
         if !self.drag_and_drop {
             form.drag = None;
         }
-        if let Err(e) = form.shortcuts(ctx).and_then(|()| form.update_texture(ctx)) {
+        if let Err(e) = form
+            .poll_image()
+            .and_then(|()| form.shortcuts(ctx))
+            .and_then(|()| form.update_texture(ctx))
+        {
             self.error = Some(e);
         }
         let mut accept = false;
@@ -495,6 +554,9 @@ impl Editor {
         let mut command = None;
         let mut paste_image = false;
         let modal = dialog_host::client(ctx, egui::Id::unique("edit-tileset"), |ui| {
+            if form.pending_image.is_some() {
+                ui.disable();
+            }
             dialog_host::heading(
                 ui,
                 if form.roof {
@@ -631,7 +693,9 @@ impl Editor {
                     .on_hover_text(format!("{title} (Ctrl/Cmd+Shift+{key})"));
                 if response.clicked() {
                     if label == "C" {
-                        form.copy_image(ctx);
+                        if let Err(e) = form.copy_image(ctx) {
+                            self.error = Some(e);
+                        }
                     } else {
                         paste_image = true;
                     }
@@ -850,7 +914,9 @@ impl Editor {
         }
         // The first Enter/Escape belongs to an open palette popup.
         if !modal.any_popup_open {
-            accept |= ctx.input(|i| i.key_pressed(egui::Key::Enter));
+            if form.pending_image.is_none() {
+                accept |= ctx.input(|i| i.key_pressed(egui::Key::Enter));
+            }
             cancel |= ctx.input(|i| i.key_pressed(egui::Key::Escape));
         }
         if let Some(command) = command
@@ -858,7 +924,7 @@ impl Editor {
         {
             self.error = Some(e);
         }
-        if paste_image && let Err(e) = form.paste_image() {
+        if paste_image && let Err(e) = form.paste_image(ctx) {
             self.error = Some(e);
         }
         if form.refresh {

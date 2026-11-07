@@ -20,7 +20,7 @@ use crate::keyboard::ModifiersState;
 use crate::platform_impl::wayland::state::WinitState;
 
 mod keyboard;
-mod file_drop;
+pub(crate) mod file_drop;
 pub(crate) use file_drop::DropDevice;
 mod pointer;
 mod text_input;
@@ -219,6 +219,7 @@ impl SeatHandler for WinitState {
         _queue_handle: &QueueHandle<Self>,
         seat: WlSeat,
     ) {
+        self.clipboard_selections.lock().unwrap().retain(|(id, _)| id != &seat.id());
         self.cancel_file_drops(&seat.id());
         let _ = self.seats.remove(&seat.id());
         self.on_keyboard_destroy(&seat.id());

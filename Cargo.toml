@@ -1,9 +1,10 @@
 [workspace]
 members = ["crates/core", "crates/project", "crates/gui", "crates/cli", "crates/platform"]
 resolver = "3"
-exclude = ["vendor/winit-0.30.13", "vendor/egui-winit-0.37.0", "vendor/eframe-0.37.0", "vendor/arboard-3.7.0"]
+exclude = ["vendor/smithay-clipboard-0.7.3", "vendor/winit-0.30.13", "vendor/egui-winit-0.37.0", "vendor/eframe-0.37.0", "vendor/arboard-3.7.0"]
 
 [patch.crates-io]
+smithay-clipboard = { path = "vendor/smithay-clipboard-0.7.3" }
 arboard = { path = "vendor/arboard-3.7.0" }
 eframe = { path = "vendor/eframe-0.37.0" }
 winit = { path = "vendor/winit-0.30.13" }

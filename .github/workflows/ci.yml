@@ -53,6 +53,11 @@ jobs:
       - name: Verify isolated X11 modal windows
         if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum env POLISHED_MAP_NATIVE_MODAL_PROBE=1 cargo run -p polished-map-platform --locked --example native_modals
+      - name: Verify standard Wayland image clipboard
+        if: runner.os == 'Linux'
+        run: |
+          python3 tools/wayland_clipboard_probe.py
+          cargo test -p egui-winit --locked --lib
       - name: Verify native Wayland modal protocol
         if: runner.os == 'Linux'
         run: python3 tools/wayland_modal_probe.py

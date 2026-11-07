@@ -3365,7 +3365,7 @@ of an unconsumed result. Windows format, Clippy with warnings denied, workspace
 tests, rustdoc and the production native-adapter graph pass. Pinned vendor
 archive/patch verification and documentation checks also pass.
 
-The native Wayland retest now displays `The native image clipboard is unavailable
+The first acknowledgment-only Wayland retest displayed `The native image clipboard is unavailable
 on this display`, with no success dialog; acknowledgment returns to the unchanged
 10×9/248-block editor. A separate startup defect was also reproduced: Map Options
 could be created before eframe mapped its parent, centering the dialog partly
@@ -3384,12 +3384,48 @@ including Windows/Linux/macOS tests and native probes, source-reference and
 real-project checks, visuals, MSRV and dependency auditing. These automated
 checks do not close interactive macOS or complete desktop acceptance.
 
-Full Wayland image transfer remains **unimplemented** when neither data-control
-nor X11 is available. The existing Smithay adapter supports standard-protocol
-text only. PP3 requires image MIME support on the GUI's existing Wayland
-connection, with bounded PNG/BMP transfers, focus/serial handling, ownership
-lifetime and visible errors. Error reporting alone does not satisfy that gate.
-See the [implementation direction](architecture.md#standard-wayland-image-clipboard).
+Standard Wayland PNG/BMP transfer is now implemented in the pinned Smithay
+adapter, with asynchronous GUI Copy/Paste, bounded codecs/pipes, cancellation,
+seat teardown and native error propagation. Print retains its focused dialog
+until publication finishes; closing it first reproduced a clipboard-focus error
+on Weston. Tile/roof copies use the root owner so closing the draft does not
+retire the copied selection. No project persistence or artwork changed.
+
+The native comparison also exposed interference with file drops: the receive-only
+winit data device immediately destroyed clipboard offers. Weston 9's
+[data-device implementation](https://github.com/wayland-mirror/weston/blob/9.0/libweston/data-device.c)
+only services the last offered selection and cancels its source when that offer
+is destroyed. Protocol traces reproduced cancellation followed by zero-byte
+reads on WSLg and isolated Weston; this was not merely a WSLg bridge limitation.
+The window adapter now retains each seat's selection until replacement/teardown
+and shares its focused offer with Smithay for text and image reads. File-drop
+transfers remain separate and cannot consume the selection.
+
+The independent [clipboard protocol probe](../tools/wayland_clipboard_probe.py)
+passes eleven scenarios: PNG preference, BMP fallback, missing MIME, exact
+fragmented copy/receive, immutable replaced sources, size/time bounds, cancellation,
+seat removal, host-offer routing and explicit empty host selections. The three
+adapter unit tests and five image/clipboard codec tests pass. The thirteen
+[file-drop protocol scenarios](../tools/wayland_file_drop_probe.py) also pass;
+they now reject premature destruction of a live clipboard selection and verify
+its release after replacement or teardown.
+
+Native exchange ran on an isolated Weston 9.0.0 desktop nested under WSLg,
+with both applications' `DISPLAY` unset and no data-control extension. The
+compositor used its GL software renderer after its Pixman renderer crashed;
+that crash is test-environment evidence, not an NG application crash. NG++
+Print → Copy succeeded. A separate [native receiver](../crates/gui/examples/native_image_clipboard.rs)
+captured the 320×288 grid image; all 92,160 RGB pixels match the existing baseline,
+SHA-256 `c878560e03bbfc0e565a730337bd2a261f6c1405ba9e295ae708aec428b44283`.
+The peer then copied a generated 8×8 four-shade tile; NG++ Ctrl+Shift+V displayed
+the expected repeating grayscale columns in its draft. Cancel discarded that
+paste. Captures and fixture graphics remain ignored scratch data.
+
+This establishes focused standard-protocol application exchange, not complete
+Wayland desktop acceptance, arbitrary external application compatibility, macOS
+runtime acceptance or a parity release. Integrated file-manager/capture/drop,
+placement/focus/DPI and remaining platform checks stay open in PP3/M6/P1.
+See [architecture and limits](architecture.md#standard-wayland-image-clipboard).
 
 An isolated Ubuntu Thunar 4.16.10 and its libraries were unpacked under ignored
 scratch storage, with a private D-Bus session; no system packages were installed.

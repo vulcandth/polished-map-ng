@@ -163,8 +163,14 @@ impl Editor {
         let Some(mut form) = self.print_form.take() else {
             return;
         };
+        let busy = self.print_request.is_some()
+            || self.print_worker.is_some()
+            || self.print_clipboard.is_some();
         let (mut export, mut copy, mut cancel) = (false, false, false);
         dialog_host::client(ctx, egui::Id::unique("print-options"), |ui| {
+            if busy {
+                ui.disable();
+            }
             dialog_host::heading(ui, "Print Options");
             let font = egui::TextStyle::Body.resolve(ui.style());
             let measure = |label: &str| {
@@ -239,15 +245,29 @@ impl Editor {
             copy |= ui.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::C));
             export |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
         });
+        cancel &= !busy;
+        copy &= !busy;
+        export &= !busy;
         if cancel || export || copy {
             // The source stores all five values BEFORE checking cancellation.
             self.print_options = form.options;
-            if !cancel {
+            if cancel {
+                self.print_request = None;
+                self.print_worker = None;
+                if let Some(id) = self.print_clipboard.take() {
+                    egui_winit::image_clipboard::cancel(ctx, egui::ViewportId::ROOT, id);
+                }
+            } else {
                 self.queue_print(if copy {
                     Destination::Clipboard
                 } else {
                     Destination::ChooseFile
                 });
+                // Keep the native surface focused until Wayland has accepted the
+                // asynchronous selection. Closing it first can clear seat focus.
+                if copy {
+                    self.print_form = Some(form);
+                }
             }
         } else {
             self.print_form = Some(form);
@@ -287,7 +307,7 @@ impl Editor {
                 self.print_worker = Some(rx);
                 self.status = "Printing…".into();
             }
-            Err(e) => self.error = Some(format!("Could not start Print worker: {e}")),
+            Err(e) => self.finish_print(Err(format!("Could not start Print worker: {e}"))),
         }
     }
 
@@ -334,6 +354,7 @@ impl Editor {
     }
 
     fn finish_print(&mut self, result: Result<String, String>) {
+        self.print_form = None;
         match result {
             Ok(message) => {
                 self.status = message.clone();

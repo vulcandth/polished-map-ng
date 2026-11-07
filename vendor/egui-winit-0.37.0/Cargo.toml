@@ -52,6 +52,7 @@ rustdoc-args = ["--generate-link-to-definition"]
 ignored = ["wayland-cursor"]
 
 [features]
+smithay-clipboard = ["dep:smithay-clipboard", "dep:image"]
 accesskit = ["dep:accesskit_winit"]
 android-game-activity = ["winit/android-game-activity"]
 android-native-activity = ["winit/android-native-activity"]
@@ -101,6 +102,12 @@ optional = true
 
 [dependencies.document-features]
 version = "0.2.12"
+optional = true
+
+[dependencies.image]
+version = "0.25"
+default-features = false
+features = ["png", "bmp"]
 optional = true
 
 [dependencies.egui]

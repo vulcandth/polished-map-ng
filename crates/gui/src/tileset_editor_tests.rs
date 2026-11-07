@@ -430,19 +430,12 @@ fn image_clipboard_events_use_grayscale_output_and_shared_clipped_import() {
         modifiers: egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,
     });
     h.step();
-    let copied = h
-        .output()
-        .platform_output
-        .commands
-        .iter()
-        .find_map(|command| {
-            if let egui::OutputCommand::CopyImage(image) = command {
-                Some(image)
-            } else {
-                None
-            }
-        })
-        .expect("image-copy shortcut must issue an image output command");
+    let mut copied = None;
+    egui_winit::image_clipboard::dispatch_with(&h.ctx, egui::ViewportId::ROOT, |image| {
+        copied = Some(image.clone());
+        Ok(())
+    });
+    let copied = copied.expect("image-copy shortcut must queue a native request");
     assert_eq!(copied.size, [8, 8]);
     assert!(
         copied

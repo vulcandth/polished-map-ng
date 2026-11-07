@@ -50,7 +50,10 @@ def main():
     errors = []
     if "linux" in target and "sctk-adwaita" in packages.get("winit", set()):
         errors.append("Wayland opacity requires the adapted fallback client frame, not sctk-adwaita")
-    for name, version in {"winit": "0.30.13", "egui-winit": "0.37.0", "eframe": "0.37.0", "arboard": "3.7.0"}.items():
+    pinned = {"winit": "0.30.13", "egui-winit": "0.37.0", "eframe": "0.37.0", "arboard": "3.7.0"}
+    if "linux" in target:
+        pinned["smithay-clipboard"] = "0.7.3"
+    for name, version in pinned.items():
         entries = [line.split("|", 1)[0] for line in graph.splitlines() if line.startswith(name + " ")]
         if not entries or any(not entry.startswith(f"{name} v{version} ")
                               or f"/vendor/{name}-{version}" not in entry.replace("\\", "/")

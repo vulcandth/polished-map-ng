@@ -343,8 +343,8 @@ limited per dispatch, and time out after ten seconds. The native adapter owns
 hover and completed offers separately: leave/new-enter cannot destroy a pending
 completed transfer. Up to 16 receives per seat retain independent paths,
 coordinates, timers and pipe sources. Removing the seat or target window cancels
-the associated receives immediately. Clipboard offers are released without
-reading or changing selection ownership. These defensive limits are recorded in
+the associated receives immediately. Clipboard offers are retained until replacement or seat teardown and shared with
+the clipboard adapter; the file-drop path never reads or replaces their contents. These defensive limits are recorded in
 [deviations](deviations.md#external-transfer-bounds-and-ole-correctness).
 Native file-manager delivery, cancellation, mixed-DPI placement and clipboard
 coexistence still require the desktop checks in item 4. See
@@ -394,24 +394,41 @@ open. Winit's boolean buffer transparency is not used as a substitute.
 
 ## Standard Wayland image clipboard
 
-The native Wayland-only acceptance probe exposed a gap: arboard's optional
-data-control transport needs compositor support, and its X11 fallback is not
-available on a pure Wayland session. The existing Smithay adapter handles text
-through the standard data-device protocol on the GUI connection, but not images.
-Full image transfer on that protocol is planned PP3 work, not implemented support.
+The vendored Smithay adapter now transfers PNG and BMP through the standard
+`wl_data_device_manager` on the GUI's existing connection, without X11 or the
+optional data-control extension. PNG is preferred; malformed preferred data is
+reported rather than silently switching formats. Windows and X11 retain arboard;
+macOS retains its native arboard path. The core renderer remains display-free.
 
-Extend the existing connection-owned clipboard path for PNG and BMP MIME offers;
-prefer PNG and report malformed preferred data rather than silently switching
-formats. Retain focus/seat serials, clipboard ownership and source lifetime with
-the native event loop. Bound encoded bytes, decoded dimensions, outstanding
-transfers and receive time; handle seat removal, cancellation and nonresponsive
-owners without blocking editor input. Verify independent protocol peers and
-actual application exchange with X11 disabled. Headless core rendering must not
-gain a window or clipboard dependency.
+Each viewport has one queued image request and a matching acknowledgment.
+Print and tile/roof Copy and Paste use that bridge; closing an editor cancels its
+pending request and stale replies cannot modify a later draft. Completed tile/roof
+copies belong to the root window, so closing the draft preserves the selection.
+Print keeps its
+native dialog alive while rendering/encoding/publishing, since destroying the
+focused surface before publication can clear the Wayland seat's clipboard focus.
+Its controls and dismissal shortcuts wait for that bounded operation to finish.
+Success means the native adapter accepted publication, not that every future
+clipboard consumer or compositor bridge will deliver the image successfully.
 
-Print's native write acknowledgment is implemented separately: a bounded,
-viewport-scoped request/reply bridges the rendered image to egui-winit's existing
-clipboard owner. The editor reports success only after that adapter returns
-success and exposes errors without changing project data. This also prevents
-false success on clipboard failures outside Wayland. It does not implement the
-missing standard-protocol image transport or close native clipboard acceptance.
+The window adapter retains the focused seat's selection offer and shares its
+proxy/MIME snapshot with Smithay for both text and image reads. This avoids
+competing clipboard receive offers: Weston 9 treats destruction of its last
+delivered offer as cancellation and only services that offer. File-drop offers
+remain separately owned and timed.
+
+The Smithay worker owns focus/seat serials, independent selection sources and
+nonblocking pipes. Replacing a selection cannot change bytes already requested
+from its predecessor. Encoded selections are bounded to 64 MiB, with at most 16
+outstanding requests/sources/transfers and a ten-second transfer deadline. Each
+transfer advances by at most 256 KiB per dispatch. Seat removal, requester drop,
+read/write failure and timeout release resources. PNG/BMP codecs run outside the
+UI thread, with at most four codec workers even across cancellation/retry;
+decoding limits dimensions to 8192 per axis and 16 Mi pixels before
+RGBA expansion. Source, archive hashes, licenses and exact patches are retained
+in [vendor provenance](../vendor/NOTICE.md).
+
+The [independent protocol probe](../tools/wayland_clipboard_probe.py) exercises
+real Unix sockets and descriptor passing, without a display server. Actual
+application and compositor limits are tracked separately in
+[compatibility evidence](compatibility.md#plusplus-wayland-image-clipboard-gap).
