@@ -138,7 +138,12 @@ def common(destination, info):
         shutil.copy2(notice, target)
     shutil.copy2("docs/rebuild.md", destination / "REBUILD.md")
     guide = "testing-plusplus.md" if info.get("profile") == "plusplus" else "testing.md"
-    shutil.copy2(Path("docs") / guide, destination / "TESTING.md")
+    # Keep the guide in docs/ so its relative links work offline. The package
+    # root provides a short entry point instead of relocating the document.
+    (destination / "TESTING.md").write_text(
+        f"# Testing development builds\n\nStart with the [tester guide](docs/{guide}) "
+        "for platform requirements, test steps and reporting instructions.\n",
+        encoding="utf-8")
     (destination / "BUILD-INFO.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")
 
 

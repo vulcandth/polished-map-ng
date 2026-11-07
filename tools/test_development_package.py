@@ -64,12 +64,18 @@ class DevelopmentArchiveTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 copy_gui(root, root, "x86_64-unknown-linux-gnu", "plusplus")
 
-    def test_plusplus_binary_includes_its_own_tester_guide(self):
-        with tempfile.TemporaryDirectory() as temporary:
-            destination = Path(temporary)
-            common(destination, {"development": True, "profile": "plusplus"})
-            self.assertEqual((destination / "TESTING.md").read_bytes(),
-                             Path("docs/testing-plusplus.md").read_bytes())
+    def test_binary_tester_entry_points_preserve_offline_guide_links(self):
+        for profile, guide in [("master", "testing.md"), ("plusplus", "testing-plusplus.md")]:
+            with self.subTest(profile=profile), tempfile.TemporaryDirectory() as temporary:
+                destination = Path(temporary)
+                common(destination, {"development": True, "profile": profile})
+                entry = (destination / "TESTING.md").read_text(encoding="utf-8")
+                self.assertIn(f"](docs/{guide})", entry)
+                self.assertEqual((destination / "docs" / guide).read_bytes(),
+                                 (Path("docs") / guide).read_bytes())
+                for relative in ["testing.md", "testing-plusplus.md", "releases.md", "cli.md",
+                                 "rebuild.md", "roadmap.md", "../upstream.lock.toml"]:
+                    self.assertTrue((destination / "docs" / relative).is_file(), relative)
 
     def test_binary_assets_keep_notices_without_loose_runtime_files(self):
         with tempfile.TemporaryDirectory() as temporary:

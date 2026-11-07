@@ -89,7 +89,8 @@ an inconsistent override. Plusplus archives use `polished-map-ng-plusplus-dev-`
 names and contain `polished-map-plusplus` (with `.exe` on Windows), or a separate
 `Polished Map NG++.app` with its own bundle identifier on macOS. The common CLI,
 complete source, notices, checksums and offline rebuild policy remain the same.
-The [plusplus tester guide](testing-plusplus.md) is included as TESTING.md.
+The package's TESTING.md links to its included [plusplus tester guide](testing-plusplus.md),
+preserving the guide's offline links in `docs/`.
 Publication requires green CI and verification of all four target archives and
 their matching source. No plusplus parity release is claimed.
 
