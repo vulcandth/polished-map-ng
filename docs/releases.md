@@ -27,6 +27,13 @@ fixtures or ignored working files are included. Source and binaries must be
 published together as a **prerelease**, with successful CI for the packaged commit.
 Do not mark a development release as the latest stable release.
 
+The packaging workflow can build both editor profiles from the same shared-source
+revision. Select `master` or `plusplus` explicitly; the profile in BUILD-INFO.json,
+launcher, preferences, Mac bundle identity and tester guide remain separate.
+Using a shared revision carries native adapter fixes into both tester builds
+without introducing automatic project/profile conversion. The Git branch name
+alone does not determine which editor is packaged.
+
 Windows uses an MSVC ZIP; Linux uses an Ubuntu 22.04-built tarball; macOS uses
 separate app-bundle ZIPs. The Mac runner labels follow
 [GitHub's runner documentation](https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job).
