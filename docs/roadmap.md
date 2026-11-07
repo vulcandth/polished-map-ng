@@ -275,6 +275,10 @@ Do not expose automatic profile switching until the unified-editor milestone.
   [Native fullscreen/maximized restart](compatibility.md#native-wayland-window-restart)
   exposed a startup request-order crash, now fixed with a failing-before/passing-after
   protocol regression and native restart evidence; broader placement remains open.
+  [Frame focus and placement checks](compatibility.md#native-wayland-frame-focus-and-placement)
+  exposed lost keyboard input after titlebar interaction. Parent-surface routing
+  passes the independent regression and native F11/Alt+F checks; compositor
+  placement/focus limitations remain explicit.
   Separate [plusplus tester packages](releases.md#plusplus-development-packages)
   and matching source/licenses are published after CI, archive and packaged CLI
   verification for all four targets; use them for the remaining native checks.

@@ -118,6 +118,13 @@ also opened successfully from the previously failing fullscreen settings,
 canceled Map Options and exited cleanly on isolated Weston. These checks do not
 close directly hosted desktop, mixed-DPI or macOS GUI acceptance.
 
+Follow-up PP3 acceptance found dropped keyboard shortcuts after a Wayland
+client-titlebar click. The [frame-focus fix](compatibility.md#native-wayland-frame-focus-and-placement)
+is verified in source and the local native build; it is not included in the
+`10019ad` packages above. In that candidate, click the client area to restore
+shortcuts after titlebar interaction. A refreshed candidate requires green CI
+and the same source/archive checks before publication.
+
 ## Final release gate
 
 Before publishing a parity/production release:

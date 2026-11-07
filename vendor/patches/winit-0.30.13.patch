@@ -729,6 +729,43 @@
 +}
 +
 +delegate_dispatch!(WinitState: [WlDataDeviceManager: GlobalData] => DataDeviceManagerState);
+--- a/winit-0.30.13/src/platform_impl/linux/wayland/seat/keyboard/mod.rs
++++ b/winit-0.30.13/src/platform_impl/linux/wayland/seat/keyboard/mod.rs
+@@ -7,6 +7,7 @@
+ use calloop::{LoopHandle, RegistrationToken};
+ use tracing::warn;
+ 
++use sctk::compositor::SurfaceData;
+ use sctk::reexports::client::protocol::wl_keyboard::{
+     Event as WlKeyboardEvent, KeyState as WlKeyState, KeymapFormat as WlKeymapFormat, WlKeyboard,
+ };
+@@ -62,7 +63,13 @@
+                 },
+             },
+             WlKeyboardEvent::Enter { surface, .. } => {
+-                let window_id = wayland::make_wid(&surface);
++                // Compositors may focus a client-frame subsurface after a
++                // titlebar click. Route it to the owning window, as pointer
++                // handling already does, instead of dropping all key input.
++                let parent = surface.data::<SurfaceData>()
++                    .and_then(SurfaceData::parent_surface)
++                    .unwrap_or(&surface);
++                let window_id = wayland::make_wid(parent);
+ 
+                 // Mark the window as focused.
+                 let was_unfocused = match state.windows.get_mut().get(&window_id) {
+@@ -97,7 +104,10 @@
+                 }
+             },
+             WlKeyboardEvent::Leave { surface, .. } => {
+-                let window_id = wayland::make_wid(&surface);
++                let parent = surface.data::<SurfaceData>()
++                    .and_then(SurfaceData::parent_surface)
++                    .unwrap_or(&surface);
++                let window_id = wayland::make_wid(parent);
+ 
+                 // NOTE: we should drop the repeat regardless whether it was for the present
+                 // window of for the window which just went gone.
 --- a/winit-0.30.13/src/platform_impl/linux/wayland/seat/mod.rs
 +++ b/winit-0.30.13/src/platform_impl/linux/wayland/seat/mod.rs
 @@ -20,6 +20,8 @@

@@ -3151,6 +3151,56 @@ error, cancelled the dialog and exited through File with code 0. Its trace has
 no conflicting unmaximize request. The packaged CLI ran under WSL Ubuntu/glibc
 2.35. These checks preserve the native acceptance limits above.
 
+### Native Wayland frame focus and placement
+
+A follow-up check of the downloaded `10019ad` Linux package reproduced a
+functional keyboard failure after clicking its client-drawn titlebar. The native
+trace delivers keyboard leave on the root surface, enter on its frame subsurface,
+and an F11 press/release, but NG emits no fullscreen request. Clicking the client
+area restores the shortcut. Winit's keyboard handler looked up the frame as a
+separate top-level window and discarded it; its pointer handler already resolves
+the same surface to the parent. Keyboard enter/leave now use that existing parent
+relationship, including seat focus removal, repeat cancellation and modifiers.
+
+The [independent keyboard protocol regression](../tools/wayland_frame_focus_probe.py)
+uses the production winit window and its five real fallback-frame subsurfaces.
+It focuses the root, each frame part, the root again, and then leaves the window;
+F11 must reach the owning window at each step and final focus must be released.
+The previous adapter stopped after the root's first acknowledgment. The patched
+adapter passes all seven key deliveries and balanced focus transitions. The
+rebuilt native GUI on the same isolated Weston desktop accepts F11 immediately
+after a titlebar click; the trace confirms keyboard focus on the frame surface
+followed by `set_fullscreen`. After returning to normal size, another titlebar
+click followed by Alt+F opens File, and Exit returns code 0. Windows format,
+workspace Clippy/tests/rustdoc, Linux workspace Clippy, the production dependency
+graph and pinned vendor source/license checks pass. No visual baselines changed.
+
+When fullscreen hides the focused frame, this Weston instance sends keyboard
+leave without transferring focus to the root; a subsequent F11 produces no
+keyboard event on the client connection. Clicking the client restores focus,
+and F11 then returns to the same normal size and position. This separate
+compositor-focus condition remains part of broader desktop acceptance; the
+adapter does not fabricate input or retain focus after a native leave.
+
+The same native pass narrowed the earlier placement observation. Launching
+normally and cycling through fullscreen restores the same visible 800×600 client
+and titlebar position. Launching directly fullscreen and then restoring can
+instead leave the titlebar above the output, while File → Exit still works.
+The trace reports valid decorated geometry `(-4, -28, 808, 632)`. In the pinned
+Weston 9 source cited above, `desktop_surface_committed` and `unset_fullscreen`
+retain or choose a surface position; `weston_view_set_initial_position` computes
+bounds from the main surface dimensions without adjusting for the negative
+frame extent. With this panel-free output, the initial fullscreen surface fills
+the output and the position can be `(0, 0)`. This explains the observed clipped
+frame without establishing a client geometry defect. No application offset or
+placement-policy workaround was introduced. Both comparison processes exited
+with code 0; the disposable project was not opened or saved in this pass.
+
+A synthesized titlebar drag produced the move request only after the compositor
+had already delivered button release, and did not move the window. It therefore
+provides no successful move/capture evidence. Directly hosted compositor input,
+window movement, mixed-DPI transitions and macOS acceptance remain open.
+
 ## Plusplus asset switching and tile options
 
 The existing [tileset](../crates/gui/src/tileset_workflows.rs) and

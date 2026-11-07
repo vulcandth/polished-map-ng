@@ -9,7 +9,7 @@
       "archive_sha256": "a6755fa58a9f8350bd1e472d4c3fcc25f824ec358933bba33306d0b63df5978d",
       "archive_url": "https://static.crates.io/crates/winit/winit-0.30.13.crate",
       "patch": "patches/winit-0.30.13.patch",
-      "patch_sha256": "610ce22738e0d28cc812448888677aa384c8070ba20fb6fb4c57c4417c0ef4f2",
+      "patch_sha256": "8c068871f2abd1337631bbf7c791a1bc48279ac290b221b29172c14d4d8619dd",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "b8b2549c91dbf3dc4087197a6be89ab5acb5511c2d1eadc7349c249f646047bb",
@@ -400,7 +400,7 @@
           "original_sha256": null
         },
         "src/platform_impl/linux/wayland/seat/keyboard/mod.rs": {
-          "sha256": "dd20e74809b3a7987864bc5cabdbeaf62a8474400ddbc4fc86188ed7a84dea62",
+          "sha256": "67c4bdb90e2f7c35a8018e1aaf71ae5e5b63f2fc2b467d2096f10c4e517907c9",
           "original_sha256": "dd20e74809b3a7987864bc5cabdbeaf62a8474400ddbc4fc86188ed7a84dea62"
         },
         "src/platform_impl/linux/wayland/seat/mod.rs": {

@@ -84,6 +84,12 @@ X11 supplies transient/modal hints; Wayland uses the existing connection for
 xdg_toplevel parent relationships and optional xdg-dialog hints. Protocol objects
 are released before their toplevels. Application input filtering remains required.
 
+Additional modification on 2026-11-07, under Apache-2.0: resolve Wayland keyboard
+enter/leave on client-frame subsurfaces to their owning window, retaining shortcut
+input and releasing focus correctly after titlebar interaction. The
+[independent protocol probe](../tools/wayland_frame_focus_probe.py) exercises the
+root and all five native frame surfaces, including final focus release.
+
 ## Smithay client toolkit 0.19.2 frame adaptation
 
 The Wayland fallback frame in `winit-0.30.13/src/platform_impl/linux/wayland/types/opacity_frame.rs`
