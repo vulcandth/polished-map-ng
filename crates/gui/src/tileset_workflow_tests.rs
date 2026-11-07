@@ -459,19 +459,20 @@ fn missing_replacement_preserves_live_assets_and_source_sized_selector() {
             .windows_buttons = windows;
         h.run();
         let area = h.state().tileset_choice_form.as_ref().unwrap().bounds;
-        assert_eq!(area.size(), Vec2::new(280.0, 80.0));
+        assert_eq!(area.size(), Vec2::new(280.0, 300.0));
         for (label, x) in [
             ("OK", if windows { 96.0 } else { 190.0 }),
             ("Cancel", if windows { 190.0 } else { 96.0 }),
         ] {
             let rect = h.get_by_label(label).rect();
             assert_eq!(rect.size(), Vec2::new(80.0, 22.0));
-            assert_eq!(rect.min - area.min, Vec2::new(x, 48.0));
+            assert_eq!(rect.min - area.min, Vec2::new(x, 268.0));
         }
         #[cfg(feature = "visual-tests")]
         {
             h.remove_cursor();
             h.run();
+            choice_preview::wait_for_preview(&mut h);
             h.snapshot(if windows {
                 "tileset-choice-windows"
             } else {

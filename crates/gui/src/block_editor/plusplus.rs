@@ -349,17 +349,25 @@ impl BlockForm {
             .inner;
         response
             .widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, "Tile palette"));
-        ui.put(
-            rect(293.0, 202.0, 22.0 + flip_width, 22.0),
-            egui::Checkbox::new(&mut plus.x_flip, "X flip"),
+        ui.scope_builder(
+            egui::UiBuilder::new()
+                .max_rect(rect(293.0, 202.0, 22.0 + flip_width, 22.0))
+                .layout(egui::Layout::left_to_right(egui::Align::Center)),
+            |ui| ui.checkbox(&mut plus.x_flip, "X flip"),
         );
-        ui.put(
-            rect(319.0 + flip_width, 202.0, 22.0 + flip_width, 22.0),
-            egui::Checkbox::new(&mut plus.y_flip, "Y flip"),
+        ui.scope_builder(
+            egui::UiBuilder::new()
+                .max_rect(rect(319.0 + flip_width, 202.0, 22.0 + flip_width, 22.0))
+                .layout(egui::Layout::left_to_right(egui::Align::Center)),
+            |ui| ui.checkbox(&mut plus.y_flip, "Y flip"),
         );
-        ui.put(
-            rect(293.0, 228.0, 174.0, 22.0),
-            egui::Checkbox::new(&mut plus.priority, "Priority (above sprites)"),
+        // Ui::put centers a short checkbox in its slot. Preserve upstream's
+        // shared left edge with X flip instead of centering the priority label.
+        ui.scope_builder(
+            egui::UiBuilder::new()
+                .max_rect(rect(293.0, 228.0, 174.0, 22.0))
+                .layout(egui::Layout::left_to_right(egui::Align::Center)),
+            |ui| ui.checkbox(&mut plus.priority, "Priority (above sprites)"),
         );
         map_options::label(ui, rect(293.0, 253.0, 174.0, 22.0), "Collision:");
         let t = plus.reference(self.selected, true);

@@ -6,6 +6,7 @@ pub use artwork::application_icon;
 mod block_editor;
 mod block_hotkeys;
 mod block_workflows;
+mod choice_preview;
 mod default_value;
 mod dialog_host;
 mod documents;
@@ -58,6 +59,7 @@ mod roof_workflows;
 mod rulers;
 mod save_feedback;
 mod shortcuts;
+mod startup_theme;
 mod status_bar;
 mod tileset_editor;
 #[cfg(test)]
@@ -239,6 +241,8 @@ pub struct Editor {
     native_color_request: Option<polished_map_core::ColorSlot>,
     #[cfg(windows)]
     native_color_picker: polished_map_platform::ColorPicker,
+
+    startup_theme: Option<mpsc::Receiver<Option<bool>>>,
     block_count_form: Option<u16>,
     block_count_default: default_value::DefaultValue<u16>,
     block_count_windows_buttons: bool,
@@ -340,6 +344,7 @@ impl Default for Editor {
             native_color_request: None,
             #[cfg(windows)]
             native_color_picker: polished_map_platform::ColorPicker::default(),
+            startup_theme: None,
             block_count_form: None,
             block_count_default: default_value::DefaultValue::new(1),
             block_count_windows_buttons: cfg!(target_os = "windows"),
@@ -1607,7 +1612,11 @@ impl Editor {
             self.canvas_zoom = self.zoom;
             self.canvas_scroll = Vec2::ZERO;
             ui.centered_and_justified(|ui| {
-                ui.label("Open a map to edit blocks.");
+                ui.label(if self.drag_and_drop {
+                    "Open a map or drag one here to edit it."
+                } else {
+                    "Open a map to edit it."
+                });
             });
             return;
         };
@@ -2141,6 +2150,8 @@ impl eframe::App for Editor {
     }
 
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        self.poll_startup_theme(ui.ctx());
+        artwork::install_window_icons(ui.ctx());
         self.apply_startup_window_state(ui.ctx());
         self.show(ui);
         #[cfg(not(test))]

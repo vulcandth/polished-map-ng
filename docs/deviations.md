@@ -572,6 +572,13 @@ that file without changing it or replacing the current editor session.
 
 ## Upstream tester usability review
 
+The November 7 follow-up adds fixed-size, read-only roof/tileset previews to the
+enlarged Change dialogs, with scrollable previews and capped dropdowns. It also
+uses the OS theme as the first-launch default when no saved NG/legacy choices
+exist, formats WRAM symbols in monospace, and corrects swatch alignment/corners
+and the empty-map caption. These are specifically requested review fixes; broad
+M4 aesthetics, original fonts and replacement artwork remain deferred.
+
 The November 1 review, accepted for M8 on November 6, replaces the two-entry
 Theme submenu with a Dark Theme checkbox; ordinary labels no longer select text,
 while About credits, Help and error messages remain selectable. About URLs are

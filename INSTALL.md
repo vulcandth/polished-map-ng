@@ -12,7 +12,8 @@ selects the development toolchain, and `Cargo.lock` pins dependencies. The
 workspace's minimum supported Rust version is checked separately in CI.
 
 - Windows: install Visual Studio Build Tools with Desktop development with C++
-  and a Windows SDK; use the MSVC Rust toolchain.
+  and a Windows SDK; use the MSVC Rust toolchain. The SDK resource compiler
+  embeds the original multi-resolution application icon during the GUI build.
 - macOS: install Xcode Command Line Tools (`xcode-select --install`).
 - Linux: install a C/C++ toolchain, pkg-config, X11/Wayland development libraries
   and fonts. On Ubuntu 24.04, the CI dependency set is:

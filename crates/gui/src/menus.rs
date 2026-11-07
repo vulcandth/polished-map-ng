@@ -112,6 +112,7 @@ impl Editor {
                 });
                 menu_popup::menu(ui, "View", |ui| {
                     if menu_popup::checkbox(ui, true, &mut self.dark, "Dark Theme").changed() {
+                        self.startup_theme = None;
                         ctx.set_theme(if self.dark {
                             egui::Theme::Dark
                         } else {

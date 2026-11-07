@@ -94,7 +94,7 @@ fn tileset_selector_preserves_map_events_colors_and_prunes_removed_blocks() {
             .unwrap()
             .bounds
             .size(),
-        Vec2::new(280.0, 80.0)
+        Vec2::new(280.0, 300.0)
     );
     choose(&mut h, "demo", "other");
     assert!(h.state().error.is_none(), "{:?}", h.state().error);
@@ -231,7 +231,7 @@ fn roof_switch_preserves_other_domains_retains_dirty_flag_and_removes_overlay() 
     );
     assert_eq!(
         h.state().roof_choice_form.as_ref().unwrap().bounds.size(),
-        Vec2::new(280.0, 80.0)
+        Vec2::new(280.0, 300.0)
     );
     choose(&mut h, "demo", "other");
     assert!(!assets(&h).roof.as_ref().unwrap().is_modified());

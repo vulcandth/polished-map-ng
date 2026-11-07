@@ -127,9 +127,18 @@ impl NativeStartup {
     }
 
     pub fn create_editor(self, cc: &eframe::CreationContext<'_>) -> Editor {
+        let fresh_theme = self.imported.is_none()
+            && self.error.is_none()
+            && cc
+                .storage
+                .and_then(|s| s.get_string(key(self.profile)))
+                .is_none();
         let mut editor = Editor::new_for_profile(cc, self.profile);
         editor.native_fonts = Some(fonts::install_native(&cc.egui_ctx));
         self.apply(&mut editor, cc.storage, &cc.egui_ctx);
+        if fresh_theme && editor.preferences_writable {
+            editor.detect_startup_theme(&cc.egui_ctx);
+        }
         editor
     }
 

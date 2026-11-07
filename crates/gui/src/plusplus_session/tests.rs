@@ -15,6 +15,7 @@ mod lifecycle;
 fn editor() -> Harness<'static, Editor> {
     Harness::builder()
         .with_size(Vec2::new(800.0, 600.0))
+        .with_max_steps(16)
         .with_theme(egui::Theme::Light)
         .build_eframe(|cc| Editor::new_plusplus(cc))
 }

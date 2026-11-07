@@ -44,6 +44,7 @@ pub(super) fn fixture(
     .unwrap();
     let graphics = tileset.graphics(blocks.blockset()).unwrap();
     let mut h = Harness::builder()
+        .with_max_steps(16)
         .with_size(Vec2::new(800.0, 600.0))
         .with_theme(egui::Theme::Light)
         .build_eframe(|cc| Editor::new(cc));
@@ -375,6 +376,7 @@ fn tileset_geometry_and_mode_restrictions_follow_source() {
     for (allow_256, mono) in [(false, false), (false, true), (true, true)] {
         let (_dir, mut h) = fixture(allow_256, mono);
         open(&mut h);
+        assert_review_swatches(&h);
         let first = h.get_by_label("Tileset tile $00").rect();
         assert!(
             h.state().tileset_form.as_ref().unwrap().bounds.height() < 370.0,
@@ -415,6 +417,39 @@ fn tileset_geometry_and_mode_restrictions_follow_source() {
                 });
             }
         }
+    }
+}
+
+pub(super) fn assert_review_swatches(h: &Harness<'_, Editor>) {
+    for index in 1..=4 {
+        let cell = h.get_by_label(&format!("Swatch {index}")).rect();
+        assert_eq!(cell.size(), Vec2::splat(22.0));
+        let digit = index.to_string();
+        let text = h
+            .output()
+            .shapes
+            .iter()
+            .filter_map(|s| match &s.shape {
+                egui::Shape::Text(t) if t.galley.text() == digit && cell.contains(t.pos) => Some(t),
+                _ => None,
+            })
+            .next_back()
+            .expect("painted swatch digit");
+        let center = text.pos + text.galley.mesh_bounds.center().to_vec2();
+        assert!(
+            (center - cell.center()).length() < 0.01,
+            "digit {index}: {center:?} vs {cell:?}"
+        );
+        let fill = h
+            .output()
+            .shapes
+            .iter()
+            .find_map(|s| match &s.shape {
+                egui::Shape::Rect(r) if r.rect == cell && r.fill != Color32::TRANSPARENT => Some(r),
+                _ => None,
+            })
+            .expect("painted swatch background");
+        assert_eq!(fill.corner_radius, egui::CornerRadius::ZERO);
     }
 }
 

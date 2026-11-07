@@ -32,6 +32,9 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked
+      - name: Verify original Windows executable icons
+        if: runner.os == 'Windows'
+        run: python tools/windows_icon_resources.py target/debug/polished-map-gui.exe target/debug/polished-map-plusplus.exe
       - name: Check native settings probe
         run: cargo clippy -p polished-map-gui --all-targets --features native-tests --locked -- -D warnings
       - name: Verify native settings shutdown and restart

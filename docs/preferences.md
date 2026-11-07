@@ -9,7 +9,7 @@ exit-time behavior. A canceled exit leaves the current session running.
 
 | Setting | Default |
 |---|---|
-| Theme | Greybird; Dark is the other supported initial choice |
+| Theme | System light/dark on first launch; Greybird if detection is unavailable |
 | Transparent | Off; requests 75% whole-window opacity |
 | Editing mode | Blocks |
 | Grid | On |
@@ -27,6 +27,11 @@ exit-time behavior. A canceled exit leaves the current session running.
 | Overworld Map Size | 1300 bytes; accepted range 1–4096 |
 | Drag and Drop | On; internal block, tile, roof and palette transfers |
 | Print Grid, IDs, Priority, Events, Warp IDs | All off; independent of editor view flags |
+
+With no saved NG or imported legacy preferences, startup chooses the system
+light/dark theme. The fallback desktop lookup runs in the background. Saved
+settings take precedence; manually choosing a theme cancels a pending lookup.
+This initializes the preference once, rather than following later OS changes.
 
 The Dark Theme checkbox retains the existing v1 `dark` boolean (false for Greybird,
 true for Dark), so earlier settings need no migration. Choosing either theme

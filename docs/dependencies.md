@@ -1,5 +1,18 @@
 # Dependency review
 
+The November 7 review adds `dark-light` 3.0.0 (MIT OR Apache-2.0) for a
+first-launch desktop-portal theme fallback; detection runs on a worker and does
+not override saved settings. It adds `futures-channel` 0.3.34 to the resolved
+graph. `embed-resource` 3.0.12 (MIT) is a build-only dependency for the original
+Windows multi-resolution ICO, using the installed SDK resource compiler.
+Its new resolved helpers are `toml_writer` 1.2.0+spec-1.1.0, `vswhom` 0.1.0,
+`vswhom-sys` 0.1.3 and `winreg` 0.56.0. No new artwork is introduced. Runtime and
+build dependencies are covered by the same license inventory and source archive
+policy below; the lockfile pins the complete graph. dark-light omits separate
+license files in both its archive and pinned repository; its unchanged published
+README/manifest declare the dual license. We select Apache-2.0 and retain those
+declarations, authors and full standard terms in the [notice supplements](../LICENSES/dependency-supplements/README.md).
+
 The native opacity adapter adds direct, target-specific uses of already-locked
 `x11-dl` 2.21.0 (MIT), `objc2` 0.6.5 (MIT) and `objc2-app-kit` 0.3.2
 (Zlib OR Apache-2.0 OR MIT), plus the

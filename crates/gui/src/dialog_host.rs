@@ -109,6 +109,7 @@ pub(super) fn show(
     }
     ctx.show_viewport_immediate(id, builder, |ui, _| {
         let child_ctx = ui.ctx();
+        artwork::install_window_icons(child_ctx);
         child_ctx.data_mut(|d| d.insert_temp(egui::Id::unique(("native-dialog-client", id)), true));
         let blocked = egui_winit::modal_windows::is_blocked(child_ctx, id);
         if blocked {
@@ -234,10 +235,7 @@ pub(super) fn client(
     );
     // egui popups cannot escape a native viewport. Source FLTK choices used
     // separate windows, so tiny source clients need room for a scrollable list.
-    if ["open-options", "change-roof", "change-tileset"]
-        .iter()
-        .any(|name| id == egui::Id::unique(name))
-    {
+    if id == egui::Id::unique("open-options") {
         ui.set_min_height(300.0);
     }
     ui.painter()

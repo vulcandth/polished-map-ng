@@ -93,7 +93,7 @@ Xvfb/Vulkan startup check, with no desktop automation or project edits.
 Windows executables import VCRUNTIME140.dll; the current [tester guide](testing.md)
 and release notes specify Microsoft's x64 redistributable prerequisite.
 
-Native clean-machine GUI launch, original executable/bundle icon resources,
+Native clean-machine GUI launch, macOS bundle icon metadata,
 minimum-OS verification and full M5–M7/P4 acceptance remain open. This packaging
 work does not resume deferred M4 aesthetics.
 
@@ -166,9 +166,10 @@ Before publishing a parity/production release:
 - Include original application/message XPMs, decoded pixels, `app.ico`,
   `crates/gui/assets/artwork/NOTICE.md` and `docs/artwork-inventory.json`. Run
   `python3 tools/artwork_assets.py` on the source archive. Package the original
-  multi-resolution ICO as Windows executable/application resources; derive macOS
-  bundle icon metadata from the attributed application picture. These packaging
-  steps and clean-machine OS display checks remain P2/P4.
+  multi-resolution ICO as Windows executable/application resources (implemented
+  in M9 and verified byte-for-byte by `tools/windows_icon_resources.py`); derive
+  macOS bundle icon metadata from the attributed application picture. macOS
+  metadata and clean-machine OS display checks remain P2/P4.
 - For the imported Fugue-derived icons, include `LICENSES/CC-BY-3.0.txt`,
   `crates/gui/assets/icons/NOTICE.md`, source XPMs and the icon inventory. Preserve
   the in-app attribution and run `python3 tools/icon_assets.py` on the source

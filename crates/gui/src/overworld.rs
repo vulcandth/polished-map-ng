@@ -8,6 +8,37 @@ wOverworldMap, or OverworldMap.\n\n\
 Its default size is 1300 bytes, so every map requires that\n\
 (width + 6) × (height + 6) ≤ 1300.";
 
+fn description_job(color: Color32) -> egui::text::LayoutJob {
+    let mut job = egui::text::LayoutJob::default();
+    let mut rest = DESCRIPTION;
+    for symbol in [
+        "wram.asm",
+        "wOverworldMapBlocks",
+        "wOverworldMap",
+        "OverworldMap",
+    ] {
+        let (before, after) = rest.split_once(symbol).expect("static WRAM description");
+        job.append(
+            before,
+            0.0,
+            egui::TextFormat::simple(egui::FontId::proportional(13.0), color),
+        );
+        job.append(
+            symbol,
+            0.0,
+            egui::TextFormat::simple(egui::FontId::monospace(13.0), color),
+        );
+        rest = after;
+    }
+    job.append(
+        rest,
+        0.0,
+        egui::TextFormat::simple(egui::FontId::proportional(13.0), color),
+    );
+    job.wrap.max_width = 360.0;
+    job
+}
+
 pub(super) struct OverworldForm {
     size: u16,
     default: default_value::DefaultValue<u16>,
@@ -68,9 +99,7 @@ has at least {bytes} bytes.",
             dialog_host::heading(ui, "Overworld Map Size");
             let font = egui::FontId::proportional(13.0);
             let color = ui.visuals().text_color();
-            let measured = ui
-                .painter()
-                .layout_no_wrap(DESCRIPTION.into(), font.clone(), color);
+            let measured = ui.painter().layout_job(description_job(color));
             // Option_Dialog::refresh + refresh_content: text metrics, 22px
             // controls, 10px margins and 16px gap before the bottom buttons.
             let description_height = measured.size().y + 22.0 - font.size;
@@ -89,7 +118,7 @@ has at least {bytes} bytes.",
                     .layout(egui::Layout::left_to_right(egui::Align::Center)),
                 |ui| {
                     ui.add(
-                        egui::Label::new(egui::RichText::new(DESCRIPTION).font(font.clone()))
+                        egui::Label::new(measured)
                             .halign(egui::Align::Min)
                             .wrap_mode(egui::TextWrapMode::Extend),
                     );
@@ -178,6 +207,36 @@ mod tests {
             h.run();
             let area = h.state().overworld_form.as_ref().unwrap().bounds;
             assert_eq!(area.width(), 380.0);
+            let description = h
+                .output()
+                .shapes
+                .iter()
+                .find_map(|shape| match &shape.shape {
+                    egui::Shape::Text(text) if text.galley.text() == DESCRIPTION => {
+                        Some(&text.galley)
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            assert!(description.size().x <= 360.0);
+            let code: Vec<_> = description
+                .job
+                .sections
+                .iter()
+                .filter(|section| section.format.font_id.family == egui::FontFamily::Monospace)
+                .map(|section| {
+                    &description.job.text[section.byte_range.start.0..section.byte_range.end.0]
+                })
+                .collect();
+            assert_eq!(
+                code,
+                [
+                    "wram.asm",
+                    "wOverworldMapBlocks",
+                    "wOverworldMap",
+                    "OverworldMap"
+                ]
+            );
             assert_eq!(
                 h.get_by_label(DESCRIPTION).rect().left() - area.left(),
                 10.0

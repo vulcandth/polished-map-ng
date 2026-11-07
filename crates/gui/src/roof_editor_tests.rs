@@ -187,6 +187,7 @@ fn roof_clipboards_use_roof_pixels_and_import_only_into_the_selected_tile() {
 fn roof_layout_uses_reversed_rows_and_original_client_dimensions() {
     let (_dir, mut h) = fixture();
     open(&mut h);
+    crate::tileset_editor_tests::assert_review_swatches(&h);
     let top = h.get_by_label("Roof tile $10").rect();
     let bottom = h.get_by_label("Roof tile $0A").rect();
     assert_eq!(top.size(), Vec2::splat(16.0));

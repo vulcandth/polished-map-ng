@@ -179,23 +179,24 @@ fn roof_load_failure_is_atomic_and_source_geometry_matches_both_button_orders() 
             .windows_buttons = windows;
         h.run();
         let area = h.state().roof_choice_form.as_ref().unwrap().bounds;
-        assert_eq!(area.size(), Vec2::new(280.0, 80.0));
+        assert_eq!(area.size(), Vec2::new(280.0, 300.0));
         let ok = h.get_by_label("OK").rect();
         let cancel = h.get_by_label("Cancel").rect();
         assert_eq!(ok.size(), Vec2::new(80.0, 22.0));
         assert_eq!(cancel.size(), ok.size());
         assert_eq!(
             ok.min - area.min,
-            Vec2::new(if windows { 96.0 } else { 190.0 }, 48.0)
+            Vec2::new(if windows { 96.0 } else { 190.0 }, 268.0)
         );
         assert_eq!(
             cancel.min - area.min,
-            Vec2::new(if windows { 190.0 } else { 96.0 }, 48.0)
+            Vec2::new(if windows { 190.0 } else { 96.0 }, 268.0)
         );
         #[cfg(feature = "visual-tests")]
         {
             h.remove_cursor();
             h.run();
+            choice_preview::wait_for_preview(&mut h);
             h.snapshot(if windows {
                 "roof-choice-windows"
             } else {

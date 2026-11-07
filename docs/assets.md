@@ -26,10 +26,12 @@ All 27 toolbar buttons now use source images with their original names, bounds,
 actions, disabled arithmetic and available dark variants. No text placeholder
 faces remain. The three 48×48 message symbols and 48×48 About image are centered
 in the source's 50×50 slots. Linux's window adapter uses the original 16×16 XPM;
-Windows/macOS receive the 48×48 application picture. The Windows ICO's 48×48
-frame exactly matches that picture. The unchanged ICO with 16/24/32/48/64 frames
-is retained for release packaging; executable resources and macOS bundle metadata
-remain P2, while native window-system icon selection/rasterization remains M4/P1.
+macOS receives the 48×48 application picture. Windows embeds the unchanged
+original ICO with 16/24/32/48/64 frames in both launchers and selects native
+small/large resources for each window's DPI. Its 48×48 frame exactly matches
+the application picture. `tools/windows_icon_resources.py` verifies all five
+embedded frame payloads against that ICO in CI and binary packaging. macOS
+bundle metadata and broader native display/DPI acceptance remain P2/M4/P1.
 
 Verification: `python tools/icon_assets.py` and `python tools/artwork_assets.py`
 check all distributed source/decoded hashes offline and run in CI. `--write`

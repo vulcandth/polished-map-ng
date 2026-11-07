@@ -16,6 +16,7 @@ import subprocess
 import tarfile
 import tempfile
 import zipfile
+from windows_icon_resources import verify as verify_windows_icons
 
 
 PROFILES = {
@@ -194,6 +195,8 @@ def main():
             binaries = Path(os.environ.get("CARGO_TARGET_DIR", "target")) / args.target / "release"
             shutil.copy2(binaries / ("polished-map" + suffix), stage / ("polished-map" + suffix))
             bundle = copy_gui(stage, binaries, args.target, profile)
+            if "windows" in args.target:
+                verify_windows_icons(stage / (PROFILES[profile][0] + ".exe"))
             if bundle is not None:
                 subprocess.run(["codesign", "--force", "--sign", "-", str(bundle)], check=True)
                 subprocess.run(["codesign", "--verify", "--deep", "--strict", str(bundle)], check=True)

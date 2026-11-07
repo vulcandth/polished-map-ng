@@ -6,6 +6,44 @@ fn legacy(body: &str) -> LegacyPreferences {
 }
 
 #[test]
+fn system_theme_only_initializes_profiles_without_saved_or_imported_preferences() {
+    for profile in [documents::Profile::Master, documents::Profile::PlusPlus] {
+        for source in ["fresh", "saved", "legacy", "malformed"] {
+            let mut storage = super::super::tests::MemoryStorage::default();
+            if source == "saved" || source == "malformed" {
+                eframe::Storage::set_string(
+                    &mut storage,
+                    key(profile),
+                    if source == "saved" {
+                        r#"{"version":1,"dark":false}"#
+                    } else {
+                        "invalid"
+                    }
+                    .into(),
+                );
+            }
+            let imported = (source == "legacy").then(|| {
+                Imported::from_legacy(profile, &legacy("theme:4\n"), "original.prefs".into())
+                    .unwrap()
+            });
+            let startup = NativeStartup::from_result(profile, Ok(imported));
+            let h = Harness::builder().build_eframe(|cc| {
+                cc.storage = Some(&storage);
+                cc.egui_ctx.begin_pass(egui::RawInput {
+                    system_theme: Some(egui::Theme::Dark),
+                    ..Default::default()
+                });
+                let mut output = cc.egui_ctx.end_pass();
+                output.textures_delta.clear();
+                startup.create_editor(cc)
+            });
+            assert_eq!(h.state().dark, source == "fresh", "{source}");
+            assert!(h.state().startup_theme.is_none());
+        }
+    }
+}
+
+#[test]
 fn every_master_setting_maps_to_the_ng_record_without_document_state() {
     let input = legacy(
         "theme:9\nmode:1\ngrid:0\nrulers:1\nzoom:1\nids:1\nhex:1\npriority:0\ngameboy:1\nevent:0\nwarp-ids:0\ntransparent:1\npalettes:5\nmonochrome:1\nprioritize:1\nall256:1\nroof-palettes:4\nevents:0\nspecial:0\nroofs:0\ndrag:0\noverworld-map:4096\nmeta128:1\nprint-grid:1\nprint-ids:1\nprint-priority:1\nprint-events:1\nprint-warp-ids:1\nresize-anchor:8\nrecent0:one.blk\nrecent1:two.blk\nrecent2:one.blk\nx:-100\ny:70\nw:920\nh:680\nfullscreen:1\nmaximized:1\n",

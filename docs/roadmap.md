@@ -25,7 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Continue PP3 integrated desktop capture/drop, placement/focus/DPI and
+**Next:** Complete M9's November 7 review fixes and verification for both profiles,
+keeping future improvements separate. Then continue PP3 integrated desktop capture/drop, placement/focus/DPI and
 macOS native acceptance using the published
 [plusplus tester packages](releases.md#plusplus-development-packages)
 for all four build targets. The November 7 packages include the verified
@@ -72,6 +73,14 @@ with compatible pinned pokecrystal. Preserve safe valid-input behavior before
 adding improvements. Each completed group below still participates in M7.
 
 ### Active review follow-up
+
+- [ ] **M9 (in progress) — November 7 tester review:** Correct priority alignment,
+  swatch geometry, empty-map guidance, WRAM label typography, first-launch theme
+  selection and Windows icon sizes in both profiles. Add the user-approved
+  roof/tileset previews with bounded, scrollable dropdowns. Acceptance requires focused
+  UI/geometry regressions, native Windows icon verification and workspace checks.
+  Record feature suggestions separately without implementing them.
+  Evidence: [review disposition](compatibility.md#november-7-upstream-review).
 
 - [x] **M8 — Upstream tester review:** reviewed input/dialog/usability fixes,
   portable assets and measured release size are verified. Refreshed four-target
@@ -343,6 +352,9 @@ refactoring from deliberately changed user behavior.
   sidebar, map-connection navigation, update checks and newer project conventions
   as separately scoped proposals. The November 6 direction defers this wishlist
   until after parity; it is not part of M8 tester builds.
+  The [November 7 suggestions](architecture.md#november-7-future-suggestions)
+  add NPC sprite previews with a custom-movement fallback and optional extensions,
+  plus replacement application artwork. These remain unstarted.
 - [ ] **I4 — Acceptance:** Each chosen change has a stated benefit, appropriate
   regression/benchmark evidence and documented intentional differences. Unselected
   proposals are explicitly deferred rather than silently expanding scope.
@@ -360,7 +372,8 @@ and release acceptance follow the preceding objectives.
   Intel/Apple Silicon app bundles, including the CLI and clean-machine launch checks.
   Development packages are built, verified and published for all four targets.
   [Packaging and tester handoff](releases.md#development-packages) track evidence;
-  clean-machine GUI launch and final icon resources remain open.
+  clean-machine GUI launch and macOS bundle icon metadata remain open;
+  Windows multi-resolution resources are implemented in M9.
 - [x] **P3:** Automate checksums, licenses/notices, matching source, lockfile,
   toolchain/patch records and rebuild/relink instructions; verify archive contents.
   The development workflow builds all four binaries offline from the published

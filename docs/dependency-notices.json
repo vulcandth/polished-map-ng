@@ -1159,5 +1159,33 @@
         "url": "https://github.com/AccessKit/accesskit/blob/f3026222559c7f5f46d8f25cb7404de68eb149f0/LICENSE-MIT"
       }
     ]
+  },
+  {
+    "name": "dark-light",
+    "version": "3.0.0",
+    "repository": "https://github.com/rust-dark-light/rust-dark-light",
+    "commit": "ff54a35edf9ee9665b15a964f5a879f1176c455b",
+    "crate_vcs_commit": "ff54a35edf9ee9665b15a964f5a879f1176c455b",
+    "note": "The published crate and pinned repository omit separate license files. Select the Apache-2.0 option explicitly offered in the unchanged published README and Cargo.toml.orig; retain author metadata and the standard Apache-2.0 terms from the separately identified source.",
+    "files": [
+      {
+        "path": "LICENSES/dependency-supplements/rust-dark-light_rust-dark-light/ff54a35edf9ee9665b15a964f5a879f1176c455b/Cargo.toml.orig",
+        "upstream_path": "Cargo.toml.orig",
+        "sha256": "45f201ba163767437f959ae5477ac720162c21c768fa97a773752ba28cf8b28a",
+        "url": "https://crates.io/api/v1/crates/dark-light/3.0.0/download"
+      },
+      {
+        "path": "LICENSES/dependency-supplements/rust-dark-light_rust-dark-light/ff54a35edf9ee9665b15a964f5a879f1176c455b/README.md",
+        "upstream_path": "README.md",
+        "sha256": "bee8f48ddc0b701bcb124c4f669bfd2a3866bba4da9ad288609fb39225122784",
+        "url": "https://crates.io/api/v1/crates/dark-light/3.0.0/download"
+      },
+      {
+        "path": "LICENSES/dependency-supplements/aclysma_profiling/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE",
+        "upstream_path": "Apache-2.0-terms.txt",
+        "sha256": "10d30a673cd5e9349bdc02aeb48f14b3386d27d0da32df8f0a555d4aa16aa551",
+        "url": "https://github.com/aclysma/profiling/blob/8271551172eb6fa4cba47369aedd93790c623df9/LICENSE-APACHE"
+      }
+    ]
   }
 ]

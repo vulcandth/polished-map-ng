@@ -140,6 +140,11 @@ resets an out-of-range selected block to zero, and clears an out-of-range copied
 block. Failed replacements preserve the previous assets and preview. Changing
 tilesets does not rewrite map header constants or write any files.
 
+Both Change dialogs show a read-only grayscale preview of the selected graphics.
+The fixed-size dropdown scrolls when a project has more choices; the preview
+scrolls separately when the image exceeds its pane. Selecting a name only updates
+the preview: OK applies the change, while Cancel preserves the loaded assets.
+
 ## Block editing
 
 Right-click and release on the same sidebar block to edit its 4×4 tile

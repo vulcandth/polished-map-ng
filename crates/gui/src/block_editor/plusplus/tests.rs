@@ -146,6 +146,10 @@ fn attributes_collisions_cancel_accept_and_save_use_shared_block_dialog() {
         );
         assert_eq!(h.get_by_label("OK").rect().min.y - origin.y, 400.0);
         assert_eq!(h.get_by_label("Tile palette").rect().height(), 22.0);
+        assert_eq!(
+            h.get_by_label("Priority (above sprites)").rect().left(),
+            h.get_by_label("X flip").rect().left(),
+        );
         h.get_by_label("Tile $0:01").click();
         h.run();
         if accept {

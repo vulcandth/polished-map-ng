@@ -288,6 +288,7 @@ fn raw_tile_and_roof_dialogs_match_geometry_keep_dirty_domains_and_save() {
             .attribute_bytes();
         for accept in [false, true] {
             open(&mut h, roof);
+            crate::tileset_editor_tests::assert_review_swatches(&h);
             let form = h.state().tileset_form.as_ref().unwrap();
             let origin = form.client_bounds.min;
             assert_eq!(

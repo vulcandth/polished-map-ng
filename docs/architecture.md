@@ -1,5 +1,30 @@
 # Architecture decisions
 
+## November 7 future suggestions
+
+These suggestions from Sylvie/Rangi42's November 7 review are **not started**.
+They belong to I1/I3 after parity and the unified-editor work, not M9:
+
+- Display NPC graphics for a whitelist of known pokecrystal movement constants,
+  with common Polished Crystal extensions. Retain “O” markers for custom or
+  unsupported movement data; consider a user extension mechanism. Resolve sprite
+  IDs through the project's constants, sprite table and graphics labels. General
+  ASM control-flow interpretation and niche background-object movements are not
+  prerequisites for a first proposal.
+- Consider revised application artwork or a new design. M9 retains the original
+  upstream multi-size ICO and its provenance limitations; it does not adopt the
+  alternative images shared in chat.
+- Measure executable size and memory before further optimization. The reviewed
+  published packages are optimized release builds, despite the chat's tentative
+  suggestion that they might be debug builds. Raw RAM figures are observations,
+  not evidence of a leak or a requirement to redesign the renderer.
+
+Roof/tileset selection previews were initially classified as future work. The
+user explicitly requested them in this review follow-up to make the enlarged
+native dropdown clients useful; they are now part of M9. The fixed-size preview
+and dropdown each scroll independently as graphics or choice counts grow.
+See [review evidence](compatibility.md#november-7-upstream-review).
+
 ## ADR 1: Separate domain logic from platform adapters immediately
 
 `polished-map-core` owns validated models, commands, history and deterministic

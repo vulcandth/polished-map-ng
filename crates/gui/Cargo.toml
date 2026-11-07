@@ -28,11 +28,15 @@ serde.workspace = true
 serde_json.workspace = true
 rfd.workspace = true
 arboard.workspace = true
+dark-light = "3.0.0"
 polished-map-platform = { version = "0.1.0", path = "../platform" }
 
 [dev-dependencies]
 egui_kittest.workspace = true
 tempfile.workspace = true
+
+[build-dependencies]
+embed-resource = "3.0.12"
 
 [target.'cfg(target_os = "linux")'.dev-dependencies]
 x11rb = "0.13"

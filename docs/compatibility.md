@@ -680,10 +680,11 @@ offline asset verifiers, including the preserved Windows ICO hash.
 
 The desktop viewport receives the original 16×16 Linux icon or the 48×48
 application picture on Windows/macOS. The latter exactly matches the original
-ICO’s 48×48 frame. This verifies the configured payload, not native OS icon
+ICO’s 48×48 frame. This historical M2 check verifies the configured payload, not native OS icon
 selection, scaling, taskbar/Dock or executable metadata. Native rendering remains
-M4/P1; embedding the original multi-resolution ICO and macOS bundle metadata
-remains P2. No GUI computer use was needed for this pixel/geometry work.
+M4/P1. Windows ICO embedding was subsequently completed in [M9](#november-7-upstream-review);
+macOS bundle metadata remains P2. No GUI computer use was needed for this historical
+pixel/geometry work.
 
 The workspace suite passes (362 tests; 33 explicit native/reference ignores),
 and the serial visual suite passes (226 tests; four explicit ignores). All
@@ -3722,6 +3723,53 @@ PCManFM-Qt 0.17.0 / Qt 5.15.3 attempt also received press/motion/release without
 issuing `start_drag`; repeating without protocol tracing still did not deliver a
 drop. Both file managers and their libraries were unpacked only into ignored
 scratch storage. These attempts do not establish a defect in NG's drop receiver.
+
+## November 7 upstream review
+
+M9 follows Sylvie/Rangi42's November 7 review of the `7e5fc4d` master and
+plusplus development builds. The review was read in Discord from 11:28 through
+the last 12:08 message, including the lower messages and attached examples.
+The reviewer confirmed Polished Crystal maps opened and the earlier scrollbar,
+About-link and unregister-hotkey fixes worked; no breaking issue was reported.
+That feedback is useful tester evidence, not completion of the native matrix.
+
+| Finding | Resolution and acceptance |
+|---|---|
+| Priority checkbox shifted right | Left-align all three occurrence attribute controls at their source origins; verify the X-flip and priority checkbox left edges match. |
+| Swatch labels off-center; corners change on selection | Center the visible digit mesh in its actual 22-point button; keep all four backgrounds square in both tile/roof editors and profiles. Geometry and existing visual regressions cover these states. |
+| Oversized empty Change Roof/Tileset clients | Following the user's clarification, fill the 280×300 client with a read-only graphics preview and bottom actions. Cap dropdown height at 220 points; longer lists scroll. Preview image scrolling is independent. Background loads never apply a selection, and stale results cannot replace the current preview. Cancel leaves document state untouched. |
+| WRAM symbols difficult to distinguish | Render the filename and three labels in monospace, measuring the mixed-font text and wrapping it within the existing width. |
+| Empty-map caption awkward and omits drop | Say “Open a map or drag one here to edit it” when dropping is enabled; omit the drag instruction when disabled. |
+| OS theme ignored on first launch | Native startup detects the system theme only without NG/legacy preferences. Detection failures retain light; the desktop-portal fallback runs off the UI thread. Saved preferences and a manual choice take precedence. |
+| Windows uses one scaled icon | Embed every frame of the unchanged original ICO in both launchers. Select small/task-switcher resources at the window's DPI, including child dialogs. The package verifier compares every PE icon resource with the source ICO. |
+
+Implementation and focused Windows inspection are complete. Native Windows
+inspection used the plusplus launcher with isolated settings and a disposable
+synthetic project: both previews loaded, the tileset image scrolled, changing the
+roof selection updated only its preview, and Cancel preserved the loaded map.
+Priority and X-flip now share a left edge; swatches remain square when selected;
+WRAM identifiers use the native monospace face. Root/child title bars displayed
+the original small icon, and the editor exited without a save prompt. This does
+not establish taskbar behavior at every DPI or native macOS/Linux acceptance.
+
+Windows workspace checks pass: fmt, Clippy with warnings denied, 497 tests
+(46 explicit native/reference ignores), and rustdoc. The production adapter
+graph, eight packaging regressions, full 470-package notice inventory and
+`cargo deny` pass. Both Windows launcher resources preserve all five original
+ICO frames byte-for-byte. Existing advisory/duplicate warnings are unchanged.
+Focused input tests reach the last of 200 roof/tileset choices without increasing
+dialog bounds, verify both profile previews/Cancel, reject stale worker results,
+and preserve saved/imported/manual theme precedence.
+
+Nineteen Linux snapshot differences were inspected before acceptance: caption
+text behind menus, square/centered swatches, mixed-font WRAM text and the four
+preview layouts. The WSL default graphics backend crashed before assertions;
+software Vulkan completed the suite with only these expected differences. The
+final accepted-baseline run and cross-platform CI remain pending. The earlier
+development releases retain their immutable source; they do not contain M9.
+No new icon artwork or original-font matching is part of this work.
+The [future suggestions](architecture.md#november-7-future-suggestions) are
+recorded separately and are not being implemented.
 
 ## November 1 upstream review
 

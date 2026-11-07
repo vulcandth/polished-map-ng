@@ -785,28 +785,34 @@ impl Editor {
                 let c = colors[usize::from(hue)];
                 let response = ui.put(
                     cell,
-                    egui::Button::new("").fill(Color32::from_rgb(c[0], c[1], c[2])),
+                    egui::Button::new("")
+                        .min_size(cell.size())
+                        .corner_radius(0)
+                        .fill(Color32::from_rgb(c[0], c[1], c[2])),
                 );
                 let digit = (i + 1).to_string();
+                let galley = ui.painter().layout_no_wrap(
+                    digit,
+                    egui::FontId::monospace(14.0),
+                    Color32::WHITE,
+                );
+                // Center the visible glyph, not its font's asymmetric line box.
+                let origin = response.rect.center() - galley.mesh_bounds.center().to_vec2();
                 for offset in [
                     Vec2::new(-1.0, 0.0),
                     Vec2::new(1.0, 0.0),
                     Vec2::new(0.0, -1.0),
                     Vec2::new(0.0, 1.0),
                 ] {
-                    ui.painter().text(
-                        cell.center() + offset,
-                        egui::Align2::CENTER_CENTER,
-                        &digit,
-                        egui::FontId::monospace(14.0),
+                    ui.painter().galley_with_override_text_color(
+                        origin + offset,
+                        galley.clone(),
                         Color32::BLACK,
                     );
                 }
-                ui.painter().text(
-                    cell.center(),
-                    egui::Align2::CENTER_CENTER,
-                    &digit,
-                    egui::FontId::monospace(14.0),
+                ui.painter().galley_with_override_text_color(
+                    origin,
+                    galley,
                     if form.hue == hue {
                         Color32::YELLOW
                     } else {

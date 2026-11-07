@@ -2,6 +2,28 @@ use super::*;
 use egui_kittest::{Harness, kittest::Queryable};
 
 #[test]
+fn empty_map_guidance_follows_drop_preference_in_both_profiles() {
+    for plus in [false, true] {
+        let mut h = Harness::builder().build_eframe(|cc| {
+            if plus {
+                Editor::new_plusplus(cc)
+            } else {
+                Editor::new(cc)
+            }
+        });
+        for enabled in [true, false, true] {
+            h.state_mut().drag_and_drop = enabled;
+            h.run();
+            h.get_by_label(if enabled {
+                "Open a map or drag one here to edit it."
+            } else {
+                "Open a map to edit it."
+            });
+        }
+    }
+}
+
+#[test]
 fn block_editor_cancel_accept_save_and_conflict_preserve_map_history() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("Map.1x1.blk");

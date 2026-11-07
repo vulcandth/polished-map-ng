@@ -6,6 +6,7 @@ use polished_map_project::TilesetChoice;
 pub(super) struct TilesetChoiceForm {
     choices: Vec<TilesetChoice>,
     selected: usize,
+    pub(super) preview: choice_preview::Preview,
     pub(super) windows_buttons: bool,
     #[cfg(test)]
     pub(super) bounds: Rect,
@@ -96,6 +97,7 @@ impl Editor {
                 self.tileset_choice_form = Some(TilesetChoiceForm {
                     choices,
                     selected,
+                    preview: Default::default(),
                     windows_buttons: cfg!(target_os = "windows"),
                     #[cfg(test)]
                     bounds: Rect::NOTHING,
@@ -215,8 +217,9 @@ impl Editor {
         let choosing = egui::Popup::is_any_open(ctx);
         dialog_host::client(ctx, egui::Id::unique("change-tileset"), |ui| {
             dialog_host::heading(ui, "Change Tileset");
-            // Option_Dialog: 10 + 22 + 16 + 22 + 10 = 80 logical pixels.
-            let (area, _) = ui.allocate_exact_size(Vec2::new(280.0, 80.0), Sense::hover());
+            // Bounded reviewed client: selector, scrollable preview, actions.
+            let (area, _) =
+                ui.allocate_exact_size(Vec2::new(280.0, choice_preview::HEIGHT), Sense::hover());
             #[cfg(test)]
             {
                 form.bounds = area;
@@ -248,6 +251,7 @@ impl Editor {
                 |ui| {
                     ui.spacing_mut().interact_size.y = 22.0;
                     egui::ComboBox::from_id_salt("tileset-choice")
+                        .height(choice_preview::MENU_HEIGHT)
                         .width(combo_width)
                         .truncate()
                         .selected_text(current)
@@ -260,16 +264,34 @@ impl Editor {
                         .on_hover_text(current);
                 },
             );
+            let preview_area = rect(10.0, 44.0, 260.0, 210.0);
+            ui.scope_builder(egui::UiBuilder::new().max_rect(preview_area), |ui| {
+                ui.set_clip_rect(preview_area.intersect(ui.clip_rect()));
+                form.preview.show(
+                    ui,
+                    choice_preview::Request::new(
+                        self,
+                        Some(&form.choices[form.selected].name),
+                        false,
+                    ),
+                );
+            });
             let (ok, no) = if form.windows_buttons {
                 (96.0, 190.0)
             } else {
                 (190.0, 96.0)
             };
             accept = ui
-                .put(rect(ok, 48.0, 80.0, 22.0), egui::Button::new("OK"))
+                .put(
+                    rect(ok, choice_preview::BUTTON_Y, 80.0, 22.0),
+                    egui::Button::new("OK"),
+                )
                 .clicked();
             cancel = ui
-                .put(rect(no, 48.0, 80.0, 22.0), egui::Button::new("Cancel"))
+                .put(
+                    rect(no, choice_preview::BUTTON_Y, 80.0, 22.0),
+                    egui::Button::new("Cancel"),
+                )
                 .clicked();
             if !choosing && !egui::Popup::is_any_open(ctx) {
                 accept |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
@@ -287,5 +309,48 @@ impl Editor {
         } else {
             self.tileset_choice_form = Some(form);
         }
+    }
+}
+
+#[cfg(test)]
+mod review_tests {
+    use super::*;
+
+    #[test]
+    fn long_tileset_list_scrolls_without_growing_the_dialog() {
+        let (_dir, mut h) = crate::roof_editor_tests::fixture();
+        h.state_mut().request_tileset_change();
+        let form = h.state_mut().tileset_choice_form.as_mut().unwrap();
+        let original = form.choices[0].clone();
+        form.choices = (0..200)
+            .map(|i| {
+                let mut choice = original.clone();
+                choice.name = format!("tile{i:03}");
+                choice.label = choice.name.clone();
+                choice
+            })
+            .collect();
+        form.selected = 0;
+        h.run();
+        let bounds = h.state().tileset_choice_form.as_ref().unwrap().bounds;
+        choice_preview::scroll_to_last_choice(&mut h, "tile000", "tile199", bounds);
+        assert_eq!(
+            h.state().tileset_choice_form.as_ref().unwrap().selected,
+            199
+        );
+        assert_eq!(
+            h.state().tileset_choice_form.as_ref().unwrap().bounds,
+            bounds
+        );
+        assert_eq!(
+            h.state()
+                .loaded
+                .as_ref()
+                .unwrap()
+                .tileset_location()
+                .unwrap()
+                .1,
+            "demo"
+        );
     }
 }

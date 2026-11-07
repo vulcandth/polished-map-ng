@@ -53,7 +53,7 @@ impl Image {
 
 /// Original upstream application picture for the desktop window adapter.
 /// Linux uses its original 16px XPM; other platforms use the 48px About/ICO frame.
-/// Platform packaging retains the original multi-resolution ICO separately.
+/// Windows replaces this fallback with its embedded multi-resolution resource.
 pub fn application_icon() -> egui::IconData {
     icon_for_linux(cfg!(target_os = "linux"))
 }
@@ -69,6 +69,44 @@ fn icon_for_linux(linux: bool) -> egui::IconData {
         width: size,
         height: size,
     }
+}
+
+/// egui's single RGBA icon cannot preserve an ICO's size-specific artwork.
+/// Use the original resource for Windows' small and task-switcher icons, at the
+/// window's native DPI. Winit owns the handles; its safe API also releases them.
+pub(super) fn install_window_icons(ctx: &egui::Context) {
+    #[cfg(windows)]
+    {
+        use egui_winit::winit::{
+            dpi::PhysicalSize,
+            platform::windows::{IconExtWindows, WindowExtWindows},
+            window::Icon,
+        };
+        let id = ctx.viewport_id();
+        let key = egui::Id::unique(("windows-resource-icons", id));
+        egui_winit::modal_windows::with_window(ctx, id, |window| {
+            let scale = window.scale_factor();
+            if ctx.data(|data| data.get_temp::<f64>(key)) == Some(scale) {
+                return;
+            }
+            let load = |logical: f64| {
+                let pixels = (logical * scale).round() as u32;
+                Icon::from_resource(1, Some(PhysicalSize::new(pixels, pixels)))
+            };
+            match (load(16.0), load(32.0)) {
+                (Ok(small), Ok(large)) => {
+                    window.set_window_icon(Some(small));
+                    window.set_taskbar_icon(Some(large));
+                }
+                _ => eprintln!(
+                    "Original Windows icon resource is unavailable; retaining the RGBA fallback."
+                ),
+            }
+            ctx.data_mut(|data| data.insert_temp(key, scale));
+        });
+    }
+    #[cfg(not(windows))]
+    let _ = ctx;
 }
 
 #[cfg(test)]

@@ -18,6 +18,12 @@ a license file entirely: its published Cargo.toml identifies Steven Sheldon as
 author and declares MIT. We retain that exact manifest together with the standard
 MIT terms. These source distinctions are explicit in the provenance manifest.
 
+dark-light 3.0.0 also omits separate license files in its published crate and
+pinned upstream revision. Its unchanged README and Cargo.toml.orig explicitly
+offer MIT or Apache-2.0. We select Apache-2.0, retain the authors and declarations,
+and include the complete standard Apache-2.0 terms from the separately attributed
+profiling supplement. No missing copyright statement is invented.
+
 Binary packages copy these notices into the relevant per-package license folder,
 retain original authors/repository/license metadata in the dependency inventory,
 and include this complete supplement directory. Font, icon and original
