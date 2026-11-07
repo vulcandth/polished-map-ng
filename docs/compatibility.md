@@ -3233,12 +3233,44 @@ original Paste into `$0:12`. Saving from NG produced exactly two black pixels
 at `(0,16)` and `(8,16)` in the 24×24 roof PNG; all other 574 pixels stayed white.
 The reverse-reference draft was canceled without overwriting NG's saved file.
 Windows format/Clippy/workspace tests/rustdoc and production graph pass; Linux
-Clippy and the independent X11 probe pass. Cross-platform CI remains pending.
+Clippy/workspace tests/rustdoc, production graph and the independent X11 probe
+pass. All eight [CI jobs at `10b3519`](https://github.com/vulcandth/polished-map-ng/actions/runs/42312990074)
+pass, including Windows/Linux/macOS, MSRV, licensing, real-project integration
+and visual checks. CI compilation/tests do not establish native desktop acceptance.
+
+### Pinned Polished Crystal application interoperability
+
+The native Windows NG and unmodified Linux X11 original application opened a
+disposable complete archive of pinned Polished Crystal `1226ea17bb0bdf5de1bad706a688fe89af573981`.
+Both inferred New Bark Town's 10×9 dimensions, 90-byte `.ablk`, compound tileset
+`johto_traditional.johto_common` and 248 blocks. Selecting roof `new_bark` and Day
+palettes rendered the town in both applications; this observation is not a pixel
+comparison. The archive and game graphics remain ignored local scratch data.
+
+| Workflow | Observed evidence |
+|---|---|
+| Map NG → original | NG painted block 0 at `(0,0)`, undid/redid it and saved. Only map byte 0 changed, from 5 to 0. The original reopened that edit. |
+| Map original → NG | Original painted block 2 at `(1,0)` and saved. NG closed and reopened through Recent, displaying both edits. The complete file equals `[0,2]` followed by the pinned file's bytes from offset 2. |
+| Event NG → original | NG Event Options moved the first warp X from 6 to 7 and saved. Original Reload Events displayed `(7,3)`. The script differed only by that coordinate. |
+| Event original → NG | Original dragged that warp to `(8,3)` and saved. The rebuilt NG opened it at `(8,3)`, dragged to `(9,3)` and saved. The complete script equals the pinned bytes with only the first `warp_event  6,  3, ELMS_LAB, 1` changed to X = 9. |
+
+This pass exposed a shared native event-input defect: Windows delivered a primary
+press and movement off the marker in one frame; egui's final-position hit test
+missed the starting marker. Event capture now uses the actual press position,
+matching upstream `event.cpp`'s `FL_PUSH`/`FL_DRAG` sequence, with clipping, layer,
+modal and editing-mode guards. Regression tests inject events directly into
+`RawInput` (the normal kittest event queue processes one event per frame), covering
+separate frames, combined press/move and whole-gesture batches at both zoom levels.
+They also cover overlapping markers, empty starts, Shift, modal and Blocks mode.
+Native Windows dragging and exact-byte saving pass after the fix.
+Windows format, Clippy, full workspace tests, rustdoc and the production native
+feature graph also pass for the drag fix; its cross-platform CI remains pending.
 
 PP3 remains open for integrated cross-application clipboard, capture/drop,
-placement/DPI and complete Linux/macOS workflows. PP4 remains open for the pinned
-Polished Crystal full-application edit/save/reopen matrix and master regressions.
-Synthetic native workflows do not establish real-project parity.
+placement/DPI and complete Linux/macOS workflows. PP4 remains open for the rest
+of the pinned Polished Crystal full-application matrix: block attributes/collisions,
+graphics/roofs/palettes and Print comparisons, together with master regressions.
+The map/event evidence above does not establish complete real-project parity.
 
 ## November 1 upstream review
 

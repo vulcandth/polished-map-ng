@@ -258,6 +258,31 @@ pub(super) fn canvas_events(
     let destination = hovered.and_then(|i| model.local_warp_target(i, map_name));
     state.hovered_event = hovered;
     let mut action = None;
+    // FL_PUSH captures the marker before FL_DRAG moves it (upstream event.cpp).
+    // Native input can batch a press and movement beyond the marker into one
+    // frame, so egui's final-position hit test cannot identify that press.
+    if state.mode && interact && ui.is_enabled() {
+        let pressed = ui.input(|i| {
+            i.events.iter().find_map(|event| match event {
+                egui::Event::PointerButton {
+                    pos,
+                    button: egui::PointerButton::Primary,
+                    pressed: true,
+                    modifiers,
+                } if !modifiers.shift => Some(*pos),
+                _ => None,
+            })
+        });
+        if let Some(pos) = pressed
+            && ui.clip_rect().contains(pos)
+            && ui.ctx().layer_id_at(pos) == Some(ui.layer_id())
+        {
+            state.drag = model
+                .entries()
+                .iter()
+                .rposition(|event| rect(event.definition()).contains(pos));
+        }
+    }
     for (index, event) in model.entries().iter().enumerate() {
         let d = event.definition();
         let area = rect(d);
@@ -324,9 +349,6 @@ pub(super) fn canvas_events(
                     format!("Event {index}: {}", d.kind.macro_name()),
                 )
             });
-            if response.drag_started_by(egui::PointerButton::Primary) {
-                state.drag = Some(index);
-            }
             if response.secondary_clicked() {
                 action = Some(EventAction::Options(index));
             }
@@ -347,7 +369,8 @@ pub(super) fn canvas_events(
         && ui.is_enabled()
         && let Some(index) = state.drag
     {
-        if let Some(pos) = ui.input(|i| i.pointer.interact_pos())
+        if action.is_none()
+            && let Some(pos) = ui.input(|i| i.pointer.interact_pos())
             && ui.input(|i| !i.modifiers.shift || !i.pointer.primary_down())
         {
             action = Some(EventAction::Move(

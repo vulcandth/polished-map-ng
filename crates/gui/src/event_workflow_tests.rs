@@ -657,6 +657,137 @@ fn event_draft_cancel_accept_reload_unload_and_save_are_independent() {
 }
 
 #[test]
+fn event_drag_survives_pointer_batches() {
+    for zoom in [false, true] {
+        for batching in 0..3 {
+            let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+            let map = dir.path().join("Town.10x9.blk");
+            std::fs::write(&map, [0; 90]).unwrap();
+            h.state_mut().loaded.as_mut().unwrap().document =
+                MapDocument::open(&map, &OpenOptions::default())
+                    .unwrap()
+                    .into();
+            let path = dir.path().join("Map.asm");
+            std::fs::write(
+                &path,
+                "\twarp_event 6, 3, MAP, 1\n\tbg_event 6, 4, SCRIPT\n",
+            )
+            .unwrap();
+            h.state_mut().request_event_change(EventChange::Load(path));
+            h.state_mut().event_ui.mode = true;
+            h.state_mut().event_ui.game_boy = true;
+            h.state_mut().event_ui.warp_ids = true;
+            h.state_mut().zoom = zoom;
+            h.run();
+            let from = h.get_by_label("Event 0: warp_event").rect().center();
+            let to = from + Vec2::new(if zoom { 32.0 } else { 16.0 }, 0.0);
+            h.hover_at(from);
+            h.run();
+            for (step, event) in [
+                egui::Event::PointerButton {
+                    pos: from,
+                    button: egui::PointerButton::Primary,
+                    pressed: true,
+                    modifiers: egui::Modifiers::NONE,
+                },
+                egui::Event::MouseMoved(Vec2::new(5618.0, 11837.0)),
+                egui::Event::PointerMoved(to),
+                egui::Event::PointerButton {
+                    pos: to,
+                    button: egui::PointerButton::Primary,
+                    pressed: false,
+                    modifiers: egui::Modifiers::NONE,
+                },
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                // Harness::event runs each event in a separate frame. Native
+                // adapters can deliver the entire gesture in one RawInput.
+                h.input_mut().events.push(event);
+                if batching == 0 || (batching == 2 && step == 2) {
+                    h.run();
+                }
+            }
+            h.run();
+            let loaded = h.state().loaded.as_ref().unwrap();
+            let d = loaded.events.as_ref().unwrap().script().events().entries()[0].definition();
+            assert_eq!((d.x, d.y), (7, 3), "zoom={zoom}, batching={batching}");
+            assert!(!loaded.document.map().is_modified());
+            assert!(h.state().event_ui.drag.is_none());
+        }
+    }
+}
+
+#[test]
+fn batched_event_drag_respects_capture_guards_and_topmost_marker() {
+    for guard in ["none", "empty", "shift", "modal", "blocks"] {
+        let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+        let path = dir.path().join("Map.asm");
+        std::fs::write(&path, "\tbg_event 0, 0, FIRST\n\tbg_event 0, 0, TOP\n").unwrap();
+        h.state_mut().request_event_change(EventChange::Load(path));
+        h.state_mut().event_ui.mode = true;
+        h.run();
+        let center = h.get_by_label("Event 1: bg_event").rect().center();
+        let from = if guard == "empty" {
+            center + Vec2::new(0.0, 16.0)
+        } else {
+            center
+        };
+        let to = center + Vec2::new(16.0, 0.0);
+        let modifiers = if guard == "shift" {
+            egui::Modifiers::SHIFT
+        } else {
+            egui::Modifiers::NONE
+        };
+        if guard == "modal" {
+            h.state_mut().prepare_resize();
+        } else if guard == "blocks" {
+            h.state_mut().event_ui.mode = false;
+        }
+        h.run();
+        h.input_mut().events.extend([
+            egui::Event::PointerButton {
+                pos: from,
+                button: egui::PointerButton::Primary,
+                pressed: true,
+                modifiers,
+            },
+            egui::Event::PointerMoved(to),
+            egui::Event::PointerButton {
+                pos: to,
+                button: egui::PointerButton::Primary,
+                pressed: false,
+                modifiers,
+            },
+        ]);
+        h.run();
+        let entries = h
+            .state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .events
+            .as_ref()
+            .unwrap()
+            .script()
+            .events()
+            .entries();
+        assert_eq!(
+            (entries[0].definition().x, entries[0].definition().y),
+            (0, 0),
+            "{guard}"
+        );
+        assert_eq!(
+            (entries[1].definition().x, entries[1].definition().y),
+            (i16::from(guard == "none"), 0),
+            "{guard}"
+        );
+        assert!(h.state().event_ui.drag.is_none());
+    }
+}
+
+#[test]
 fn event_options_geometry_fields_and_actual_canvas_drag_match_source() {
     let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
     let path = dir.path().join("Map.asm");

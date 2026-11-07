@@ -243,13 +243,17 @@ Do not expose automatic profile switching until the unified-editor milestone.
   [expanded native pass](compatibility.md#plusplus-expanded-native-acceptance)
   covers block/roof/palette/event/conflict and original-app reopen workflows.
   The Linux BMP clipboard fix passes independent X11 and bidirectional
-  original-app clipboard checks; cross-platform CI is pending. Complete native
+  original-app clipboard checks and cross-platform CI. The real-project pass
+  exposed a batched native event-drag defect; the fix passes automated and
+  Windows native checks. Complete native
   workflows, integrated window/dialog/clipboard behavior and desktop acceptance
   remain. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 (in progress) — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every
   remaining difference resolved or explicitly approved. Backend roundtrips alone
-  do not establish application parity.
+  do not establish application parity. [Pinned-project application checks](compatibility.md#pinned-polished-crystal-application-interoperability)
+  now cover bidirectional map/event saves and exact-byte preservation. Complete
+  the block/collision, graphics/roof/palette and Print application matrix.
 
 ## 3. Unified editor — not started
 
