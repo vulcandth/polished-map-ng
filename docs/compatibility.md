@@ -3142,6 +3142,15 @@ of its titlebar above the output; the complete client remained accessible.
 Broader placement, directly hosted pointer alignment, mixed-monitor transitions,
 file-manager drops, native middle capture and macOS GUI acceptance remain open.
 
+[CI for `10019ad`](https://github.com/vulcandth/polished-map-ng/actions/runs/42342468720)
+passes all eight jobs, including the new startup protocol regression and retained
+master/plusplus project, source-reference and visual checks. The downloaded Linux
+release binary was also launched with the same fullscreen record that crashed
+`3646262`: it displayed the fullscreen parent and Map Options without a protocol
+error, cancelled the dialog and exited through File with code 0. Its trace has
+no conflicting unmaximize request. The packaged CLI ran under WSL Ubuntu/glibc
+2.35. These checks preserve the native acceptance limits above.
+
 ## Plusplus asset switching and tile options
 
 The existing [tileset](../crates/gui/src/tileset_workflows.rs) and

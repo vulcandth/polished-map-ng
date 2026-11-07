@@ -81,10 +81,10 @@ successful native CLI smoke checks; record the workflow and release links here.
 
 ## Plusplus development packages
 
-The [2026-11-06 plusplus development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-06-3646262)
-is published from `3646262e3b128040fe3d731a652fde1945463eec` for PP3/PP4 native
-acceptance. [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42340291285)
-and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42340311952)
+The [2026-11-06 plusplus development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-06-10019ad)
+is published from `10019ad8e781ce8dc787f28cfbaa702b91785c08` for PP3/PP4 native
+acceptance. [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42342468720)
+and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42342490709)
 passed. The manual packaging workflow accepts `profile: plusplus`; the
 default remains `master`. Source and binaries record the selected profile in
 BUILD-INFO.json. Binary packaging inherits it from the matching source and rejects
@@ -109,10 +109,14 @@ acceptance gates remain open. No plusplus parity release is claimed; aesthetics
 and original-font matching remain deferred. The master candidate above remains
 available separately.
 
-Follow-up native testing found a Wayland fullscreen-restart crash in this
-candidate. The [startup ordering fix](compatibility.md#native-wayland-window-restart)
-passes native and protocol checks; refreshed packages are pending. Until then,
-leave fullscreen before exiting when testing on Wayland.
+This candidate supersedes the [earlier November 6 plusplus build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-06-3646262),
+which could crash when restoring fullscreen on Wayland. The
+[startup ordering fix](compatibility.md#native-wayland-window-restart)
+passes native fullscreen/maximized restart and normal-size restoration checks,
+with an independent protocol regression. The downloaded Linux release binary
+also opened successfully from the previously failing fullscreen settings,
+canceled Map Options and exited cleanly on isolated Weston. These checks do not
+close directly hosted desktop, mixed-DPI or macOS GUI acceptance.
 
 ## Final release gate
 
