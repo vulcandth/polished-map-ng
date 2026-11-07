@@ -252,8 +252,9 @@ Do not expose automatic profile switching until the unified-editor milestone.
   pass against original plusplus, with master regressions still green and every
   remaining difference resolved or explicitly approved. Backend roundtrips alone
   do not establish application parity. [Pinned-project application checks](compatibility.md#pinned-polished-crystal-application-interoperability)
-  now cover bidirectional map/event saves and exact-byte preservation. Complete
-  the block/collision, graphics/roof/palette and Print application matrix.
+  now cover bidirectional map/event saves, exact-byte preservation and an exact
+  plain Print pixel comparison. Complete the block/collision, graphics/roof/palette
+  edit workflows and remaining Print overlay/clipboard application matrix.
 
 ## 3. Unified editor — not started
 

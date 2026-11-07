@@ -3253,6 +3253,11 @@ comparison. The archive and game graphics remain ignored local scratch data.
 | Map original → NG | Original painted block 2 at `(1,0)` and saved. NG closed and reopened through Recent, displaying both edits. The complete file equals `[0,2]` followed by the pinned file's bytes from offset 2. |
 | Event NG → original | NG Event Options moved the first warp X from 6 to 7 and saved. Original Reload Events displayed `(7,3)`. The script differed only by that coordinate. |
 | Event original → NG | Original dragged that warp to `(8,3)` and saved. The rebuilt NG opened it at `(8,3)`, dragged to `(9,3)` and saved. The complete script equals the pinned bytes with only the first `warp_event  6,  3, ELMS_LAB, 1` changed to X = 9. |
+| Plain Print export | Both full applications exported with roof `new_bark`, Day palettes and all five Print overlays off. Decoded RGB images are 320×288 and match at every one of 92,160 pixels; RGB SHA-256 is `80fce00f1fdb54e61d64f7302dc2280de739df1e6c97477964a5099d7d7c3f0c`. PNG container bytes need not match. Text/overlay and clipboard comparisons remain open. |
+
+A complete SHA-256 comparison of all 7,803 archived project files after the
+map/event operations found changes only in `maps/NewBarkTown.ablk` and
+`maps/NewBarkTown.asm`, with no files added. Print exports are outside the project.
 
 This pass exposed a shared native event-input defect: Windows delivered a primary
 press and movement off the marker in one frame; egui's final-position hit test
@@ -3264,12 +3269,15 @@ separate frames, combined press/move and whole-gesture batches at both zoom leve
 They also cover overlapping markers, empty starts, Shift, modal and Blocks mode.
 Native Windows dragging and exact-byte saving pass after the fix.
 Windows format, Clippy, full workspace tests, rustdoc and the production native
-feature graph also pass for the drag fix; its cross-platform CI remains pending.
+feature graph also pass for the drag fix. All eight
+[CI jobs at `a77ac98`](https://github.com/vulcandth/polished-map-ng/actions/runs/42315648003)
+pass, including Windows/Linux/macOS and the shared master regressions.
 
 PP3 remains open for integrated cross-application clipboard, capture/drop,
 placement/DPI and complete Linux/macOS workflows. PP4 remains open for the rest
 of the pinned Polished Crystal full-application matrix: block attributes/collisions,
-graphics/roofs/palettes and Print comparisons, together with master regressions.
+graphics/roofs/palettes and remaining Print overlay/clipboard comparisons,
+together with master regressions for subsequent changes.
 The map/event evidence above does not establish complete real-project parity.
 
 ## November 1 upstream review
