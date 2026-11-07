@@ -79,6 +79,20 @@ local build instructions. Before publishing a candidate, verify archive contents
 matching commits/checksums, executable modes, licensing/source files and the
 successful native CLI smoke checks; record the workflow and release links here.
 
+## Plusplus development packages
+
+The separate plusplus candidate is **in preparation** for PP3/PP4 native
+acceptance. The manual packaging workflow accepts `profile: plusplus`; the
+default remains `master`. Source and binaries record the selected profile in
+BUILD-INFO.json. Binary packaging inherits it from the matching source and rejects
+an inconsistent override. Plusplus archives use `polished-map-ng-plusplus-dev-`
+names and contain `polished-map-plusplus` (with `.exe` on Windows), or a separate
+`Polished Map NG++.app` with its own bundle identifier on macOS. The common CLI,
+complete source, notices, checksums and offline rebuild policy remain the same.
+The [plusplus tester guide](testing-plusplus.md) is included as TESTING.md.
+Publication requires green CI and verification of all four target archives and
+their matching source. No plusplus parity release is claimed.
+
 ## Final release gate
 
 Before publishing a parity/production release:

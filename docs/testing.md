@@ -3,7 +3,8 @@
 These packages are for master-profile compatibility testing, not parity or
 production releases. Use a copy of your project and keep a backup. Original-font
 and remaining aesthetic matching are deferred, including the approved palette
-slider appearance. Plusplus support is not ready for acceptance testing.
+slider appearance. The separate plusplus candidate has its own
+[testing instructions](testing-plusplus.md) and [availability record](releases.md#plusplus-development-packages).
 
 Download a package and its `.sha256` from the
 [development prerelease](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-06-73c0e36):

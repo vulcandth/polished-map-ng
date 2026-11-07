@@ -18,6 +18,42 @@ import tempfile
 import zipfile
 
 
+PROFILES = {
+    "master": ("polished-map-gui", "Polished Map NG", "io.github.vulcandth.polished-map-ng"),
+    "plusplus": ("polished-map-plusplus", "Polished Map NG++", "io.github.vulcandth.polished-map-ng.plusplus"),
+}
+
+
+def package_profile(requested, source_info):
+    inherited = source_info.get("profile", "master")
+    if inherited not in PROFILES:
+        raise ValueError(f"Unknown source profile: {inherited}")
+    if source_info and requested is not None and requested != inherited:
+        raise ValueError("Binary profile must match its source archive")
+    return requested or inherited
+
+
+def copy_gui(destination, binaries, target, profile):
+    """Copy the selected launcher without falling back to a different profile."""
+    executable, display_name, identifier = PROFILES[profile]
+    suffix = ".exe" if "windows" in target else ""
+    gui = destination / (executable + suffix)
+    bundle = None
+    if "apple" in target:
+        bundle = destination / (display_name + ".app")
+        contents = bundle / "Contents"
+        (contents / "MacOS").mkdir(parents=True)
+        gui = contents / "MacOS" / executable
+        with (contents / "Info.plist").open("wb") as file:
+            plistlib.dump({"CFBundleName": display_name, "CFBundleDisplayName": display_name,
+                          "CFBundleIdentifier": identifier, "CFBundleExecutable": executable,
+                          "CFBundlePackageType": "APPL", "CFBundleVersion": "0.1.0",
+                          "CFBundleShortVersionString": "0.1.0", "LSMinimumSystemVersion": "11.0",
+                          "NSHighResolutionCapable": True}, file)
+    shutil.copy2(binaries / (executable + suffix), gui)
+    return bundle
+
+
 def run(*args, cwd=None):
     return subprocess.check_output(args, cwd=cwd, text=True, encoding="utf-8")
 
@@ -101,7 +137,8 @@ def common(destination, info):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(notice, target)
     shutil.copy2("docs/rebuild.md", destination / "REBUILD.md")
-    shutil.copy2("docs/testing.md", destination / "TESTING.md")
+    guide = "testing-plusplus.md" if info.get("profile") == "plusplus" else "testing.md"
+    shutil.copy2(Path("docs") / guide, destination / "TESTING.md")
     (destination / "BUILD-INFO.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")
 
 
@@ -109,16 +146,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("kind", choices=["source", "binary"])
     parser.add_argument("--target")
+    parser.add_argument("--profile", choices=PROFILES)
     parser.add_argument("--output", type=Path, default=Path(".scratch/dist"))
     args = parser.parse_args()
     if args.kind == "binary" and not args.target:
         parser.error("binary requires --target")
-    commit = (json.loads(Path("BUILD-INFO.json").read_text(encoding="utf-8"))["commit"]
-              if Path("BUILD-INFO.json").is_file() else run("git", "rev-parse", "HEAD").strip())
-    stem = "polished-map-ng-dev-" + commit[:12]
+    source_info = (json.loads(Path("BUILD-INFO.json").read_text(encoding="utf-8"))
+                   if Path("BUILD-INFO.json").is_file() else {})
+    profile = package_profile(args.profile, source_info)
+    commit = source_info["commit"] if source_info else run("git", "rev-parse", "HEAD").strip()
+    stem = "polished-map-ng-" + ("plusplus-" if profile == "plusplus" else "") + "dev-" + commit[:12]
     args.output.mkdir(parents=True, exist_ok=True)
     output = args.output.resolve()
-    info = {"commit": commit, "development": True, "target": args.target,
+    info = {"commit": commit, "development": True, "profile": profile, "target": args.target,
             "rustc": run("rustc", "-Vv").strip(), "build_host": platform.platform(),
             "source_archive": stem + "-source.tar.gz",
             "signing": "ad-hoc only" if args.target and "apple" in args.target else "unsigned"}
@@ -148,20 +188,8 @@ def main():
             suffix = ".exe" if "windows" in args.target else ""
             binaries = Path(os.environ.get("CARGO_TARGET_DIR", "target")) / args.target / "release"
             shutil.copy2(binaries / ("polished-map" + suffix), stage / ("polished-map" + suffix))
-            gui = stage / ("polished-map-gui" + suffix)
-            if "apple" in args.target:
-                bundle = stage / "Polished Map NG.app"
-                contents = bundle / "Contents"
-                (contents / "MacOS").mkdir(parents=True)
-                gui = contents / "MacOS/polished-map-gui"
-                with (contents / "Info.plist").open("wb") as file:
-                    plistlib.dump({"CFBundleName": "Polished Map NG", "CFBundleDisplayName": "Polished Map NG",
-                                  "CFBundleIdentifier": "io.github.vulcandth.polished-map-ng",
-                                  "CFBundleExecutable": "polished-map-gui", "CFBundlePackageType": "APPL",
-                                  "CFBundleVersion": "0.1.0", "CFBundleShortVersionString": "0.1.0",
-                                  "LSMinimumSystemVersion": "11.0", "NSHighResolutionCapable": True}, file)
-            shutil.copy2(binaries / ("polished-map-gui" + suffix), gui)
-            if "apple" in args.target:
+            bundle = copy_gui(stage, binaries, args.target, profile)
+            if bundle is not None:
                 subprocess.run(["codesign", "--force", "--sign", "-", str(bundle)], check=True)
                 subprocess.run(["codesign", "--verify", "--deep", "--strict", str(bundle)], check=True)
             # Run the shipped CLI, not a separate debug artifact.

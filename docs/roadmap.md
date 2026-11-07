@@ -26,7 +26,9 @@ Native feasibility was originally listed under Foundation: it is **not complete*
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
 **Next:** Continue PP3 integrated desktop capture/drop, placement/focus/DPI and
-macOS native acceptance. The temporary-size dialog mapping defect from the
+macOS native acceptance. Prepare the separate
+[plusplus tester packages](releases.md#plusplus-development-packages) to make
+those checks reproducible across all four build targets. The temporary-size dialog mapping defect from the
 [native 2× check](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
 is fixed; verify pointer alignment on a directly hosted compositor before
 claiming high-DPI acceptance.
@@ -268,6 +270,9 @@ Do not expose automatic profile switching until the unified-editor milestone.
   [Native 2× geometry and palette checks](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
   add measured evidence and a verified fix for temporary-size dialog mapping;
   desktop pointer alignment, mixed-DPI and macOS checks remain open.
+  Separate [plusplus tester packages](releases.md#plusplus-development-packages)
+  are in preparation; verify matching source/licenses and all four target archives
+  before publishing a development candidate for these remaining checks.
   Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 (in progress) — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every

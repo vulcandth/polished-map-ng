@@ -1,6 +1,12 @@
 name: Development packages
 on:
   workflow_dispatch:
+    inputs:
+      profile:
+        description: Editor profile to package
+        type: choice
+        options: [master, plusplus]
+        default: master
 
 permissions:
   contents: read
@@ -18,7 +24,9 @@ jobs:
           python-version: '3.12'
       - run: rustup show
       - run: python -m unittest discover -s tools -p test_development_package.py
-      - run: python3 tools/development_package.py source
+      - run: python3 tools/development_package.py source --profile "$PACKAGE_PROFILE"
+        env:
+          PACKAGE_PROFILE: ${{ inputs.profile || 'master' }}
       - uses: actions/upload-artifact@v4
         with:
           name: development-source
