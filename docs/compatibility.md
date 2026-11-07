@@ -3770,7 +3770,8 @@ ignores). All eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actio
 pass for `642f1ba`: Windows/Linux/macOS workspace and native adapter checks,
 MSRV, dependencies, upstream references, visual regressions and real-project
 integration. These checks close M9, not the broader native parity gates. The earlier
-development releases retain their immutable source; they do not contain M9.
+development releases retain their immutable source; the fresh
+[`618aefd` packages](releases.md) now include M9 for both profiles.
 No new icon artwork or original-font matching is part of this work.
 The [future suggestions](architecture.md#november-7-future-suggestions) are
 recorded separately and are not being implemented.

@@ -79,7 +79,8 @@ adding improvements. Each completed group below still participates in M7.
   previews retain bounded, scrollable dropdowns. Focused input/geometry tests,
   reviewed snapshots, native Windows inspection and all eight cross-platform CI
   jobs pass. Future suggestions remain separately planned; broader native
-  acceptance stays open. These source fixes are not in the earlier dev packages.
+  acceptance stays open. Fresh master/plusplus development packages, matching
+  source and licenses are [published for all four targets](releases.md).
   Evidence: [review disposition](compatibility.md#november-7-upstream-review).
 
 - [x] **M8 — Upstream tester review:** reviewed input/dialog/usability fixes,

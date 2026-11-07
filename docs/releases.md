@@ -42,6 +42,24 @@ range while preserving license bytes and executable modes. The regression in
 [the archive test](../tools/test_development_package.py) covers the pre-1980
 notice timestamps found during the first Mac package run.
 
+The [November 7 review-fix master candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-618aefd)
+is published from shared-source revision `618aefd47f29bd6b0025ff3db6d0faf5a1e5c454`.
+It includes all [M9 review fixes](compatibility.md#november-7-upstream-review),
+including bounded roof/tileset previews and the original Windows multi-size icons.
+[All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42426696741)
+and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42426711300)
+passed for this exact revision. All five downloaded archives passed SHA-256,
+commit/profile, source-content, architecture/mode, Mac bundle/signature-metadata
+and license checks. All 460 vendored registry sources match Cargo.lock and their
+file checksums; each binary retains 470 dependency notice/attribution records.
+Both Windows launchers' five embedded ICO frames match the original artwork.
+All ten published asset sizes/digests match the audited local files. The shipped
+CLI ran on all four build runners and locally on Windows and WSL Ubuntu; both
+Mac jobs verified their ad-hoc signatures. Native GUI acceptance remains open.
+General aesthetics, original fonts and future feature suggestions remain deferred.
+
+### Earlier master candidates (historical)
+
 The [2026-11-07 master development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-7e5fc4d)
 is published from shared-source revision `7e5fc4dccf01e5897a3cf120e7ba3e53472c937c`,
 with the master launcher, settings and bundle identity. It includes the shared
@@ -59,7 +77,7 @@ under WSL Ubuntu. Both Mac jobs verified their ad-hoc bundle signatures.
 These package checks do not close native GUI acceptance; no new manual GUI
 verification is claimed for this delivery. Aesthetics remain deferred.
 
-Historical package evidence follows; it does not supersede this candidate.
+Earlier historical package evidence follows.
 
 The [2026-11-06 master development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-06-73c0e36)
 is published from `73c0e362ead36be8b8a44c0e7b999ed187b8ac17`.
@@ -104,6 +122,23 @@ matching commits/checksums, executable modes, licensing/source files and the
 successful native CLI smoke checks; record the workflow and release links here.
 
 ## Plusplus development packages
+
+The [November 7 review-fix plusplus candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-618aefd)
+is published from the same `618aefd47f29bd6b0025ff3db6d0faf5a1e5c454` revision as
+master, with a separate launcher, preferences and Mac bundle identity. It includes
+all M9 review fixes and preserves the earlier plusplus functionality.
+[All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42426696741)
+and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42426713272)
+passed. Its five archives and ten published asset digests passed the same full
+source, checksum, profile, architecture, executable-mode, signature-metadata,
+Windows ICO and license audit as master: 460 vendored registry sources and 470
+dependency notice records. The shipped CLI ran on all native build runners,
+locally on Windows and in WSL Ubuntu. Both Mac signatures were verified by the
+native packaging jobs. PP3/PP4 native GUI gates remain open; these are development
+packages, not parity releases. The [plusplus tester guide](testing-plusplus.md)
+and matching source/rebuild instructions are included.
+
+### Earlier plusplus candidates (historical)
 
 The [2026-11-07 plusplus development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-7e5fc4d)
 is published from `7e5fc4dccf01e5897a3cf120e7ba3e53472c937c` for PP3/PP4 native
