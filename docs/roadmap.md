@@ -25,10 +25,11 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Continue PP4 with valid standalone graphics roundtrips, then remaining
-Print overlay/clipboard comparisons on the pinned Polished Crystal fixture.
-PP3 integrated desktop/gesture checks remain open alongside that application
-matrix. The user resumed plusplus after the M8 backport.
+**Next:** Continue PP3 integrated Linux desktop capture/drop and clipboard
+workflows, then remaining placement/DPI and macOS native acceptance. PP4's
+standalone graphics and Linux original-application Print comparisons now have
+native evidence; its acceptance gate remains open alongside PP3. The user
+resumed plusplus after the M8 backport.
 Master M5–M7 acceptance remains open on the
 [November 6 development build](releases.md#development-packages).
 The remaining M4 aesthetic matching is
@@ -254,11 +255,13 @@ Do not expose automatic profile switching until the unified-editor milestone.
   remaining difference resolved or explicitly approved. Backend roundtrips alone
   do not establish application parity. [Pinned-project application checks](compatibility.md#pinned-polished-crystal-application-interoperability)
   now cover bidirectional map/event/block/collision/roof/palette operations,
-  compound graphics NG → original, valid common-sheet edits back to NG, and an
-  exact plain Print pixel comparison. The original compound-export overread is
-  reproduced and NG's existing rejection verified. Complete valid standalone
-  graphics roundtrips and remaining Print overlay/clipboard application checks;
-  retain PP3's integrated desktop/gesture acceptance.
+  compound graphics NG → original, valid common-sheet and standalone graphics
+  roundtrips, and native Print export/clipboard comparisons. Plain and grid
+  images match exactly; priority blending is mathematically accounted for and
+  native text appearance remains under the approved aesthetic deferral. The
+  original compound-export overread is reproduced and NG's existing rejection
+  verified. Retain PP3's integrated desktop/gesture acceptance and master
+  regressions before closing the full application acceptance gate.
 
 ## 3. Unified editor — not started
 

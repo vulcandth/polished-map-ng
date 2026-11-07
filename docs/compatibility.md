@@ -3253,19 +3253,24 @@ comparison. The archive and game graphics remain ignored local scratch data.
 | Map original → NG | Original painted block 2 at `(1,0)` and saved. NG closed and reopened through Recent, displaying both edits. The complete file equals `[0,2]` followed by the pinned file's bytes from offset 2. |
 | Event NG → original | NG Event Options moved the first warp X from 6 to 7 and saved. Original Reload Events displayed `(7,3)`. The script differed only by that coordinate. |
 | Event original → NG | Original dragged that warp to `(8,3)` and saved. The rebuilt NG opened it at `(8,3)`, dragged to `(9,3)` and saved. The complete script equals the pinned bytes with only the first `warp_event  6,  3, ELMS_LAB, 1` changed to X = 9. |
-| Plain Print export | Both full applications exported with roof `new_bark`, Day palettes and all five Print overlays off. Decoded RGB images are 320×288 and match at every one of 92,160 pixels; RGB SHA-256 is `80fce00f1fdb54e61d64f7302dc2280de739df1e6c97477964a5099d7d7c3f0c`. PNG container bytes need not match. Text/overlay and clipboard comparisons remain open. |
+| Plain Print export | Both full applications exported with roof `new_bark`, Day palettes and all five Print overlays off. Decoded RGB images are 320×288 and match at every one of 92,160 pixels; RGB SHA-256 is `80fce00f1fdb54e61d64f7302dc2280de739df1e6c97477964a5099d7d7c3f0c`. PNG container bytes need not match. This preceded the asset edits below; the subsequent native clipboard comparison uses the edited fixture with no roof. |
 | Block/ASM collisions NG → original | On block 0, NG painted occurrence 0 with tile `$1:01`, RED, X flip and priority, and changed top-left collision to `FLOOR`. Save changed only metatile byte 0 to `01`, attribute byte 0 to `A9`, and that named field in the collision ASM. Original reopened and picked the same tile/flags and collision. |
 | Block/ASM collisions original → NG | Original painted occurrence 1 with the same tile plus Y flip (`E9`) and changed top-right collision to `WALL`. NG reopened and picked both flips, RED, priority and bank 1. Metatile bytes are `01 01`, attribute bytes `A9 E9`, and collision row 0 is `FLOOR, WALL, VOID, VOID`; every other byte in those files matches the pinned source. |
 | Compound graphics NG → original | Native NG edited pixel `(0,0)` in both `johto_common.png` (128×64) and `johto_traditional.johto_common.png` (128×80) to black. Save retained both dimensions and every other decoded pixel. Original reopened both and displayed the edits in tiles `$0:00` and `$1:00`. |
 | Common graphics original → NG | Original added black pixel `(1,0)` in `$0:00`; NG reopened and displayed both black pixels. The 128×64 common sheet differs from pinned pixels only at `(0,0)` and `(1,0)`. The invalid unique sheet produced by the same save required the explicit fixture reset described below. |
 | Roof in both directions | NG changed `(0,16)` to black in the 24×24 `new_bark.png`; original reopened it in tile `$0:10`, changed `(1,16)` to white, and saved. NG reopened and displayed both edits. Only those two decoded pixels differ from the pinned roof; all other pixels and dimensions remain exact. |
 | Palette export/import in both directions | NG edited Night/GRAY's first color to exact hex `13579B`, displayed RGB5 2/10/19, and exported all six sets (48 RGB rows). Original imported it as 2/10/19, incremented red to 3 and exported. All 48 RGB rows match NG's file except that one intended channel. NG imported the original file and displayed 3/10/19 and hex `18529C`. The original's mislabeled fourth/fifth set comments and `(null)` sixth comment match the [documented label-table defect](deviations.md#palette-export-labels-and-validation); they do not change numeric set order. |
+| Standalone graphics in both directions | Both applications inferred Elms Lab as 5×6, `lab`, 53 blocks. NG changed `lab.png` pixel `(0,0)` from black to white; original reopened it, changed `(1,0)` to white and saved; NG reopened and displayed both. The complete decoded sheet remains 128×88, with exactly those two pixels changed from pinned data. This reverse roundtrip uses the original's valid zero-offset export path. |
 
 A complete SHA-256 comparison of all 7,803 archived project files after the
 map/event operations found changes only in `maps/NewBarkTown.ablk` and
 `maps/NewBarkTown.asm`, with no files added. Print exports are outside the project.
 After NG's block/graphics/roof saves, only the additional three block/collision
 files and three graphics PNGs changed; the complete project still had no added files.
+After the unique-sheet reset and standalone lab edit, a fresh comparison of all
+7,803 files found exactly eight changed files: the map, event ASM, three
+block/collision files, common PNG, lab PNG and roof PNG. No files were added or
+removed. The native Print captures did not modify the project.
 
 The reverse compound save reproduced the already documented
 [upstream export overread](deviations.md#plusplus-graphics-export-bounds).
@@ -3277,7 +3282,8 @@ This is a safety deviation, not a successful reverse compound roundtrip or an
 NG export-size defect. The original output was retained only in ignored scratch
 evidence. For the common-sheet/roof reverse checks, the invalid unique file was
 explicitly reset to byte-exact pinned data outside the application; NG did not
-silently crop or repair it. Reverse checks of a valid standalone sheet remain open.
+silently crop or repair it. The standalone-sheet roundtrip above separately
+verifies original → NG graphics interoperability on valid input.
 
 This pass exposed a shared native event-input defect: Windows delivered a primary
 press and movement off the marker in one frame; egui's final-position hit test
@@ -3293,13 +3299,51 @@ feature graph also pass for the drag fix. All eight
 [CI jobs at `a77ac98`](https://github.com/vulcandth/polished-map-ng/actions/runs/42315648003)
 pass, including Windows/Linux/macOS and the shared master regressions.
 
-PP3 remains open for integrated cross-application clipboard, capture/drop,
-placement/DPI and complete Linux/macOS workflows. PP4 remains open for the rest
-of the pinned Polished Crystal full-application matrix: valid standalone graphics
-roundtrips and remaining Print overlay/clipboard comparisons,
-together with master regressions for subsequent changes.
+PP3 remains open for remaining integrated cross-application clipboard, capture/drop,
+placement/DPI and complete Linux/macOS workflows. The standalone graphics and
+Linux Print checks now have native evidence; PP4 remains open alongside those
+desktop gates and master regressions for subsequent changes.
 The workflows above cover the observed operations, not complete real-project or
 cross-platform parity; integrated gesture/window acceptance remains PP3.
+
+### Native plusplus Print clipboard comparison
+
+The current NG build (production code at `a77ac98`) and the unmodified pinned
+original both ran on Ubuntu 22.04.5 through WSLg X11, with New Bark Town's edited
+fixture above, Day palettes, light theme, decimal IDs and roof `(none)`.
+Both native Print dialogs exercised Copy with four flag combinations. A temporary
+headless reader using NG's production arboard dependency captured each complete
+320×288 image while its application owned the X11 clipboard. It required those
+dimensions and wrote the returned RGBA bytes without rescaling. Comparison used
+decoded RGB, not clipboard encoding or screenshots. The reader, eight captures,
+comparison script and JSON results remain in ignored acceptance scratch data;
+no game images or diagnostic executable are distributed.
+
+| Native options | Complete-image result |
+|---|---|
+| Grid; Warp IDs selected but Events off | All 92,160 pixels match. RGB SHA-256 `c878560e03bbfc0e565a730337bd2a261f6c1405ba9e295ae708aec428b44283`. Warp IDs correctly have no effect without Events. |
+| Grid + Priority | 158 pixels differ, each by at most one per channel, entirely within the four enabled 8×8 priority tiles. Independent composition from the native grid baseline, source pattern and saved attributes reproduces every pixel of both outputs using their respective blending rules below. |
+| Grid + Events + Warp IDs | 3,986 differing pixels, all inside the 21 occupied 16×16 event rectangles (22 events, including one overlap). All 672 unique top/bottom border samples reproduce each backend's alpha formula. The entire map/grid outside these rectangles matches. All 175 pixels of the five 5×7 warp-number bitmaps match each other and the original digit artwork. |
+| All five flags | 15,888 differing pixels; all are within conservative block-label rectangles (local x = 2…29, y = 0…20), event rectangles or the four priority tiles. The five warp-number bitmaps remain exact. Both rendered outputs were inspected; this bounded comparison does not prove identical glyphs or label appearance. |
+
+FLTK's `argb_premul_converter` floors `source * alpha / 255` before XRender
+composition. For priority alpha 96, the observed original output is exactly
+`floor(source * 96 / 255) + round(destination * 159 / 255)`; NG's existing Xlib
+software rule is `floor((source * 96 + destination * 160) / 256)`. The independent
+calculation checked the full image, including grid replacement after priority.
+For event alpha 128, top/bottom borders likewise match accelerated premultiplication
+versus the software rule's normalized alpha 129. This is an observed native
+rounding difference, not a missing flag or misplaced overlay. Source:
+FLTK 1.4.5 `src/drivers/Xlib/Fl_Xlib_Graphics_Driver_image.cxx`,
+`argb_premul_converter`, `alpha_blend` and `scale_and_render_pixmap`.
+
+NG reports Ubuntu Mono for Courier Bold and DejaVu Sans for Helvetica Bold;
+its CPU font rasterizer differs from the original Xft path. Exact typeface,
+glyph rasterization and backend-specific alpha rounding remain within the
+[approved aesthetic deferral](deviations.md#remaining-m4-aesthetics-deferred).
+No new functional defect was found and no rendering code was changed to chase
+these differences. These are X11 application/clipboard checks, not native
+Wayland, Windows clipboard, macOS or complete desktop acceptance.
 
 ## November 1 upstream review
 
