@@ -4,7 +4,7 @@ A map and tileset editor being rewritten in Rust with egui/eframe, based on
 [Polished Map](https://github.com/Rangi42/polished-map) by Rangi42.
 
 **Development version; compatibility is still being verified.**
-[Download development builds](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-06-73c0e36)
+[Download development builds](docs/releases.md#development-packages)
 for Windows, Linux and macOS. See the [roadmap](docs/roadmap.md) for supported scope
 and remaining work.
 

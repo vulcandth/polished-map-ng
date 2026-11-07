@@ -7,7 +7,7 @@ slider appearance. The separate plusplus candidate has its own
 [testing instructions](testing-plusplus.md) and [availability record](releases.md#plusplus-development-packages).
 
 Download a package and its `.sha256` from the
-[development prerelease](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-7e5fc4d):
+[development prerelease](releases.md#development-packages):
 
 | Platform | Package suffix | Start the editor |
 |---|---|---|
