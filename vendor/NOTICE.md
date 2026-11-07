@@ -152,6 +152,12 @@ viewport-scoped completion/cancellation. Share the window adapter's retained
 selection with Smithay before native input/output dispatch. Other native backends
 retain arboard.
 
+Additional egui-winit modifications on 2026-11-06, under MIT OR Apache-2.0:
+preserve fullscreen priority when applying initial viewport settings after
+creation. Do not follow an initial fullscreen configure with a conflicting
+maximize/unmaximize request; Weston 9 otherwise configures zero fullscreen
+dimensions and disconnects the client. Explicit later state changes are unchanged.
+
 ## eframe 0.37.0
 
 Source: <https://github.com/emilk/egui> and the Cargo archive identified in

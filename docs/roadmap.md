@@ -28,7 +28,9 @@ and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive
 **Next:** Continue PP3 integrated desktop capture/drop, placement/focus/DPI and
 macOS native acceptance using the published
 [plusplus tester packages](releases.md#plusplus-development-packages)
-for all four build targets. The temporary-size dialog mapping defect from the
+for all four build targets. Refresh those packages after the verified
+[fullscreen restart fix](compatibility.md#native-wayland-window-restart).
+The temporary-size dialog mapping defect from the
 [native 2× check](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
 is fixed; verify pointer alignment on a directly hosted compositor before
 claiming high-DPI acceptance.
@@ -270,6 +272,9 @@ Do not expose automatic profile switching until the unified-editor milestone.
   [Native 2× geometry and palette checks](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
   add measured evidence and a verified fix for temporary-size dialog mapping;
   desktop pointer alignment, mixed-DPI and macOS checks remain open.
+  [Native fullscreen/maximized restart](compatibility.md#native-wayland-window-restart)
+  exposed a startup request-order crash, now fixed with a failing-before/passing-after
+  protocol regression and native restart evidence; broader placement remains open.
   Separate [plusplus tester packages](releases.md#plusplus-development-packages)
   and matching source/licenses are published after CI, archive and packaged CLI
   verification for all four targets; use them for the remaining native checks.

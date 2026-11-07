@@ -3102,6 +3102,46 @@ PP3 retains direct-desktop pointer alignment,
 mixed-DPI transitions, broader placement policy and macOS native acceptance.
 No aesthetic changes or screenshot baseline updates were made.
 
+### Native Wayland window restart
+
+The published `3646262` Linux package was exercised on the same isolated Weston
+9 / WSLg setup, using one 1100×800 output at scale 1, `DISPLAY` unset, separate
+XDG settings and the disposable pinned-project checkout. An unsaved map edit
+opened the exit guard in fullscreen; Cancel retained the session. Undo restored
+the pixels but, consistently with the existing sticky dirty flag, exit still
+required explicit discard. No project file was saved or changed.
+
+Exiting fullscreen saved `fullscreen:true`, `maximized:false` and normal size
+800×600. Restart reproduced a crash: `set_fullscreen` received a 1100×800
+configure, but egui-winit then sent `unset_maximized`. Weston's
+`desktop-shell/shell.c::set_maximized(false)` resets the pending size to zero;
+it rejected the next buffer as larger than the configured 0×0 fullscreen state.
+The resulting surface error terminated NG. This was a native startup defect,
+not an aesthetic mismatch or successful lifecycle acceptance.
+
+The patched initial viewport application now preserves winit's fullscreen
+priority over maximization. Later explicit window-state commands are unchanged.
+The [protocol regression](../tools/wayland_window_startup_probe.py) runs the real
+adapter against an independent peer for normal, maximized, fullscreen and both
+flags together. It fails on the previous code's conflicting request and passes
+with the fix; no desktop or GPU is needed for that regression.
+
+The rebuilt application reopened the unchanged fullscreen record successfully,
+loaded the map, returned to an 800×600 client and exited with code 0. A fresh
+normal launch was then maximized and exited; its saved record retained 800×600
+with `maximized:true`. Restart restored maximization, Map Options cancelled
+normally, and restoring returned to 800×600. Final exit returned code 0, saved
+both state flags false and left the fixture Git-clean. Protocol geometry and
+saved records independently corroborate the visible state changes.
+
+Windows format/Clippy/workspace tests/rustdoc, Linux workspace Clippy, the four
+protocol cases, production dependency graph and vendor source/license checks
+pass. Native evidence is limited to this nested single-output desktop. After
+restoring a window initially launched fullscreen/maximized, Weston placed part
+of its titlebar above the output; the complete client remained accessible.
+Broader placement, directly hosted pointer alignment, mixed-monitor transitions,
+file-manager drops, native middle capture and macOS GUI acceptance remain open.
+
 ## Plusplus asset switching and tile options
 
 The existing [tileset](../crates/gui/src/tileset_workflows.rs) and

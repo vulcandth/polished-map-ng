@@ -109,6 +109,11 @@ acceptance gates remain open. No plusplus parity release is claimed; aesthetics
 and original-font matching remain deferred. The master candidate above remains
 available separately.
 
+Follow-up native testing found a Wayland fullscreen-restart crash in this
+candidate. The [startup ordering fix](compatibility.md#native-wayland-window-restart)
+passes native and protocol checks; refreshed packages are pending. Until then,
+leave fullscreen before exiting when testing on Wayland.
+
 ## Final release gate
 
 Before publishing a parity/production release:

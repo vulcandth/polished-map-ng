@@ -1022,7 +1022,22 @@
          self.apply_cursor(window, event_loop, cursor_icon, cursor_image.as_ref());
  
          let allow_ime = ime.is_some();
-@@ -2652,6 +2724,8 @@
+@@ -2529,7 +2601,13 @@
+             let pos = PhysicalPosition::new(pixels_per_point * pos.x, pixels_per_point * pos.y);
+             window.set_outer_position(pos);
+         }
+-        if let Some(maximized) = builder.maximized {
++        // Window creation gives fullscreen precedence over maximization. Preserve
++        // that order here: sending unset_maximized after the initial fullscreen
++        // configure makes Weston 9 issue a zero-sized fullscreen configure and
++        // disconnect the client when it presents its first full-sized buffer.
++        if let Some(maximized) = builder.maximized
++            && builder.fullscreen != Some(true)
++        {
+             set_maximized(window, maximized);
+         }
+     }
+@@ -2652,6 +2730,8 @@
          WindowEvent::CloseRequested => "WindowEvent::CloseRequested",
          WindowEvent::Destroyed => "WindowEvent::Destroyed",
          WindowEvent::DroppedFile { .. } => "WindowEvent::DroppedFile",

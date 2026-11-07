@@ -913,7 +913,7 @@
       "archive_sha256": "e4e449f4c4a2a60c7ccb4ba7fa4078417bfe1f9ddc03b5e05ce75748e33a70de",
       "archive_url": "https://static.crates.io/crates/egui-winit/egui-winit-0.37.0.crate",
       "patch": "patches/egui-winit-0.37.0.patch",
-      "patch_sha256": "5af046c76848e659aaf561d681388876ed6c1af51fd63a9f2f42b53f9473d062",
+      "patch_sha256": "07de341e4074c89ee79a22970adf2b4e71d5941aba559b357d2c9cda9d9579ad",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "3eb2f5f41008d97f2800b00c5245f906e3f70c1c6258714d4e9d89d6f31a8b33",
@@ -964,7 +964,7 @@
           "original_sha256": null
         },
         "src/lib.rs": {
-          "sha256": "8e3ffb968a9839c1d7e6bec232f396320a4c61b55b6c8438bfe878f510c4f5fd",
+          "sha256": "c5e5cef11b9197f494b9f0174139a3355a899e72378a30bf87007132cfe0d9bb",
           "original_sha256": "d742b0d35e6b1248329f11fdc6d267c3f04cb93f1729fbe7b7ac074172d91c45"
         },
         "src/macos_scroll_momentum.rs": {

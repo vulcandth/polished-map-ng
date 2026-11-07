@@ -61,6 +61,9 @@ jobs:
       - name: Verify native Wayland modal protocol
         if: runner.os == 'Linux'
         run: python3 tools/wayland_modal_probe.py
+      - name: Verify native Wayland window startup
+        if: runner.os == 'Linux'
+        run: python3 tools/wayland_window_startup_probe.py
       - name: Verify native X11 opacity property
         if: runner.os == 'Linux'
         run: xvfb-run --auto-servernum cargo test -p polished-map-platform --locked native_x11_opacity -- --ignored --test-threads=1

@@ -585,3 +585,11 @@ Implicit egui whole-interface keyboard zoom is disabled: its Ctrl+- reduced UI
 scale while Ctrl+= was consumed by the original map zoom action, preventing the
 inverse operation. Ctrl+0 also belongs to block assignment. Startup also recovers UI scale saved by that old shortcut. OS DPI scaling and
 map zoom remain intact; additional zoom controls are planned under I3.
+
+## Fullscreen startup request ordering
+
+NG's initial native adapter preserves fullscreen priority instead of following
+it with a maximize/unmaximize request. The previous sequence could disconnect
+the Wayland client when restoring fullscreen on Weston 9. This corrects an NG
+startup crash without changing saved preferences, normal geometry or subsequent
+explicit window commands. See the [native restart evidence](compatibility.md#native-wayland-window-restart).
