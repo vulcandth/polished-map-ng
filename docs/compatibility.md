@@ -2976,13 +2976,19 @@ remained black after release outside the native child. Escape discarded the draf
 In the native palette window, the red slider changed 27 → 5, middle-click restored
 27, and a drag released outside the window clamped it to 31. Escape discarded the
 palette draft and restored parent input. The approved rounded slider appearance
-is unchanged. Earlier in this pass, F11 entered compositor fullscreen and a tile
-child opened with all controls reachable; complete restoration/mixed-DPI and
-platform lifecycle acceptance remain open.
+is unchanged. F11 fullscreen and native maximize/restore each returned to the
+same 800×600 normal client and position. A tile child opened in fullscreen with
+all controls reachable. Closing the restored main window exited cleanly. These
+checks used one nested Wayland output; restart persistence, mixed-DPI transitions
+and broader platform lifecycle acceptance remain open.
 
 Windows format, workspace Clippy/tests/rustdoc and the production native graph
 pass; Linux Clippy and the native build pass. The 27 tile-family and ten native
 host tests include the new regressions. Documentation links/examples pass.
+[CI for `b861a51`](https://github.com/vulcandth/polished-map-ng/actions/runs/42333080900)
+passes all eight jobs: Windows/Linux/macOS, MSRV, dependency/license audit,
+reference comparisons, real-project workflows and visual regressions. Snapshot
+baselines are unchanged. CI does not replace the remaining interactive checks.
 
 ## Plusplus asset switching and tile options
 
