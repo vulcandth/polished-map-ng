@@ -391,3 +391,129 @@ fn blocked_parent_cannot_retain_a_mouse_press_released_over_its_child() {
     output.textures_delta.clear();
     assert!(ctx.input(|i| !i.pointer.any_down() && !i.pointer.any_click()));
 }
+
+#[test]
+fn native_pixel_capture_uses_the_child_layer_at_both_scales() {
+    for (plus, roof) in [(false, false), (true, false), (true, true)] {
+        for scale in [1.0, 2.0] {
+            let (_dir, mut h) = if plus {
+                crate::plusplus_session::tests::fixture()
+            } else {
+                crate::tileset_editor_tests::fixture(false, false)
+            };
+            let ctx = h.ctx.clone();
+            let mut editor = std::mem::take(h.state_mut());
+            let renderer = renderer(&ctx, scale);
+            if roof {
+                editor.prepare_roof();
+            } else {
+                editor.prepare_tileset();
+            }
+            let id = main_id(editor.dialog_kind().unwrap());
+            frame(&ctx, &mut editor);
+            frame(&ctx, &mut editor);
+            renderer
+                .borrow_mut()
+                .inputs
+                .insert(id, key(egui::Key::Num4));
+            frame(&ctx, &mut editor);
+            let form = editor.tileset_form.as_ref().unwrap();
+            let selected = form.selected;
+            let mut expected = form.draft.pixels(selected);
+            let pixel_size = if plus { 17.0 } else { 18.0 };
+            let tile_x = if roof {
+                70.0
+            } else if plus {
+                293.0
+            } else {
+                278.0
+            };
+            let start = Pos2::new(tile_x + 1.0 + 2.5 * pixel_size, 37.0 + 2.5 * pixel_size);
+            let outside = Pos2::new(700.0, start.y);
+            renderer.borrow_mut().inputs.insert(
+                id,
+                RawInput {
+                    events: vec![
+                        egui::Event::PointerMoved(start),
+                        egui::Event::PointerButton {
+                            pos: start,
+                            button: egui::PointerButton::Primary,
+                            pressed: true,
+                            modifiers: egui::Modifiers::NONE,
+                        },
+                        egui::Event::PointerMoved(outside),
+                        egui::Event::PointerButton {
+                            pos: outside,
+                            button: egui::PointerButton::Primary,
+                            pressed: false,
+                            modifiers: egui::Modifiers::NONE,
+                        },
+                    ],
+                    ..Default::default()
+                },
+            );
+            frame(&ctx, &mut editor);
+            expected[18] = 3;
+            assert_eq!(
+                editor.tileset_form.as_ref().unwrap().draft.pixels(selected),
+                expected,
+                "native child: plus={plus} roof={roof} scale={scale}"
+            );
+            renderer.borrow_mut().inputs.insert(id, close(id));
+            frame(&ctx, &mut editor);
+            assert!(editor.tileset_form.is_none());
+            assert!(!editor.is_modified());
+        }
+    }
+}
+
+#[test]
+fn native_client_slider_and_middle_release_use_registered_hit_layer() {
+    let ctx = egui::Context::default();
+    let renderer = renderer(&ctx, 1.0);
+    let id = main_id("slider-probe");
+    let mut value = 7u8;
+    let mut reset = default_value::DefaultValue::slider(value);
+    let mut slider = Rect::NOTHING;
+    let mut run = |input: Option<RawInput>| {
+        if let Some(input) = input {
+            renderer.borrow_mut().inputs.insert(id, input);
+        }
+        let mut output = ctx.run_ui(root_input(), |ui| {
+            show(ui.ctx(), id, |child| {
+                client(child, egui::Id::unique("slider-probe-client"), |ui| {
+                    ui.set_min_size(Vec2::new(200.0, 100.0));
+                    let response = ui.add(nice_slider::NiceSlider(&mut value));
+                    slider = response.rect;
+                    reset.restore(ui, &response, &mut value);
+                });
+            });
+        });
+        output.textures_delta.clear();
+        (value, slider)
+    };
+    run(None);
+    run(None);
+    let (_, rect) = run(None);
+    let point = Pos2::new(rect.right() - 1.0, rect.center().y);
+    let input = |button| RawInput {
+        events: vec![
+            egui::Event::PointerMoved(point),
+            egui::Event::PointerButton {
+                pos: point,
+                button,
+                pressed: true,
+                modifiers: egui::Modifiers::NONE,
+            },
+            egui::Event::PointerButton {
+                pos: point,
+                button,
+                pressed: false,
+                modifiers: egui::Modifiers::NONE,
+            },
+        ],
+        ..Default::default()
+    };
+    assert!(run(Some(input(egui::PointerButton::Primary))).0 > 7);
+    assert_eq!(run(Some(input(egui::PointerButton::Middle))).0, 7);
+}

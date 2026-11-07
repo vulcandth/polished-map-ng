@@ -2943,6 +2943,47 @@ production adapter graph pass. The five new tile/roof input tests and both
 pinned-project GUI workflows pass on WSL Ubuntu 22.04.5 without a display server.
 Windows offscreen tile/roof rendering checks pass with unchanged master snapshots.
 
+### Native pixel gestures and dialog hit layers
+
+A native Wayland capture check on the `6044f08` code exposed a missed tile-paint
+press when press/motion/release arrived before one rendered frame and release
+landed outside the child window. Pinned master/plusplus
+`map-buttons.cpp::Pixel_Button::handle` invokes the pixel callback on `FL_PUSH`
+and on entered pixels during a held gesture; `Tileset_Window::change_pixel_cb`
+applies the Shift/Ctrl/Alt precedence and right-click color picking.
+
+The shared [pixel input adapter](../crates/gui/src/tileset_editor/pixels.rs) now
+processes delivered events in order, applies each encountered pixel, and releases
+capture outside the grid. It does not interpolate undelivered motion positions.
+Right-click picking reads the current draft at that point in the event stream.
+The regression fails on the previous implementation for both master and plusplus;
+it now checks intermediate motion, outside release, idle return, pick-before-paint
+ordering and cancelled-draft isolation for master tiles and plusplus tiles/roofs.
+
+The native repeat exposed a separate shared host defect: the custom native `Ui`
+layer was absent from egui's Area registry. Layer-aware pixel input, palette
+sliders, middle-release defaults and sheet panning could therefore reject their
+own controls. [The native host](../crates/gui/src/dialog_host.rs) now registers its
+existing client bounds every pass using egui's public `Areas::set_state` API.
+It preserves client geometry and higher popup layers. Native-viewport renderer
+regressions exercise master/plusplus/roof gestures at scales 1 and 2, slider input
+and middle-release reset; existing modal ownership/cancel/geometry checks pass.
+These renderer tests complement, rather than replace, desktop verification.
+
+The rebuilt application passed the failing gesture on Weston 9 nested under
+WSLg, with `DISPLAY` unset: pixel `(2,2)` became black on the initial press and
+remained black after release outside the native child. Escape discarded the draft.
+In the native palette window, the red slider changed 27 → 5, middle-click restored
+27, and a drag released outside the window clamped it to 31. Escape discarded the
+palette draft and restored parent input. The approved rounded slider appearance
+is unchanged. Earlier in this pass, F11 entered compositor fullscreen and a tile
+child opened with all controls reachable; complete restoration/mixed-DPI and
+platform lifecycle acceptance remain open.
+
+Windows format, workspace Clippy/tests/rustdoc and the production native graph
+pass; Linux Clippy and the native build pass. The 27 tile-family and ten native
+host tests include the new regressions. Documentation links/examples pass.
+
 ## Plusplus asset switching and tile options
 
 The existing [tileset](../crates/gui/src/tileset_workflows.rs) and
@@ -3446,8 +3487,13 @@ scratch storage, with a private D-Bus session; no system packages were installed
 Its real file-manager window opened the fixture directory. The available input
 tool rejected a cross-window drag outside the source bounds, and its activation
 restored a maximized WSLg window before the next attempt, invalidating the
-observed drop geometry. No successful desktop drop is claimed. That native gate
-remains open; protocol/headless tests are not a replacement for it.
+observed drop geometry. A later attempt placed Thunar and NG inside one isolated
+Weston desktop, allowing the entire gesture inside the host window. Thunar then
+failed before sending `wl_data_device.start_drag`: its trace received button-down,
+motion and button-up in a burst, then GTK reported an invalid source Wayland
+window while creating the drag. No successful desktop drop or NG drop failure
+is inferred from that source-application failure. This native gate remains open;
+protocol/headless tests are not a replacement for it.
 
 ## November 1 upstream review
 

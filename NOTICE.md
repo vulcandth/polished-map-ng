@@ -369,3 +369,8 @@ MIT, with asynchronous PNG/BMP dispatch in the MIT OR Apache-2.0 egui-winit
 adapter. Original licenses, archive hashes and modification patches accompany
 these sources in [vendor notices](vendor/NOTICE.md). The Rust editor changes
 remain LGPL-3.0-only; native test probes contain generated images only.
+
+Ordered tile/roof pixel input adapts pinned master/plusplus
+`map-buttons.cpp::Pixel_Button::handle` and the corresponding editor callbacks,
+under LGPL-3.0-only. Native dialog hit-layer registration uses egui's public
+API; no upstream egui code or additional artwork is copied by this change.

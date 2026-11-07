@@ -465,3 +465,92 @@ fn image_clipboard_events_use_grayscale_output_and_shared_clipped_import() {
     );
     assert!(!loaded.document.map().is_modified());
 }
+
+/// Native platforms can deliver press, motion and release before one egui frame.
+pub(super) fn verify_batched_pixel_capture(h: &mut Harness<'_, Editor>) {
+    h.get_by_label("Swatch 4").click();
+    h.run();
+    let form = h.state().tileset_form.as_ref().unwrap();
+    let selected = form.selected;
+    let before = form.draft.pixels(selected);
+    let start = h.get_by_label("Pixel 2, 2").rect().center();
+    let next = h.get_by_label("Pixel 3, 2").rect().center();
+    let outside = h.ctx.content_rect().max + Vec2::splat(50.0);
+    let button = |pos, button, pressed| egui::Event::PointerButton {
+        pos,
+        button,
+        pressed,
+        modifiers: egui::Modifiers::NONE,
+    };
+    for event in [
+        egui::Event::PointerMoved(start),
+        button(start, egui::PointerButton::Primary, true),
+        egui::Event::PointerMoved(next),
+        egui::Event::PointerMoved(outside),
+        button(outside, egui::PointerButton::Primary, false),
+    ] {
+        h.input_mut().events.push(event);
+    }
+    h.run();
+    let mut expected = before;
+    expected[18] = 3;
+    expected[19] = 3;
+    assert_eq!(
+        h.state()
+            .tileset_form
+            .as_ref()
+            .unwrap()
+            .draft
+            .pixels(selected),
+        expected,
+        "press and each delivered in-grid motion must survive release outside"
+    );
+    // Release outside must not leave a paint operation active on return.
+    let untouched = h.get_by_label("Pixel 4, 2").rect().center();
+    h.hover_at(untouched);
+    h.run();
+    assert_eq!(
+        h.state()
+            .tileset_form
+            .as_ref()
+            .unwrap()
+            .draft
+            .pixels(selected),
+        expected
+    );
+    h.get_by_label("Swatch 2").click();
+    h.run();
+    // A pick and a new press in one frame must use the picked hue in order.
+    for event in [
+        egui::Event::PointerMoved(start),
+        button(start, egui::PointerButton::Secondary, true),
+        button(start, egui::PointerButton::Secondary, false),
+        egui::Event::PointerMoved(untouched),
+        button(untouched, egui::PointerButton::Primary, true),
+        egui::Event::PointerMoved(outside),
+        button(outside, egui::PointerButton::Primary, false),
+    ] {
+        h.input_mut().events.push(event);
+    }
+    h.run();
+    expected[20] = 3;
+    assert_eq!(
+        h.state()
+            .tileset_form
+            .as_ref()
+            .unwrap()
+            .draft
+            .pixels(selected),
+        expected
+    );
+    h.get_by_label("Cancel").click();
+    h.run();
+    assert!(!h.state().is_modified());
+}
+
+#[test]
+fn master_batched_pixel_capture_preserves_press_motion_pick_and_release() {
+    let (_dir, mut h) = fixture(false, false);
+    open(&mut h);
+    verify_batched_pixel_capture(&mut h);
+}

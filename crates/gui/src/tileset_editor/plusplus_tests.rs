@@ -717,3 +717,12 @@ fn raw_editor_pixels_and_sheet_use_monochrome_and_undefined_colors() {
         &polished_map_core::UNDEFINED_COLORS[0]
     );
 }
+
+#[test]
+fn plusplus_batched_pixel_capture_preserves_press_motion_pick_and_release() {
+    for roof in [false, true] {
+        let (_dir, mut h) = fixture();
+        open(&mut h, roof);
+        crate::tileset_editor_tests::verify_batched_pixel_capture(&mut h);
+    }
+}

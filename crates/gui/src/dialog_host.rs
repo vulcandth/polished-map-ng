@@ -212,12 +212,25 @@ pub(super) fn client(
         };
     }
     let any_popup_open = egui::Popup::is_any_open(ctx);
+    let layer = egui::LayerId::new(egui::Order::Middle, id);
+    let bounds = ctx.content_rect();
+    // A bare Ui does not register an Area. Layer-aware input (sliders, default
+    // resets, panning and ordered pixel gestures) must see this native client,
+    // while higher popup layers must still win hit-testing.
+    ctx.memory_mut(|memory| {
+        memory.areas_mut().set_state(
+            layer,
+            egui::AreaState {
+                pivot_pos: Some(bounds.min),
+                size: Some(bounds.size()),
+                ..Default::default()
+            },
+        );
+    });
     let mut ui = egui::Ui::new(
         ctx.clone(),
         id,
-        egui::UiBuilder::new()
-            .layer_id(egui::LayerId::new(egui::Order::Middle, id))
-            .max_rect(ctx.content_rect()),
+        egui::UiBuilder::new().layer_id(layer).max_rect(bounds),
     );
     // egui popups cannot escape a native viewport. Source FLTK choices used
     // separate windows, so tiny source clients need room for a scrollable list.

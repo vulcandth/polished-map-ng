@@ -3,6 +3,7 @@
 use super::*;
 use polished_map_core::plusplus::RawTileCommand as TileCommand;
 mod draft;
+mod pixels;
 #[cfg(test)]
 mod plusplus_tests;
 mod sheet;
@@ -34,6 +35,7 @@ pub(super) struct TilesetForm {
     sheet_scroll: workspace_pan::SheetScroll,
     drag: Option<u16>,
     last_pixel: Option<usize>,
+    pixel_primary_down: bool,
     paste_handled: bool,
     pending_image: Option<PendingImage>,
     swap_held: bool,
@@ -368,6 +370,7 @@ impl Editor {
             sheet_scroll: Default::default(),
             drag: None,
             last_pixel: None,
+            pixel_primary_down: false,
             paste_handled: false,
             pending_image: None,
             swap_held: false,
@@ -707,6 +710,10 @@ impl Editor {
                 self.drag_and_drop,
                 &priority,
             );
+            let pixel_grid = rect(tile_x + 1.0, 37.0, 8.0 * pixel_size, 8.0 * pixel_size);
+            if let Err(error) = form.pixel_input(ui, pixel_grid, pixel_size) {
+                self.error = Some(error);
+            }
             let colors = form.colors();
             let pixels = form.draft.pixels(form.selected);
             for (i, &hue) in pixels.iter().enumerate() {
@@ -740,51 +747,24 @@ impl Editor {
                 if response.hovered() {
                     super::block_editor::selection_border(ui, cell);
                 }
-                if response.secondary_clicked()
-                    || (response.contains_pointer()
-                        && ui.input(|i| i.pointer.button_pressed(egui::PointerButton::Secondary)))
+                // Keyboard/accessibility activation has no native pointer event.
+                // Pointer clicks were already handled in chronological order.
+                if response.clicked()
+                    && !ui.input(|input| {
+                        input.events.iter().any(|event| {
+                            matches!(
+                                event,
+                                egui::Event::PointerButton {
+                                    button: egui::PointerButton::Primary,
+                                    ..
+                                }
+                            )
+                        })
+                    })
+                    && let Err(error) = form.paint_pixel(i, ui.input(|input| input.modifiers))
                 {
-                    form.hue = hue;
+                    self.error = Some(error);
                 }
-                if (response.clicked()
-                    || (response.contains_pointer() && ui.input(|i| i.pointer.primary_down())))
-                    && form.last_pixel != Some(i)
-                {
-                    form.last_pixel = Some(i);
-                    let at = Point {
-                        x: (i % 8) as u16,
-                        y: (i / 8) as u16,
-                    };
-                    let modifiers = ui.input(|i| i.modifiers);
-                    command = Some(if modifiers.shift {
-                        TileCommand::Fill {
-                            tile: form.selected,
-                            at,
-                            hue: form.hue,
-                        }
-                    } else if modifiers.ctrl {
-                        TileCommand::Replace {
-                            tile: form.selected,
-                            from: hue,
-                            to: form.hue,
-                        }
-                    } else if modifiers.alt {
-                        TileCommand::SwapHues {
-                            tile: form.selected,
-                            a: hue,
-                            b: form.hue,
-                        }
-                    } else {
-                        TileCommand::Paint {
-                            tile: form.selected,
-                            points: vec![at],
-                            hue: form.hue,
-                        }
-                    });
-                }
-            }
-            if ui.input(|i| !i.pointer.primary_down()) {
-                form.last_pixel = None;
             }
             for (i, &hue) in SWATCHES.iter().enumerate() {
                 let cell = if form.roof {

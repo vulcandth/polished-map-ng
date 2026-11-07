@@ -255,7 +255,11 @@ Do not expose automatic profile switching until the unified-editor milestone.
   success. Native acknowledgment, focused asynchronous publication and retained
   clipboard offers now pass protocol and native exchange checks. Standard
   Wayland PNG/BMP transport and bounded failures are implemented; broader
-  desktop/placement/focus/DPI and macOS acceptance remain open. Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
+  desktop/placement/focus/DPI and macOS acceptance remain open. Native capture
+  checks also exposed batched pixel-input loss and unregistered dialog hit layers;
+  shared fixes and their verification are tracked in
+  [native input evidence](compatibility.md#native-pixel-gestures-and-dialog-hit-layers).
+  Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 (in progress) — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every
   remaining difference resolved or explicitly approved. Backend roundtrips alone
