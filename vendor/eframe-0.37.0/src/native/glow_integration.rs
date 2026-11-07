@@ -1721,6 +1721,12 @@ fn render_immediate_viewport(
         mut viewport_ui_cb,
     } = immediate_viewport;
 
+    // A hidden sizing pass must not submit a buffer: on Wayland that maps the
+    // temporary-size window even though winit cannot implement set_visible(false).
+    // Retain texture updates and process commands so the next visible pass uses
+    // the measured client size before the compositor chooses its placement.
+    let paint = builder.visible != Some(false);
+
     let viewport_id = ids.this;
 
     {
@@ -1813,43 +1819,45 @@ fn render_immediate_viewport(
         return;
     };
 
-    let screen_size_in_pixels: [u32; 2] = window.inner_size().into();
+    if paint {
+        let screen_size_in_pixels: [u32; 2] = window.inner_size().into();
 
-    change_gl_context(
-        current_gl_context,
-        not_current_gl_context,
-        current_viewport,
-        viewport_id,
-        gl_surface,
-    );
-
-    let current_gl_context = current_gl_context.as_ref().unwrap();
-
-    if !gl_surface.is_current(current_gl_context) {
-        log::error!(
-            "egui::show_viewport_immediate: viewport {:?} ({:?}) was not created on main thread.",
-            viewport.ids.this,
-            viewport.builder.title
+        change_gl_context(
+            current_gl_context,
+            not_current_gl_context,
+            current_viewport,
+            viewport_id,
+            gl_surface,
         );
-    }
 
-    egui_glow::painter::clear(
-        painter.borrow().gl(),
-        screen_size_in_pixels,
-        [0.0, 0.0, 0.0, 0.0],
-    );
+        let current_gl_context = current_gl_context.as_ref().unwrap();
 
-    painter.borrow_mut().paint_and_update_textures(
-        screen_size_in_pixels,
-        pixels_per_point,
-        &clipped_primitives,
-        &mut viewport.pending_delta,
-    );
+        if !gl_surface.is_current(current_gl_context) {
+            log::error!(
+                "egui::show_viewport_immediate: viewport {:?} ({:?}) was not created on main thread.",
+                viewport.ids.this,
+                viewport.builder.title
+            );
+        }
 
-    {
-        profiling::scope!("swap_buffers");
-        if let Err(err) = gl_surface.swap_buffers(current_gl_context) {
-            log::error!("swap_buffers failed: {err}");
+        egui_glow::painter::clear(
+            painter.borrow().gl(),
+            screen_size_in_pixels,
+            [0.0, 0.0, 0.0, 0.0],
+        );
+
+        painter.borrow_mut().paint_and_update_textures(
+            screen_size_in_pixels,
+            pixels_per_point,
+            &clipped_primitives,
+            &mut viewport.pending_delta,
+        );
+
+        {
+            profiling::scope!("swap_buffers");
+            if let Err(err) = gl_surface.swap_buffers(current_gl_context) {
+                log::error!("swap_buffers failed: {err}");
+            }
         }
     }
 

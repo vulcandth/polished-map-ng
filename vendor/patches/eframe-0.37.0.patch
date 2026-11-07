@@ -277,6 +277,101 @@
              egui_winit.set_clipboard_shortcuts(self.clipboard_shortcuts);
              egui_winit
          });
+@@ -1720,6 +1721,12 @@
+         mut viewport_ui_cb,
+     } = immediate_viewport;
+ 
++    // A hidden sizing pass must not submit a buffer: on Wayland that maps the
++    // temporary-size window even though winit cannot implement set_visible(false).
++    // Retain texture updates and process commands so the next visible pass uses
++    // the measured client size before the compositor chooses its placement.
++    let paint = builder.visible != Some(false);
++
+     let viewport_id = ids.this;
+ 
+     {
+@@ -1812,43 +1819,45 @@
+         return;
+     };
+ 
+-    let screen_size_in_pixels: [u32; 2] = window.inner_size().into();
+-
+-    change_gl_context(
+-        current_gl_context,
+-        not_current_gl_context,
+-        current_viewport,
+-        viewport_id,
+-        gl_surface,
+-    );
+-
+-    let current_gl_context = current_gl_context.as_ref().unwrap();
+-
+-    if !gl_surface.is_current(current_gl_context) {
+-        log::error!(
+-            "egui::show_viewport_immediate: viewport {:?} ({:?}) was not created on main thread.",
+-            viewport.ids.this,
+-            viewport.builder.title
++    if paint {
++        let screen_size_in_pixels: [u32; 2] = window.inner_size().into();
++
++        change_gl_context(
++            current_gl_context,
++            not_current_gl_context,
++            current_viewport,
++            viewport_id,
++            gl_surface,
+         );
+-    }
+-
+-    egui_glow::painter::clear(
+-        painter.borrow().gl(),
+-        screen_size_in_pixels,
+-        [0.0, 0.0, 0.0, 0.0],
+-    );
+-
+-    painter.borrow_mut().paint_and_update_textures(
+-        screen_size_in_pixels,
+-        pixels_per_point,
+-        &clipped_primitives,
+-        &mut viewport.pending_delta,
+-    );
+-
+-    {
+-        profiling::scope!("swap_buffers");
+-        if let Err(err) = gl_surface.swap_buffers(current_gl_context) {
+-            log::error!("swap_buffers failed: {err}");
++
++        let current_gl_context = current_gl_context.as_ref().unwrap();
++
++        if !gl_surface.is_current(current_gl_context) {
++            log::error!(
++                "egui::show_viewport_immediate: viewport {:?} ({:?}) was not created on main thread.",
++                viewport.ids.this,
++                viewport.builder.title
++            );
++        }
++
++        egui_glow::painter::clear(
++            painter.borrow().gl(),
++            screen_size_in_pixels,
++            [0.0, 0.0, 0.0, 0.0],
++        );
++
++        painter.borrow_mut().paint_and_update_textures(
++            screen_size_in_pixels,
++            pixels_per_point,
++            &clipped_primitives,
++            &mut viewport.pending_delta,
++        );
++
++        {
++            profiling::scope!("swap_buffers");
++            if let Err(err) = gl_surface.swap_buffers(current_gl_context) {
++                log::error!("swap_buffers failed: {err}");
++            }
+         }
+     }
+ 
 --- a/eframe-0.37.0/src/native/mod.rs
 +++ b/eframe-0.37.0/src/native/mod.rs
 @@ -1,5 +1,7 @@
@@ -366,4 +461,67 @@
 +                egui_winit.register_window(&window);
                  egui_winit.set_clipboard_shortcuts(clipboard_shortcuts);
                  self.egui_winit = Some(egui_winit);
+ 
+@@ -1212,6 +1214,12 @@
+         builder,
+         mut viewport_ui_cb,
+     } = immediate_viewport;
++
++    // A hidden sizing pass must not submit a buffer: on Wayland that maps the
++    // temporary-size window even though winit cannot implement set_visible(false).
++    // Retain texture updates and process commands so the next visible pass uses
++    // the measured client size before the compositor chooses its placement.
++    let paint = builder.visible != Some(false);
+ 
+     let input = {
+         let SharedState {
+@@ -1294,27 +1302,29 @@
+         return;
+     };
+ 
+-    {
+-        profiling::scope!("set_window");
+-        if let Err(err) = pollster::block_on(painter.set_window(ids.this, Some(Arc::clone(window))))
++    if paint {
+         {
+-            log::error!(
+-                "when rendering viewport_id={:?}, set_window Error {err}",
+-                ids.this
+-            );
+-        }
+-    }
+-
+-    let clipped_primitives = egui_ctx.tessellate(shapes, pixels_per_point);
+-    painter.paint_and_update_textures(
+-        ids.this,
+-        pixels_per_point,
+-        [0.0, 0.0, 0.0, 0.0],
+-        &clipped_primitives,
+-        &mut viewport.pending_delta,
+-        vec![],
+-        window,
+-    );
++            profiling::scope!("set_window");
++            if let Err(err) = pollster::block_on(painter.set_window(ids.this, Some(Arc::clone(window))))
++            {
++                log::error!(
++                    "when rendering viewport_id={:?}, set_window Error {err}",
++                    ids.this
++                );
++            }
++        }
++
++        let clipped_primitives = egui_ctx.tessellate(shapes, pixels_per_point);
++        painter.paint_and_update_textures(
++            ids.this,
++            pixels_per_point,
++            [0.0, 0.0, 0.0, 0.0],
++            &clipped_primitives,
++            &mut viewport.pending_delta,
++            vec![],
++            window,
++        );
++    }
+ 
+     egui_winit.handle_platform_output(window, platform_output);
  

@@ -1215,6 +1215,12 @@ fn render_immediate_viewport(
         mut viewport_ui_cb,
     } = immediate_viewport;
 
+    // A hidden sizing pass must not submit a buffer: on Wayland that maps the
+    // temporary-size window even though winit cannot implement set_visible(false).
+    // Retain texture updates and process commands so the next visible pass uses
+    // the measured client size before the compositor chooses its placement.
+    let paint = builder.visible != Some(false);
+
     let input = {
         let SharedState {
             egui_ctx,
@@ -1296,27 +1302,29 @@ fn render_immediate_viewport(
         return;
     };
 
-    {
-        profiling::scope!("set_window");
-        if let Err(err) = pollster::block_on(painter.set_window(ids.this, Some(Arc::clone(window))))
+    if paint {
         {
-            log::error!(
-                "when rendering viewport_id={:?}, set_window Error {err}",
-                ids.this
-            );
+            profiling::scope!("set_window");
+            if let Err(err) = pollster::block_on(painter.set_window(ids.this, Some(Arc::clone(window))))
+            {
+                log::error!(
+                    "when rendering viewport_id={:?}, set_window Error {err}",
+                    ids.this
+                );
+            }
         }
-    }
 
-    let clipped_primitives = egui_ctx.tessellate(shapes, pixels_per_point);
-    painter.paint_and_update_textures(
-        ids.this,
-        pixels_per_point,
-        [0.0, 0.0, 0.0, 0.0],
-        &clipped_primitives,
-        &mut viewport.pending_delta,
-        vec![],
-        window,
-    );
+        let clipped_primitives = egui_ctx.tessellate(shapes, pixels_per_point);
+        painter.paint_and_update_textures(
+            ids.this,
+            pixels_per_point,
+            [0.0, 0.0, 0.0, 0.0],
+            &clipped_primitives,
+            &mut viewport.pending_delta,
+            vec![],
+            window,
+        );
+    }
 
     egui_winit.handle_platform_output(window, platform_output);
 

@@ -320,6 +320,11 @@ fn native_editor_and_option_families_close_through_their_cancel_paths() {
             assert!(size.y >= 300.0, "native choices need popup space");
         }
         assert!(size.x > 0.0 && size.y > 0.0);
+        assert_eq!(renderer.borrow().builders[&id].visible, Some(false));
+        frame(&ctx, &mut editor);
+        let builder = renderer.borrow().builders[&id].clone();
+        assert_eq!(builder.visible, Some(true));
+        assert_eq!(builder.inner_size, Some(size));
         renderer.borrow_mut().inputs.insert(id, close(id));
         frame(&ctx, &mut editor);
         assert_eq!(editor.dialog_kind(), None, "{family}");

@@ -175,3 +175,9 @@ zero sizes. The application tests compile the exact tracker for regressions.
 These dependencies retain their own licenses; the application's LGPL-3.0-only
 license does not replace them. Binary source bundles must include these patched
 trees, all patches, both manifests and all retained license/notice files.
+
+Additional eframe modifications on 2026-11-06, under MIT OR Apache-2.0: skip
+buffer presentation for an explicitly hidden immediate-viewport sizing pass in
+WGPU and Glow, retaining its texture deltas and processing native commands.
+This lets the first visible pass map the measured dialog dimensions on Wayland,
+where winit cannot hide a window after a buffer has been submitted.

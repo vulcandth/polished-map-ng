@@ -997,7 +997,7 @@
       "archive_sha256": "9c5642501a65ca657d05f00c643a5c14ff2346cb3818032bfe23d58e1f8e5f84",
       "archive_url": "https://static.crates.io/crates/eframe/eframe-0.37.0.crate",
       "patch": "patches/eframe-0.37.0.patch",
-      "patch_sha256": "c4318993bd1fea71e29245c6c8d5fd0cc3c3d82ead78d81a6fd453e1e9211725",
+      "patch_sha256": "5cdd6562188d757604d71402115f125f5dfe639730e1146e2570bb69b748e8f2",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "6b52daea212c1b9ede504ecd06ca5bb992e586c82eecaf4c94e4c9135094a084",
@@ -1060,7 +1060,7 @@
           "original_sha256": "a4e86acf8c0298d980972ffb27fa032b9337554cd64e0bca6de70fafce49ec30"
         },
         "src/native/glow_integration.rs": {
-          "sha256": "6471a79a4b97d70a75237d2c2168ba0535a9a02bdbf00d1aa22d45639308588a",
+          "sha256": "79ba7c5f5007e2ecc97b11fbdad7e596381fb065a0df429a3da148c0db20ad68",
           "original_sha256": "126bf05970d14177f885c2e767446576d8721be44bc81e1dead26596bc7880c4"
         },
         "src/native/macos.rs": {
@@ -1080,7 +1080,7 @@
           "original_sha256": "c3ac2c5096efccfc7bfad8f3984161002aca61cb28a0cdcb3a6683b8db0185f5"
         },
         "src/native/wgpu_integration.rs": {
-          "sha256": "339feefb6c1cbdf1f9e03ace3dd5e66d58f210647fa50da179756cb9cb9efb97",
+          "sha256": "05fb8defd826cbe3148588b4e3e938b29a13ba92ce8b12a87dec17738b792926",
           "original_sha256": "658a1283f49ecabc308a8dd69fbe7baa694fd745723c623ecb77836e8e1a39a7"
         },
         "src/native/winit_integration.rs": {

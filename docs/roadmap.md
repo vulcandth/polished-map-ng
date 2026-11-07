@@ -26,9 +26,10 @@ Native feasibility was originally listed under Foundation: it is **not complete*
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
 **Next:** Continue PP3 integrated desktop capture/drop, placement/focus/DPI and
-macOS native acceptance. Resolve the tile-dialog placement and pointer-alignment
-questions from the [native 2× check](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
-on a directly hosted compositor before claiming high-DPI acceptance.
+macOS native acceptance. The temporary-size dialog mapping defect from the
+[native 2× check](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
+is fixed; verify pointer alignment on a directly hosted compositor before
+claiming high-DPI acceptance.
 Standard Wayland image Copy/Paste now has independent
 protocol checks and native two-process exchange without X11 or data-control. PP4's
 standalone graphics and Linux original-application Print comparisons now have
@@ -265,8 +266,8 @@ Do not expose automatic profile switching until the unified-editor milestone.
   Batched tile/palette/sidebar transfers are also fixed and natively verified;
   see [internal transfer evidence](compatibility.md#ordered-internal-asset-transfers).
   [Native 2× geometry and palette checks](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
-  add measured evidence; off-screen tile placement and desktop pointer alignment
-  still require investigation, alongside mixed-DPI and macOS checks.
+  add measured evidence and a verified fix for temporary-size dialog mapping;
+  desktop pointer alignment, mixed-DPI and macOS checks remain open.
   Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 (in progress) — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every

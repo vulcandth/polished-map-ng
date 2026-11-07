@@ -3050,9 +3050,9 @@ changed from 27 to 3 (`18FFDE`), middle-click restored 27 (`DEFFDE`), and Escape
 discarded the draft. File → Exit then returned exit code 0 without a dirty prompt.
 The fixture checkout remained clean.
 
-This does **not** pass placement or complete high-DPI input acceptance. The tile
-child opened partly off the small desktop. The diagnostic trace confirms native
-parent ownership, but the cause of that placement remains unresolved. Injected
+That initial run did **not** pass placement or complete high-DPI input acceptance.
+The tile child opened partly off the small desktop. The diagnostic trace confirms
+native parent ownership; the mapping defect and its fix are explained below. Injected
 pointer coordinates also differed vertically from screenshot coordinates: a
 palette click at screenshot `(1454,859)` reached client `(235,25)`, while the
 visible client began at `(984,797)`. The slider responded when the delivered
@@ -3063,9 +3063,40 @@ product coordinates. Closing the first compositor host with Alt+F4 crashed
 Weston and disconnected the application; that run provides no clean-exit
 evidence. The second run used the application's File menu successfully.
 
-PP3 retains tile-dialog placement, direct-desktop pointer alignment, mixed-DPI
-transitions and macOS native acceptance. No aesthetic changes or screenshot
-baseline updates were made for this check.
+The subsequent source/trace comparison identified a product defect in the
+renderer integration. Both immediate renderers presented the first hidden sizing
+pass before processing its resize command. Winit cannot implement visibility
+changes on Wayland, so this mapped a temporary 360×200 client. Weston 9's
+`desktop-shell/shell.c` (`map`, `weston_view_set_initial_position`,
+`desktop_surface_set_parent`) chooses a random in-bounds position using that
+first surface size; parent ownership affects stacking, not centering. Growing
+the dialog later could push its controls off screen. Source: the
+[official Weston 9.0.0 archive](https://wayland.freedesktop.org/releases/weston-9.0.0.tar.xz),
+SHA-256 `5cf5d6ce192e0eb15c1fc861a436bf21b5bb3b91dbdabbdebe83e1f83aa098fe`.
+
+The pinned eframe WGPU/Glow integrations now retain texture updates and process
+commands during an explicitly hidden immediate sizing pass without presenting
+a buffer. The next visible pass therefore uses the measured client size. This
+preserves compositor ownership of placement and does not add pixel offsets.
+The [native dialog-family test](../crates/gui/src/dialog_host/tests.rs) checks
+hidden measurement followed by visible, correctly sized clients for the editor
+and option families. Native protocol traces independently verify the actual
+renderer: before the fix, Map Options first attached a buffer with decorated
+geometry 368×232 (360×200 client); afterward it first attached at 308×332
+(300×300 client), and the tile editor at 449×336 (441×304 client). On the same
+900×650 logical/scale-2 desktop, the complete tile client measured 882×608
+physical pixels and both confirmation buttons were visible. Escape canceled it.
+File → Exit returned code 0 without a dirty prompt. The rebuilt Windows binary
+also opened Map Options and the complete centered tile child, rendered its
+textures, canceled with Escape and exited cleanly with Alt+F4. No project Save or
+Export was performed in either fixed-build run.
+
+Windows format, workspace Clippy/tests/rustdoc and the production native graph
+pass. The Linux application build and compilation with the alternate Glow
+renderer pass. Vendor archives, patches and retained license records are checked
+against their pinned sources. PP3 retains direct-desktop pointer alignment,
+mixed-DPI transitions, broader placement policy and macOS native acceptance.
+No aesthetic changes or screenshot baseline updates were made.
 
 ## Plusplus asset switching and tile options
 
@@ -3491,14 +3522,17 @@ archive/patch verification and documentation checks also pass.
 
 The first acknowledgment-only Wayland retest displayed `The native image clipboard is unavailable
 on this display`, with no success dialog; acknowledgment returns to the unchanged
-10×9/248-block editor. A separate startup defect was also reproduced: Map Options
-could be created before eframe mapped its parent, centering the dialog partly
-off-screen on a zero-sized parent. The native host now defers child creation until
+10×9/248-block editor. A separate startup issue was also observed: Map Options
+could be created before eframe mapped its parent and appeared partly off screen.
+The native host now defers child creation until
 the parent's first frame has completed. The rebuilt Wayland startup displays the
 complete 300×300 Map Options client at positive desktop coordinates, and Open
 reveals the parent normally. The same rule covers nested errors; automated native
 renderer tests verify one-frame deferral, subsequent creation and retained modal
-draft/close guards. This addresses usability, not font or decoration matching.
+draft/close guards. Later [scale-two tracing](#native-scale-two-geometry-and-remaining-placement-checks)
+identified temporary-size mapping as an additional cause of off-screen dialogs;
+the earlier positive-coordinate observation did not prove general placement.
+These changes address usability, not font or decoration matching.
 The rebuilt X11 application still reports success after Copy; independent
 clipboard capture matches all 92,160 grid-baseline pixels and RGB SHA-256
 `c878560e03bbfc0e565a730337bd2a261f6c1405ba9e295ae708aec428b44283`.
