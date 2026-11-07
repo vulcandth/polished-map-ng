@@ -3419,7 +3419,21 @@ captured the 320×288 grid image; all 92,160 RGB pixels match the existing basel
 SHA-256 `c878560e03bbfc0e565a730337bd2a261f6c1405ba9e295ae708aec428b44283`.
 The peer then copied a generated 8×8 four-shade tile; NG++ Ctrl+Shift+V displayed
 the expected repeating grayscale columns in its draft. Cancel discarded that
-paste. Captures and fixture graphics remain ignored scratch data.
+paste. The final `6044f08` build repeated the exchange directly on WSLg with
+`DISPLAY` unset: its independent capture has the same dimensions and exact RGB
+hash. The generated tile pasted successfully; copying that draft, cancelling it,
+opening a fresh editor and pasting again preserved the copied pixels. Both drafts
+were cancelled and the project stayed unchanged. Captures and fixture graphics
+remain ignored scratch data.
+
+Local final verification passed Windows format/Clippy/workspace tests/rustdoc,
+Linux Clippy with native test targets and native build, all eleven clipboard
+protocol scenarios, the adapter/codec unit tests, both production dependency
+graphs, vendor source/license/patch checks and documentation links/examples.
+Commit `6044f08` passed all eight
+[cross-platform CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42330470461),
+including Windows/Linux/macOS tests and native probes, visual regressions,
+source-reference/real-project checks, MSRV and dependency/license auditing.
 
 This establishes focused standard-protocol application exchange, not complete
 Wayland desktop acceptance, arbitrary external application compatibility, macOS
