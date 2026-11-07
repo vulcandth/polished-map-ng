@@ -42,6 +42,25 @@ range while preserving license bytes and executable modes. The regression in
 [the archive test](../tools/test_development_package.py) covers the pre-1980
 notice timestamps found during the first Mac package run.
 
+The [2026-11-07 master development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-7e5fc4d)
+is published from shared-source revision `7e5fc4dccf01e5897a3cf120e7ba3e53472c937c`,
+with the master launcher, settings and bundle identity. It includes the shared
+native input, dialog, clipboard, fullscreen-startup and keyboard-focus fixes.
+[All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42385507344)
+and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42385522286)
+passed. All five archives passed checksum, exact-commit/profile, executable
+architecture/mode, Mac bundle/signature-metadata and license checks. The tracked
+source matches the packaged revision, apart from the appended offline Cargo
+configuration. All 453 registry sources match Cargo.lock and their vendor file
+checksums; each binary retains 463 dependency license/attribution records.
+All ten published asset sizes and digests match the verified local files.
+The packaged CLI ran on all four native build runners, locally on Windows and
+under WSL Ubuntu. Both Mac jobs verified their ad-hoc bundle signatures.
+These package checks do not close native GUI acceptance; no new manual GUI
+verification is claimed for this delivery. Aesthetics remain deferred.
+
+Historical package evidence follows; it does not supersede this candidate.
+
 The [2026-11-06 master development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-06-73c0e36)
 is published from `73c0e362ead36be8b8a44c0e7b999ed187b8ac17`.
 [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42297779471)
@@ -54,8 +73,6 @@ architecture/mode, Mac bundle/signature-metadata and license checks. All ten
 published asset digests match the verified local files. The shipped Windows CLI
 also ran locally; focused native Windows GUI evidence is recorded in the
 [review disposition](compatibility.md#november-1-upstream-review).
-
-Historical package evidence follows; it does not supersede this candidate.
 
 The [2026-10-31 development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-10-31-9a6f607)
 is published from `9a6f6074fc939276fa747c287280a5d61898c5b8`.
@@ -88,10 +105,11 @@ successful native CLI smoke checks; record the workflow and release links here.
 
 ## Plusplus development packages
 
-The [2026-11-07 plusplus development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-fc18238)
-is published from `fc182383afb05226f036baacf5da738b37ede966` for PP3/PP4 native
-acceptance. [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42344988501)
-and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42345012634)
+The [2026-11-07 plusplus development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-7e5fc4d)
+is published from `7e5fc4dccf01e5897a3cf120e7ba3e53472c937c` for PP3/PP4 native
+acceptance, using the same shared-source revision as the master candidate above.
+[All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42385507344)
+and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42385529178)
 passed. The manual packaging workflow accepts `profile: plusplus`; the
 default remains `master`. Source and binaries record the selected profile in
 BUILD-INFO.json. Binary packaging inherits it from the matching source and rejects
@@ -117,6 +135,10 @@ Direct-desktop input/drop/DPI, macOS GUI workflows and the other PP3/PP4 native
 acceptance gates remain open. No plusplus parity release is claimed; aesthetics
 and original-font matching remain deferred. The master candidate above remains
 available separately.
+
+This candidate replaces the [earlier November 7 plusplus packages](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-fc18238)
+with a fresh build paired with the master profile. It retains the same functional
+fixes; no new GUI acceptance is claimed for this packaging refresh.
 
 This candidate supersedes the [earlier November 6 plusplus build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-06-3646262),
 which could crash when restoring fullscreen on Wayland. The

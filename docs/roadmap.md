@@ -41,7 +41,7 @@ standalone graphics and Linux original-application Print comparisons now have
 native evidence; its acceptance gate remains open alongside PP3. The user
 resumed plusplus after the M8 backport.
 Master M5–M7 acceptance remains open on the
-[November 6 development build](releases.md#development-packages).
+[latest master development build](releases.md#development-packages).
 The remaining M4 aesthetic matching is
 **deferred by user direction (2026-10-30)** after the palette-slider work;
 resume M4 only to fix a functional issue. Exact original fonts are also deferred
