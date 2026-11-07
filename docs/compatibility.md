@@ -3254,10 +3254,30 @@ comparison. The archive and game graphics remain ignored local scratch data.
 | Event NG → original | NG Event Options moved the first warp X from 6 to 7 and saved. Original Reload Events displayed `(7,3)`. The script differed only by that coordinate. |
 | Event original → NG | Original dragged that warp to `(8,3)` and saved. The rebuilt NG opened it at `(8,3)`, dragged to `(9,3)` and saved. The complete script equals the pinned bytes with only the first `warp_event  6,  3, ELMS_LAB, 1` changed to X = 9. |
 | Plain Print export | Both full applications exported with roof `new_bark`, Day palettes and all five Print overlays off. Decoded RGB images are 320×288 and match at every one of 92,160 pixels; RGB SHA-256 is `80fce00f1fdb54e61d64f7302dc2280de739df1e6c97477964a5099d7d7c3f0c`. PNG container bytes need not match. Text/overlay and clipboard comparisons remain open. |
+| Block/ASM collisions NG → original | On block 0, NG painted occurrence 0 with tile `$1:01`, RED, X flip and priority, and changed top-left collision to `FLOOR`. Save changed only metatile byte 0 to `01`, attribute byte 0 to `A9`, and that named field in the collision ASM. Original reopened and picked the same tile/flags and collision. |
+| Block/ASM collisions original → NG | Original painted occurrence 1 with the same tile plus Y flip (`E9`) and changed top-right collision to `WALL`. NG reopened and picked both flips, RED, priority and bank 1. Metatile bytes are `01 01`, attribute bytes `A9 E9`, and collision row 0 is `FLOOR, WALL, VOID, VOID`; every other byte in those files matches the pinned source. |
+| Compound graphics NG → original | Native NG edited pixel `(0,0)` in both `johto_common.png` (128×64) and `johto_traditional.johto_common.png` (128×80) to black. Save retained both dimensions and every other decoded pixel. Original reopened both and displayed the edits in tiles `$0:00` and `$1:00`. |
+| Common graphics original → NG | Original added black pixel `(1,0)` in `$0:00`; NG reopened and displayed both black pixels. The 128×64 common sheet differs from pinned pixels only at `(0,0)` and `(1,0)`. The invalid unique sheet produced by the same save required the explicit fixture reset described below. |
+| Roof in both directions | NG changed `(0,16)` to black in the 24×24 `new_bark.png`; original reopened it in tile `$0:10`, changed `(1,16)` to white, and saved. NG reopened and displayed both edits. Only those two decoded pixels differ from the pinned roof; all other pixels and dimensions remain exact. |
+| Palette export/import in both directions | NG edited Night/GRAY's first color to exact hex `13579B`, displayed RGB5 2/10/19, and exported all six sets (48 RGB rows). Original imported it as 2/10/19, incremented red to 3 and exported. All 48 RGB rows match NG's file except that one intended channel. NG imported the original file and displayed 3/10/19 and hex `18529C`. The original's mislabeled fourth/fifth set comments and `(null)` sixth comment match the [documented label-table defect](deviations.md#palette-export-labels-and-validation); they do not change numeric set order. |
 
 A complete SHA-256 comparison of all 7,803 archived project files after the
 map/event operations found changes only in `maps/NewBarkTown.ablk` and
 `maps/NewBarkTown.asm`, with no files added. Print exports are outside the project.
+After NG's block/graphics/roof saves, only the additional three block/collision
+files and three graphics PNGs changed; the complete project still had no added files.
+
+The reverse compound save reproduced the already documented
+[upstream export overread](deviations.md#plusplus-graphics-export-bounds).
+Original saved the 128×80 unique sheet as 128×208, with nonwhite data beyond the
+valid rows; adding the 128 common tiles gives 544 tiles. NG's native reopen
+reported that compound graphics exceed 512 tiles including padding, retained
+the existing 248-block/10×9 editor session, and left the rejected file untouched.
+This is a safety deviation, not a successful reverse compound roundtrip or an
+NG export-size defect. The original output was retained only in ignored scratch
+evidence. For the common-sheet/roof reverse checks, the invalid unique file was
+explicitly reset to byte-exact pinned data outside the application; NG did not
+silently crop or repair it. Reverse checks of a valid standalone sheet remain open.
 
 This pass exposed a shared native event-input defect: Windows delivered a primary
 press and movement off the marker in one frame; egui's final-position hit test
@@ -3275,10 +3295,11 @@ pass, including Windows/Linux/macOS and the shared master regressions.
 
 PP3 remains open for integrated cross-application clipboard, capture/drop,
 placement/DPI and complete Linux/macOS workflows. PP4 remains open for the rest
-of the pinned Polished Crystal full-application matrix: block attributes/collisions,
-graphics/roofs/palettes and remaining Print overlay/clipboard comparisons,
+of the pinned Polished Crystal full-application matrix: valid standalone graphics
+roundtrips and remaining Print overlay/clipboard comparisons,
 together with master regressions for subsequent changes.
-The map/event evidence above does not establish complete real-project parity.
+The workflows above cover the observed operations, not complete real-project or
+cross-platform parity; integrated gesture/window acceptance remains PP3.
 
 ## November 1 upstream review
 

@@ -25,9 +25,10 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Complete PP3 native editing, dialog, clipboard and save/conflict
-workflows, then PP4 original-application interoperability using the pinned
-Polished Crystal fixture. The user resumed plusplus after the M8 backport.
+**Next:** Continue PP4 with valid standalone graphics roundtrips, then remaining
+Print overlay/clipboard comparisons on the pinned Polished Crystal fixture.
+PP3 integrated desktop/gesture checks remain open alongside that application
+matrix. The user resumed plusplus after the M8 backport.
 Master M5–M7 acceptance remains open on the
 [November 6 development build](releases.md#development-packages).
 The remaining M4 aesthetic matching is
@@ -252,9 +253,12 @@ Do not expose automatic profile switching until the unified-editor milestone.
   pass against original plusplus, with master regressions still green and every
   remaining difference resolved or explicitly approved. Backend roundtrips alone
   do not establish application parity. [Pinned-project application checks](compatibility.md#pinned-polished-crystal-application-interoperability)
-  now cover bidirectional map/event saves, exact-byte preservation and an exact
-  plain Print pixel comparison. Complete the block/collision, graphics/roof/palette
-  edit workflows and remaining Print overlay/clipboard application matrix.
+  now cover bidirectional map/event/block/collision/roof/palette operations,
+  compound graphics NG → original, valid common-sheet edits back to NG, and an
+  exact plain Print pixel comparison. The original compound-export overread is
+  reproduced and NG's existing rejection verified. Complete valid standalone
+  graphics roundtrips and remaining Print overlay/clipboard application checks;
+  retain PP3's integrated desktop/gesture acceptance.
 
 ## 3. Unified editor — not started
 

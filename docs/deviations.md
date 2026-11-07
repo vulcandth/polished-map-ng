@@ -558,6 +558,10 @@ before any write. Missing components can trigger source's inferred-length output
 and produce an unopenable aggregate; NG reports that case instead of creating it.
 Valid missing-component output semantics are otherwise preserved. These guards
 extend the existing no-partial-write persistence policy to plusplus.
+The [real-project native pass](compatibility.md#pinned-polished-crystal-application-interoperability)
+reproduces this defect in the unmodified original: a 128×80 unique sheet became
+128×208 with nonwhite overread data, producing 544 aggregate tiles. NG rejects
+that file without changing it or replacing the current editor session.
 
 ## Upstream tester usability review
 
