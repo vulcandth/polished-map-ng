@@ -15,7 +15,7 @@ and design decisions in [architecture](architecture.md).
 | 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
-| 6. Platform delivery | In progress — development builds available | Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
+| 6. Platform delivery | In progress — development builds available | Separate master and plusplus Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
 
 `[x]` means the stated work is implemented with linked evidence, not that its
 entire milestone has passed. `[ ]` means work or acceptance remains. Unchecked
@@ -26,9 +26,9 @@ Native feasibility was originally listed under Foundation: it is **not complete*
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
 **Next:** Continue PP3 integrated desktop capture/drop, placement/focus/DPI and
-macOS native acceptance. Prepare the separate
-[plusplus tester packages](releases.md#plusplus-development-packages) to make
-those checks reproducible across all four build targets. The temporary-size dialog mapping defect from the
+macOS native acceptance using the published
+[plusplus tester packages](releases.md#plusplus-development-packages)
+for all four build targets. The temporary-size dialog mapping defect from the
 [native 2× check](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
 is fixed; verify pointer alignment on a directly hosted compositor before
 claiming high-DPI acceptance.
@@ -271,8 +271,8 @@ Do not expose automatic profile switching until the unified-editor milestone.
   add measured evidence and a verified fix for temporary-size dialog mapping;
   desktop pointer alignment, mixed-DPI and macOS checks remain open.
   Separate [plusplus tester packages](releases.md#plusplus-development-packages)
-  are in preparation; verify matching source/licenses and all four target archives
-  before publishing a development candidate for these remaining checks.
+  and matching source/licenses are published after CI, archive and packaged CLI
+  verification for all four targets; use them for the remaining native checks.
   Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 (in progress) — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every

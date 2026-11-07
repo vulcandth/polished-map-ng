@@ -81,8 +81,11 @@ successful native CLI smoke checks; record the workflow and release links here.
 
 ## Plusplus development packages
 
-The separate plusplus candidate is **in preparation** for PP3/PP4 native
-acceptance. The manual packaging workflow accepts `profile: plusplus`; the
+The [2026-11-06 plusplus development candidate](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-06-3646262)
+is published from `3646262e3b128040fe3d731a652fde1945463eec` for PP3/PP4 native
+acceptance. [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42340291285)
+and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42340311952)
+passed. The manual packaging workflow accepts `profile: plusplus`; the
 default remains `master`. Source and binaries record the selected profile in
 BUILD-INFO.json. Binary packaging inherits it from the matching source and rejects
 an inconsistent override. Plusplus archives use `polished-map-ng-plusplus-dev-`
@@ -91,8 +94,20 @@ names and contain `polished-map-plusplus` (with `.exe` on Windows), or a separat
 complete source, notices, checksums and offline rebuild policy remain the same.
 The package's TESTING.md links to its included [plusplus tester guide](testing-plusplus.md),
 preserving the guide's offline links in `docs/`.
-Publication requires green CI and verification of all four target archives and
-their matching source. No plusplus parity release is claimed.
+All five archives passed checksum, exact-commit/profile, executable
+architecture/mode, Mac bundle/signature-metadata and license checks. Tracked
+source matches the packaged commit, with offline Cargo source configuration
+appended for the archive's 453 locked registry sources. Each binary retains all 463 dependency
+license/attribution records. All ten published asset sizes and digests match the
+verified local files. The packaged CLI ran on each native build runner, locally
+on Windows, and under WSL Ubuntu with glibc 2.35. Both Mac jobs verified their
+ad-hoc bundle signatures. The packaged tester entry point and its guide links
+are verified for offline use.
+
+Direct-desktop input/drop/DPI, macOS GUI workflows and the other PP3/PP4 native
+acceptance gates remain open. No plusplus parity release is claimed; aesthetics
+and original-font matching remain deferred. The master candidate above remains
+available separately.
 
 ## Final release gate
 
