@@ -362,3 +362,248 @@ fn asset_drag_feedback_matches_selection_border_geometry() {
     }
     snapshots.unwrap();
 }
+
+// Native input can deliver a complete gesture before the next egui frame.
+fn queue_drag(h: &mut Harness<'_, Editor>, from: Pos2, to: Pos2, ctrl: bool) {
+    let modifiers = if ctrl {
+        egui::Modifiers::CTRL
+    } else {
+        egui::Modifiers::NONE
+    };
+    h.input_mut().events.extend([
+        egui::Event::PointerMoved(from),
+        egui::Event::PointerButton {
+            pos: from,
+            button: egui::PointerButton::Primary,
+            pressed: true,
+            modifiers,
+        },
+        egui::Event::PointerMoved(to),
+        egui::Event::PointerButton {
+            pos: to,
+            button: egui::PointerButton::Primary,
+            pressed: false,
+            modifiers,
+        },
+    ]);
+}
+
+fn batch_drag(h: &mut Harness<'_, Editor>, from: Pos2, to: Pos2, ctrl: bool) {
+    queue_drag(h, from, to, ctrl);
+    h.run();
+}
+
+#[test]
+fn batched_tile_transfers_cover_both_profiles_and_roofs() {
+    for plus in [false, true] {
+        for roof in [false, true] {
+            let (_dir, mut h) = if plus {
+                crate::plusplus_session::tests::fixture()
+            } else if roof {
+                crate::roof_editor_tests::fixture()
+            } else {
+                crate::tileset_editor_tests::fixture(false, false)
+            };
+            if roof {
+                h.state_mut().prepare_roof();
+            } else {
+                h.state_mut().prepare_tileset();
+            }
+            h.run();
+            let labels = match (plus, roof) {
+                (false, false) => ["Tileset tile $00", "Tileset tile $01"],
+                (false, true) => ["Roof tile $0A", "Roof tile $0B"],
+                (true, false) => ["Tileset tile $0:00", "Tileset tile $0:01"],
+                (true, true) => ["Roof tile $0:0A", "Roof tile $0:0B"],
+            };
+            let get = |h: &Harness<'_, Editor>, id| {
+                h.state().tileset_form.as_ref().unwrap().draft.pixels(id)
+            };
+            h.state_mut()
+                .tileset_form
+                .as_mut()
+                .unwrap()
+                .draft
+                .apply(polished_map_core::plusplus::RawTileCommand::Paint {
+                    tile: 0,
+                    points: vec![Point { x: 0, y: 0 }],
+                    hue: 3,
+                })
+                .unwrap();
+            let before = [get(&h, 0), get(&h, 1)];
+            assert_ne!(before[0], before[1]);
+            let from = h.get_by_label(labels[0]).rect().center();
+            let to = h.get_by_label(labels[1]).rect().center();
+            batch_drag(&mut h, from, to, false);
+            assert_eq!(
+                [get(&h, 0), get(&h, 1)],
+                [before[1], before[0]],
+                "plus={plus}, roof={roof}"
+            );
+            batch_drag(&mut h, to, from, true);
+            assert_eq!([get(&h, 0), get(&h, 1)], [before[0]; 2]);
+            h.get_by_label("Cancel").click();
+            h.run();
+            assert!(!h.state().is_modified());
+        }
+    }
+}
+
+#[test]
+fn batched_palette_transfers_preserve_live_rgb8_for_both_profiles() {
+    for plus in [false, true] {
+        let (_dir, mut h) = if plus {
+            crate::plusplus_session::tests::fixture()
+        } else {
+            crate::tileset_editor_tests::fixture(false, false)
+        };
+        h.state_mut().prepare_palettes();
+        h.run();
+        let set = h.state().palette_form.as_ref().unwrap().draft.selected();
+        let (a, b) = (
+            ColorSlot { set, ..slot(0, 0) },
+            ColorSlot { set, ..slot(0, 2) },
+        );
+        h.state_mut()
+            .palette_form
+            .as_mut()
+            .unwrap()
+            .draft
+            .apply_batch(&[
+                PaletteCommand::SetRgb {
+                    slot: a,
+                    rgb: [3, 127, 249],
+                },
+                PaletteCommand::SetRgb {
+                    slot: b,
+                    rgb: [17, 34, 51],
+                },
+            ])
+            .unwrap();
+        h.run();
+        let from = h.get_by_label("GRAY color 1").rect().center();
+        let to = h.get_by_label("GRAY color 2").rect().center();
+        batch_drag(&mut h, from, to, false);
+        assert_eq!(color(&h, a), [17, 34, 51], "plus={plus}");
+        assert_eq!(color(&h, b), [3, 127, 249]);
+        // Two transfers in one rendered frame must use the live results of the first.
+        queue_drag(&mut h, to, from, false);
+        queue_drag(&mut h, from, to, true);
+        h.run();
+        assert_eq!(color(&h, a), [3, 127, 249]);
+        assert_eq!(color(&h, b), [3, 127, 249]);
+        h.get_by_label("Cancel").click();
+        h.run();
+        assert!(!h.state().is_modified());
+    }
+}
+
+#[test]
+fn batched_sidebar_transfer_swaps_blocks_without_painting_map() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    batch_drag(&mut h, Pos2::new(16.0, 63.0), Pos2::new(48.0, 63.0), false);
+    let loaded = h.state().loaded.as_ref().unwrap();
+    let blocks = loaded.blockset.as_ref().unwrap().blockset();
+    assert_eq!(blocks.blocks()[0], [1; 16]);
+    assert_eq!(blocks.blocks()[1], [0; 16]);
+    assert!(!loaded.document.map().is_modified());
+}
+
+#[test]
+fn batched_sidebar_transfer_preserves_plusplus_attributes_and_map() {
+    let (_dir, mut h) = crate::plusplus_session::tests::fixture();
+    batch_drag(&mut h, Pos2::new(16.0, 63.0), Pos2::new(48.0, 63.0), false);
+    let loaded = h.state().loaded.as_ref().unwrap();
+    let blocks = loaded.plus_assets.as_ref().unwrap().blocks.blockset();
+    assert_eq!(&blocks.offsets().bytes()[..16], &[1; 16]);
+    assert_eq!(&blocks.attribute_bytes()[..16], &[1; 16]);
+    assert_eq!(&blocks.offsets().bytes()[16..32], &[0; 16]);
+    assert_eq!(&blocks.attribute_bytes()[16..32], &[0; 16]);
+    assert!(!loaded.document.map().is_modified());
+}
+
+#[test]
+fn batched_transfers_cancel_outside_on_focus_loss_and_when_disabled() {
+    for reason in [
+        "outside",
+        "focus",
+        "gone",
+        "disabled",
+        "same",
+        "outside-source",
+    ] {
+        let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+        h.state_mut().prepare_tileset();
+        h.run();
+        let from = h.get_by_label("Tileset tile $00").rect().center();
+        let to = h.get_by_label("Tileset tile $01").rect().center();
+        let outside = Pos2::new(799.0, 599.0);
+        h.state_mut().drag_and_drop = reason != "disabled";
+        queue_drag(
+            &mut h,
+            if reason == "outside-source" {
+                outside
+            } else {
+                from
+            },
+            match reason {
+                "outside" => outside,
+                "same" => from,
+                _ => to,
+            },
+            false,
+        );
+        if reason == "focus" || reason == "gone" {
+            h.input_mut().events.insert(
+                2,
+                if reason == "focus" {
+                    egui::Event::WindowFocused(false)
+                } else {
+                    egui::Event::PointerGone
+                },
+            );
+        }
+        h.run();
+        assert_eq!(pixels(&h, false, 0), [1; 64], "{reason}");
+        assert_eq!(pixels(&h, false, 1), [2; 64], "{reason}");
+        // Returning without a new press must never revive a cancelled transfer.
+        h.input_mut().events.push(egui::Event::PointerMoved(to));
+        h.run();
+        assert_eq!(pixels(&h, false, 0), [1; 64]);
+    }
+}
+
+#[test]
+fn drag_return_to_origin_selects_without_changing_tiles_or_colors() {
+    let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+    h.state_mut().prepare_tileset();
+    h.run();
+    let from = h.get_by_label("Tileset tile $01").rect().center();
+    queue_drag(&mut h, from, from, false);
+    h.input_mut()
+        .events
+        .insert(2, egui::Event::PointerMoved(from + Vec2::new(50.0, 0.0)));
+    h.run();
+    assert_eq!(h.state().tileset_form.as_ref().unwrap().selected, 1);
+    assert_eq!(pixels(&h, false, 0), [1; 64]);
+    assert_eq!(pixels(&h, false, 1), [2; 64]);
+    h.get_by_label("Cancel").click();
+    h.run();
+    h.state_mut().prepare_palettes();
+    h.run();
+    let before = color(&h, slot(0, 2));
+    let from = h.get_by_label("GRAY color 2").rect().center();
+    queue_drag(&mut h, from, from, false);
+    h.input_mut()
+        .events
+        .insert(2, egui::Event::PointerMoved(from + Vec2::new(50.0, 0.0)));
+    h.run();
+    assert_eq!(color(&h, slot(0, 2)), before);
+    h.get_by_label("R channel").set_value_accesskit(1.0);
+    h.run();
+    assert_ne!(
+        color(&h, slot(0, 2)),
+        before,
+        "the returned source became selected"
+    );
+}

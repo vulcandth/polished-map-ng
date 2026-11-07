@@ -1,6 +1,7 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
 mod about;
 mod artwork;
+mod asset_drag;
 pub use artwork::application_icon;
 mod block_editor;
 mod block_hotkeys;
@@ -245,6 +246,7 @@ pub struct Editor {
     plus_block_attributes: [bool; 3],
     paste_shortcut_handled: bool,
     sidebar_drag: Option<u8>,
+    sidebar_drag_press: Option<(u8, Pos2)>,
     sidebar_press: Option<(egui::PointerButton, u8)>,
     block_hotkeys: block_hotkeys::BlockHotkeys,
     sidebar_reveal: Option<u8>,
@@ -345,6 +347,7 @@ impl Default for Editor {
             plus_block_attributes: [false; 3],
             paste_shortcut_handled: false,
             sidebar_drag: None,
+            sidebar_drag_press: None,
             sidebar_press: None,
             block_hotkeys: Default::default(),
             sidebar_reveal: None,
@@ -1451,21 +1454,13 @@ impl Editor {
                     && (id as usize) < self.textures.len())
                 .then_some(id as u8)
             };
-            if !self.drag_and_drop || !ui.is_enabled() {
-                self.sidebar_drag = None;
-            }
-            if !pan.handled
-                && self.drag_and_drop
-                && response.drag_started_by(egui::PointerButton::Primary)
-            {
-                self.sidebar_drag = ui.input(|i| i.pointer.press_origin()).and_then(hit);
-            }
-            let drop = if response.drag_stopped_by(egui::PointerButton::Primary) {
-                let from = self.sidebar_drag.take();
-                from.zip(response.interact_pointer_pos().and_then(hit))
-            } else {
-                None
-            };
+            let drops = asset_drag::transfers(
+                ui,
+                self.drag_and_drop && !pan.handled,
+                &mut self.sidebar_drag_press,
+                &mut self.sidebar_drag,
+                hit,
+            );
             // Metatile_Button sends its release callback to the pressed button;
             // select_metatile_cb acts only if the pointer is still over it.
             // Keep that cell identity even though egui uses one sidebar region.
@@ -1562,10 +1557,11 @@ impl Editor {
                     self.prepare_block(ui.ctx());
                 }
             }
-            if let Some((from, to)) = drop
-                && from != to
-            {
-                let command = if ui.input(|i| i.modifiers.ctrl) {
+            for asset_drag::Transfer { from, to, copy } in drops {
+                if from == to {
+                    continue;
+                }
+                let command = if copy {
                     polished_map_core::BlockCommand::Copy { from, to }
                 } else {
                     polished_map_core::BlockCommand::Swap { a: from, b: to }

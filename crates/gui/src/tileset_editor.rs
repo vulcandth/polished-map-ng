@@ -34,6 +34,7 @@ pub(super) struct TilesetForm {
     refresh: bool,
     sheet_scroll: workspace_pan::SheetScroll,
     drag: Option<u16>,
+    drag_press: Option<(u16, Pos2)>,
     last_pixel: Option<usize>,
     pixel_primary_down: bool,
     paste_handled: bool,
@@ -369,6 +370,7 @@ impl Editor {
             refresh: true,
             sheet_scroll: Default::default(),
             drag: None,
+            drag_press: None,
             last_pixel: None,
             pixel_primary_down: false,
             paste_handled: false,
@@ -554,7 +556,6 @@ impl Editor {
         }
         let mut accept = false;
         let mut cancel = false;
-        let mut command = None;
         let mut paste_image = false;
         let modal = dialog_host::client(ctx, egui::Id::unique("edit-tileset"), |ui| {
             if form.pending_image.is_some() {
@@ -704,12 +705,14 @@ impl Editor {
                     }
                 }
             }
-            command = form.tile_sheet(
+            if let Err(error) = form.tile_sheet(
                 ui,
                 area.min + Vec2::new(11.0, 37.0),
                 self.drag_and_drop,
                 &priority,
-            );
+            ) {
+                self.error = Some(error);
+            }
             let pixel_grid = rect(tile_x + 1.0, 37.0, 8.0 * pixel_size, 8.0 * pixel_size);
             if let Err(error) = form.pixel_input(ui, pixel_grid, pixel_size) {
                 self.error = Some(error);
@@ -898,11 +901,6 @@ impl Editor {
                 accept |= ctx.input(|i| i.key_pressed(egui::Key::Enter));
             }
             cancel |= ctx.input(|i| i.key_pressed(egui::Key::Escape));
-        }
-        if let Some(command) = command
-            && let Err(e) = form.apply(command)
-        {
-            self.error = Some(e);
         }
         if paste_image && let Err(e) = form.paste_image(ctx) {
             self.error = Some(e);

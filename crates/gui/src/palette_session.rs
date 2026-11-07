@@ -114,6 +114,7 @@ impl Editor {
         self.selected = 0;
         self.block_clipboard = None;
         self.sidebar_drag = None;
+        self.sidebar_drag_press = None;
         self.sidebar_press = None;
         self.canvas_pan.reset();
         self.sidebar_pan.reset();

@@ -259,6 +259,8 @@ Do not expose automatic profile switching until the unified-editor milestone.
   checks also exposed batched pixel-input loss and unregistered dialog hit layers;
   shared fixes and their verification are tracked in
   [native input evidence](compatibility.md#native-pixel-gestures-and-dialog-hit-layers).
+  Batched tile/palette/sidebar transfers are also fixed and natively verified;
+  see [internal transfer evidence](compatibility.md#ordered-internal-asset-transfers).
   Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
 - [ ] **PP4 (in progress) — Acceptance:** Differential and real-project edit/save/reopen tests
   pass against original plusplus, with master regressions still green and every

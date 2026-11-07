@@ -374,3 +374,8 @@ Ordered tile/roof pixel input adapts pinned master/plusplus
 `map-buttons.cpp::Pixel_Button::handle` and the corresponding editor callbacks,
 under LGPL-3.0-only. Native dialog hit-layer registration uses egui's public
 API; no upstream egui code or additional artwork is copied by this change.
+
+Ordered internal asset transfers adapt pinned master/plusplus `map-buttons.cpp`
+Metatile_Button, Deep_Tile_Button and Color_Button drag handlers, under
+LGPL-3.0-only. The shared adapter preserves swap/copy, live palette RGB8 and
+profile-specific block/tile data while handling batched native events.

@@ -28,6 +28,7 @@ pub(super) struct PaletteForm {
     defaults: [[default_value::DefaultValue<u8>; 2]; 3],
     clipboard: Option<(ColorSlot, [u8; 3])>,
     drag: Option<ColorSlot>,
+    drag_press: Option<(ColorSlot, Pos2)>,
     paste_handled: bool,
     swap_held: bool,
     pub(super) windows_buttons: bool,
@@ -191,6 +192,7 @@ impl Editor {
             }),
             clipboard: None,
             drag: None,
+            drag_press: None,
             paste_handled: false,
             swap_held: false,
             windows_buttons: cfg!(target_os = "windows"),
@@ -412,7 +414,6 @@ impl Editor {
             self.error = Some(e);
         }
         let mut command = None;
-        let mut reselect_after_command = false;
         let mut accept = false;
         let mut cancel = false;
         let mut hex_enter = false;
@@ -476,6 +477,61 @@ impl Editor {
                 0.0,
                 ui.visuals().widgets.inactive.bg_fill,
             );
+            let cells: Vec<_> = (0..if form.monochrome { 1 } else { 8 })
+                .flat_map(|row| {
+                    HUES.into_iter()
+                        .enumerate()
+                        .map(move |(col, hue)| (row, col, hue))
+                })
+                .map(|(row, col, hue)| {
+                    (
+                        ColorSlot {
+                            set: form.draft.selected(),
+                            palette: if form.monochrome { 8 } else { row },
+                            hue,
+                        },
+                        rect(
+                            12.0 + off + col as f32 * 21.0,
+                            12.0 + f32::from(row) * 21.0,
+                            20.0,
+                            20.0,
+                        ),
+                    )
+                })
+                .collect();
+            let drops = asset_drag::transfers(
+                ui,
+                self.drag_and_drop,
+                &mut form.drag_press,
+                &mut form.drag,
+                |pos| {
+                    cells
+                        .iter()
+                        .find(|(_, rect)| {
+                            rect.contains(pos) && pos.x < rect.right() && pos.y < rect.bottom()
+                        })
+                        .map(|(slot, _)| *slot)
+                },
+            );
+            for asset_drag::Transfer { from, to, copy } in drops {
+                if from == to {
+                    form.select(to);
+                    continue;
+                }
+                let transfer = if copy {
+                    // Source Color_Button copies live RGB8, not clipboard RGB5.
+                    PaletteCommand::SetRgb {
+                        slot: to,
+                        rgb: form.draft.color(from).expect("validated drag source"),
+                    }
+                } else {
+                    PaletteCommand::Swap { a: from, b: to }
+                };
+                match form.apply(transfer) {
+                    Ok(()) => form.select(to),
+                    Err(error) => self.error = Some(error),
+                }
+            }
             for row in 0..if form.monochrome { 1 } else { 8 } {
                 let palette = if form.monochrome { 8 } else { row };
                 ui.painter().text(
@@ -522,33 +578,7 @@ impl Editor {
                     if response.clicked() {
                         form.select(slot);
                     }
-                    if self.drag_and_drop && response.drag_started_by(egui::PointerButton::Primary)
-                    {
-                        form.drag = Some(slot);
-                    }
-                    if response.contains_pointer()
-                        && ui.input(|i| i.pointer.button_released(egui::PointerButton::Primary))
-                        && let Some(from) = form.drag
-                    {
-                        if from != slot {
-                            // Color_Button copies the live RGB8 value, unlike the
-                            // keyboard clipboard's intentionally quantized RGB5.
-                            command = Some(if ui.input(|i| i.modifiers.ctrl) {
-                                PaletteCommand::SetRgb {
-                                    slot,
-                                    rgb: form.draft.color(from).expect("validated drag source"),
-                                }
-                            } else {
-                                PaletteCommand::Swap { a: from, b: slot }
-                            });
-                            reselect_after_command = true;
-                        }
-                        form.select(slot);
-                    }
                 }
-            }
-            if ui.input(|i| !i.pointer.primary_down()) {
-                form.drag = None;
             }
             let rgb = form.draft.color(form.selected).unwrap();
             for (channel, name) in ["R", "G", "B"].into_iter().enumerate() {
@@ -652,8 +682,6 @@ impl Editor {
         {
             self.error = Some(e);
             accept = false;
-        } else if reselect_after_command {
-            form.select(form.selected);
         }
         if accept && !cancel {
             form.draft.mark_modified();

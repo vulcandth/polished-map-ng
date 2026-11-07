@@ -2990,6 +2990,43 @@ passes all eight jobs: Windows/Linux/macOS, MSRV, dependency/license audit,
 reference comparisons, real-project workflows and visual regressions. Snapshot
 baselines are unchanged. CI does not replace the remaining interactive checks.
 
+### Ordered internal asset transfers
+
+A native Wayland tile-sheet drag on `d295d5d` failed with Drag and Drop enabled:
+press, movement to the adjacent tile and release arrived before one rendered
+frame, leaving both tiles and selection unchanged. Equivalent batched regressions
+failed for tile, palette and sidebar transfers. The previous tests separated each
+input event across frames and therefore missed this path.
+
+The shared [transfer adapter](../crates/gui/src/asset_drag.rs) now follows delivered
+press/motion/release order, including multiple transfers in a frame. Pinned
+master/plusplus `map-buttons.cpp` supplies `Metatile_Button`, `Deep_Tile_Button`
+and `Color_Button` behavior: movement starts a transfer, release swaps with a
+different enabled destination, and Ctrl at release copies instead. Palette copies
+retain live RGB8; plusplus block transfers retain occurrence attributes. Disabled
+controls, popups, clipped cells, outside releases and lost focus cannot complete
+or revive an old transfer. No system file-drag source is synthesized by this fix.
+
+[Input regressions](../crates/gui/src/drag_tests.rs) cover both profiles, tiles and
+roofs, ordered live palette values, block attributes, cancellation and unchanged
+map bytes. Existing multi-frame drags, option gates and middle panning still pass.
+[Native-viewport renderer checks](../crates/gui/src/dialog_host/tests.rs) cover all
+four profile/editor combinations at scales 1 and 2; these are not mixed-monitor
+checks.
+
+The rebuilt plusplus application passed on the isolated Weston 9 / WSLg desktop
+with `DISPLAY` unset: tiles `$0:00` and `$0:01` swapped in both directions, and a
+release outside the tile child left the draft unchanged. Native GRAY swatches
+exchanged `DEFFDE` and `ADADAD`, with selection/channel fields following the
+destination. Escape discarded both inspection drafts. Sidebar blocks 0 and 1
+swapped and refreshed the map; Cancel Exit preserved those unsaved block edits,
+then explicit discard exited cleanly. No Save or Export was performed.
+
+Windows format, workspace Clippy/tests/rustdoc and the production native-adapter
+graph pass. Linux Clippy and the native build pass. File-manager drops, native
+middle-button capture, mixed-DPI transitions and interactive macOS acceptance
+remain open in PP3; aesthetics remain deferred.
+
 ## Plusplus asset switching and tile options
 
 The existing [tileset](../crates/gui/src/tileset_workflows.rs) and
@@ -3499,7 +3536,11 @@ failed before sending `wl_data_device.start_drag`: its trace received button-dow
 motion and button-up in a burst, then GTK reported an invalid source Wayland
 window while creating the drag. No successful desktop drop or NG drop failure
 is inferred from that source-application failure. This native gate remains open;
-protocol/headless tests are not a replacement for it.
+protocol/headless tests are not a replacement for it. A subsequent isolated
+PCManFM-Qt 0.17.0 / Qt 5.15.3 attempt also received press/motion/release without
+issuing `start_drag`; repeating without protocol tracing still did not deliver a
+drop. Both file managers and their libraries were unpacked only into ignored
+scratch storage. These attempts do not establish a defect in NG's drop receiver.
 
 ## November 1 upstream review
 

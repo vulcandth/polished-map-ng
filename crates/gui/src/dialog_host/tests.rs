@@ -517,3 +517,78 @@ fn native_client_slider_and_middle_release_use_registered_hit_layer() {
     assert!(run(Some(input(egui::PointerButton::Primary))).0 > 7);
     assert_eq!(run(Some(input(egui::PointerButton::Middle))).0, 7);
 }
+
+#[test]
+fn native_tile_transfers_preserve_batched_gestures_at_both_scales() {
+    for (plus, roof) in [(false, false), (false, true), (true, false), (true, true)] {
+        for scale in [1.0, 2.0] {
+            let (_dir, mut h) = if plus {
+                crate::plusplus_session::tests::fixture()
+            } else if roof {
+                crate::roof_editor_tests::fixture()
+            } else {
+                crate::tileset_editor_tests::fixture(false, false)
+            };
+            let ctx = h.ctx.clone();
+            let mut editor = std::mem::take(h.state_mut());
+            let renderer = renderer(&ctx, scale);
+            if roof {
+                editor.prepare_roof();
+            } else {
+                editor.prepare_tileset();
+            }
+            let id = main_id(editor.dialog_kind().unwrap());
+            editor
+                .tileset_form
+                .as_mut()
+                .unwrap()
+                .draft
+                .apply(polished_map_core::plusplus::RawTileCommand::Paint {
+                    tile: 0,
+                    points: vec![Point { x: 0, y: 0 }],
+                    hue: 3,
+                })
+                .unwrap();
+            frame(&ctx, &mut editor);
+            frame(&ctx, &mut editor);
+            let form = editor.tileset_form.as_ref().unwrap();
+            let before = [form.draft.pixels(0), form.draft.pixels(1)];
+            assert_ne!(before[0], before[1]);
+            let from = Pos2::new(19.0, if roof { 77.0 } else { 45.0 });
+            let to = from + Vec2::new(16.0, 0.0);
+            renderer.borrow_mut().inputs.insert(
+                id,
+                RawInput {
+                    events: vec![
+                        egui::Event::PointerMoved(from),
+                        egui::Event::PointerButton {
+                            pos: from,
+                            button: egui::PointerButton::Primary,
+                            pressed: true,
+                            modifiers: egui::Modifiers::NONE,
+                        },
+                        egui::Event::PointerMoved(to),
+                        egui::Event::PointerButton {
+                            pos: to,
+                            button: egui::PointerButton::Primary,
+                            pressed: false,
+                            modifiers: egui::Modifiers::NONE,
+                        },
+                    ],
+                    ..Default::default()
+                },
+            );
+            frame(&ctx, &mut editor);
+            let form = editor.tileset_form.as_ref().unwrap();
+            assert_eq!(
+                [form.draft.pixels(0), form.draft.pixels(1)],
+                [before[1], before[0]],
+                "plus={plus} roof={roof} scale={scale}"
+            );
+            renderer.borrow_mut().inputs.insert(id, close(id));
+            frame(&ctx, &mut editor);
+            assert!(editor.tileset_form.is_none());
+            assert!(!editor.is_modified());
+        }
+    }
+}

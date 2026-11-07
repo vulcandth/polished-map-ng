@@ -8,10 +8,9 @@ impl TilesetForm {
         ui: &mut egui::Ui,
         id: u16,
         cell: Rect,
-        drag: bool,
         priority: &priority::Textures,
         panning: bool,
-    ) -> Option<TileCommand> {
+    ) {
         let enabled = self.enabled(id);
         let mut tile_ui = ui.new_child(
             egui::UiBuilder::new()
@@ -59,28 +58,49 @@ impl TilesetForm {
         {
             super::super::block_editor::selection_border(ui, cell);
         }
-        if panning {
-            return None;
-        }
-        if response.clicked() {
+        if !panning && response.clicked() {
             self.selected = id;
         }
-        if drag && enabled && response.drag_started_by(egui::PointerButton::Primary) {
-            self.drag = Some(id);
-        }
-        if enabled
-            && response.contains_pointer()
-            && ui.input(|i| i.pointer.button_released(egui::PointerButton::Primary))
-            && let Some(from) = self.drag
-        {
-            self.selected = id;
-            return Some(if ui.input(|i| i.modifiers.ctrl) {
-                TileCommand::Copy { from, to: id }
+    }
+
+    fn sheet_transfers(
+        &mut self,
+        ui: &egui::Ui,
+        cells: &[(u16, Rect)],
+        enabled: bool,
+    ) -> Vec<TileCommand> {
+        let enabled_cells: Vec<_> = cells
+            .iter()
+            .copied()
+            .filter(|(id, _)| self.enabled(*id))
+            .collect();
+        asset_drag::transfers(ui, enabled, &mut self.drag_press, &mut self.drag, |pos| {
+            enabled_cells
+                .iter()
+                .find(|(_, rect)| {
+                    rect.contains(pos) && pos.x < rect.right() && pos.y < rect.bottom()
+                })
+                .map(|(id, _)| *id)
+        })
+        .into_iter()
+        .filter_map(|transfer| {
+            self.selected = transfer.to;
+            if transfer.from == transfer.to {
+                return None;
+            }
+            Some(if transfer.copy {
+                TileCommand::Copy {
+                    from: transfer.from,
+                    to: transfer.to,
+                }
             } else {
-                TileCommand::Swap { a: from, b: id }
-            });
-        }
-        None
+                TileCommand::Swap {
+                    a: transfer.from,
+                    b: transfer.to,
+                }
+            })
+        })
+        .collect()
     }
     pub(super) fn tile_sheet(
         &mut self,
@@ -88,8 +108,8 @@ impl TilesetForm {
         origin: Pos2,
         drag: bool,
         priority: &priority::Textures,
-    ) -> Option<TileCommand> {
-        let mut command = None;
+    ) -> Result<(), String> {
+        let mut commands = Vec::new();
         if self.draft.is_plus() && !self.roof {
             ui.scope_builder(
                 egui::UiBuilder::new()
@@ -109,19 +129,25 @@ impl TilesetForm {
                                 Vec2::new(256.0, count as f32),
                                 Sense::hover(),
                             );
-                            for index in 0..count {
-                                let cell = Rect::from_min_size(
-                                    sheet.min
-                                        + Vec2::new(
-                                            (index % 16) as f32 * 16.0,
-                                            (index / 16) as f32 * 16.0,
+                            let cells: Vec<_> = (0..count)
+                                .map(|index| {
+                                    (
+                                        index as u16,
+                                        Rect::from_min_size(
+                                            sheet.min
+                                                + Vec2::new(
+                                                    (index % 16) as f32 * 16.0,
+                                                    (index / 16) as f32 * 16.0,
+                                                ),
+                                            Vec2::splat(16.0),
                                         ),
-                                    Vec2::splat(16.0),
-                                );
+                                    )
+                                })
+                                .collect();
+                            commands.extend(self.sheet_transfers(ui, &cells, drag && !panning));
+                            for (id, cell) in cells {
                                 if ui.is_rect_visible(cell) {
-                                    command = self
-                                        .sheet_cell(ui, index as u16, cell, drag, priority, panning)
-                                        .or(command.take());
+                                    self.sheet_cell(ui, id, cell, priority, panning);
                                 }
                             }
                         },
@@ -130,6 +156,7 @@ impl TilesetForm {
                 },
             );
         } else {
+            let mut cells = Vec::new();
             for index in 0..self.draft.count() {
                 let id = index as u16;
                 let cell = Rect::from_min_size(
@@ -140,14 +167,16 @@ impl TilesetForm {
                         ),
                     Vec2::splat(16.0),
                 );
-                command = self
-                    .sheet_cell(ui, id, cell, drag, priority, false)
-                    .or(command.take());
+                cells.push((id, cell));
+            }
+            commands.extend(self.sheet_transfers(ui, &cells, drag));
+            for (id, cell) in cells {
+                self.sheet_cell(ui, id, cell, priority, false);
             }
         }
-        if ui.input(|i| !i.pointer.primary_down()) {
-            self.drag = None;
+        for command in commands {
+            self.apply(command)?;
         }
-        command
+        Ok(())
     }
 }

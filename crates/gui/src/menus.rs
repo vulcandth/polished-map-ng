@@ -247,6 +247,7 @@ impl Editor {
                         .changed()
                     {
                         self.sidebar_drag = None;
+                        self.sidebar_drag_press = None;
                     }
                     if action(ui, true, "Overworld Map Size…") {
                         self.prepare_overworld();
