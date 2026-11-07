@@ -3033,6 +3033,40 @@ workflows, MSRV, dependency/license audit and visuals with unchanged baselines.
 File-manager drops, native middle-button capture, mixed-DPI transitions and
 interactive macOS acceptance remain open in PP3; aesthetics remain deferred.
 
+### Native scale-two geometry and remaining placement checks
+
+The `70896e9` tree (runtime changes through `f8d2383`) was rebuilt on Linux and
+opened the pinned Polished Crystal map on an isolated Weston 9 / WSLg desktop,
+with `DISPLAY` unset and disposable XDG settings. `weston-info` reported one
+900×650 logical output, an 1800×1300 physical mode and output scale 2. This is a
+single-scale native check, not a mixed-monitor transition.
+
+The main client measured 1600×1200 physical pixels for its 800×600 logical size;
+the 10×9 map at zoom 1 measured 640×576 pixels. Map Options measured 600×600
+pixels for its 300×300 client. The palette client measured 706×382 pixels for
+353×191 logical points with the loaded Linux font. Protocol traces independently
+confirmed buffer scale 2 and client/decorated geometry. The palette's R channel
+changed from 27 to 3 (`18FFDE`), middle-click restored 27 (`DEFFDE`), and Escape
+discarded the draft. File → Exit then returned exit code 0 without a dirty prompt.
+The fixture checkout remained clean.
+
+This does **not** pass placement or complete high-DPI input acceptance. The tile
+child opened partly off the small desktop. The diagnostic trace confirms native
+parent ownership, but the cause of that placement remains unresolved. Injected
+pointer coordinates also differed vertically from screenshot coordinates: a
+palette click at screenshot `(1454,859)` reached client `(235,25)`, while the
+visible client began at `(984,797)`. The slider responded when the delivered
+point was inside its hit rectangle; this does not establish that the unadjusted
+desktop hit targets are correct. Repeat on a directly hosted compositor to
+separate WSLg/capture input mapping from application behavior before changing
+product coordinates. Closing the first compositor host with Alt+F4 crashed
+Weston and disconnected the application; that run provides no clean-exit
+evidence. The second run used the application's File menu successfully.
+
+PP3 retains tile-dialog placement, direct-desktop pointer alignment, mixed-DPI
+transitions and macOS native acceptance. No aesthetic changes or screenshot
+baseline updates were made for this check.
+
 ## Plusplus asset switching and tile options
 
 The existing [tileset](../crates/gui/src/tileset_workflows.rs) and
