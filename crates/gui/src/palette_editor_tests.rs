@@ -268,7 +268,7 @@ fn palette_editor_operates_before_loading_a_map() {
     );
     assert!(h.state().palette_document().is_modified());
 }
-fn hex(h: &mut Harness<'_, Editor>, value: &str) {
+pub(super) fn hex(h: &mut Harness<'_, Editor>, value: &str) {
     let input = h.get_by_label("Hex color");
     input.click();
     h.run();

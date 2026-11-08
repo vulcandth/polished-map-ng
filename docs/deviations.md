@@ -634,6 +634,10 @@ capability as required by the unified application's automatic adaptation.
 
 ## Unified source capabilities
 
+The unified application also recognizes master's numeric outdoor environments
+`1`/`2` for roof-color imports with either storage model. Fixed plusplus uses its
+upstream named-only `TOWN`/`ROUTE` rule; fixed master retains numeric support.
+
 The unified application combines master's CHR imports and binary collision path
 with plusplus's occurrence-attribute model. The shared graphics decoder retains
 256/512-tile bounds according to storage; it does not truncate attributed sheets

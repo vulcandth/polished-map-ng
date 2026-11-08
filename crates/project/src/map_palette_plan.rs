@@ -114,11 +114,13 @@ impl MapPalettePlan {
             automatic,
             explicit: options.palette,
         });
-        if options.roof_colors
-            && metadata.group != 0
-            && !options.monochrome
-            && matches!(metadata.environment.as_str(), "TOWN" | "ROUTE" | "1" | "2")
-        {
+        // Master map.h also accepts the legacy numeric outdoor environments.
+        // Unified keeps that capability with either storage model; fixed plusplus
+        // retains its named-only rule.
+        let outside = matches!(metadata.environment.as_str(), "TOWN" | "ROUTE")
+            || ((unified || doc.rules() == crate::discovery::Rules::Master)
+                && matches!(metadata.environment.as_str(), "1" | "2"));
+        if options.roof_colors && metadata.group != 0 && !options.monochrome && outside {
             steps.push_back(Step::Roof {
                 path: crate::roof_palette_path(root),
                 group: metadata.group,

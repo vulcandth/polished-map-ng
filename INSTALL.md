@@ -58,8 +58,9 @@ cargo run -p polished-map-gui --bin polished-map-unified --locked --
 
 It detects storage from the map and selected tileset, uses its own settings, and
 has no mode selector. Open/New, legacy source inputs, alternating-project saves
-and automatic tileset changes have automated coverage. Integrated/native
-acceptance and unified packaging remain open. Follow the [unified roadmap](docs/roadmap.md#3-unified-editor--in-progress)
+and automatic tileset changes have automated coverage, including representative
+asset edits and saves in all five target projects. Integrated/native acceptance
+and unified package delivery remain open. Follow the [unified roadmap](docs/roadmap.md#3-unified-editor--in-progress)
 before using this development launcher for acceptance testing.
 
 For optimized binaries:

@@ -22,6 +22,7 @@ from windows_icon_resources import verify as verify_windows_icons
 PROFILES = {
     "master": ("polished-map-gui", "Polished Map NG", "io.github.vulcandth.polished-map-ng"),
     "plusplus": ("polished-map-plusplus", "Polished Map NG++", "io.github.vulcandth.polished-map-ng.plusplus"),
+    "unified": ("polished-map-unified", "Polished Map NG Unified", "io.github.vulcandth.polished-map-ng.unified"),
 }
 
 
@@ -29,9 +30,20 @@ def package_profile(requested, source_info):
     inherited = source_info.get("profile", "master")
     if inherited not in PROFILES:
         raise ValueError(f"Unknown source profile: {inherited}")
+    if requested is not None and requested not in PROFILES:
+        raise ValueError(f"Unknown requested profile: {requested}")
     if source_info and requested is not None and requested != inherited:
         raise ValueError("Binary profile must match its source archive")
     return requested or inherited
+
+
+def profile_suffix(profile):
+    package_profile(profile, {})
+    return "" if profile == "master" else "-" + profile
+
+
+def package_stem(commit, profile):
+    return "polished-map-ng" + profile_suffix(profile) + "-dev-" + commit[:12]
 
 
 def copy_gui(destination, binaries, target, profile):
@@ -138,7 +150,7 @@ def common(destination, info):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(notice, target)
     shutil.copy2("docs/rebuild.md", destination / "REBUILD.md")
-    guide = "testing-plusplus.md" if info.get("profile") == "plusplus" else "testing.md"
+    guide = "testing" + profile_suffix(package_profile(None, info)) + ".md"
     # Keep the guide in docs/ so its relative links work offline. The package
     # root provides a short entry point instead of relocating the document.
     (destination / "TESTING.md").write_text(
@@ -161,7 +173,7 @@ def main():
                    if Path("BUILD-INFO.json").is_file() else {})
     profile = package_profile(args.profile, source_info)
     commit = source_info["commit"] if source_info else run("git", "rev-parse", "HEAD").strip()
-    stem = "polished-map-ng-" + ("plusplus-" if profile == "plusplus" else "") + "dev-" + commit[:12]
+    stem = package_stem(commit, profile)
     args.output.mkdir(parents=True, exist_ok=True)
     output = args.output.resolve()
     info = {"commit": commit, "development": True, "profile": profile, "target": args.target,

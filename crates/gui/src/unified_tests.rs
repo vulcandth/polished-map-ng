@@ -9,6 +9,36 @@ use std::{
     time::{Duration, Instant},
 };
 
+mod real_assets;
+
+const PINNED_PROJECTS: [(&str, &str, &str, Profile); 5] = [
+    ("POLISHED_MAP_POKERED", "PalletTown", "blk", Profile::Master),
+    (
+        "POLISHED_MAP_POKEYELLOW",
+        "PalletTown",
+        "blk",
+        Profile::Master,
+    ),
+    (
+        "POLISHED_MAP_POKEGOLD",
+        "NewBarkTown",
+        "blk",
+        Profile::Master,
+    ),
+    (
+        "POLISHED_MAP_POKECRYSTAL",
+        "NewBarkTown",
+        "blk",
+        Profile::Master,
+    ),
+    (
+        "POLISHED_CRYSTAL_FIXTURE",
+        "NewBarkTown",
+        "ablk",
+        Profile::PlusPlus,
+    ),
+];
+
 fn editor() -> Harness<'static, Editor> {
     Harness::builder()
         .with_size(Vec2::new(800.0, 600.0))
@@ -576,36 +606,9 @@ fn unified_asm_map_uses_occurrence_assets_and_saves_only_to_explicit_binary_targ
 #[test]
 #[ignore = "requires all five pinned project fixture environment variables"]
 fn unified_pinned_projects_alternate_open_edit_save_and_reopen() {
-    let projects = [
-        ("POLISHED_MAP_POKERED", "PalletTown", "blk", Profile::Master),
-        (
-            "POLISHED_MAP_POKEYELLOW",
-            "PalletTown",
-            "blk",
-            Profile::Master,
-        ),
-        (
-            "POLISHED_MAP_POKEGOLD",
-            "NewBarkTown",
-            "blk",
-            Profile::Master,
-        ),
-        (
-            "POLISHED_MAP_POKECRYSTAL",
-            "NewBarkTown",
-            "blk",
-            Profile::Master,
-        ),
-        (
-            "POLISHED_CRYSTAL_FIXTURE",
-            "NewBarkTown",
-            "ablk",
-            Profile::PlusPlus,
-        ),
-    ];
     let mut h = editor();
     let output = tempfile::tempdir().unwrap();
-    for (variable, name, extension, profile) in projects.into_iter().cycle().take(10) {
+    for (variable, name, extension, profile) in PINNED_PROJECTS.into_iter().cycle().take(10) {
         let root = PathBuf::from(std::env::var_os(variable).expect("set pinned project fixture"));
         let path = root.join(format!("maps/{name}.{extension}"));
         let original = fs::read(&path).unwrap();

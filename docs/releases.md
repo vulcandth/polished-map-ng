@@ -27,11 +27,12 @@ fixtures or ignored working files are included. Source and binaries must be
 published together as a **prerelease**, with successful CI for the packaged commit.
 Do not mark a development release as the latest stable release.
 
-The packaging workflow can build both editor profiles from the same shared-source
-revision. Select `master` or `plusplus` explicitly; the profile in BUILD-INFO.json,
+The packaging workflow can build all three launchers from the same shared-source
+revision. Select `master`, `plusplus` or `unified` explicitly; the profile in BUILD-INFO.json,
 launcher, preferences, Mac bundle identity and tester guide remain separate.
-Using a shared revision carries native adapter fixes into both tester builds
-without introducing automatic project/profile conversion. The Git branch name
+Using a shared revision carries native adapter fixes into every tester build.
+The unified launcher adapts to storage context without silently converting files.
+The Git branch name
 alone does not determine which editor is packaged.
 
 Windows uses an MSVC ZIP; Linux uses an Ubuntu 22.04-built tarball; macOS uses
@@ -231,6 +232,23 @@ Before publishing a parity/production release:
 - Signing/notarization is not yet configured; never claim signed delivery.
 
 No binaries should be presented as production-ready before these gates pass.
+
+## Unified development packaging
+
+The Development packages workflow now accepts `unified` in addition to the two
+parity launchers. It packages `polished-map-unified`, uses the macOS bundle name
+`Polished Map NG Unified.app` and a separate bundle identifier, and includes the
+[unified tester guide](testing-unified.md). Archive names include `-unified-`;
+the source archive and each binary must agree on their launcher and commit.
+All three launchers remain in source, and a missing selected executable fails
+packaging rather than substituting another launcher.
+
+Nine packaging regression tests pass, including all four target layouts,
+distinct bundle identities, source/binary mismatch rejection, notices and offline
+tester-guide links. Actual unified artifact production, archive verification and
+publication are still pending. The existing offline source rebuild, licensing,
+lockfile and checksum requirements apply unchanged. No unified parity release
+is claimed.
 
 ## Development binary size
 

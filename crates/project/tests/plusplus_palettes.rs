@@ -230,6 +230,47 @@ fn palette_plan_paths_consent_context_and_roof_failure_are_independent() {
 }
 
 #[test]
+fn unified_keeps_legacy_numeric_outdoor_roof_colors_without_changing_parity() {
+    let dir = tempfile::tempdir().unwrap();
+    write(dir.path(), "Makefile", "");
+    for environment in ["TOWN", "ROUTE", "1", "2", "INDOOR", "3"] {
+        let doc = map(dir.path(), environment, "PALETTE_AUTO");
+        for unified in [false, true] {
+            let options = PaletteOptions::default();
+            let mut plan = if unified {
+                MapPalettePlan::for_unified_map(&doc, "demo", &options)
+            } else {
+                MapPalettePlan::for_map(&doc, "demo", &options)
+            }
+            .unwrap();
+            let mut colors = PaletteDocument::default();
+            plan.advance(&mut colors, false).unwrap(); // default import
+            plan.advance(&mut colors, false).unwrap(); // contextual selection
+            assert_eq!(
+                plan.next_is_roof_colors(),
+                matches!(environment, "TOWN" | "ROUTE")
+                    || (unified && matches!(environment, "1" | "2")),
+                "environment {environment}, unified {unified}"
+            );
+        }
+        let classic_path = write(dir.path(), "maps/Town.blk", [0]);
+        let classic =
+            polished_map_project::MapDocument::open(&classic_path, &OpenOptions::default())
+                .unwrap();
+        let mut plan =
+            polished_map_project::MapPalettePlan::for_map(&classic, "demo", &Default::default())
+                .unwrap();
+        let mut colors = polished_map_project::PaletteDocument::default();
+        plan.advance(&mut colors, false).unwrap();
+        plan.advance(&mut colors, false).unwrap();
+        assert_eq!(
+            plan.next_is_roof_colors(),
+            matches!(environment, "TOWN" | "ROUTE" | "1" | "2")
+        );
+    }
+}
+
+#[test]
 fn contextual_palette_order_and_explicit_selection_match_source_rules() {
     let dir = tempfile::tempdir().unwrap();
     for (environment, palette, dark, expected) in [

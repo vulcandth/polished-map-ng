@@ -12,7 +12,7 @@ and design decisions in [architecture](architecture.md).
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
 | 2. Plusplus parity | **In progress — awaiting native acceptance** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
-| 3. Unified editor | **In progress — active milestone** | Automatic Open/New/Change Tileset are implemented on `codex/unified-editor`; final U1 drift reconciliation and U2/U3 integrated acceptance remain. The parity launchers remain available. |
+| 3. Unified editor | **In progress — active milestone** | U1 source/detection reconciliation is complete. Automatic Open/New/Change Tileset and representative five-project asset saves are verified; U2 package delivery and U3 integrated/native acceptance remain. The parity launchers remain available. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Measured improvements | Not started | Deliberate behavior changes follow compatibility acceptance. Structural refactoring is ongoing during unified work. |
 | 6. Platform delivery | In progress — development builds available | Separate master and plusplus Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
@@ -25,8 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Complete **U1** final pinned upstream drift reconciliation, then finish
-**U2/U3** integrated asset-editing verification and unified development packaging.
+**Next:** Finish **U2** unified development package delivery, then continue
+**U3** integrated/native acceptance using the five-project tester guide.
 Unified Open/New, automatic tileset changes and alternating-project saves have automated
 workflow evidence; full unified/native acceptance remains open. The user authorized unified work
 on November 7 while retaining the separate parity launchers. Keep structural
@@ -307,12 +307,12 @@ Authorized on November 7 before native parity acceptance; retain both parity
 launchers. No mode selector and no silent format conversion. See the
 [sequencing decision](deviations.md#unified-work-before-native-parity-acceptance).
 
-- [ ] **U1 — In progress:** Detect storage and capabilities from map/project and
+- [x] **U1 — Complete:** Detect storage and capabilities from map/project and
   selected-tileset evidence, with actionable missing/conflicting-context errors.
   Storage detection, union events, legacy graphics/collision adapters and metadata
-  integration are implemented; final drift reconciliation remains, including master improvements
-  absent in plusplus. Acceptance: deterministic tests on both pinned projects, legacy
-  layouts, compound assets and mixed/conflicting evidence; document each drift
+  integration and final source drift reconciliation are implemented, including master
+  improvements absent in plusplus. Deterministic tests cover both pinned projects, legacy
+  layouts, compound assets and mixed/conflicting evidence; each drift family has a
   disposition in [compatibility evidence](compatibility.md#unified-format-detection-and-upstream-drift).
 - [ ] **U2 — In progress:** Deliver one automatically adapting binary with safe loading,
   editing, saving and project changes. Keep application identity/preferences
@@ -320,8 +320,8 @@ launchers. No mode selector and no silent format conversion. See the
   duplicated code as encountered without erasing format semantics. The third
   launcher, Open/New, union events, separate palette sessions and stable settings
   identity, legacy metadata and cross-storage tileset changes are implemented.
-  Integrated asset-editing verification and a distributable unified development
-  build remain. Evidence:
+  Representative five-project asset editing/saves are verified. Packaging supports
+  the unified launcher; building and verifying distributable packages remains. Evidence:
   [unified workflows](compatibility.md#unified-opennew-and-session-transitions).
 - [ ] **U3 — In progress, acceptance open:** Pinned pokered, pokeyellow, pokegold,
   pokecrystal and Polished Crystal suites pass through the unified
@@ -330,7 +330,8 @@ launchers. No mode selector and no silent format conversion. See the
   wrong-format writes fail without modifying files. Native workflow checks
   remain distinct from automated evidence. Discovery, event parsing, classic-map
   rendering/round trips and alternating representative GUI workflows are covered;
-  full native and cross-storage asset acceptance remain open. Evidence:
+  representative block/tile/palette/event edits and available collision/roof saves
+  also pass. Full native and cross-storage asset acceptance remain open. Evidence:
   [five-project matrix](compatibility.md#five-project-compatibility-matrix).
 
 ## 4. Autonomous interface — stabilization not started

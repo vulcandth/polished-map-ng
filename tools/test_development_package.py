@@ -8,19 +8,33 @@ import tempfile
 import unittest
 import zipfile
 
-from development_package import archive_tree, common, copy_gui, package_profile, supplemental_notices
+from development_package import PROFILES, archive_tree, common, copy_gui, package_profile, package_stem, supplemental_notices
 
 
 class DevelopmentArchiveTests(unittest.TestCase):
     def test_profile_inheritance_and_source_binary_mismatch(self):
         self.assertEqual(package_profile(None, {}), "master")
         self.assertEqual(package_profile(None, {"commit": "old"}), "master")
-        self.assertEqual(package_profile("plusplus", {}), "plusplus")
-        self.assertEqual(package_profile(None, {"profile": "plusplus"}), "plusplus")
-        with self.assertRaisesRegex(ValueError, "must match"):
-            package_profile("master", {"profile": "plusplus"})
+        for profile in PROFILES:
+            self.assertEqual(package_profile(profile, {}), profile)
+            self.assertEqual(package_profile(None, {"profile": profile}), profile)
+            for other in PROFILES:
+                if other != profile:
+                    with self.assertRaisesRegex(ValueError, "must match"):
+                        package_profile(other, {"profile": profile})
         with self.assertRaisesRegex(ValueError, "Unknown source profile"):
             package_profile(None, {"profile": "unknown"})
+        with self.assertRaisesRegex(ValueError, "Unknown requested profile"):
+            package_profile("unknown", {})
+
+    def test_archive_names_distinguish_all_launchers_at_the_same_commit(self):
+        commit = "1234567890abcdef"
+        names = {package_stem(commit, profile) for profile in PROFILES}
+        self.assertEqual(names, {
+            "polished-map-ng-dev-1234567890ab",
+            "polished-map-ng-plusplus-dev-1234567890ab",
+            "polished-map-ng-unified-dev-1234567890ab",
+        })
 
     def test_launchers_and_mac_bundle_identities_are_separate(self):
         for target in ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu",
@@ -31,7 +45,7 @@ class DevelopmentArchiveTests(unittest.TestCase):
                 binaries.mkdir()
                 destination.mkdir()
                 suffix = ".exe" if "windows" in target else ""
-                for executable in ["polished-map-gui", "polished-map-plusplus"]:
+                for executable, _, _ in PROFILES.values():
                     source = binaries / (executable + suffix)
                     source.write_bytes(executable.encode("utf-8"))
                     source.chmod(0o755)
@@ -39,6 +53,7 @@ class DevelopmentArchiveTests(unittest.TestCase):
                 for profile, executable, display in [
                     ("master", "polished-map-gui", "Polished Map NG"),
                     ("plusplus", "polished-map-plusplus", "Polished Map NG++"),
+                    ("unified", "polished-map-unified", "Polished Map NG Unified"),
                 ]:
                     bundle = copy_gui(destination, binaries, target, profile)
                     output = destination / (executable + suffix)
@@ -57,15 +72,17 @@ class DevelopmentArchiveTests(unittest.TestCase):
                     self.assertEqual(output.read_bytes(), source.read_bytes())
                     self.assertEqual(output.stat().st_mode, source.stat().st_mode)
 
-    def test_missing_plusplus_launcher_never_substitutes_master(self):
+    def test_missing_launcher_never_substitutes_master(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "polished-map-gui").write_bytes(b"master")
-            with self.assertRaises(FileNotFoundError):
-                copy_gui(root, root, "x86_64-unknown-linux-gnu", "plusplus")
+            for profile in ["plusplus", "unified"]:
+                with self.assertRaises(FileNotFoundError):
+                    copy_gui(root, root, "x86_64-unknown-linux-gnu", profile)
 
     def test_binary_tester_entry_points_preserve_offline_guide_links(self):
-        for profile, guide in [("master", "testing.md"), ("plusplus", "testing-plusplus.md")]:
+        for profile, guide in [("master", "testing.md"), ("plusplus", "testing-plusplus.md"),
+                               ("unified", "testing-unified.md")]:
             with self.subTest(profile=profile), tempfile.TemporaryDirectory() as temporary:
                 destination = Path(temporary)
                 common(destination, {"development": True, "profile": profile})

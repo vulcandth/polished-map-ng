@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
     inputs:
       profile:
-        description: Editor profile to package
+        description: Application launcher to package
         type: choice
-        options: [master, plusplus]
+        options: [master, plusplus, unified]
         default: master
 
 permissions:

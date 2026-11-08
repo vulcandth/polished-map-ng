@@ -3869,30 +3869,33 @@ The legacy source adapters (`abfbbd3`) and unified metadata (`798d041`) likewise
 passed all eight jobs ([sources](https://github.com/vulcandth/polished-map-ng/actions/runs/42437426784),
 [metadata](https://github.com/vulcandth/polished-map-ng/actions/runs/42438149708)).
 
-### Pinned-source drift disposition — in progress
+### Pinned-source drift disposition — audited
 
 The comparison uses `8b9bdc2b8aac8c865809516c2123af69c498da0b` against
 `27c1f8479107c7495ac0c1818900190a137da6e1`, not moving branches. The final
 `src/` trees differ in 43 files. Non-equivalent commit hashes alone do not prove
 missing features; the final behavior and existing Rust adapters are the evidence.
 
-| Source family | Difference and disposition | Remaining unified work |
+| Source family | Difference and disposition | Implementation and verification |
 |---|---|---|
 | `config.cpp`, `option-dialogs.cpp` | Different root markers, asset directories, map suffixes, metadata macros and legacy pokered layouts. Detection uses union root markers and selected-asset evidence. | Shared unified discovery now accepts legacy dimensions/headers with either storage model, preserves filename/header precedence and detects conflicting layout aliases. Parity discovery remains unchanged. |
 | `map.cpp`, `parse-asm.*`, `tiled-image.cpp` | Master added ASM `.map`, `.CHR` and `.CEL` imports absent in plusplus. Shared bounded ASM codecs already exist. Detection treats map encoding separately from attributes. | ASM map import retains explicit binary Save As; CHR tiles/roofs now work with either attribute model. CEL stays the classic blockset source adapter, without invented occurrence-attribute conversion. See legacy-source evidence below. |
-| `metatileset.*`, `metatile.*`, `deep-tile.*`, `tile.*`, `palette-map.*` | Master stores tile palettes; plusplus stores per-occurrence bank/palette/flips/priority and expands to 512 tiles. Both models and guarded persistence already exist. | Bind controls and save operations to the detected document; never reinterpret bytes or widen master IDs globally. |
-| `tileset.cpp`, `image.cpp` | Different slot/bank order and undefined-tile/export handling. Plusplus's nonzero-offset export overread is already corrected and documented. | Preserve each model's valid ordering and keep shared bounded raster/export code. |
+| `metatileset.*`, `metatile.*`, `deep-tile.*`, `tile.*`, `palette-map.*` | Master stores tile palettes; plusplus stores per-occurrence bank/palette/flips/priority and expands to 512 tiles. Both models and guarded persistence remain distinct. | Shared GUI block/pixel workflows dispatch to validated storage-specific commands. `plusplus_reference.rs` checks original rendering strides; block/tileset suites cover banks, attributes, trimming, compound assets and guarded multi-file saves. The unified asset test below checks real saved output. |
+| `tileset.cpp`, `image.*` | Different slot/bank order and undefined-tile/export handling. Plusplus's nonzero-offset export overread is already corrected and documented. | Classic `tileset_export.rs` preserves slot gaps and palette-map lines; plusplus `graphics.rs` preserves linear sheets, interior blank trimming and row padding. Shared image codecs bound allocations. Both exports retain their existing reference/golden tests. |
 | `map-events.cpp` | Master includes pokered `warp/sign/object/warp_to`; plusplus adds Pokémon/PC/base macros. Master distinguishes a four-argument map `warp` from a three-argument script command. Shared parser already contains this guard; parity catalogs stay distinct. | Backend `parse_unified`/`open_unified` now recognize their union with the same script guard and source-span persistence. Unified GUI automatic/manual event loading now uses this catalog. |
-| `main-window.cpp` palette loading/saving | Master monochrome fallback, priority palette-map output and suppressed monochrome roof-color import are intentional storage capabilities. Plusplus always uses game palettes/occurrence priority. | Keep capabilities context-sensitive; do not apply master's monochrome switch to attributed data. |
+| `main-window.*`, `map.h` palette loading/saving | Master monochrome fallback, priority palette-map output and suppressed monochrome roof-color import are intentional storage capabilities. Master also recognizes numeric outdoor environments `1`/`2`; plusplus accepts only `TOWN`/`ROUTE`. | Unified retains numeric outdoor support with either storage model. The shared palette plan now explicitly preserves each fixed launcher's rule; a six-environment regression checks classic, plusplus and unified results. Palette sessions and monochrome fallback are document-sensitive as verified below. |
 | `config.cpp` collisions | Master also checks `data/tilesets/*_collision.bin`; plusplus omits that candidate. Both already support binary collision codecs. | Unified attributed blocksets now use the union collision candidate list; each parity entry point keeps its original precedence. |
-| `main-window.cpp` save warning | Master's one-time 128-block engine warning is absent in plusplus. Current NG master preserves it. | Keep it for classic engine context; do not infer an engine limit solely from expanded tile-bank UI state. |
-| Block/palette/roof/tileset windows and `map-buttons.*` | Attribute ownership, flips, bank order and keyboard actions differ; master and plusplus GUI adapters already implement these separately. | Audit each final difference and consolidate shared workflows while preserving attribute-specific operations. |
-| `colors.*`, `ruler.cpp`, `widgets.cpp`, `version.h`, `main.cpp` | Palette model, themes, minor visual choices and application identity differ. M4/font/theme exceptions remain authoritative. | Finish final-source disposition; keep identity independent of active storage and avoid reviving deferred aesthetics. |
+| `main-window.cpp` save warning | Master's one-time 128-block engine warning is absent in plusplus. | Shared save feedback checks active storage. Classic warning and attributed saves are covered by save-feedback tests; bank-display options do not determine engine limits. |
+| `block-window.*`, `palette-window.*`, `roof-window.*`, `tileset-window.*`, `map-buttons.*` | Attribute ownership, flips, bank order, keyboard actions, raw grayscale previews and dialog dimensions differ. | Shared pixel gestures, clipboard/drag transfers and palette controls retain storage-specific drafts. Block occurrence shortcuts/stamps and raw tile/roof tests cover the attributed paths; classic palette/priority and skip-slot operations retain their tests. Sheet scroll resets on open and right-click selection reveals the chosen tile. Geometry remains source-derived; approved aesthetic exceptions stay deferred. |
+| `colors.*` | All 192 game palette RGB triples match. Master additionally supports monochrome sets; plusplus raw editing uses fixed grayscale and separate undefined colors. | Shared RGB editing/import/export keeps the eight-game-palette boundary on attributed data, master's monochrome layouts on classic data, and roof overlay semantics. Palette oracle tests compare supported layouts; unified session tests preserve edited colors across storage changes. |
+| `ruler.cpp`, `widgets.cpp`, `version.h`, `main.cpp` | Ruler include-only change; plusplus fixes framed workspace pan bounds; executable/version names and Windows light-theme choice differ. | `workspace_pan` uses inset content bounds with input/geometry tests. `Application` owns stable unified identity/settings independent of storage. The two parity launchers remain. Existing light/dark and M4/font/theme exceptions govern visual differences. |
 
-This is an implementation audit, not U1 acceptance. ASM map import and GUI Open/New
-transitions and legacy graphics/collision adapters now have the evidence below.
-Unified metadata and in-document cross-storage tileset changes are now integrated;
-final drift reconciliation and integrated/native acceptance remain open.
+The final-source audit covers the 43 changed or branch-only source/header files;
+unchanged source files introduce no branch drift. The numeric outdoor rule above
+was the last discovered shared-rule discrepancy. No unresolved upstream intent
+requires a question to Sylvie. This closes U1's source/detection reconciliation;
+U2 packaging and U3 integrated/native acceptance remain separate gates. This is
+not a claim that either original application's native parity gate is complete.
 
 The unified event entry points share the existing parser/save implementation,
 selecting the union lookup instead of adding another parser. Focused tests retain
@@ -4048,6 +4051,11 @@ Linux/WSL passes two backend context tests and eleven focused unified GUI/prefer
 tests. Documentation links/anchors and CLI/JSON examples pass. No native GUI
 acceptance is claimed by these headless checks.
 
+The cross-storage implementation also passed all eight jobs in
+[CI 42438997744](https://github.com/vulcandth/polished-map-ng/actions/runs/42438997744),
+including Windows/Linux/macOS workspace tests, MSRV, dependency checks, reference
+oracles, visual comparisons and the external-project job.
+
 ### Five-project compatibility matrix
 
 User direction on November 7 expanded unified compatibility targets to all five
@@ -4095,8 +4103,10 @@ This exception is a size-selection requirement, not evidence of file corruption.
 than duplicating SHA pins in CI; it verifies existing revisions and refuses tracked
 edits. Fixtures stay ignored and are excluded from packages. Automated loading
 and rendering do not independently prove pixel parity against the original editor;
-visual/reference comparisons, all editing domains and native OS workflows remain
-separate acceptance requirements. No new support claims were added to README.
+visual/reference comparisons and native OS workflows remain separate acceptance
+requirements. Representative asset-domain coverage is recorded below; this does
+not establish every map's or project's full acceptance. No new support claims
+were added to README.
 
 Windows validation after expanding the matrix and fixing color transitions passes fmt, warnings-denied
 workspace Clippy, **516 tests with 51 explicit external/native cases ignored**,
@@ -4112,3 +4122,37 @@ Polished Crystal. A focused regression switches between absent/present palette
 maps and attributed data, toggles the actual menu checkbox, and verifies that
 only explicit preference persists. Classic and attributed tileset reloads now
 share the same block-texture creation helper instead of duplicating it.
+
+### Unified real-project asset editing and persistence
+
+The [unified asset workflow](../crates/gui/src/unified_tests/real_assets.rs) copies
+each pinned project's discovery inputs and editable assets into a temporary
+directory, excluding Git metadata, build products and unrelated game graphics.
+One unified editor alternates through all five projects. It uses actual block,
+pixel, roof and palette dialogs, shared collision/event commands, and the GUI's
+save paths. It then reopens the copied map and compares all block bytes,
+occurrence attributes or referenced classic palette attributes, collision rows,
+tile/roof pixels and complete event source. All copied original input files are
+checked byte-for-byte unchanged. The map bytes must also remain unchanged during
+asset saves. CI includes this test in its existing `unified_pinned_projects` run.
+
+| Project | Block and tile edits | Palette edit/export/reload | Event move/save/reopen | Collision and roof edits |
+|---|---|---|---|---|
+| pokered | Pass | Monochrome pass | Pass | Not present in the selected fixture context |
+| pokeyellow | Pass | Monochrome pass | Pass | Not present in the selected fixture context |
+| pokegold | Pass | Color pass | Pass | Pass, explicitly selecting `new_bark` |
+| pokecrystal | Pass | Color pass | Pass | Pass, explicitly selecting `new_bark` |
+| Polished Crystal | Pass, including occurrence palette and X flip | Color pass | Pass | Pass, explicitly selecting `new_bark` |
+
+Roof selection is repeated on reopen because changing the preview does not rewrite
+map headers. Classic monochrome PNG row padding can recreate unused blank tile
+definitions after trimming; the test checks every pixel and the palette attributes
+of referenced tiles, rather than treating that transient unused tail as serialized
+state. The shared five-project list and palette-input helper are reused instead
+of adding another divergent fixture list or keyboard-input path.
+
+Windows passes fmt, warnings-denied workspace Clippy, **535 tests / 52 explicitly
+ignored external/native cases**, rustdoc and the production native adapter graph.
+All three external unified GUI tests pass separately, including the asset workflow.
+These are headless input/persistence checks; native clipboard, desktop drag/drop,
+dialogs, focus, DPI and original-application interoperability remain open.
