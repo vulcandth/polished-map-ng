@@ -25,14 +25,16 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Continue **U3** with native monochrome palette/binary-collision cases,
-remaining event variants, external clipboard exchange, desktop-transfer, focus
-and DPI workflows on Windows, Linux X11/Wayland and both macOS targets, using the
+**Next:** Continue **U3** with remaining native legacy/plusplus event variants,
+external clipboard exchange, desktop-transfer, focus and DPI workflows on
+Windows, Linux X11/Wayland and both macOS targets, using the
 [unified build](releases.md#unified-development-packaging) and five-project tester
 guide. The Windows project cycle and mixed-storage map/block save/reopen checks
 are [verified](compatibility.md#unified-windows-mixed-storage-native-checks), along
 with [roof and tileset persistence](compatibility.md#unified-windows-roof-and-tileset-persistence)
 and [color palettes and ASM collisions](compatibility.md#unified-windows-palette-and-collision-persistence).
+[Gen 1 palettes/events and binary collisions](compatibility.md#unified-windows-monochrome-binary-collision-and-gen-1-events)
+also have focused Windows evidence, with synthetic binary fixtures identified separately.
 Open/New,
 automatic tileset changes and asset saves have automated workflow evidence;
 full unified/native acceptance remains open. The user authorized unified work
@@ -344,9 +346,9 @@ launchers. No mode selector and no silent format conversion. See the
   directions. The representative five-project cycle, map and attributed-block
   saves/reopens, and Open cancellation also pass in the packaged Windows GUI.
   Windows mixed-storage map/block saves, event move/save/reload, image-clipboard
-  transfer between storage contexts, roof/tileset and ASM collision save/reload,
-  color palette transfer/export in both storage models and the compound filename
-  correction pass native checks; refreshed
+  transfer between storage contexts, roof/tileset and ASM/binary collision save/reload,
+  color/monochrome palette transfer/export, Gen 1 background/object event saves
+  and the compound filename correction pass native checks. Refreshed
   cross-platform packages and matching source are
   [published](releases.md#unified-development-packaging). Remaining
   native workflows and other platforms stay open. Evidence:
@@ -356,7 +358,8 @@ launchers. No mode selector and no silent format conversion. See the
   [mixed-storage native checks](compatibility.md#unified-windows-mixed-storage-native-checks),
   [events and clipboard](compatibility.md#unified-windows-event-and-image-clipboard-checks),
   [roof and tileset persistence](compatibility.md#unified-windows-roof-and-tileset-persistence),
-  [palettes and collisions](compatibility.md#unified-windows-palette-and-collision-persistence).
+  [palettes and collisions](compatibility.md#unified-windows-palette-and-collision-persistence),
+  [Gen 1 and binary checks](compatibility.md#unified-windows-monochrome-binary-collision-and-gen-1-events).
 
 ## 4. Autonomous interface — stabilization not started
 

@@ -4430,6 +4430,54 @@ test artifacts; no project assets enter source or release archives.
 
 This verifies representative native color-palette editing/import/export and
 ASM-collision persistence in both storage contexts. Monochrome palette and
-binary-collision native cases, other event variants, external clipboard/desktop
-transfers, focus/DPI, Linux/macOS interaction and original-application acceptance
-remain open in U3. No product change or replacement package was needed.
+binary-collision checks follow below. Other event variants, external clipboard/
+desktop transfers, focus/DPI, Linux/macOS interaction and original-application
+acceptance remain open in U3. No product change or replacement package was needed.
+
+### Unified Windows monochrome, binary collision and Gen 1 events
+
+The published `5332c83` Windows executable opened the pinned pokered Pallet Town
+copy with automatic monochrome fallback and the compact four-swatch palette
+editor. Editing Day's first swatch to `081018` displayed RGB5 `(1, 2, 3)` and
+updated the map. Native Export Palettes produced the six-row monochrome layout,
+with source-ordered hues and the six set labels. In the pinned pokeyellow copy,
+a further red-channel increment made the current color `(2, 2, 3)`; loading the
+saved file and accepting the edited-palette warning restored the prior export.
+Re-exporting all six sets was byte-identical. Opening a subsequent color-capable
+classic tileset restored the full eight-row palette editor automatically.
+No Monochrome option or format selector was changed. These checks exercise
+`Color::write_palettes`' monochrome branch and the shared palette import guard.
+
+In pokered's native Events mode, Event Options moved the Oak's Lab background
+event from `(13, 13)` to `(14, 13)` and the Oak object from `(8, 5)` to `(9, 5)`.
+The object dialog retained its wrapped sprite/movement/text suffix. Numeric Enter
+committed the coordinate without accepting the dialog; OK accepted the draft.
+Save Event Script followed by Reload and reopening both dialogs retained the
+new coordinates. Byte comparison with the pinned script proved only those two
+X operands changed; macro names, suffixes, whitespace, line endings and all other
+source bytes survived.
+
+The five pinned projects do not supply the supported four-byte-per-block binary
+collision layout. A separate 11-file synthetic fixture therefore exercised that
+native path without game assets. Both collision inputs contained two rows,
+`01 23 45 67 89 AB CD EF`. Editing the classic block's top-left byte to `FF` and
+saving changed only offset 0. Change Tileset selected attributed assets in the
+same document and exposed the attributed block controls automatically. Editing
+its bottom-right byte to `80` and saving changed only offset 3 of its separate
+collision file. Reloading attributed assets displayed `80`; changing back to
+classic displayed `FF`. All other bytes, including both maps, metatiles, tile
+graphics, palette maps and occurrence attributes, remained unchanged. This
+verifies unified native binary handling, not additional real-project coverage.
+
+SHA-256 audits covered all 7,781 copied project inputs and their reference
+originals, plus all 11 synthetic inputs. Relative to the pre-check baseline,
+only pokered's event script changed among project files; two explicit palette
+exports were written outside the project folders. Only the two collision files
+changed in the synthetic fixture. All reference originals were unchanged, and
+the application closed normally. Ignored fixtures, outputs and audit manifests
+are excluded from source and release archives.
+
+Remaining U3 native gates include legacy/plusplus-specific event variants,
+external clipboard/desktop exchange, focus/DPI, Linux/macOS workflows and
+original-application comparisons. This check found no product defect and does
+not close those gates or require a replacement development package.
