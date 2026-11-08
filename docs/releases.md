@@ -6,6 +6,12 @@ the development policy below; the full checklist remains the final release gate.
 
 ## Development packages
 
+| Application | Current development download | Testing guide |
+|---|---|---|
+| Unified editor | [November 7 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-4edcbc6) | [Unified testing](testing-unified.md) |
+| Fixed master parity | [November 7 master build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-618aefd) | [Master testing](testing.md) |
+| Fixed plusplus parity | [November 7 plusplus build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-618aefd) | [Plusplus testing](testing-plusplus.md) |
+
 [The manual workflow](../.github/workflows/development.yml) creates a complete
 source archive, then builds Windows x86-64, Linux x86-64, Apple Silicon and Intel
 Mac packages **offline from that archive**. Registry source is vendored separately
@@ -235,6 +241,13 @@ No binaries should be presented as production-ready before these gates pass.
 
 ## Unified development packaging
 
+The [first unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-4edcbc6)
+is published from `4edcbc6289b4d7d84729c419d5a05e92dc906670` for Windows x86-64,
+Linux x86-64, Apple Silicon and Intel macOS. Its complete source and all five
+SHA-256 files are published alongside the four binaries. The tag resolves to
+that exact commit; all ten uploaded sizes and server-reported digests match the
+locally verified files. It is a prerelease and is not marked latest stable.
+
 The Development packages workflow now accepts `unified` in addition to the two
 parity launchers. It packages `polished-map-unified`, uses the macOS bundle name
 `Polished Map NG Unified.app` and a separate bundle identifier, and includes the
@@ -243,26 +256,26 @@ the source archive and each binary must agree on their launcher and commit.
 All three launchers remain in source, and a missing selected executable fails
 packaging rather than substituting another launcher.
 
-Nine packaging regression tests pass, including all four target layouts,
-distinct bundle identities, source/binary mismatch rejection, notices and offline
-tester-guide links. The initial candidate `254d57e2c306cc78f20127e110bd09c3f7349225`
-passed all five [package jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42440191285)
-and all eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42440177458).
-Its complete source archive was verified against Git and all 460 registry source
-checksums. Windows, Linux and Apple Silicon archives passed checksum, executable
-metadata, tester-guide and 470 dependency-notice inventory checks. Intel artifact
-inspection was superseded by the [native Save As fix](compatibility.md#unified-native-save-context).
-This candidate was not published; fresh packages containing that fix still require
-verification and publication. The existing offline source rebuild, licensing,
-lockfile and checksum requirements apply unchanged. No unified parity release is claimed.
+All five [package jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42442281801)
+and all eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42442268372)
+passed for this commit. The source archive matches Git and all 460 vendored registry
+source checksums. Every binary archive passes architecture, executable mode,
+launcher identity, tester-guide, notices and 470-entry dependency inventory checks;
+Mac bundle/signature metadata and all five Windows icon resources are verified.
+Nine packaging regression tests cover all targets and mismatch rejection.
 
-The replacement candidate is `4edcbc6289b4d7d84729c419d5a05e92dc906670`:
-[package run 42442281801](https://github.com/vulcandth/polished-map-ng/actions/runs/42442281801)
-and [CI 42442268372](https://github.com/vulcandth/polished-map-ng/actions/runs/42442268372)
-are in progress. Local Windows full-workspace validation, focused Linux checks,
-and the three external five-project GUI workflows on both systems pass. The
-native Windows Save As suggestion was verified; broader native acceptance remains
-open. Download/archive verification and publication await the replacement runs.
+The packaged CLI runs on all native build runners and locally on Windows/WSL.
+The packaged Windows GUI starts and closes normally. The Linux package creates
+an 800×600 visible X11 window under Xvfb/WSL; that bounded check terminates its
+own process and does not establish desktop interaction or Wayland acceptance.
+The [Windows Save As check](compatibility.md#unified-native-save-context) and
+[real-project asset workflows](compatibility.md#unified-cross-storage-asset-persistence)
+provide additional evidence. Full native acceptance remains open; no parity or
+clean-machine release claim is made. The existing offline source, licensing,
+lockfile and checksum requirements apply unchanged.
+
+The earlier `254d57e` candidate completed packaging and CI but was not published:
+native verification found stale Save As hints, corrected in this release.
 
 ## Development binary size
 

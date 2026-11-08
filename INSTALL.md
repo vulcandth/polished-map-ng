@@ -1,8 +1,8 @@
 # Building and running Polished Map NG
 
-[Download development packages](docs/releases.md#development-packages)
+[Download unified development packages](docs/releases.md#unified-development-packaging)
 for compatibility testing; see
-[tester instructions](docs/testing.md) and the [roadmap](docs/roadmap.md).
+[tester instructions](docs/testing-unified.md) and the [roadmap](docs/roadmap.md).
 The instructions below build the development version from source.
 
 ## Prerequisites
@@ -36,13 +36,14 @@ From a local checkout of this repository:
 
 ```text
 rustup show
-cargo run -p polished-map-gui --locked --
+cargo run -p polished-map-gui --bin polished-map-unified --locked --
 cargo run -p polished-map-cli --locked -- --help
 ```
 
-The default GUI is master. To launch the separate experimental plusplus editor:
+To launch either separate parity editor:
 
 ```text
+cargo run -p polished-map-gui --bin polished-map-gui --locked --
 cargo run -p polished-map-gui --bin polished-map-plusplus --locked --
 ```
 
@@ -50,18 +51,10 @@ Both parity launchers accept an optional map path after `--`, retain separate
 settings and stay fixed to their respective formats. Their parity acceptance is
 still in progress; master and plusplus tester packages are published separately.
 
-The in-progress unified application is also available from source:
-
-```text
-cargo run -p polished-map-gui --bin polished-map-unified --locked --
-```
-
-It detects storage from the map and selected tileset, uses its own settings, and
-has no mode selector. Open/New, legacy source inputs, alternating-project saves
-and automatic tileset changes have automated coverage, including representative
-asset edits and saves in all five target projects. Integrated/native acceptance
-and unified package delivery remain open. Follow the [unified roadmap](docs/roadmap.md#3-unified-editor--in-progress)
-before using this development launcher for acceptance testing.
+The unified application detects storage from the map and selected tileset, uses
+its own settings, and has no mode selector. Published packages include the
+[unified tester guide](docs/testing-unified.md). Integrated/native acceptance
+remains open in the [roadmap](docs/roadmap.md#3-unified-editor--in-progress).
 
 For optimized binaries:
 

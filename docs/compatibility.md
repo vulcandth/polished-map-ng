@@ -3896,8 +3896,9 @@ The final-source audit covers the 43 changed or branch-only source/header files;
 unchanged source files introduce no branch drift. The numeric outdoor rule above
 was the last discovered shared-rule discrepancy. No unresolved upstream intent
 requires a question to Sylvie. This closes U1's source/detection reconciliation;
-U2 packaging and U3 integrated/native acceptance remain separate gates. This is
-not a claim that either original application's native parity gate is complete.
+U2's [development packages](releases.md#unified-development-packaging) are now
+delivered; U3 integrated/native acceptance remains separate. This is not a claim
+that either original application's native parity gate is complete.
 
 The unified event entry points share the existing parser/save implementation,
 selecting the union lookup instead of adding another parser. Focused tests retain
@@ -3943,8 +3944,8 @@ The load worker now delegates through a shared typed request boundary; dimension
 and selected-tileset validation are shared by both adapters. Palette caches and
 active settings change only after candidate graphics/textures succeed. General
 visual work remains deferred. The final source-drift audit and representative
-asset workflows are recorded in their sections; U2 distribution and U3 broader
-integrated/native acceptance remain open.
+asset workflows are recorded in their sections. U2 distribution is complete;
+U3 broader integrated/native acceptance remains open.
 
 Windows validation for this integration passes fmt, workspace Clippy with warnings
 denied, **515 tests with 49 explicit external/native cases ignored**, rustdoc and
@@ -4221,3 +4222,6 @@ external/native cases**, and rustdoc pass. These changes add acceptance evidence
 without changing production code since package candidate `4edcbc6`. Native
 cross-storage asset interaction and original-application comparison remain part
 of U3; headless persistence does not waive them.
+Supplemental acceptance commit `f96cd60` also passes all eight
+[cross-platform CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42443240776),
+including the expanded real-project workflow.
