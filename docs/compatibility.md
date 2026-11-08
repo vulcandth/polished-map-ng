@@ -4190,5 +4190,6 @@ The project test checks hint decoding, current dimensions, unsupported hint name
 and zero-size rejection. Windows and Linux/WSL focused checks pass. Windows also
 passes fmt, warnings-denied workspace Clippy, **537 tests / 52 explicitly ignored
 external/native cases**, rustdoc and the production native-adapter graph. These
-checks also include a separate successful run of all three five-project GUI
-workflows on Windows. They do not close the broader U3 native acceptance gate.
+checks also include separate successful runs of all three five-project GUI
+workflows on Windows and Linux/WSL. They do not close the broader U3 native
+acceptance gate.

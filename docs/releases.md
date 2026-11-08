@@ -256,6 +256,14 @@ This candidate was not published; fresh packages containing that fix still requi
 verification and publication. The existing offline source rebuild, licensing,
 lockfile and checksum requirements apply unchanged. No unified parity release is claimed.
 
+The replacement candidate is `4edcbc6289b4d7d84729c419d5a05e92dc906670`:
+[package run 42442281801](https://github.com/vulcandth/polished-map-ng/actions/runs/42442281801)
+and [CI 42442268372](https://github.com/vulcandth/polished-map-ng/actions/runs/42442268372)
+are in progress. Local Windows full-workspace validation, focused Linux checks,
+and the three external five-project GUI workflows on both systems pass. The
+native Windows Save As suggestion was verified; broader native acceptance remains
+open. Download/archive verification and publication await the replacement runs.
+
 ## Development binary size
 
 Release builds use thin LTO, one codegen unit and explicit symbol stripping.
