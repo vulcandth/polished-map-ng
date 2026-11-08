@@ -3833,8 +3833,9 @@ original-application acceptance remain open; this backport does not advance them
 
 ## Unified format detection and upstream drift
 
-U1 is **in progress**, on `codex/unified-editor` based on the published shared
-source. Separate parity launchers and their native acceptance gates remain.
+U1 source/detection reconciliation is **complete** on `codex/unified-editor`;
+the final drift disposition is recorded below. Separate parity launchers and
+their native acceptance gates remain.
 The pinned `config.cpp` implementations agree on `.blk` binary maps but differ
 in attribute storage and asset paths. `.ablk` was introduced to distinguish
 plusplus maps; master also imports `.map` ASM and `.CHR`/`.CEL` source graphics.
@@ -3860,7 +3861,8 @@ and visuals. The union-event change (`bf18f26`) also passed all eight
 [cross-platform jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42433112936).
 The Open/New integration (`4812028`) passed all eight
 [cross-platform jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42434947611).
-Complete drift reconciliation and unified GUI/native acceptance remain open.
+Those initial runs preceded the final drift audit below. Unified GUI/native
+acceptance remains open.
 
 The five-project expansion (`e18e739`) and document-local color fallback (`fa1d8cc`)
 also passed their full CI runs ([matrix](https://github.com/vulcandth/polished-map-ng/actions/runs/42435481959),
@@ -3940,9 +3942,9 @@ desktop, DPI or full-project parity.
 The load worker now delegates through a shared typed request boundary; dimensions
 and selected-tileset validation are shared by both adapters. Palette caches and
 active settings change only after candidate graphics/textures succeed. General
-visual work remains deferred. Final source-drift and integrated asset-workflow
-acceptance remain U1/U2 work; this
-launcher is not yet a distributed unified development candidate.
+visual work remains deferred. The final source-drift audit and representative
+asset workflows are recorded in their sections; U2 distribution and U3 broader
+integrated/native acceptance remain open.
 
 Windows validation for this integration passes fmt, workspace Clippy with warnings
 denied, **515 tests with 49 explicit external/native cases ignored**, rustdoc and
@@ -4031,7 +4033,8 @@ selector or project-file conversion is introduced.
 
 The backend retains the original source hash but requires an explicit Save As
 after crossing models, including after switching back. Only a successful explicit
-save clears this guard. Save As proposes the new model's suffix. Header ASM and
+save clears this guard. Save As proposes the new model's suffix and current
+filename hints as verified in [native save context](#unified-native-save-context). Header ASM and
 companion assets are unchanged by the context transition. Unsaved New documents
 also retain union-root discovery when eventually saved. This deliberate behavior
 is recorded in [deviations](deviations.md#unified-tileset-context-changes).
@@ -4158,3 +4161,34 @@ Linux/WSL also passes the numeric outdoor regression and all three external unif
 GUI tests with the same five fixture copies and persistence assertions.
 These are headless input/persistence checks; native clipboard, desktop drag/drop,
 dialogs, focus, DPI and original-application interoperability remain open.
+
+### Unified native save context
+
+A Windows native session opened a disposable mixed classic/attributed project,
+painted a map cell, changed to attributed tiles, and exercised Cancel, undo and
+redo. The edit and history survived, the unified title stayed stable, and Save
+required a native Save As dialog. Accepting its original suggested filename
+exposed stale context: `Map.2x1.classic.blk` became `Map.2x1.classic.ablk` even
+though the selected tileset was `modern`. The saved bytes were correct and the
+original stayed unchanged, but reopening reported conflicting asset evidence.
+The GUI regression reproduced that conflict before the fix.
+
+Unified Save As now proposes the current dimensions, selected tileset and storage
+extension whenever an explicit destination is required. Filename encoding shares
+the project's discovery grammar, including its map identity before the first dot.
+Names that cannot represent a tileset hint omit it rather than guessing an alias;
+they still require explicit context on Open. Fixed parity launchers keep their
+existing filename suggestions. Ordinary saves do not rename a backed document.
+The shared Open/New completion step now records the selected tileset alongside
+the loaded assets, including newly created maps and explicit context corrections.
+
+The rebuilt Windows dialog was observed suggesting `Map.2x1.modern.ablk` after
+the same storage change; Cancel returned to the intact map. Automated workflows
+save and reopen the suggestions in both directions, create/save/reopen new maps
+with both models, correct a context-free `.blk`, and import/reopen ASM map data.
+The project test checks hint decoding, current dimensions, unsupported hint names
+and zero-size rejection. Windows and Linux/WSL focused checks pass. Windows also
+passes fmt, warnings-denied workspace Clippy, **537 tests / 52 explicitly ignored
+external/native cases**, rustdoc and the production native-adapter graph. These
+checks also include a separate successful run of all three five-project GUI
+workflows on Windows. They do not close the broader U3 native acceptance gate.

@@ -845,17 +845,9 @@ impl Editor {
             return;
         };
         let source = loaded.document.path();
-        let name = if matches!(loaded.document, documents::MapDocument::PlusPlus(_))
-            && !loaded.document.needs_save_as()
-            && loaded.document.save_extensions().iter().any(|extension| {
-                source
-                    .extension()
-                    .is_some_and(|e| e.eq_ignore_ascii_case(extension))
-            }) {
-            source.to_owned()
-        } else {
-            source.with_extension(loaded.document.default_extension())
-        };
+        let name = loaded
+            .document
+            .save_path_suggestion(self.application.is_unified());
         let path = rfd::FileDialog::new()
             .add_filter("Map blocks", loaded.document.save_extensions())
             .set_directory(source.parent().unwrap_or(source))

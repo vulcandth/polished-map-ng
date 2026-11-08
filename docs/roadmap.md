@@ -25,7 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Finish **U2** unified development package delivery, then continue
+**Next:** Finish **U2** verification and fresh package delivery after the native
+Save As context fix, then continue
 **U3** integrated/native acceptance using the five-project tester guide.
 Unified Open/New, automatic tileset changes and alternating-project saves have automated
 workflow evidence; full unified/native acceptance remains open. The user authorized unified work
@@ -321,8 +322,10 @@ launchers. No mode selector and no silent format conversion. See the
   launcher, Open/New, union events, separate palette sessions and stable settings
   identity, legacy metadata and cross-storage tileset changes are implemented.
   Representative five-project asset editing/saves are verified. Packaging supports
-  the unified launcher; building and verifying distributable packages remains. Evidence:
-  [unified workflows](compatibility.md#unified-opennew-and-session-transitions).
+  the unified launcher. Native verification exposed and corrected stale Save As
+  filename hints; fresh distributable package verification/delivery remains. Evidence:
+  [unified workflows](compatibility.md#unified-opennew-and-session-transitions) and
+  [native save context](compatibility.md#unified-native-save-context).
 - [ ] **U3 — In progress, acceptance open:** Pinned pokered, pokeyellow, pokegold,
   pokecrystal and Polished Crystal suites pass through the unified
   workflow, including alternating projects and cancelled/failed loads. Missing

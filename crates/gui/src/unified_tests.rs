@@ -242,6 +242,52 @@ fn unified_tileset_change_adapts_both_ways_preserving_map_events_and_palette_ses
 }
 
 #[test]
+fn unified_storage_change_save_suggestion_reopens_with_the_selected_assets() {
+    let dir = fixture();
+    let mut h = editor();
+    for (name, from, to, source_profile, target_profile) in [
+        (
+            "Classic",
+            "classic",
+            "modern",
+            Profile::Master,
+            Profile::PlusPlus,
+        ),
+        (
+            "Modern",
+            "modern",
+            "classic",
+            Profile::PlusPlus,
+            Profile::Master,
+        ),
+    ] {
+        let source = dir
+            .path()
+            .join(format!("{name}.2x1.{from}.{}", source_profile.extension()));
+        open(&mut h, &source, source_profile);
+        h.state_mut().apply(Command::Paint {
+            points: vec![Point { x: 0, y: 0 }],
+            block: 1,
+        });
+        choose_tileset(&mut h, from, to);
+        let doc = &mut h.state_mut().loaded.as_mut().unwrap().document;
+        // Fixed parity launchers retain their original filename behavior.
+        assert_eq!(
+            doc.save_path_suggestion(false),
+            doc.path().with_extension(target_profile.extension())
+        );
+        let suggested = doc.save_path_suggestion(true);
+        doc.save_as(&suggested).unwrap();
+        open(&mut h, &suggested, target_profile);
+        let doc = &h.state().loaded.as_ref().unwrap().document;
+        assert_eq!(doc.metadata().tileset.as_deref(), Some(to));
+        assert_eq!(doc.map().blocks(), [1, 1]);
+        assert_eq!(doc.save_path_suggestion(true), doc.path());
+        assert_eq!(fs::read(source).unwrap(), [0, 1]);
+    }
+}
+
+#[test]
 fn unified_failed_cross_storage_tileset_change_preserves_all_live_domains() {
     let dir = fixture();
     let mut h = editor();
@@ -561,6 +607,26 @@ fn unified_new_map_uses_selected_assets_and_shared_map_requires_actual_context()
         assert!(!doc.has_backing_file());
         assert!(doc.profile() == profile);
         assert_eq!(doc.path().extension().unwrap(), profile.extension());
+        let suggested = doc.save_path_suggestion(true);
+        h.state_mut()
+            .loaded
+            .as_mut()
+            .unwrap()
+            .document
+            .save_as(&suggested)
+            .unwrap();
+        open(&mut h, &suggested, profile);
+        assert_eq!(
+            h.state()
+                .loaded
+                .as_ref()
+                .unwrap()
+                .document
+                .metadata()
+                .tileset
+                .as_deref(),
+            Some(tileset)
+        );
     }
     let path = dir.path().join("Shared.blk");
     fs::write(&path, [0, 1]).unwrap();
@@ -573,6 +639,17 @@ fn unified_new_map_uses_selected_assets_and_shared_map_requires_actual_context()
     h.state_mut().start_load(form, &ctx);
     assert!(h.state().loading.is_none());
     assert!(!h.state().open_form.as_ref().unwrap().ready());
+    // The direct invalid-submit guard produced an error; dismiss it before
+    // exercising a corrected selection through the actual Open dialog.
+    assert!(h.state_mut().error.take().is_some());
+    let form = h.state_mut().open_form.as_mut().unwrap();
+    form.tileset = "modern".into();
+    form.resolve_profile();
+    assert!(form.ready());
+    submit(&mut h);
+    let document = &h.state().loaded.as_ref().unwrap().document;
+    assert!(document.profile() == Profile::PlusPlus);
+    assert_eq!(document.metadata().tileset.as_deref(), Some("modern"));
 }
 
 #[test]
@@ -597,9 +674,14 @@ fn unified_asm_map_uses_occurrence_assets_and_saves_only_to_explicit_binary_targ
     });
     let document = &mut h.state_mut().loaded.as_mut().unwrap().document;
     assert!(document.save().is_err());
-    let target = dir.path().join("Imported.ablk");
+    let target = document.save_path_suggestion(true);
     document.save_as(&target).unwrap();
-    assert_eq!(fs::read(target).unwrap(), [1, 1]);
+    assert_eq!(fs::read(&target).unwrap(), [1, 1]);
+    open(&mut h, &target, Profile::PlusPlus);
+    assert_eq!(
+        h.state().loaded.as_ref().unwrap().document.map().blocks(),
+        [1, 1]
+    );
     assert_eq!(fs::read(path).unwrap(), source);
 }
 

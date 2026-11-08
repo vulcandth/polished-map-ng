@@ -658,3 +658,12 @@ change requires explicit Save As before writing the map, including after switchi
 back. Cancelling Save As retains that requirement and all edits. A successful
 explicit save establishes the new backing destination. This guard distinguishes
 selecting a preview context from authorizing a write to the original project.
+
+When that explicit destination is required, unified Save As suggests current
+dimension/tileset hints using the existing filename grammar. This prevents an
+old tileset hint from contradicting the new storage extension on reopen. New maps
+and ASM imports use the same suggestion; the user still chooses the destination.
+Tileset names outside the hint grammar need explicit context on reopen. Fixed
+parity launchers retain their original suggestions. No existing project filename,
+header or companion asset is changed by generating a suggestion. See
+[native and regression evidence](compatibility.md#unified-native-save-context).

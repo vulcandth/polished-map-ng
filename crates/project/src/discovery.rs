@@ -190,17 +190,23 @@ fn filename_dimensions_with_rules(map: &Path, rules: Rules) -> Option<(u16, u16)
         if index + 2 < parts.len() && !valid_suffix(parts[index + 1]) {
             continue;
         }
-        if let Some((w, h)) = parts[index].split_once('x')
-            && !w.is_empty()
-            && !h.is_empty()
-            && w.bytes().all(|b| b.is_ascii_digit())
-            && h.bytes().all(|b| b.is_ascii_digit())
-            && let (Ok(w), Ok(h)) = (w.parse(), h.parse())
-        {
-            return Some((w, h));
+        if let Some(dimensions) = dimensions_suffix(parts[index]) {
+            return Some(dimensions);
         }
     }
     None
+}
+
+fn dimensions_suffix(value: &str) -> Option<(u16, u16)> {
+    let (width, height) = value.split_once('x')?;
+    if width.is_empty()
+        || height.is_empty()
+        || !width.bytes().all(|b| b.is_ascii_digit())
+        || !height.bytes().all(|b| b.is_ascii_digit())
+    {
+        return None;
+    }
+    Some((width.parse().ok()?, height.parse().ok()?))
 }
 
 fn filename_tileset(map: &Path, rules: Rules) -> Option<String> {
@@ -210,6 +216,39 @@ fn filename_tileset(map: &Path, rules: Rules) -> Option<String> {
     }
     let hint = parts[parts.len() - 2];
     valid_suffix(hint).then(|| hint.to_owned())
+}
+
+/// Suggest a binary-map path carrying the current dimensions and tileset.
+///
+/// Uses the pinned filename-hint grammar and its map identity (before the first
+/// dot). This only proposes a name; it neither writes files nor changes headers.
+/// Unrepresentable tileset names are omitted instead of inventing a lossy alias;
+/// reopening those maps still requires explicit context. Non-UTF-8 paths and
+/// nonbinary extensions have no hint representation and return `None`.
+pub fn map_path_with_context(
+    path: &Path,
+    dimensions: (u8, u8),
+    tileset: Option<&str>,
+) -> Option<PathBuf> {
+    let extension = path.extension()?.to_str()?;
+    if !Rules::PlusPlus.binary_extension(extension) || dimensions.0 == 0 || dimensions.1 == 0 {
+        return None;
+    }
+    let name = path.file_name()?.to_str()?.split('.').next()?;
+    if name.is_empty() {
+        return None;
+    }
+    let (width, height) = dimensions;
+    let mut filename = format!("{name}.{width}x{height}");
+    if let Some(tileset) =
+        tileset.filter(|name| valid_suffix(name) && dimensions_suffix(name).is_none())
+    {
+        filename.push('.');
+        filename.push_str(tileset);
+    }
+    filename.push('.');
+    filename.push_str(extension);
+    Some(path.with_file_name(filename))
 }
 
 fn valid_suffix(value: &str) -> bool {

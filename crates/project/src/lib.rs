@@ -31,7 +31,8 @@ pub use blockset::{BlocksetDocument, prepare_blockset_save_as};
 pub use collisions::prepare_collision_save_as;
 pub use discovery::{
     MapMetadata, TilesetChoice, TilesetOptions, discover_map, discover_unified_map,
-    find_project_root, list_tilesets, map_constant, tileset_choices, tileset_options,
+    find_project_root, list_tilesets, map_constant, map_path_with_context, tileset_choices,
+    tileset_options,
 };
 pub use document::{
     MapDocument, MapOpenReport, OpenOptions, ProjectError, SaveTarget, prepare_save_as,

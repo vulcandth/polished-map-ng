@@ -94,6 +94,35 @@ fn filename_overrides_metadata_and_explicit_dimensions_override_filename() {
 }
 
 #[test]
+fn suggested_context_paths_roundtrip_hints_without_inventing_tileset_aliases() {
+    use polished_map_project::{discover_unified_map, map_path_with_context};
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    write(root, "gfx/tilesets/current-tiles.2bpp", "");
+    for extension in ["blk", "ablk", "BLK"] {
+        let source = root.join(format!("Town.9x9.old.{extension}"));
+        let suggested = map_path_with_context(&source, (2, 1), Some("current-tiles")).unwrap();
+        assert_eq!(
+            suggested,
+            root.join(format!("Town.2x1.current-tiles.{extension}"))
+        );
+        let metadata = discover_unified_map(&suggested, Some(root)).unwrap();
+        assert_eq!(metadata.dimensions, Some((2, 1)));
+        assert_eq!(metadata.tileset.as_deref(), Some("current-tiles"));
+        assert!(!suggested.exists());
+        for unsupported in ["a.b", "../escape", "", "é", "3x4"] {
+            let suggested = map_path_with_context(&source, (2, 1), Some(unsupported)).unwrap();
+            assert_eq!(suggested, root.join(format!("Town.2x1.{extension}")));
+            let metadata = discover_unified_map(&suggested, Some(root)).unwrap();
+            assert_eq!(metadata.dimensions, Some((2, 1)));
+            assert!(metadata.tileset.is_none());
+        }
+    }
+    assert!(map_path_with_context(Path::new("Town.map"), (2, 1), None).is_none());
+    assert!(map_path_with_context(Path::new("Town.blk"), (0, 1), None).is_none());
+}
+
+#[test]
 fn legacy_macros_and_path_precedence_match_upstream() {
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();

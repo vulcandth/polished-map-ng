@@ -132,6 +132,33 @@ impl From<plusplus::MapDocument> for MapDocument {
 }
 
 impl MapDocument {
+    // Keep the fixed launchers' save_as_cb naming. Unified context transitions
+    // need current hints: changing only .blk to .ablk would retain stale assets.
+    pub fn save_path_suggestion(&self, unified: bool) -> PathBuf {
+        let source = self.path();
+        let suggested = if matches!(self, Self::PlusPlus(_))
+            && !self.needs_save_as()
+            && self.save_extensions().iter().any(|extension| {
+                source
+                    .extension()
+                    .is_some_and(|e| e.eq_ignore_ascii_case(extension))
+            }) {
+            source.to_owned()
+        } else {
+            source.with_extension(self.default_extension())
+        };
+        if unified && self.needs_save_as() {
+            polished_map_project::map_path_with_context(
+                &suggested,
+                (self.map().width(), self.map().height()),
+                self.metadata().tileset.as_deref(),
+            )
+            .unwrap_or(suggested)
+        } else {
+            suggested
+        }
+    }
+
     pub fn needs_save_as(&self) -> bool {
         match self {
             Self::Master(d) => d.needs_save_as(),

@@ -35,7 +35,9 @@ Crystal. For reproducible results use the commits in
 3. Open a project with mixed classic and attributed tilesets. Change Tileset in
    both directions. Map edits, undo history and events should survive; each storage
    model retains its palette session. A storage change requires an explicit Save
-   As destination. It does not convert existing map headers or asset files.
+   As destination. The suggested name includes current dimensions and tileset
+   hints where representable; save and reopen it to check automatic detection.
+   It does not convert existing map headers or asset files.
 4. Exercise dirty-document Cancel/Discard decisions and external-write conflicts.
    Missing dimensions or ambiguous tileset evidence should require corrected
    context. Do not accept guessed dimensions for short maps without checking the

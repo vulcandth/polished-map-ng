@@ -245,13 +245,16 @@ packaging rather than substituting another launcher.
 
 Nine packaging regression tests pass, including all four target layouts,
 distinct bundle identities, source/binary mismatch rejection, notices and offline
-tester-guide links. Candidate commit `254d57e2c306cc78f20127e110bd09c3f7349225` is
-building in [package run 42440191285](https://github.com/vulcandth/polished-map-ng/actions/runs/42440191285),
-with [CI 42440177458](https://github.com/vulcandth/polished-map-ng/actions/runs/42440177458)
-for the same source. Artifact completion, archive verification and publication
-are still pending. The existing offline source rebuild, licensing,
-lockfile and checksum requirements apply unchanged. No unified parity release
-is claimed.
+tester-guide links. The initial candidate `254d57e2c306cc78f20127e110bd09c3f7349225`
+passed all five [package jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42440191285)
+and all eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42440177458).
+Its complete source archive was verified against Git and all 460 registry source
+checksums. Windows, Linux and Apple Silicon archives passed checksum, executable
+metadata, tester-guide and 470 dependency-notice inventory checks. Intel artifact
+inspection was superseded by the [native Save As fix](compatibility.md#unified-native-save-context).
+This candidate was not published; fresh packages containing that fix still require
+verification and publication. The existing offline source rebuild, licensing,
+lockfile and checksum requirements apply unchanged. No unified parity release is claimed.
 
 ## Development binary size
 

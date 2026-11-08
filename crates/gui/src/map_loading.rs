@@ -42,7 +42,8 @@ impl Loaded {
         palettes: documents::PaletteDocument,
         settings: LoadSettings,
     ) -> LoadResult {
-        match (form.profile, palettes) {
+        let selected_tileset = form.unified.then(|| form.tileset.clone());
+        let mut loaded = match (form.profile, palettes) {
             (documents::Profile::Master, documents::PaletteDocument::Master(palettes)) => {
                 Self::open_master(form, palettes, settings.graphics, settings.auto_events)
                     .map_err(|e| e.to_string())
@@ -64,7 +65,16 @@ impl Loaded {
                 )
             }
             _ => Err("Map storage and palette session do not match".into()),
+        }?;
+        // Open/New may explicitly correct missing or stale metadata. Commit the
+        // same selected context as the assets, including unsaved new documents.
+        if let Some(name) = selected_tileset.filter(|name| !name.is_empty()) {
+            loaded
+                .document
+                .select_tileset(&name)
+                .map_err(|e| e.to_string())?;
         }
+        Ok(loaded)
     }
 
     fn open_master(
