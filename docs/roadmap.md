@@ -25,41 +25,20 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Continue **U3** with desktop-transfer, focus and DPI workflows,
-remaining cross-platform clipboard checks and original-application comparisons on
-Windows, Linux X11/Wayland and both macOS targets, using the
-[unified build](releases.md#unified-development-packaging) and five-project tester
-guide. The Windows project cycle and mixed-storage map/block save/reopen checks
-are [verified](compatibility.md#unified-windows-mixed-storage-native-checks), along
-with [roof and tileset persistence](compatibility.md#unified-windows-roof-and-tileset-persistence)
-and [color palettes and ASM collisions](compatibility.md#unified-windows-palette-and-collision-persistence).
-[Gen 1 palettes/events and binary collisions](compatibility.md#unified-windows-monochrome-binary-collision-and-gen-1-events)
-also have focused Windows evidence, with synthetic binary fixtures identified separately.
-[Combined legacy/plusplus event fields and persistence](compatibility.md#unified-windows-combined-event-catalog)
-have representative Windows coverage across storage changes and a real Polished Crystal map.
-[External tile/roof clipboard exchange with Paint](compatibility.md#unified-windows-external-image-clipboard)
-also passes in the Windows package with exact returned-pixel comparisons.
-[Native Print Copy/Export/Paint comparisons](compatibility.md#unified-windows-native-print-exchange)
-pass for both storage contexts in the corrected Windows build.
-Open/New,
-automatic tileset changes and asset saves have automated workflow evidence;
-full unified/native acceptance remains open. The user authorized unified work
-on November 7 while retaining the separate parity launchers. Keep structural
-refactoring alongside implementation; preserve the outstanding native gates.
-PP3 desktop capture/drop, placement/focus/DPI and macOS acceptance and PP4
-original-application interoperability remain open against the
-[published plusplus packages](releases.md#plusplus-development-packages).
-Master M5–M7 acceptance remains open on the
-[latest master development build](releases.md#development-packages).
-The remaining M4 aesthetic matching is
-**deferred by user direction (2026-10-30)** after the palette-slider work;
-resume M4 only to fix a functional issue. Exact original fonts are also deferred
-to later manual review. See the [approved scope exception](deviations.md#remaining-m4-aesthetics-deferred).
-M3's implementation and isolated native protocol checks are in place; integrated
-file-manager, compositor, clipboard and mixed-DPI behavior remains open in M6.
-M1 inventory/discovery/save feedback and M2 original artwork are complete.
-The [approved sequencing exception](deviations.md#plusplus-development-before-master-native-acceptance)
-permits plusplus work without claiming M7 has passed.
+**Next:** Continue **U3** with integrated Linux window-manager/portal and native
+Wayland workflows, remaining Windows desktop transfers/focus/DPI, and both macOS
+targets. Complete the remaining clipboard, persistence and original-application
+comparisons using the [published unified build](releases.md#unified-development-packaging)
+and [five-project tester guide](testing-unified.md). Focused Windows checks and
+[Linux X11 original-app exchange/file drops](compatibility.md#unified-linux-x11-original-app-exchange-and-file-drops)
+are verified; their scope and outstanding gates are recorded under U3 below.
+
+Retain the separate parity launchers and continue structural refactoring alongside
+implementation. Master M5–M7 and plusplus PP3/PP4 native acceptance remain open;
+unified work does not waive them. Remaining M4 aesthetics and original-font
+matching are **deferred by user direction**; resume visual matching only for a
+functional issue. Preserve the [scope exception](deviations.md#remaining-m4-aesthetics-deferred)
+and [approved sequencing](deviations.md#plusplus-development-before-master-native-acceptance).
 
 ## Foundation — bootstrap complete
 
@@ -344,22 +323,15 @@ launchers. No mode selector and no silent format conversion. See the
   pokecrystal and Polished Crystal suites pass through the unified
   workflow, including alternating projects and cancelled/failed loads. Missing
   or conflicting evidence requires corrected context, never a mode selector;
-  wrong-format writes fail without modifying files. Native workflow checks
-  remain distinct from automated evidence. Discovery, event parsing, classic-map
-  rendering/round trips and alternating representative GUI workflows are covered;
-  representative block/tile/palette/event edits and available collision/roof saves
-  also pass. Real-asset cross-storage editing/saving/reopening passes in both
-  directions. The representative five-project cycle, map and attributed-block
-  saves/reopens, and Open cancellation also pass in the packaged Windows GUI.
-  Windows mixed-storage map/block saves, event move/save/reload, image-clipboard
-  transfer between storage contexts and external Paint tile/roof exchange,
-  roof/tileset and ASM/binary collision save/reload,
-  color/monochrome palette transfer/export, Gen 1 and combined-catalog event saves
-  and the compound filename correction pass native checks. Native Print keyboard
-  copying and exact external-image comparison pass after a shared shortcut fix;
-  all eight CI jobs pass and refreshed four-target packages with matching source are
-  [published](releases.md#unified-development-packaging). Remaining
-  native workflows and other platforms stay open. Evidence:
+  wrong-format writes fail without modifying files. Automated five-project and
+  cross-storage edit/save/reopen suites pass. Focused Windows project, asset,
+  event, palette/collision and external clipboard workflows pass. Linux X11
+  original-app Print/tile exchange and bidirectional file-manager drops also pass.
+  Completion still requires remaining integrated desktop, native chooser,
+  focus/DPI, clipboard/persistence and original-application checks across Windows,
+  Linux X11/Wayland and both macOS targets. Native acceptance is distinct from
+  the green CI and [published four-target packages](releases.md#unified-development-packaging).
+  Evidence:
   [five-project matrix](compatibility.md#five-project-compatibility-matrix) and
   [cross-storage assets](compatibility.md#unified-cross-storage-asset-persistence),
   [Windows project cycle](compatibility.md#unified-windows-five-project-native-checks) and
@@ -370,7 +342,8 @@ launchers. No mode selector and no silent format conversion. See the
   [Gen 1 and binary checks](compatibility.md#unified-windows-monochrome-binary-collision-and-gen-1-events),
   [combined event catalog](compatibility.md#unified-windows-combined-event-catalog),
   [external image clipboard](compatibility.md#unified-windows-external-image-clipboard),
-  [native Print exchange](compatibility.md#unified-windows-native-print-exchange).
+  [native Print exchange](compatibility.md#unified-windows-native-print-exchange),
+  [Linux X11 original-app exchange/file drops](compatibility.md#unified-linux-x11-original-app-exchange-and-file-drops).
 
 ## 4. Autonomous interface — stabilization not started
 

@@ -4609,5 +4609,70 @@ fixture through Recent, retains all five Print flags, reports successful Ctrl+C
 copying and closes normally. Both native test applications exited cleanly.
 [Refreshed four-target packages and matching source](releases.md#unified-development-packaging)
 are published with verified checksums, notices and offline rebuild inputs.
-U3 remains open for desktop transfers, focus/DPI, Linux/macOS workflows and
-original-application comparisons.
+The Linux checks below add original-application clipboard and file-manager
+coverage. U3 remains open for the remaining desktop transfers, focus/DPI,
+Linux/macOS workflows and original-application comparisons.
+
+### Unified Linux X11 original-app exchange and file drops
+
+On November 8, the published unified Linux package at `66ca4b6` ran on an
+isolated 1600×1000 Xvfb display under Ubuntu 22.04.5/WSL, using software GL and
+no window manager. Both unmodified originals were built from the commits in
+[the upstream lock](../upstream.lock.toml), using its FLTK 1.4.5 checkout.
+Portable original preferences and NG's XDG paths were isolated in scratch data.
+These were full application windows and native X11 input/clipboard transfers,
+not headless editor-state injection or a desktop/compositor acceptance claim.
+
+Disposable copies of pinned pokecrystal and Polished Crystal supplied their
+respective `NewBarkTown.blk` and `NewBarkTown.ablk`. Both applications selected
+10×9 maps, Day palettes and roof `(none)`, with `johto` or
+`johto_traditional,johto_common` as appropriate. Ctrl+P and Ctrl+C exercised
+Print with all five overlays disabled. An independent `xclip` process read the
+originals' BMP offers and NG's PNG offers; comparison decoded RGB without
+resizing. Every pixel matched:
+
+| Context | Compared pixels | Complete-image RGB SHA-256 |
+|---|---:|---|
+| Classic, against original master | 92,160 | `5420e75e201e5d772e1a2efc91ad2bd261ec1c4198bafc35c2e5722021618e50` |
+| Attributed, against original plusplus | 92,160 | `324b1e2bb7a192c2d81248c0d1fd96f2845f7a4db08a6e036f9bd2c6b5d1696b` |
+
+The same running unified application changed projects through actual Thunar
+file drops. Dropping the attributed map on the workspace opened correctly
+detected Map Options; Cancel preserved the classic map. Dropping on the blocks
+sidebar did not open a map. After painting one classic map block, another
+workspace drop prompted for unsaved changes; Cancel retained the edit. Undo
+restored the block while retaining the existing sticky dirty flag. Accepting
+the subsequent discard and Map Options opened the attributed map with 248
+blocks. A reverse drop opened the classic map with 128 blocks. Its subsequent
+Print capture matched the original classic baseline at all 92,160 pixels,
+checking for stale graphics after the roundtrip. No mode selector was used.
+
+Both storage contexts also passed bidirectional tile-image exchange with their
+corresponding original. Original tile 1 copied through Ctrl+Shift+C/BMP; NG
+pasted into blank tile 0 through Ctrl+Shift+V. Painting only `(0, 0)` black,
+copying and canceling NG's draft left a live PNG selection that the original
+pasted and recopied as BMP. All 64 RGB pixels matched the original image plus
+that one edit in both NG's output and the returned original output:
+
+| Context | Edited-tile RGB SHA-256 |
+|---|---|
+| Classic | `964788f55128cc7aefd08bd70a1224c47a41be8eb0abd6fa615bb4ceeb940897` |
+| Attributed | `9c7709a4c6dcc19736e9150b440faa0593994f961f8cba134bea351eb71bc9ec` |
+
+All tile drafts were canceled; no project Save was used. The audit checked all
+12,427 copied files against both their baseline hashes and the reference files:
+every byte remained unchanged. Both upstream source checkouts and both reference
+project checkouts had clean Git status. Editors and Thunar closed normally;
+the test-owned display and helper services were stopped. Captures, copied game
+assets, input driver and audit results remain ignored under
+`.scratch/u3-linux-x11`, outside source and binary packages.
+
+This pass required no product change or replacement build. It does not cover
+the full Print overlay matrix, roof clipboard exchange on Linux, project-save
+interoperability, window-manager/compositor focus or mixed DPI, native Wayland,
+Windows file drops or either macOS target. The isolated environment has no
+desktop portal service, so its Open chooser attempt is not chooser acceptance;
+the checks used startup paths and real file-manager drops. The Windows Explorer
+attempt separately stopped at the automation API's rejection of an endpoint
+outside its source window, without delivering a drop. These limits remain U3
+verification work, not reported application defects.

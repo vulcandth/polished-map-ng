@@ -277,9 +277,11 @@ regression tests cover all targets and mismatch rejection.
 The packaged CLI runs on all native build runners and locally on Windows/WSL.
 The latest Windows package reopens the generated mixed-event map through Recent,
 retains all five Print flags, copies successfully with Ctrl+C and closes normally.
-The Linux package creates an 800×600 visible X11 window under Xvfb/WSL;
-that bounded check terminates its own process and does not establish desktop
-interaction or Wayland acceptance. Broader Windows evidence includes the
+The Linux package also passes [X11 original-app clipboard comparisons and
+file-manager drops](compatibility.md#unified-linux-x11-original-app-exchange-and-file-drops)
+under Xvfb/WSL, including classic → attributed → classic transitions in one
+running app. These checks do not establish window-manager, portal, mixed-DPI
+or Wayland acceptance. Broader Windows evidence includes the
 [five-project cycle](compatibility.md#unified-windows-five-project-native-checks),
 [mixed-storage saves](compatibility.md#unified-windows-mixed-storage-native-checks)
 and [event/clipboard workflows](compatibility.md#unified-windows-event-and-image-clipboard-checks).
