@@ -3830,3 +3830,52 @@ checks). [Cross-platform CI](https://github.com/vulcandth/polished-map-ng/action
 passed all eight jobs, including Windows/Linux/macOS, source-reference,
 real-project, dependency, MSRV and visual checks. PP3/PP4 native and
 original-application acceptance remain open; this backport does not advance them.
+
+## Unified format detection and upstream drift
+
+U1 is **in progress**, on `codex/unified-editor` based on the published shared
+source. Separate parity launchers and their native acceptance gates remain.
+The pinned `config.cpp` implementations agree on `.blk` binary maps but differ
+in attribute storage and asset paths. `.ablk` was introduced to distinguish
+plusplus maps; master also imports `.map` ASM and `.CHR`/`.CEL` source graphics.
+`Makefile` versus `main.asm`/`layout.link` locates roots; these markers alone
+cannot distinguish project storage. Detection must use the actual map hint or
+selected tileset, not the first available tileset or unrelated assets elsewhere.
+
+The backend now exposes explicit storage, input encoding and evidence. Nine
+focused tests cover selected/mixed tilesets, compound fallback, invalid preferred
+assets, conflicts, legacy layouts, nearest roots Windows parent-path errors and the two original collision-path precedences.
+The new pinned-project test observes **236 master + 418 plusplus maps** with
+loadable matching blocksets; **18 master + 34 plusplus shared maps** still require
+an actual tileset choice. These counts are asserted, not treated as unexplained
+skips. The map bytes remain unchanged. Windows workspace validation passes (506 tests,
+47 explicitly ignored external/native cases), along with fmt, Clippy and rustdoc.
+All nine focused detection tests also pass on Linux/WSL. Four differential path
+tests against the pinned master oracle confirm unchanged valid asset precedence.
+The production Windows adapter graph and documentation links/examples pass.
+Complete drift reconciliation and unified GUI/native acceptance remain open.
+
+### Pinned-source drift disposition — in progress
+
+The comparison uses `8b9bdc2b8aac8c865809516c2123af69c498da0b` against
+`27c1f8479107c7495ac0c1818900190a137da6e1`, not moving branches. The final
+`src/` trees differ in 43 files. Non-equivalent commit hashes alone do not prove
+missing features; the final behavior and existing Rust adapters are the evidence.
+
+| Source family | Difference and disposition | Remaining unified work |
+|---|---|---|
+| `config.cpp`, `option-dialogs.cpp` | Different root markers, asset directories, map suffixes, metadata macros and legacy pokered layouts. Detection now uses union root markers and actual selected-asset evidence, reusing loader paths. | Merge discovery capabilities without changing parity discovery precedence; exercise mixed and legacy GUI opens. |
+| `map.cpp`, `parse-asm.*`, `tiled-image.cpp` | Master added ASM `.map`, `.CHR` and `.CEL` imports absent in plusplus. Shared bounded ASM codecs already exist. Detection treats map encoding separately from attributes. | Unified source imports must work with the appropriate attribute model and retain explicit binary Save As behavior. |
+| `metatileset.*`, `metatile.*`, `deep-tile.*`, `tile.*`, `palette-map.*` | Master stores tile palettes; plusplus stores per-occurrence bank/palette/flips/priority and expands to 512 tiles. Both models and guarded persistence already exist. | Bind controls and save operations to the detected document; never reinterpret bytes or widen master IDs globally. |
+| `tileset.cpp`, `image.cpp` | Different slot/bank order and undefined-tile/export handling. Plusplus's nonzero-offset export overread is already corrected and documented. | Preserve each model's valid ordering and keep shared bounded raster/export code. |
+| `map-events.cpp` | Master includes pokered `warp/sign/object/warp_to`; plusplus adds Pokémon/PC/base macros. Master distinguishes a four-argument map `warp` from a three-argument script command. Shared parser already contains this guard; parity catalogs stay distinct. | Unified event catalog must recognize their union while preserving the script guard and unrelated source. |
+| `main-window.cpp` palette loading/saving | Master monochrome fallback, priority palette-map output and suppressed monochrome roof-color import are intentional storage capabilities. Plusplus always uses game palettes/occurrence priority. | Keep capabilities context-sensitive; do not apply master's monochrome switch to attributed data. |
+| `config.cpp` collisions | Master also checks `data/tilesets/*_collision.bin`; plusplus omits that candidate. Both already support binary collision codecs. | Make this legacy path available in unified context, preserving parity precedence. |
+| `main-window.cpp` save warning | Master's one-time 128-block engine warning is absent in plusplus. Current NG master preserves it. | Keep it for classic engine context; do not infer an engine limit solely from expanded tile-bank UI state. |
+| Block/palette/roof/tileset windows and `map-buttons.*` | Attribute ownership, flips, bank order and keyboard actions differ; master and plusplus GUI adapters already implement these separately. | Audit each final difference and consolidate shared workflows while preserving attribute-specific operations. |
+| `colors.*`, `ruler.cpp`, `widgets.cpp`, `version.h`, `main.cpp` | Palette model, themes, minor visual choices and application identity differ. M4/font/theme exceptions remain authoritative. | Finish final-source disposition; keep identity independent of active storage and avoid reviving deferred aesthetics. |
+
+This is an implementation audit, not U1 acceptance. In particular, unified event
+catalogs, source imports, legacy collision discovery and GUI session transitions
+remain unimplemented; the existing parity adapters are not evidence they already
+work through one automatically adapting application.

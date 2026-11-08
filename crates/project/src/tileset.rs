@@ -90,7 +90,7 @@ impl MasterTilesetDocument {
                 message: "project root is required for graphics".into(),
             })?;
         let mut options = options.clone();
-        options.monochrome |= !palette_map_path(root, name).is_file();
+        options.monochrome |= !palette_map_path(root, name)?.is_file();
         let plan = crate::MapPalettePlan::for_map(doc, name, &options)?;
         let tileset = Self::open_colors(root, name, &options, session.clone())?;
         Ok((tileset, plan))
@@ -110,7 +110,7 @@ impl MasterTilesetDocument {
             })?;
         validate_tileset(root, name)?;
         let mut options = options.clone();
-        options.monochrome |= !palette_map_path(root, name).is_file();
+        options.monochrome |= !palette_map_path(root, name)?.is_file();
         let (bank, selected) = map_palette_bank(doc, name, &options)?;
         Self::open_colors(root, name, &options, PaletteDocument::new(bank, selected))
     }
@@ -169,7 +169,7 @@ impl MasterTilesetDocument {
             main.len().div_ceil(16) * 16
         };
         let middle_end = before_end + main_count;
-        let path = palette_map_path(root, name);
+        let path = palette_map_path(root, name)?;
         let monochrome = options.monochrome || !path.is_file();
         let (ids, palette_source) = if !monochrome {
             let observed = prepare_target(&path)?;

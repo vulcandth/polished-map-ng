@@ -209,19 +209,3 @@ impl CollisionDocument {
         Ok(out.into_bytes())
     }
 }
-
-pub(crate) fn collision_path(root: &Path, tileset: &str) -> Option<PathBuf> {
-    let base = tileset.split('.').next().unwrap_or(tileset);
-    [tileset, base]
-        .into_iter()
-        .flat_map(|name| {
-            [
-                root.join(format!("data/tilesets/{name}_collision.asm")),
-                root.join(format!("data/tilesets/{name}_collision.inc")),
-                root.join(format!("data/tilesets/{name}_collision.bin")),
-                root.join(format!("tilesets/{name}_collision.asm")),
-                root.join(format!("tilesets/{name}_collision.bin")),
-            ]
-        })
-        .find(|p| p.is_file())
-}

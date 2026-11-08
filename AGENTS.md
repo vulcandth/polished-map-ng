@@ -76,6 +76,13 @@ exist from day one; a partial slice is not a completed parity milestone.
   acceptance work after the verified M8 backport; keep master acceptance open.
   Preserve layout/sizing and separate plusplus entry points; reuse shared backend/platform code.
   Preserve the approved exception in `docs/deviations.md` and roadmap status.
+- On November 7, after publishing M9 builds, the user authorized unified-editor
+  work before the remaining native parity gates. Retain the master/plusplus
+  launchers and do not add a mode selector. Detect the appropriate behavior from
+  project/asset context, reconcile upstream branch drift and preserve safe writes.
+- Refactor continuously for maintainability: simplify functions and consolidate
+  duplicate code when encountered. Do not defer structural cleanup to milestone
+  5; distinguish it from future feature suggestions and deliberate behavior changes.
 - The user prefers the earlier rounded egui palette sliders (2026-10-31).
   Preserve that appearance and the retained functional fixes; do not restore
   FLTK slider styling as part of parity work.

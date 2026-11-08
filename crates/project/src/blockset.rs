@@ -1,7 +1,7 @@
 //! Master config.cpp/metatileset.cpp blockset paths and byte I/O.
 use crate::{
     ProjectError, SaveTarget, codecs,
-    collisions::{CollisionDocument, collision_path, validate_destination},
+    collisions::{CollisionDocument, validate_destination},
     document::{optional_hash, persist_bytes, prepare_target},
     read_bounded,
     transaction::{Change, persist_pair},
@@ -66,8 +66,10 @@ impl BlocksetDocument {
     pub fn open_in_project(root: &Path, tileset: &str) -> Result<Self, ProjectError> {
         crate::graphics::validate_tileset(root, tileset)?;
         Self::open_with_collisions(
-            &blockset_path(root, tileset),
-            collision_path(root, tileset).as_deref(),
+            &crate::asset_paths::AssetKind::MasterBlocks.path(root, tileset)?,
+            crate::asset_paths::AssetKind::Collisions(crate::ProjectFormat::Master)
+                .existing(root, tileset)?
+                .as_deref(),
         )
     }
     pub fn open_with_collisions(
@@ -212,22 +214,4 @@ impl BlocksetDocument {
         self.collisions = saved_collision;
         Ok(())
     }
-}
-
-fn blockset_path(root: &Path, tileset: &str) -> PathBuf {
-    let base = tileset.split('.').next().unwrap_or(tileset);
-    let mut paths = Vec::new();
-    for name in [tileset, base] {
-        paths.extend([
-            root.join(format!("data/tilesets/{name}_metatiles.bin")),
-            root.join(format!("gfx/blocksets/{name}.bst")),
-            root.join(format!("MAPDATA/{name}.CEL")),
-            root.join(format!("tilesets/{name}_metatiles.bin")),
-        ]);
-    }
-    paths
-        .iter()
-        .find(|p| p.is_file())
-        .unwrap_or(&paths[paths.len() - 1])
-        .clone()
 }

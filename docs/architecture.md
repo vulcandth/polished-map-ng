@@ -25,6 +25,27 @@ native dropdown clients useful; they are now part of M9. The fixed-size preview
 and dropdown each scroll independently as graphics or choice counts grow.
 See [review evidence](compatibility.md#november-7-upstream-review).
 
+## Unified application boundary
+
+The unified application is being developed separately from both parity launchers.
+Application identity, settings storage and legacy migration must remain stable
+when the active document changes. Document storage and map input encoding are
+separate backend facts: per-tile palettes versus per-occurrence attributes, and
+binary versus ASM map input. Neither is a user-selectable application mode.
+
+`project::detect_map_format` exposes read-only evidence and typed missing-context
+or conflict results. It uses the map's metadata or an explicitly selected tileset;
+project markers only locate the nearest root. Both loaders and detection share
+compound-name/directory resolution. Detection does not validate asset contents:
+the selected loader must fail on malformed input without retrying another model.
+A shared map without a unique header requires the ordinary tileset choice.
+
+The next integration must bind capabilities to the successfully loaded document,
+retain the old session on failed/cancelled loads, keep palette sessions separate,
+and preserve the legacy launchers' exact parsing and output contracts. Union event
+macros, source imports and legacy layout support belong to the unified adapter;
+they must not silently widen either parity launcher's accepted input.
+
 ## ADR 1: Separate domain logic from platform adapters immediately
 
 `polished-map-core` owns validated models, commands, history and deterministic

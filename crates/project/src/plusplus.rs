@@ -119,9 +119,10 @@ impl BlocksetDocument {
     }
     pub fn open_in_project(root: &Path, tileset: &str) -> Result<Self, ProjectError> {
         crate::graphics::validate_tileset(root, tileset)?;
-        let offsets = binary_path(root, tileset, "metatiles");
-        let attributes = binary_path(root, tileset, "attributes");
-        let collision = collision_path(root, tileset);
+        let offsets = crate::asset_paths::AssetKind::PlusPlusBlocks.path(root, tileset)?;
+        let attributes = crate::asset_paths::AssetKind::Attributes.path(root, tileset)?;
+        let collision = crate::asset_paths::AssetKind::Collisions(crate::ProjectFormat::PlusPlus)
+            .existing(root, tileset)?;
         Self::open(&offsets, &attributes, collision.as_deref())
     }
     pub fn path(&self) -> &Path {
@@ -228,39 +229,6 @@ impl BlocksetDocument {
         self.blockset.mark_saved();
         Ok(())
     }
-}
-
-fn binary_path(root: &Path, tileset: &str, kind: &str) -> PathBuf {
-    let base = tileset.split('.').next().unwrap_or(tileset);
-    let candidates: Vec<_> = [tileset, base]
-        .into_iter()
-        .flat_map(|name| {
-            [
-                root.join(format!("data/tilesets/{name}_{kind}.bin")),
-                root.join(format!("tilesets/{name}_{kind}.bin")),
-            ]
-        })
-        .collect();
-    candidates
-        .iter()
-        .find(|p| p.is_file())
-        .unwrap_or(&candidates[3])
-        .clone()
-}
-
-fn collision_path(root: &Path, tileset: &str) -> Option<PathBuf> {
-    let base = tileset.split('.').next().unwrap_or(tileset);
-    [tileset, base]
-        .into_iter()
-        .flat_map(|name| {
-            [
-                root.join(format!("data/tilesets/{name}_collision.asm")),
-                root.join(format!("data/tilesets/{name}_collision.inc")),
-                root.join(format!("tilesets/{name}_collision.asm")),
-                root.join(format!("tilesets/{name}_collision.bin")),
-            ]
-        })
-        .find(|p| p.is_file())
 }
 
 /// Read plusplus PNG/2bpp/LZ graphics without accepting master's CHR path.

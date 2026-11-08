@@ -70,18 +70,8 @@ pub(crate) fn graphics_path(directory: &Path, name: &str) -> PathBuf {
     )
 }
 
-pub(crate) fn palette_map_path(root: &Path, tileset: &str) -> PathBuf {
-    let base = tileset.split('.').next().unwrap_or(tileset);
-    let mut paths = Vec::new();
-    for name in [tileset, base] {
-        paths.extend([
-            root.join(format!("gfx/tilesets/{name}_palette_map.asm")),
-            root.join(format!("gfx/tilesets/{name}_palette_map.inc")),
-            root.join(format!("color/tilesets/{name}.asm")),
-            root.join(format!("tilesets/{name}_palette_map.asm")),
-        ]);
-    }
-    first_existing(&paths)
+pub(crate) fn palette_map_path(root: &Path, tileset: &str) -> Result<PathBuf, ProjectError> {
+    crate::asset_paths::AssetKind::PaletteMap.path(root, tileset)
 }
 
 fn first_existing(paths: &[PathBuf]) -> PathBuf {

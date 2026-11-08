@@ -6,12 +6,7 @@ use serde::Serialize;
 
 use crate::{ProjectError, read_bounded};
 
-/// Internal, explicit source rules. Public entry points remain format-specific.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Rules {
-    Master,
-    PlusPlus,
-}
+pub(crate) use crate::ProjectFormat as Rules;
 
 impl Rules {
     pub(crate) fn binary_extension(self, extension: &str) -> bool {

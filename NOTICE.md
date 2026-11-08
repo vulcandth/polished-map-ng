@@ -304,6 +304,11 @@ PNG destination rules from pinned `config.cpp`, `utils.cpp`, `tileset.cpp` and
 and persistence through a profile-specific adapter; project/game inputs and
 rendered acceptance images remain untracked temporary fixtures.
 
+Unified detection and shared asset resolution adapt the pinned master/plusplus
+`config.cpp` path precedence and `option-dialogs.cpp` metadata conventions under
+LGPL-3.0-only. Detection evidence and storage/encoding separation are NG additions;
+no project/game graphics are incorporated or redistributed by these tests.
+
 Plusplus map discovery/lifecycle and palette sessions adapt pinned `config.cpp`,
 `option-dialogs.cpp`, `map.cpp`, `main-window.cpp` and `colors.cpp`, under
 LGPL-3.0-only. They reuse the master map/history, RGB editing, palette import

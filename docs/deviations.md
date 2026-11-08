@@ -600,3 +600,23 @@ it with a maximize/unmaximize request. The previous sequence could disconnect
 the Wayland client when restoring fullscreen on Weston 9. This corrects an NG
 startup crash without changing saved preferences, normal geometry or subsequent
 explicit window commands. See the [native restart evidence](compatibility.md#native-wayland-window-restart).
+
+## Unified work before native parity acceptance
+
+On November 7, after the refreshed master/plusplus packages were published, the
+user authorized beginning the unified application while retaining both parity
+launchers. U1–U3 may proceed before the remaining master/plusplus native gates;
+this does not close those gates. The unified editor must detect behavior from
+project and tileset context, without a mode selector, and reconcile upstream
+branch drift. Structural refactoring is continuous rather than deferred to the
+later behavior-improvement milestone. Reviewed future-feature suggestions and
+M4 aesthetics remain deferred.
+
+## Asset path errors during automatic detection
+
+Shared blockset/palette-map resolution now reports unreadable path components
+instead of falling through to a lower-priority asset. On Windows a file occupying
+a required directory can be reported as PATH_NOT_FOUND; the resolver checks the
+nearest existing parent before treating that as an absent candidate. Valid
+compound-name and directory precedence remain unchanged. This prevents detection
+and loading from disagreeing about the files that determine storage.

@@ -11,10 +11,10 @@ and design decisions in [architecture](architecture.md).
 |---|---|---|
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
-| 2. Plusplus parity | **In progress — active milestone** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
-| 3. Unified editor | Not started | Profile detection and a combined user workflow remain. |
+| 2. Plusplus parity | **In progress — awaiting native acceptance** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
+| 3. Unified editor | **In progress — active milestone** | U1 automatic format detection and upstream drift reconciliation are underway on `codex/unified-editor`; the parity launchers remain available. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
-| 5. Improvement and refactoring | Not started | Deliberate behavior changes follow compatibility acceptance. |
+| 5. Measured improvements | Not started | Deliberate behavior changes follow compatibility acceptance. Structural refactoring is ongoing during unified work. |
 | 6. Platform delivery | In progress — development builds available | Separate master and plusplus Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
 
 `[x]` means the stated work is implemented with linked evidence, not that its
@@ -25,21 +25,14 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Continue PP3 integrated desktop capture/drop, placement/focus/DPI and
-macOS native acceptance using the published
-[plusplus tester packages](releases.md#plusplus-development-packages)
-for all four build targets. The November 7 packages include the verified
-[fullscreen restart fix](compatibility.md#native-wayland-window-restart) and
-[frame keyboard-focus fix](compatibility.md#native-wayland-frame-focus-and-placement).
-The temporary-size dialog mapping defect from the
-[native 2× check](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
-is fixed; verify pointer alignment on a directly hosted compositor before
-claiming high-DPI acceptance.
-Standard Wayland image Copy/Paste now has independent
-protocol checks and native two-process exchange without X11 or data-control. PP4's
-standalone graphics and Linux original-application Print comparisons now have
-native evidence; its acceptance gate remains open alongside PP3. The user
-resumed plusplus after the M8 backport.
+**Next:** Complete **U1** automatic map/tileset detection and reconcile the pinned
+upstream branch differences, then carry that context through **U2** loading,
+editing and saving without a mode selector. The user authorized unified work
+on November 7 while retaining the separate parity launchers. Keep structural
+refactoring alongside implementation; preserve the outstanding native gates.
+PP3 desktop capture/drop, placement/focus/DPI and macOS acceptance and PP4
+original-application interoperability remain open against the
+[published plusplus packages](releases.md#plusplus-development-packages).
 Master M5–M7 acceptance remains open on the
 [latest master development build](releases.md#development-packages).
 The remaining M4 aesthetic matching is
@@ -307,17 +300,27 @@ Do not expose automatic profile switching until the unified-editor milestone.
   verified. Retain PP3's integrated desktop/gesture acceptance and master
   regressions before closing the full application acceptance gate.
 
-## 3. Unified editor — not started
+## 3. Unified editor — in progress
 
-Begins after PP4; no silent format conversion.
+Authorized on November 7 before native parity acceptance; retain both parity
+launchers. No mode selector and no silent format conversion. See the
+[sequencing decision](deviations.md#unified-work-before-native-parity-acceptance).
 
-- [ ] **U1:** Define explicit profiles/capabilities and deterministic project
-  detection, with a user override and clear ambiguity errors.
-- [ ] **U2:** Deliver one binary with capability-aware controls and profile-safe
-  loading, editing, saving and switching.
+- [ ] **U1 — In progress:** Detect storage and capabilities from map/project and
+  selected-tileset evidence, with actionable missing/conflicting-context errors.
+  Reconcile pinned master/plusplus drift, including master improvements absent
+  in plusplus. Acceptance: deterministic tests on both pinned projects, legacy
+  layouts, compound assets and mixed/conflicting evidence; document each drift
+  disposition in [compatibility evidence](compatibility.md#unified-format-detection-and-upstream-drift).
+- [ ] **U2:** Deliver one automatically adapting binary with safe loading,
+  editing, saving and project changes. Keep application identity/preferences
+  separate from document storage; retain both parity launchers. Consolidate
+  duplicated code as encountered without erasing format semantics.
 - [ ] **U3 — Acceptance:** Both pinned project suites pass through the unified
-  workflow; ambiguous projects require a choice and wrong-profile writes fail
-  without modifying files.
+  workflow, including alternating projects and cancelled/failed loads. Missing
+  or conflicting evidence requires corrected context, never a mode selector;
+  wrong-format writes fail without modifying files. Native workflow checks
+  remain distinct from automated evidence.
 
 ## 4. Autonomous interface — stabilization not started
 
@@ -340,8 +343,9 @@ using the same underlying operations in the meantime.
 
 ## 5. Improvement and refactoring — not started
 
-Begins after A4. Keep both compatibility suites running; distinguish structural
-refactoring from deliberately changed user behavior.
+Deliberate behavior/performance improvements begin after A4. Structural
+refactoring is continuous, including U1–U3: simplify functions and remove
+duplicate paths as encountered while keeping both compatibility suites running.
 
 - [ ] **I1:** Propose and implement evidence-based internal consolidation and
   measured performance improvements, preserving the accepted compatibility baseline.

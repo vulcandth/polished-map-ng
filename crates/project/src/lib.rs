@@ -3,12 +3,14 @@
 //! palette-map.cpp and tileset.cpp; see upstream.lock.toml. LGPL-3.0-only.
 
 mod asset_names;
+mod asset_paths;
 mod blockset;
 pub mod codecs;
 mod collisions;
 mod discovery;
 mod document;
 mod events;
+mod format;
 mod graphics;
 mod legacy_preferences;
 mod map_palette_plan;
@@ -36,6 +38,10 @@ pub use document::{
     read_bounded,
 };
 pub use events::{EventDocument, EventScript, EventScriptError, event_script_path};
+pub use format::{
+    AttributeStorage, DetectedFormat, FormatDetectionError, FormatEvidence, FormatEvidenceKind,
+    MapEncoding, ProjectFormat, detect_map_format, find_unified_project_root,
+};
 pub use graphics::{
     load_master_graphics, load_master_map_graphics, write_new_png, write_png, write_png_export,
 };
