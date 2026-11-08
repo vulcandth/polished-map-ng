@@ -4225,3 +4225,38 @@ of U3; headless persistence does not waive them.
 Supplemental acceptance commit `f96cd60` also passes all eight
 [cross-platform CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42443240776),
 including the expanded real-project workflow.
+
+### Unified Windows five-project native checks
+
+The published `4edcbc6289b4d7d84729c419d5a05e92dc906670` Windows x86-64
+package was exercised through native windows on disposable copies of all five
+lockfile-pinned projects. One application session opened pokered → Polished
+Crystal → pokegold → pokeyellow → pokecrystal, then reopened the two edited
+projects through Open Recent. Every Open detected the representative map's
+10×9 dimensions and correct tileset without a format selector. Gen 1 used
+monochrome graphics and disabled roof/priority controls; classic Gen 2 restored
+color and roof availability while keeping Priority disabled; Polished Crystal
+selected the compound Johto tileset and enabled occurrence attributes/Priority.
+Map graphics, block inventories and event overlays appeared in each context.
+
+Native pointer input painted pokered's first map cell with block 0. Ctrl+S,
+the success dialog and subsequent reopening preserved exactly byte 0's change
+from `0x52` to `0x00`. In Polished Crystal's Edit Block dialog, X flip was
+applied to block 0's first occurrence and Save Blockset persisted exactly byte
+0 of `johto_traditional_attributes.bin` from `0x00` to `0x20`. After switching
+projects and reopening, picking the neighboring occurrence cleared X flip and
+picking the edited occurrence restored it, verifying loaded data rather than
+merely a retained brush setting.
+
+Native Open cancellation preserved the loaded pokecrystal map and returned
+focus to the editor. Save confirmations, block-dialog Escape, recent-file
+keyboard activation and normal application shutdown also worked. A SHA-256
+audit of all 7,781 copied input files found only those two intended one-byte
+changes, no added/deleted project files, and unchanged reference originals.
+No game assets or screenshots from this check are distributed.
+
+This establishes the representative Windows project cycle and the two stated
+save/reopen operations. It does not close U3: native mixed-storage asset editing,
+remaining asset/event workflows, clipboard/desktop transfers, mixed-monitor DPI,
+Linux X11/Wayland and macOS interaction, and original-application comparisons
+remain separate checks. No production code changed or new package was needed.

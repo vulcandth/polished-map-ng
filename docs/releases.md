@@ -265,7 +265,9 @@ Mac bundle/signature metadata and all five Windows icon resources are verified.
 Nine packaging regression tests cover all targets and mismatch rejection.
 
 The packaged CLI runs on all native build runners and locally on Windows/WSL.
-The packaged Windows GUI starts and closes normally. The Linux package creates
+The packaged Windows GUI passes a [representative five-project native cycle and
+map/attribute save/reopen checks](compatibility.md#unified-windows-five-project-native-checks),
+and closes normally. The Linux package creates
 an 800×600 visible X11 window under Xvfb/WSL; that bounded check terminates its
 own process and does not establish desktop interaction or Wayland acceptance.
 The [Windows Save As check](compatibility.md#unified-native-save-context) and
