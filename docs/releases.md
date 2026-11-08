@@ -8,7 +8,7 @@ the development policy below; the full checklist remains the final release gate.
 
 | Application | Current development download | Testing guide |
 |---|---|---|
-| Unified editor | [November 7 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-5332c83) | [Unified testing](testing-unified.md) |
+| Unified editor | [November 8 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-08-66ca4b6) | [Unified testing](testing-unified.md) |
 | Fixed master parity | [November 7 master build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-618aefd) | [Master testing](testing.md) |
 | Fixed plusplus parity | [November 7 plusplus build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-618aefd) | [Plusplus testing](testing-plusplus.md) |
 
@@ -241,18 +241,21 @@ No binaries should be presented as production-ready before these gates pass.
 
 ## Unified development packaging
 
-The [latest unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-5332c83)
-is published from `5332c83e74676a95e07b6ceebcb22658513460e1` for Windows x86-64,
+The [latest unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-08-66ca4b6)
+is published from `66ca4b6cd528d0859b30b6b8ba05291cd00ccd6b` for Windows x86-64,
 Linux x86-64, Apple Silicon and Intel macOS. Complete source and all five SHA-256
 files accompany the four binaries. The tag resolves to that exact commit; all ten
 uploaded sizes and server-reported digests match the locally verified files. It
 is a prerelease and is not marked latest stable.
 
-This refresh preserves compound tileset context in unified Save As and rejects
-ambiguous plain/compound filename hints. Shared discovery now validates hints
-against the current inventory and reads constants once for the combined asset
-list. The fixed parity launchers retain their existing behavior and releases.
-See [native and regression evidence](compatibility.md#unified-windows-mixed-storage-native-checks).
+This refresh fixes native Ctrl+C/Cmd+C in Print Options. Print and block editing
+reuse a helper that handles translated Copy events and raw shortcuts without
+duplicate consumption. Native Windows Print exports and clipboard images saved
+by Paint match exactly under classic and attributed storage; the downloaded
+package also passes the Ctrl+C check. See
+[native and regression evidence](compatibility.md#unified-windows-native-print-exchange).
+The fixed parity launchers remain in the shared source; their previously
+published packages remain available separately for comparison.
 
 The Development packages workflow accepts `unified` in addition to the two
 parity launchers. It packages `polished-map-unified`, uses the macOS bundle name
@@ -262,8 +265,8 @@ the source archive and each binary must agree on their launcher and commit.
 All three launchers remain in source, and a missing selected executable fails
 packaging rather than substituting another launcher.
 
-All five [package jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42447288147)
-and all eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42447287953)
+All five [package jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42488164390)
+and all eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42488165621)
 passed for this commit. The source archive matches Git and all 460 vendored registry
 source checksums. Every binary archive passes architecture, executable mode,
 launcher identity, tester-guide, notices and 470-entry dependency inventory checks;
@@ -272,9 +275,9 @@ The binaries are rebuilt offline from the matching source archive. Nine packagin
 regression tests cover all targets and mismatch rejection.
 
 The packaged CLI runs on all native build runners and locally on Windows/WSL.
-The latest Windows package reopens the saved compound map with correct asset
-selection, attributed controls, blocks and saved event position, then closes
-normally. The Linux package creates an 800×600 visible X11 window under Xvfb/WSL;
+The latest Windows package reopens the generated mixed-event map through Recent,
+retains all five Print flags, copies successfully with Ctrl+C and closes normally.
+The Linux package creates an 800×600 visible X11 window under Xvfb/WSL;
 that bounded check terminates its own process and does not establish desktop
 interaction or Wayland acceptance. Broader Windows evidence includes the
 [five-project cycle](compatibility.md#unified-windows-five-project-native-checks),
@@ -282,6 +285,12 @@ interaction or Wayland acceptance. Broader Windows evidence includes the
 and [event/clipboard workflows](compatibility.md#unified-windows-event-and-image-clipboard-checks).
 Full native acceptance remains open; no parity or clean-machine release claim is
 made. Offline source, licensing, lockfile and checksum requirements apply unchanged.
+
+The [previous unified release, `5332c83`](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-5332c83),
+preserved compound tileset context in Save As and rejected ambiguous
+plain/compound filename hints using the current inventory. Its native compound
+reopen check is retained in the [mixed-storage evidence](compatibility.md#unified-windows-mixed-storage-native-checks).
+The current release retains those changes and adds the Print shortcut correction.
 
 The [first unified release, `4edcbc6`](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-4edcbc6),
 remains available for comparison. It corrected stale simple Save As hints but did

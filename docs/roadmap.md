@@ -25,9 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Complete **U3**'s cross-platform verification and package refresh for
-the [native Print copy-shortcut correction](compatibility.md#unified-windows-native-print-exchange),
-then continue desktop-transfer, focus and DPI workflows and remaining clipboard checks on
+**Next:** Continue **U3** with desktop-transfer, focus and DPI workflows,
+remaining cross-platform clipboard checks and original-application comparisons on
 Windows, Linux X11/Wayland and both macOS targets, using the
 [unified build](releases.md#unified-development-packaging) and five-project tester
 guide. The Windows project cycle and mixed-storage map/block save/reopen checks
@@ -358,8 +357,7 @@ launchers. No mode selector and no silent format conversion. See the
   color/monochrome palette transfer/export, Gen 1 and combined-catalog event saves
   and the compound filename correction pass native checks. Native Print keyboard
   copying and exact external-image comparison pass after a shared shortcut fix;
-  its cross-platform verification and package refresh are in progress. Earlier
-  cross-platform packages and matching source are
+  all eight CI jobs pass and refreshed four-target packages with matching source are
   [published](releases.md#unified-development-packaging). Remaining
   native workflows and other platforms stay open. Evidence:
   [five-project matrix](compatibility.md#five-project-compatibility-matrix) and

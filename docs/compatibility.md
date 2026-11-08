@@ -4602,4 +4602,12 @@ All eleven project inputs remained byte-identical. Generated fixtures, Paint
 outputs and audit manifests stay ignored and outside release archives. This
 verifies the corrected Windows keyboard/Print/clipboard/export path; it is not
 an original-application pixel comparison or native Linux/macOS acceptance.
-Cross-platform checks and refreshed package delivery remain in progress.
+All eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42488165621)
+and all five [package jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42488164390)
+pass for `66ca4b6`. The downloaded Windows package also opens the mixed-event
+fixture through Recent, retains all five Print flags, reports successful Ctrl+C
+copying and closes normally. Both native test applications exited cleanly.
+[Refreshed four-target packages and matching source](releases.md#unified-development-packaging)
+are published with verified checksums, notices and offline rebuild inputs.
+U3 remains open for desktop transfers, focus/DPI, Linux/macOS workflows and
+original-application comparisons.
