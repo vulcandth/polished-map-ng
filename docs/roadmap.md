@@ -341,13 +341,15 @@ launchers. No mode selector and no silent format conversion. See the
   also pass. Real-asset cross-storage editing/saving/reopening passes in both
   directions. The representative five-project cycle, map and attributed-block
   saves/reopens, and Open cancellation also pass in the packaged Windows GUI.
-  Windows mixed-storage map/block saves and the compound filename correction
-  pass native checks; refreshed cross-platform packages are pending. Remaining
+  Windows mixed-storage map/block saves, event move/save/reload, image-clipboard
+  transfer between storage contexts and the compound filename correction pass
+  native checks; refreshed cross-platform packages are pending. Remaining
   native workflows and other platforms stay open. Evidence:
   [five-project matrix](compatibility.md#five-project-compatibility-matrix) and
   [cross-storage assets](compatibility.md#unified-cross-storage-asset-persistence),
   [Windows project cycle](compatibility.md#unified-windows-five-project-native-checks) and
-  [mixed-storage native checks](compatibility.md#unified-windows-mixed-storage-native-checks).
+  [mixed-storage native checks](compatibility.md#unified-windows-mixed-storage-native-checks),
+  [events and clipboard](compatibility.md#unified-windows-event-and-image-clipboard-checks).
 
 ## 4. Autonomous interface — stabilization not started
 

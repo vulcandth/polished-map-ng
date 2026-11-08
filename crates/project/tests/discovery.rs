@@ -133,12 +133,46 @@ fn compound_save_hints_require_a_unique_current_discovery_match() {
 }
 
 #[test]
+fn plain_save_hints_reject_competing_compound_names_and_numeric_aliases() {
+    use polished_map_project::MapMetadata;
+    for extra in [
+        "gfx/tilesets/johto.common.png",
+        "gfx/tilesets/01.png",
+        "MAPDATA/johto.common.CHR",
+    ] {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write(root, "gfx/tilesets/johto.png", "");
+        write(
+            root,
+            "constants/tileset_constants.asm",
+            "\tconst TILESET_JOHTO\n",
+        );
+        let metadata = MapMetadata {
+            root: Some(root.into()),
+            tileset: Some("johto".into()),
+            ..Default::default()
+        };
+        assert_eq!(metadata.filename_tileset_hint().unwrap(), Some("johto"));
+        write(root, extra, "");
+        assert_eq!(metadata.filename_tileset_hint().unwrap(), None, "{extra}");
+    }
+}
+
+#[test]
 fn compound_save_hints_do_not_guess_missing_or_invalid_context() {
     use polished_map_project::MapMetadata;
     let dir = tempfile::tempdir().unwrap();
     let root = dir.path();
     write(root, "gfx/tilesets/2x3.common.png", "");
-    for name in ["missing.common", "2x3.common", "../escape", "", "é"] {
+    for name in [
+        "missing",
+        "missing.common",
+        "2x3.common",
+        "../escape",
+        "",
+        "é",
+    ] {
         let metadata = MapMetadata {
             root: Some(root.into()),
             tileset: Some(name.into()),

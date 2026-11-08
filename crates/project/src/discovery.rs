@@ -67,20 +67,15 @@ pub struct MapMetadata {
 impl MapMetadata {
     /// Encode the selected tileset as a unified map filename hint when possible.
     ///
-    /// Compound names use their base only when a fresh unified inventory proves
-    /// that the hint uniquely resolves back to the selected name. Conflicts,
+    /// Names use their base only when a fresh unified inventory proves that the
+    /// hint uniquely resolves back to the selected name. Conflicts,
     /// missing assets/roots and unrepresentable names require explicit Open
     /// context instead. The fixed launchers retain their original save naming.
     pub fn filename_tileset_hint(&self) -> Result<Option<&str>, ProjectError> {
         let Some(name) = self.tileset.as_deref() else {
             return Ok(None);
         };
-        if valid_tileset_hint(name) {
-            return Ok(Some(name));
-        }
-        let Some((base, _)) = name.split_once('.') else {
-            return Ok(None);
-        };
+        let base = name.split_once('.').map_or(name, |(base, _)| base);
         let Some(root) = self.root.as_deref().filter(|_| valid_tileset_hint(base)) else {
             return Ok(None);
         };
@@ -253,7 +248,7 @@ fn filename_tileset(map: &Path, rules: Rules) -> Option<String> {
 /// Unrepresentable tileset names are omitted instead of inventing a lossy alias;
 /// reopening those maps still requires explicit context. Non-UTF-8 paths and
 /// nonbinary extensions have no hint representation and return `None`.
-/// Use [`MapMetadata::filename_tileset_hint`] to validate a compound name's base
+/// Use [`MapMetadata::filename_tileset_hint`] to validate a name's base
 /// against the current project inventory before passing it to this encoder.
 pub fn map_path_with_context(
     path: &Path,

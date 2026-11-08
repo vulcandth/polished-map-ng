@@ -4284,6 +4284,12 @@ bases/numeric aliases, conflicting directories, missing assets and unreadable
 metadata do not justify a shortened hint. Fixed-launcher suggestions and the
 original filename parser remain unchanged.
 
+The same inventory proof applies to plain names: a selected `johto` can also
+compete with `johto.common` or the numeric alias `01`. A regression demonstrated
+that the initial plain-name shortcut emitted that ambiguous hint. Both plain
+and compound names now share one validation path; missing roots/assets or
+competing matches omit the optional hint instead of suggesting a different asset.
+
 Discovery now shares matched-name lookup and reads tileset constants once for
 the combined inventory. The GUI regression reproduces the old missing hint,
 then saves/reopens the generated path without a context correction. Project
@@ -4302,11 +4308,35 @@ original fixture files found only byte 0's intended `0x00` → `0x01` change in
 each selected metatile file. Both new map outputs contained `[1, 1]`; the
 original map remained `[0, 1]`, and all other original files were unchanged.
 
-Windows format, warnings-denied workspace Clippy, workspace tests (540 passed,
+The initial compound correction passed Windows format, warnings-denied workspace
+Clippy, workspace tests (540 passed,
 53 explicitly ignored), rustdoc and the production native-adapter graph pass.
 All four external unified workflows pass on Windows and Linux/WSL; Linux also
 passes the discovery suite and compound Save As GUI regression. These checks
 cover map/block persistence and context transitions, not every native asset
 domain. Remaining asset/event workflows, clipboard/desktop transfers, focus/DPI,
 Linux X11/Wayland, macOS interaction and original-application comparison remain
-part of U3.
+part of U3. The additional plain-name guard is undergoing the same required
+checks before refreshed package publication.
+
+### Unified Windows event and image-clipboard checks
+
+The Windows build from `1baa7a1` reopened the saved classic mixed-project map.
+Native Events mode dragging moved its warp from `(0, 0)` to `(2, 0)`; Event
+Options displayed the new coordinates. Save Events wrote
+`\twarp_event  2,  0, MAP, 1\r\n`, retaining the suffix and original CRLF.
+Reload and then opening the attributed map restored the moved marker from disk.
+
+In the classic native Edit Tileset window, Ctrl+Shift+C copied patterned tile 1
+to the Windows image clipboard. Selecting blank tile 0 and Ctrl+Shift+V restored
+the pattern with the destination palette. Escape discarded that draft. After
+opening the attributed map, pasting the same clipboard payload into its blank
+tile 0 restored the same pattern as raw grayscale. Escape again discarded the
+draft, and the application closed normally. A hash audit of the 1,725 original
+fixture files found only the two earlier intentional metatile edits and this
+event-script edit; all graphics and other files remained unchanged.
+
+This verifies native image-clipboard copy/paste across the two storage contexts,
+draft cancellation, and one event move/save/reload/reopen path. It does not prove
+clipboard exchange with another application, roof clipboard behavior, desktop
+drag/drop, mixed-monitor DPI, or Linux/macOS native interaction.

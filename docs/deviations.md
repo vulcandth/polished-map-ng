@@ -663,9 +663,9 @@ When that explicit destination is required, unified Save As suggests current
 dimension/tileset hints using the existing filename grammar. This prevents an
 old tileset hint from contradicting the new storage extension on reopen. New maps
 and ASM imports use the same suggestion; the user still chooses the destination.
-Compound names use their base hint only when the current unified inventory
-resolves it uniquely to the selected asset, including numeric aliases and both
-graphics directories. Names without a safe hint still need explicit context on
+Names use a filename hint only when the current unified inventory resolves it
+uniquely to the selected asset, including compound bases, numeric aliases and
+both graphics directories. Names without a safe hint still need explicit context on
 reopen. Fixed parity launchers retain their original suggestions. No existing project filename,
 header or companion asset is changed by generating a suggestion. See
 [native and regression evidence](compatibility.md#unified-native-save-context).
