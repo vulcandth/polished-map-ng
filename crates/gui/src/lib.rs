@@ -74,6 +74,7 @@ mod transparency;
 mod unified_open;
 #[cfg(test)]
 mod unified_tests;
+mod unified_tileset;
 mod window_title;
 mod workspace_pan;
 #[cfg(test)]
@@ -743,13 +744,7 @@ impl Editor {
         let Some(loaded) = &self.loaded else {
             return;
         };
-        if !loaded.document.has_backing_file()
-            || loaded
-                .document
-                .path()
-                .extension()
-                .is_some_and(|e| e.eq_ignore_ascii_case("map"))
-        {
+        if loaded.document.needs_save_as() {
             self.save_as();
             return;
         }
@@ -851,6 +846,7 @@ impl Editor {
         };
         let source = loaded.document.path();
         let name = if matches!(loaded.document, documents::MapDocument::PlusPlus(_))
+            && !loaded.document.needs_save_as()
             && loaded.document.save_extensions().iter().any(|extension| {
                 source
                     .extension()

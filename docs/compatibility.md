@@ -3865,6 +3865,9 @@ Complete drift reconciliation and unified GUI/native acceptance remain open.
 The five-project expansion (`e18e739`) and document-local color fallback (`fa1d8cc`)
 also passed their full CI runs ([matrix](https://github.com/vulcandth/polished-map-ng/actions/runs/42435481959),
 [color](https://github.com/vulcandth/polished-map-ng/actions/runs/42435968073)).
+The legacy source adapters (`abfbbd3`) and unified metadata (`798d041`) likewise
+passed all eight jobs ([sources](https://github.com/vulcandth/polished-map-ng/actions/runs/42437426784),
+[metadata](https://github.com/vulcandth/polished-map-ng/actions/runs/42438149708)).
 
 ### Pinned-source drift disposition — in progress
 
@@ -3888,7 +3891,8 @@ missing features; the final behavior and existing Rust adapters are the evidence
 
 This is an implementation audit, not U1 acceptance. ASM map import and GUI Open/New
 transitions and legacy graphics/collision adapters now have the evidence below.
-Unified metadata is now integrated; in-document cross-storage tileset changes remain incomplete.
+Unified metadata and in-document cross-storage tileset changes are now integrated;
+final drift reconciliation and integrated/native acceptance remain open.
 
 The unified event entry points share the existing parser/save implementation,
 selecting the union lookup instead of adding another parser. Focused tests retain
@@ -3933,7 +3937,7 @@ desktop, DPI or full-project parity.
 The load worker now delegates through a shared typed request boundary; dimensions
 and selected-tileset validation are shared by both adapters. Palette caches and
 active settings change only after candidate graphics/textures succeed. General
-visual work remains deferred. Cross-storage Change Tileset and final source-drift
+visual work remains deferred. Final source-drift and integrated asset-workflow
 acceptance remain U1/U2 work; this
 launcher is not yet a distributed unified development candidate.
 
@@ -3966,8 +3970,8 @@ capacities, invalid operands/lengths, mixed directories, compound padding, outpu
 paths, source conflicts, roof bounds, collision precedence, and contextual palette
 paths. The [unified GUI test](../crates/gui/src/unified_tests.rs) opens an attributed
 CHR tileset, previews/selects a CHR roof, reloads while retaining map edits/history,
-and then opens a classic asset from the other directory. Cross-storage Change
-Tileset remains separate acceptance work; metadata integration is described below.
+and then opens a classic asset from the other directory. Metadata and cross-storage
+Change Tileset integration are described below.
 
 Validation: Windows fmt, workspace Clippy with warnings denied, **524 passing
 tests / 51 explicitly ignored external/native tests**, rustdoc and the production
@@ -4005,6 +4009,44 @@ pinned projects; their classified-map counts are unchanged. Linux/WSL passes the
 four metadata tests and seven focused unified GUI/preference tests. Local
 documentation links/anchors and CLI/JSON examples pass. Native acceptance remains
 open.
+
+### Unified in-document tileset changes
+
+Change Tileset now inventories both source layouts and identifies the selected
+asset's attribute model independently of the open map's suffix. Previews use the
+same detection. Both same-storage and cross-storage replacements validate all
+assets and render textures before adopting state; a malformed or conflicting
+selection leaves the previous document, previews, edits and palette caches intact.
+Existing unsaved asset Cancel/Discard decisions remain in effect.
+
+Cross-storage changes preserve byte-map data, undo/redo and the existing event
+document. Each storage model retains its palette session; the first transition
+initializes project colors, and later returns preserve cached edits. Optional
+roof-color failures warn and continue, sharing Open's recovery policy. Attribute
+ownership and editing controls follow the successfully adopted assets. No mode
+selector or project-file conversion is introduced.
+
+The backend retains the original source hash but requires an explicit Save As
+after crossing models, including after switching back. Only a successful explicit
+save clears this guard. Save As proposes the new model's suffix. Header ASM and
+companion assets are unchanged by the context transition. Unsaved New documents
+also retain union-root discovery when eventually saved. This deliberate behavior
+is recorded in [deviations](deviations.md#unified-tileset-context-changes).
+
+[Backend context tests](../crates/project/tests/unified_context.rs) assert history,
+hashes, guarded writes, explicit copy saves and New-map root discovery. The
+[GUI tests](../crates/gui/src/unified_tests.rs) exercise classic → attributed →
+classic transitions through the actual selector, independent palette edits,
+event preservation, preview loading, malformed-input recovery, unsaved-asset
+Cancel/Discard and optional roof-color warnings. These tests do not replace
+native window/dialog acceptance or the remaining integrated asset-editing matrix.
+
+Validation: Windows fmt, workspace Clippy with warnings denied, **534 passing
+tests / 51 explicitly ignored external/native cases**, rustdoc and the production
+adapter graph pass. Both external five-project GUI workflows also pass separately.
+Linux/WSL passes two backend context tests and eleven focused unified GUI/preference
+tests. Documentation links/anchors and CLI/JSON examples pass. No native GUI
+acceptance is claimed by these headless checks.
 
 ### Five-project compatibility matrix
 

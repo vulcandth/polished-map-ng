@@ -58,8 +58,19 @@ Both parity launchers retain their accepted input and precedence. Unified metada
 uses one shared discovery pass: union binary filename hints, master's legacy
 dimensions/headers and the full asset inventory. Conflicting directory aliases
 leave the choice unset and produce an actionable detection error. Both the
-chooser and actual load worker consume these rules. In-document cross-storage
-tileset integration remains in progress.
+chooser and actual load worker consume these rules.
+
+Change Tileset inventories both layouts and detects the selected asset without
+using the old map's extension as a storage override. The backend stages a new
+map context by cloning the bounded byte-map history; it does not re-read the map
+or convert companion assets. The GUI prepares graphics, palettes and textures
+before replacing any active state. Map/event edits and both palette sessions
+survive; first use of a storage model initializes its project colors, while a
+cached session retains its edits. Open and Change Tileset share optional roof-color
+warning recovery. Crossing storage models requires an explicit Save As before
+the byte map can be written, with the new model's default suffix. Original ASM
+and companion files remain untouched by context changes. See
+[switching evidence](compatibility.md#unified-in-document-tileset-changes).
 
 ## ADR 1: Separate domain logic from platform adapters immediately
 

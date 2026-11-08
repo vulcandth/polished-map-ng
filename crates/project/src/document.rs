@@ -89,7 +89,7 @@ pub struct OpenOptions {
     pub height: Option<u16>,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct MapDocument {
     path: PathBuf,
     hash: Option<[u8; 32]>,
@@ -97,6 +97,7 @@ pub struct MapDocument {
     metadata: MapMetadata,
     rules: Rules,
     unified: bool,
+    require_new_destination: bool,
 }
 
 /// Result of the original editor's prefix-loading behavior. No bytes are written.
@@ -218,6 +219,58 @@ impl MapDocument {
         Self::new_with_rules(root, width, height, Rules::Master)
     }
 
+    pub fn new_unified_map(root: &Path, width: u16, height: u16) -> Result<Self, ProjectError> {
+        Self::new_unified_with_rules(root, width, height, Rules::Master)
+    }
+
+    pub(crate) fn new_unified_with_rules(
+        root: &Path,
+        width: u16,
+        height: u16,
+        rules: Rules,
+    ) -> Result<Self, ProjectError> {
+        let mut document = Self::new_with_rules(root, width, height, rules)?;
+        document.unified = true;
+        Ok(document)
+    }
+
+    /// Preserve byte-map history while changing the selected asset model.
+    /// Companion assets must be loaded/validated before the caller adopts this candidate.
+    pub fn with_plusplus_tileset(
+        &self,
+        name: &str,
+    ) -> Result<crate::plusplus::MapDocument, ProjectError> {
+        Ok(crate::plusplus::MapDocument::from_inner(
+            self.with_storage(Rules::PlusPlus, name)?,
+        ))
+    }
+
+    pub(crate) fn with_storage(&self, rules: Rules, name: &str) -> Result<Self, ProjectError> {
+        crate::graphics::validate_tileset(self.path(), name)?;
+        let mut document = self.clone();
+        document.require_new_destination |= self.rules != rules && self.has_backing_file();
+        document.rules = rules;
+        document.unified = true;
+        document.select_tileset(name)?;
+        Ok(document)
+    }
+
+    /// Update in-memory selected context only; never rewrite map headers.
+    pub fn select_tileset(&mut self, name: &str) -> Result<(), ProjectError> {
+        crate::graphics::validate_tileset(self.path(), name)?;
+        self.metadata.tileset = Some(name.into());
+        Ok(())
+    }
+
+    pub fn needs_save_as(&self) -> bool {
+        self.require_new_destination
+            || !self.has_backing_file()
+            || self
+                .path
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("map"))
+    }
+
     pub(crate) fn new_with_rules(
         root: &Path,
         width: u16,
@@ -236,6 +289,7 @@ impl MapDocument {
             path: root.join(format!("NewMap.{}", rules.default_extension())),
             rules,
             unified: false,
+            require_new_destination: false,
             hash: None,
             map,
             metadata: MapMetadata {
@@ -394,6 +448,7 @@ impl MapDocument {
             metadata,
             rules,
             unified,
+            require_new_destination: false,
         };
         Ok(MapOpenReport {
             document,
@@ -462,6 +517,7 @@ impl MapDocument {
         persist_bytes(&target.path, target.hash, self.map.blocks())?;
         self.path.clone_from(&target.path);
         self.hash = Some(Sha256::digest(self.map.blocks()).into());
+        self.require_new_destination = false;
         // Keep loaded map attributes/tileset; moving to another project changes the root.
         self.metadata.root = root;
         self.map.mark_saved();
@@ -470,6 +526,9 @@ impl MapDocument {
 
     /// Replace one file after a content conflict check. This is not a multi-file transaction.
     pub fn save(&mut self) -> Result<(), ProjectError> {
+        if self.require_new_destination {
+            return Err(ProjectError::DestinationRequired);
+        }
         let expected = self.hash.ok_or(ProjectError::DestinationRequired)?;
         // ASM import is allowed, but silently writing binary over its source is unsafe.
         if self

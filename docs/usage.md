@@ -9,9 +9,8 @@ remaining work and [compatibility evidence](compatibility.md) for verification.
 ## Separate plusplus editor
 
 Launch `polished-map-plusplus` as described in [INSTALL](../INSTALL.md). It has
-its own preferences and recent history; neither launcher automatically switches
-formats. The published master testing packages do not include this experimental
-launcher yet.
+its own preferences and recent history; neither parity launcher automatically
+switches formats. Master and plusplus testing packages are published separately.
 
 Plusplus opens binary `.ablk`/`.blk` maps in projects with `main.asm` or
 `layout.link` roots, using its own metadata and asset discovery rules. New maps
@@ -25,6 +24,22 @@ Wheel, scrollbar and middle-button dragging scroll expanded tile lists in both
 the block and tileset editors. Middle dragging pans without selecting or editing
 tiles. Common pixel tools, palette editing, event workflows and save guards are
 shared with master. See the [roadmap](roadmap.md) for remaining acceptance gates.
+
+## Unified development editor
+
+The source-built `polished-map-unified` launcher uses its own preferences and
+automatically follows the selected map and tileset. There is no mode selector.
+It accepts legacy map/graphics sources with the appropriate attribute model;
+missing or conflicting context requires a project folder or tileset choice.
+See [installation and current availability](../INSTALL.md).
+
+Tools → Change Tileset offers the project's combined asset inventory. Selecting
+a differently stored tileset adapts the editing controls while retaining map
+undo/redo, events and each model's palette session. Unsaved asset changes still
+require a discard decision. Crossing attribute models requires Save As before
+writing the map; cancelling leaves edits intact. The operation does not rewrite
+map headers or convert tileset files. Integrated/native acceptance remains open
+in the [roadmap](roadmap.md#3-unified-editor--in-progress).
 
 ## Opening projects
 

@@ -87,11 +87,14 @@ impl Editor {
         let Some((root, name)) = self.loaded.as_ref().and_then(|l| l.tileset_location()) else {
             return;
         };
-        match self
-            .profile()
-            .tileset_options(root, None)
-            .map(|options| options.choices().to_vec())
-        {
+        let choices = if self.application.is_unified() {
+            polished_map_project::unified_tileset_choices(root)
+        } else {
+            self.profile()
+                .tileset_options(root, None)
+                .map(|options| options.choices().to_vec())
+        };
+        match choices {
             Ok(choices) if !choices.is_empty() => {
                 let selected = choices.iter().position(|c| c.name == name).unwrap_or(0);
                 self.tileset_choice_form = Some(TilesetChoiceForm {
@@ -109,6 +112,23 @@ impl Editor {
     }
 
     fn change_loaded_tileset(&mut self, ctx: &egui::Context, name: &str) -> Result<(), String> {
+        if self.application.is_unified() {
+            let (root, _) = self
+                .loaded
+                .as_ref()
+                .and_then(|l| l.tileset_location())
+                .ok_or("No tileset is loaded")?;
+            let profile = polished_map_project::detect_tileset_format(root, name)
+                .map_err(|e| e.to_string())?
+                .into();
+            if profile != self.profile() {
+                self.change_storage_tileset(ctx, name, profile)?;
+                self.finish_tileset_change(name);
+                self.status
+                    .push_str(" — Save As required for the new map context");
+                return Ok(());
+            }
+        }
         let monochrome = self.monochrome_preference();
         let loaded = self.loaded.as_mut().ok_or("No map is loaded")?;
         if let Some(previous) = &loaded.plus_assets {
@@ -117,6 +137,12 @@ impl Editor {
                 .map_err(|e| e.to_string())?;
             let graphics = assets.graphics(&assets.palettes);
             let textures = documents::block_textures(ctx, &graphics)?;
+            if self.application.is_unified() {
+                loaded
+                    .document
+                    .select_tileset(name)
+                    .map_err(|e| e.to_string())?;
+            }
             self.allow_512 = assets.allow_512;
             loaded.plus_assets = Some(assets);
             loaded.graphics = graphics;
@@ -139,6 +165,12 @@ impl Editor {
             .map_err(|e| e.to_string())?
             .into();
         let textures = documents::block_textures(ctx, &graphics)?;
+        if self.application.is_unified() {
+            loaded
+                .document
+                .select_tileset(name)
+                .map_err(|e| e.to_string())?;
+        }
         // Preserve all map IDs/history, even when some IDs no longer have definitions.
         self.allow_priority = tileset.allow_priority();
         self.monochrome = tileset.monochrome();

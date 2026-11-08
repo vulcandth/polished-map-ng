@@ -643,3 +643,14 @@ directory wins when both contain the selected asset; its compound components,
 special palettes and PNG outputs remain together. CHR originals are never
 rewritten. Fixed parity entry points preserve their original rules. Evidence is
 in [legacy-source compatibility](compatibility.md#unified-legacy-graphics-and-collision-sources).
+
+## Unified tileset context changes
+
+The original fixed-profile editors cannot change attribute storage within an open
+map. Unified Change Tileset detects it from the selected assets and preserves the
+byte map, undo/redo, events and palette caches. It updates only in-memory context;
+map headers and companion files are not converted or rewritten. A storage-model
+change requires explicit Save As before writing the map, including after switching
+back. Cancelling Save As retains that requirement and all edits. A successful
+explicit save establishes the new backing destination. This guard distinguishes
+selecting a preview context from authorizing a write to the original project.

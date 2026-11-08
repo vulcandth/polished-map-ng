@@ -35,7 +35,17 @@ impl Request {
 
     fn read(&self) -> Result<egui::ColorImage, polished_map_project::ProjectError> {
         let name = self.name.as_deref().expect("named preview request");
-        let tiles = match (self.profile, self.roof) {
+        let profile = if self.unified && !self.roof {
+            polished_map_project::detect_tileset_format(&self.root, name)
+                .map_err(|e| polished_map_project::ProjectError::Format {
+                    path: self.root.join(name),
+                    message: e.to_string(),
+                })?
+                .into()
+        } else {
+            self.profile
+        };
+        let tiles = match (profile, self.roof) {
             (documents::Profile::Master, true) => {
                 let open = if self.unified {
                     polished_map_project::RoofDocument::open_unified_in_project

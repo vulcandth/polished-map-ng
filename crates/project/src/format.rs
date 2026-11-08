@@ -204,16 +204,7 @@ pub fn detect_map_format(
     if let (Some(root), Some(tileset)) = (root.as_deref(), selected.as_deref()) {
         collect_asset_evidence(root, tileset, &mut evidence)?;
     }
-    let format = evidence
-        .first()
-        .map(|e| e.format)
-        .ok_or_else(|| FormatDetectionError::ContextRequired { path: map.into() })?;
-    if evidence.iter().any(|e| e.format != format) {
-        return Err(FormatDetectionError::ConflictingEvidence {
-            path: map.into(),
-            evidence,
-        });
-    }
+    let format = consistent_format(map, &evidence)?;
     if selected.is_some() {
         metadata.tileset = selected;
     }
@@ -227,6 +218,34 @@ pub fn detect_map_format(
         metadata,
         evidence,
     })
+}
+
+/// Resolve a tileset independently of the currently open map's filename.
+/// Used when changing assets; no companion file is converted or written.
+pub fn detect_tileset_format(
+    root: &Path,
+    tileset: &str,
+) -> Result<ProjectFormat, FormatDetectionError> {
+    let mut evidence = Vec::new();
+    collect_asset_evidence(root, tileset, &mut evidence)?;
+    consistent_format(&root.join(tileset), &evidence)
+}
+
+fn consistent_format(
+    path: &Path,
+    evidence: &[FormatEvidence],
+) -> Result<ProjectFormat, FormatDetectionError> {
+    let format = evidence
+        .first()
+        .map(|e| e.format)
+        .ok_or_else(|| FormatDetectionError::ContextRequired { path: path.into() })?;
+    if evidence.iter().any(|e| e.format != format) {
+        return Err(FormatDetectionError::ConflictingEvidence {
+            path: path.into(),
+            evidence: evidence.to_vec(),
+        });
+    }
+    Ok(format)
 }
 
 fn collect_asset_evidence(

@@ -7,17 +7,25 @@ fn advance_import(
     load: bool,
     warnings: &mut Vec<String>,
 ) -> Result<(), polished_map_project::ProjectError> {
-    match loaded.advance_palette(load) {
-        Err(e)
-            if loaded
-                .palette_plan
-                .as_ref()
-                .is_some_and(|p| p.next_is_roof_colors()) =>
-        {
-            warnings.push(format!(
-                "The map opened, but roof colors were not loaded:\n{e}"
-            ));
-            loaded.advance_palette(false)
+    let roof = loaded
+        .palette_plan
+        .as_ref()
+        .is_some_and(|p| p.next_is_roof_colors());
+    advance_step(roof, load, warnings, |load| loaded.advance_palette(load))
+}
+
+/// Optional roof colors warn without discarding an otherwise valid candidate.
+/// Open and cross-storage asset changes share this recovery policy.
+pub(super) fn advance_step(
+    roof: bool,
+    load: bool,
+    warnings: &mut Vec<String>,
+    mut advance: impl FnMut(bool) -> Result<(), polished_map_project::ProjectError>,
+) -> Result<(), polished_map_project::ProjectError> {
+    match advance(load) {
+        Err(error) if roof => {
+            warnings.push(format!("Roof colors were not loaded:\n{error}"));
+            advance(false)
         }
         result => result,
     }

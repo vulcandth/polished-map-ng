@@ -125,6 +125,211 @@ fn color(h: &mut Harness<'_, Editor>, rgb: [u8; 3]) {
     h.state_mut().commit_palettes(&ctx, palettes).unwrap();
 }
 
+fn choose_tileset(h: &mut Harness<'_, Editor>, from: &str, to: &str) {
+    h.state_mut().request_tileset_change();
+    h.run();
+    h.get_by_label(from).click();
+    h.run();
+    h.get_by_label(to).click();
+    h.run();
+    choice_preview::wait_for_preview(h);
+    h.get_by_label("Selected graphics preview");
+    h.get_by_label("OK").click();
+    h.run();
+}
+
+#[test]
+fn unified_tileset_change_adapts_both_ways_preserving_map_events_and_palette_sessions() {
+    let dir = fixture();
+    let root = dir.path();
+    let mut h = editor();
+    let path = root.join("Classic.2x1.classic.blk");
+    open(&mut h, &path, Profile::Master);
+    color(&mut h, [17, 34, 51]);
+    let classic_colors = h.state().palette_document().color_snapshot();
+    h.state_mut().apply(Command::Paint {
+        points: vec![Point { x: 0, y: 0 }],
+        block: 1,
+    });
+    h.state_mut()
+        .loaded
+        .as_mut()
+        .unwrap()
+        .document
+        .map_mut()
+        .undo();
+    let events = h
+        .state_mut()
+        .loaded
+        .as_mut()
+        .unwrap()
+        .events
+        .as_mut()
+        .unwrap();
+    events
+        .apply(&[polished_map_core::EventCommand::Move {
+            index: 0,
+            x: 1,
+            y: 0,
+        }])
+        .unwrap();
+    let event_edits = events.script().events().clone();
+    choose_tileset(&mut h, "classic", "modern");
+    assert!(h.state().error.is_none(), "{:?}", h.state().error);
+    assert!(h.state().profile() == Profile::PlusPlus);
+    color(&mut h, [68, 85, 102]);
+    let plus_colors = h.state().palette_document().color_snapshot();
+    let doc = &mut h.state_mut().loaded.as_mut().unwrap().document;
+    assert!(doc.map().can_redo());
+    doc.map_mut().redo();
+    assert_eq!(doc.map().blocks(), [1, 1]);
+    assert!(doc.needs_save_as());
+    assert!(doc.save().is_err());
+    assert_eq!(doc.default_extension(), "ablk");
+    choose_tileset(&mut h, "modern", "classic");
+    assert!(h.state().error.is_none(), "{:?}", h.state().error);
+    assert!(h.state().profile() == Profile::Master);
+    assert_eq!(
+        h.state().palette_document().color_snapshot(),
+        classic_colors
+    );
+    assert!(h.state().loaded.as_ref().unwrap().document.map().can_undo());
+    choose_tileset(&mut h, "classic", "modern");
+    assert_eq!(h.state().palette_document().color_snapshot(), plus_colors);
+    let loaded = h.state_mut().loaded.as_mut().unwrap();
+    assert_eq!(
+        loaded.events.as_ref().unwrap().script().events(),
+        &event_edits
+    );
+    loaded.document.save_as(&root.join("Copy.ablk")).unwrap();
+    assert!(!loaded.document.needs_save_as());
+    assert_eq!(fs::read(root.join("Copy.ablk")).unwrap(), [1, 1]);
+    assert_eq!(fs::read(path).unwrap(), [0, 1]);
+    assert_eq!(
+        fs::read(root.join("data/tilesets/modern_attributes.bin")).unwrap(),
+        [[0; 16], [1; 16]].concat()
+    );
+}
+
+#[test]
+fn unified_failed_cross_storage_tileset_change_preserves_all_live_domains() {
+    let dir = fixture();
+    let mut h = editor();
+    open(
+        &mut h,
+        &dir.path().join("Classic.2x1.classic.blk"),
+        Profile::Master,
+    );
+    color(&mut h, [17, 34, 51]);
+    let colors = h.state().palette_document().color_snapshot();
+    h.state_mut().apply(Command::Paint {
+        points: vec![Point { x: 0, y: 0 }],
+        block: 1,
+    });
+    fs::write(dir.path().join("data/tilesets/modern_attributes.bin"), [0]).unwrap();
+    choose_tileset(&mut h, "classic", "modern");
+    assert!(h.state().error.is_some());
+    assert!(h.state().profile() == Profile::Master);
+    assert_eq!(h.state().palette_document().color_snapshot(), colors);
+    assert!(h.state().inactive_palettes.is_none());
+    let loaded = h.state().loaded.as_ref().unwrap();
+    assert_eq!(loaded.document.map().blocks(), [1, 1]);
+    assert!(loaded.document.map().can_undo());
+    assert_eq!(loaded.tileset_location().unwrap().1, "classic");
+    assert!(!loaded.document.needs_save_as());
+}
+
+#[test]
+fn unified_cross_storage_change_obeys_unsaved_asset_cancel_and_discard() {
+    let dir = fixture();
+    let mut h = editor();
+    open(
+        &mut h,
+        &dir.path().join("Classic.2x1.classic.blk"),
+        Profile::Master,
+    );
+    h.state_mut()
+        .loaded
+        .as_mut()
+        .unwrap()
+        .tileset
+        .as_mut()
+        .unwrap()
+        .apply_batch(&[polished_map_core::TileCommand::Paint {
+            tile: 0,
+            points: vec![Point { x: 0, y: 0 }],
+            hue: 3,
+        }])
+        .unwrap();
+    h.state_mut().request_tileset_change();
+    h.run();
+    assert!(h.state().confirm_tileset_change);
+    h.get_by_label("Cancel").click();
+    h.run();
+    assert!(h.state().tileset_choice_form.is_none());
+    assert!(
+        h.state()
+            .loaded
+            .as_ref()
+            .unwrap()
+            .tileset
+            .as_ref()
+            .unwrap()
+            .tileset()
+            .is_modified()
+    );
+    h.state_mut().request_tileset_change();
+    h.run();
+    h.get_by_label("Change Tileset").click();
+    h.run();
+    h.get_by_label("classic").click();
+    h.run();
+    h.get_by_label("modern").click();
+    h.run();
+    h.get_by_label("OK").click();
+    h.run();
+    assert!(h.state().error.is_none(), "{:?}", h.state().error);
+    assert!(h.state().profile() == Profile::PlusPlus);
+    assert!(!dir.path().join("gfx/tilesets/classic.png").exists());
+}
+
+#[test]
+fn unified_cross_storage_change_warns_and_keeps_optional_roof_color_failure() {
+    let dir = fixture();
+    let root = dir.path();
+    fs::create_dir_all(root.join("constants")).unwrap();
+    fs::create_dir_all(root.join("data/maps")).unwrap();
+    fs::write(
+        root.join("constants/map_constants.asm"),
+        "\tnewgroup\n\tmap_const CLASSIC, 2, 1\n",
+    )
+    .unwrap();
+    fs::write(
+        root.join("data/maps/maps.asm"),
+        "map Classic, TILESET_CLASSIC, TOWN, SOMEWHERE, 0, 0, PALETTE_DAY\n",
+    )
+    .unwrap();
+    fs::write(root.join("Classic.blk"), [0, 1]).unwrap();
+    let mut h = editor();
+    h.state_mut().auto_roof_colors = false;
+    open(&mut h, &root.join("Classic.blk"), Profile::Master);
+    h.state_mut().auto_roof_colors = true;
+    choose_tileset(&mut h, "classic", "modern");
+    assert!(h.state().error.is_none(), "{:?}", h.state().error);
+    assert!(h.state().profile() == Profile::PlusPlus);
+    assert!(
+        h.state()
+            .open_palette_warning
+            .as_ref()
+            .unwrap()
+            .contains("Roof colors were not loaded")
+    );
+    assert_eq!(
+        h.state().loaded.as_ref().unwrap().document.map().blocks(),
+        [0, 1]
+    );
+}
+
 #[test]
 fn unified_chr_assets_roof_previews_and_reload_use_the_same_source_policy() {
     let dir = fixture();

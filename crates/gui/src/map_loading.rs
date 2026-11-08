@@ -76,7 +76,11 @@ impl Loaded {
         let root = PathBuf::from(&form.root);
         let report = if form.new_map {
             polished_map_project::MapOpenReport {
-                document: MapDocument::new_map(&root, form.width, form.height)?,
+                document: if form.unified {
+                    MapDocument::new_unified_map(&root, form.width, form.height)?
+                } else {
+                    MapDocument::new_map(&root, form.width, form.height)?
+                },
                 trailing_blocks: 0,
             }
         } else {

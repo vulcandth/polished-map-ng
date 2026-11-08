@@ -20,6 +20,42 @@ pub(super) struct PlusPlusAssets {
     unified: bool,
 }
 impl PlusPlusAssets {
+    pub fn open(
+        root: &std::path::Path,
+        name: &str,
+        roof: Option<&str>,
+        palettes: plusplus::PaletteDocument,
+        order: BankOrder,
+        allow_512: bool,
+        unified: bool,
+    ) -> Result<Self, ProjectError> {
+        let open_blocks = if unified {
+            plusplus::BlocksetDocument::open_unified_in_project
+        } else {
+            plusplus::BlocksetDocument::open_in_project
+        };
+        let open_tiles = if unified {
+            plusplus::TilesetDocument::open_unified_in_project
+        } else {
+            plusplus::TilesetDocument::open_in_project
+        };
+        let blocks = open_blocks(root, name)?;
+        let tiles = open_tiles(root, name, Default::default())?;
+        let mut assets = Self {
+            allow_512: allow_512
+                || tiles.enables_512_tiles()
+                || blocks.blockset().enables_512_tiles(order),
+            blocks,
+            tiles,
+            roof: None,
+            palettes,
+            order,
+            unified,
+        };
+        assets.roof = roof.map(|name| assets.open_roof(name)).transpose()?;
+        Ok(assets)
+    }
+
     pub fn replacement(
         &self,
         name: &str,
@@ -165,7 +201,11 @@ impl Loaded {
             let root = PathBuf::from(&form.root);
             let report = if form.new_map {
                 plusplus::MapOpenReport {
-                    document: plusplus::MapDocument::new_map(&root, form.width, form.height)?,
+                    document: if form.unified {
+                        plusplus::MapDocument::new_unified_map(&root, form.width, form.height)?
+                    } else {
+                        plusplus::MapDocument::new_map(&root, form.width, form.height)?
+                    },
                     trailing_blocks: 0,
                 }
             } else {
@@ -177,44 +217,21 @@ impl Loaded {
                 read(&form.path, &form.dimensions(), Some(&root))?
             };
             let name = form.tileset_name(report.document.metadata())?;
-            let open_blocks = if form.unified {
-                plusplus::BlocksetDocument::open_unified_in_project
-            } else {
-                plusplus::BlocksetDocument::open_in_project
-            };
-            let open_tiles = if form.unified {
-                plusplus::TilesetDocument::open_unified_in_project
-            } else {
-                plusplus::TilesetDocument::open_in_project
-            };
-            let open_roof = if form.unified {
-                plusplus::RoofDocument::open_unified_in_project
-            } else {
-                plusplus::RoofDocument::open_in_project
-            };
             let palette_plan = if form.unified {
                 plusplus::MapPalettePlan::for_unified_map
             } else {
                 plusplus::MapPalettePlan::for_map
             };
-            let blocks = open_blocks(&root, name)?;
-            let tiles = open_tiles(&root, name, Default::default())?;
-            let roof = (!form.roof.is_empty())
-                .then(|| open_roof(&root, &form.roof, Default::default()))
-                .transpose()?;
-            let allow_512 = form.allow_512
-                || tiles.enables_512_tiles()
-                || blocks.blockset().enables_512_tiles(order);
             let plan = palette_plan(&report.document, name, &options)?;
-            let assets = PlusPlusAssets {
-                blocks,
-                tiles,
-                roof,
+            let assets = PlusPlusAssets::open(
+                &root,
+                name,
+                (!form.roof.is_empty()).then_some(form.roof.as_str()),
                 palettes,
                 order,
-                allow_512,
-                unified: form.unified,
-            };
+                form.allow_512,
+                form.unified,
+            )?;
             let graphics = assets.graphics(&assets.palettes);
             let document = report.document.into();
             let (events, event_warning) =

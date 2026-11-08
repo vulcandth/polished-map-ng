@@ -63,7 +63,7 @@ pub fn inspect_map_sizes(
     crate::inspect_map_sizes(path, preferred)
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct MapDocument {
     pub(super) inner: crate::MapDocument,
 }
@@ -76,6 +76,31 @@ pub struct MapOpenReport {
 }
 
 impl MapDocument {
+    pub(crate) fn from_inner(inner: crate::MapDocument) -> Self {
+        Self { inner }
+    }
+    pub fn new_unified_map(root: &Path, width: u16, height: u16) -> Result<Self, ProjectError> {
+        Ok(Self {
+            inner: crate::MapDocument::new_unified_with_rules(
+                root,
+                width,
+                height,
+                Rules::PlusPlus,
+            )?,
+        })
+    }
+    /// Keep byte-map edits/history and require an explicit destination after a
+    /// storage-model change. This does not convert tiles, palettes or attributes.
+    pub fn with_classic_tileset(&self, name: &str) -> Result<crate::MapDocument, ProjectError> {
+        self.inner.with_storage(Rules::Master, name)
+    }
+    pub fn select_tileset(&mut self, name: &str) -> Result<(), ProjectError> {
+        self.inner.select_tileset(name)
+    }
+    pub fn needs_save_as(&self) -> bool {
+        self.inner.needs_save_as()
+    }
+
     pub fn new_map(root: &Path, width: u16, height: u16) -> Result<Self, ProjectError> {
         Ok(Self {
             inner: crate::MapDocument::new_with_rules(root, width, height, Rules::PlusPlus)?,

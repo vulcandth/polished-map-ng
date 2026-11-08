@@ -132,6 +132,37 @@ impl From<plusplus::MapDocument> for MapDocument {
 }
 
 impl MapDocument {
+    pub fn needs_save_as(&self) -> bool {
+        match self {
+            Self::Master(d) => d.needs_save_as(),
+            Self::PlusPlus(d) => d.needs_save_as(),
+        }
+    }
+    pub fn select_tileset(&mut self, name: &str) -> Result<(), ProjectError> {
+        match self {
+            Self::Master(d) => d.select_tileset(name),
+            Self::PlusPlus(d) => d.select_tileset(name),
+        }
+    }
+    pub fn with_storage(&self, profile: Profile, name: &str) -> Result<Self, ProjectError> {
+        match (self, profile) {
+            (Self::Master(d), Profile::PlusPlus) => {
+                d.with_plusplus_tileset(name).map(Self::PlusPlus)
+            }
+            (Self::PlusPlus(d), Profile::Master) => d.with_classic_tileset(name).map(Self::Master),
+            (Self::Master(d), Profile::Master) => {
+                let mut d = d.clone();
+                d.select_tileset(name)?;
+                Ok(Self::Master(d))
+            }
+            (Self::PlusPlus(d), Profile::PlusPlus) => {
+                let mut d = d.clone();
+                d.select_tileset(name)?;
+                Ok(Self::PlusPlus(d))
+            }
+        }
+    }
+
     pub fn profile(&self) -> Profile {
         match self {
             Self::Master(_) => Profile::Master,

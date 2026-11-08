@@ -12,7 +12,7 @@ and design decisions in [architecture](architecture.md).
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
 | 2. Plusplus parity | **In progress — awaiting native acceptance** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
-| 3. Unified editor | **In progress — active milestone** | U1 detection/drift reconciliation and U2 document-driven Open/New are underway on `codex/unified-editor`; the parity launchers remain available. |
+| 3. Unified editor | **In progress — active milestone** | Automatic Open/New/Change Tileset are implemented on `codex/unified-editor`; final U1 drift reconciliation and U2/U3 integrated acceptance remain. The parity launchers remain available. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Measured improvements | Not started | Deliberate behavior changes follow compatibility acceptance. Structural refactoring is ongoing during unified work. |
 | 6. Platform delivery | In progress — development builds available | Separate master and plusplus Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
@@ -25,9 +25,9 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Complete **U2** automatic tileset changes within a document and **U1**
-final pinned upstream drift reconciliation.
-Unified Open/New and alternating-project saves are implemented with automated
+**Next:** Complete **U1** final pinned upstream drift reconciliation, then finish
+**U2/U3** integrated asset-editing verification and unified development packaging.
+Unified Open/New, automatic tileset changes and alternating-project saves have automated
 workflow evidence; full unified/native acceptance remains open. The user authorized unified work
 on November 7 while retaining the separate parity launchers. Keep structural
 refactoring alongside implementation; preserve the outstanding native gates.
@@ -319,8 +319,9 @@ launchers. No mode selector and no silent format conversion. See the
   separate from document storage; retain both parity launchers. Consolidate
   duplicated code as encountered without erasing format semantics. The third
   launcher, Open/New, union events, separate palette sessions and stable settings
-  identity and legacy metadata integration are implemented. Cross-storage tileset
-  changes within a document remain. Evidence:
+  identity, legacy metadata and cross-storage tileset changes are implemented.
+  Integrated asset-editing verification and a distributable unified development
+  build remain. Evidence:
   [unified workflows](compatibility.md#unified-opennew-and-session-transitions).
 - [ ] **U3 — In progress, acceptance open:** Pinned pokered, pokeyellow, pokegold,
   pokecrystal and Polished Crystal suites pass through the unified
