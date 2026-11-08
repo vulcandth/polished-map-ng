@@ -63,7 +63,28 @@ impl EventScript {
     pub fn parse(source: &str) -> Result<Self, EventScriptError> {
         Self::parse_with_rules(source, Rules::Master)
     }
+    /// Recognize both pinned catalogs without coupling event syntax to a
+    /// tileset's attribute storage. The four-argument map-warp guard is shared
+    /// with master; script commands and unknown assembly remain untouched.
+    pub fn parse_unified(source: &str) -> Result<Self, EventScriptError> {
+        Self::parse_catalog(source, |name| {
+            EventKind::from_macro(name)
+                .or_else(|| polished_map_core::plusplus::event_kind_from_macro(name))
+        })
+    }
     pub(crate) fn parse_with_rules(source: &str, rules: Rules) -> Result<Self, EventScriptError> {
+        Self::parse_catalog(
+            source,
+            match rules {
+                Rules::Master => EventKind::from_macro,
+                Rules::PlusPlus => polished_map_core::plusplus::event_kind_from_macro,
+            },
+        )
+    }
+    fn parse_catalog(
+        source: &str,
+        lookup: fn(&str) -> Option<EventKind>,
+    ) -> Result<Self, EventScriptError> {
         if source.len() > LIMIT {
             return Err(EventScriptError::Limit);
         }
@@ -83,12 +104,7 @@ impl EventScript {
             }
             let content = body.trim_start_matches(char::is_whitespace);
             let macro_end = content.find(char::is_whitespace).unwrap_or(content.len());
-            let kind = match rules {
-                Rules::Master => EventKind::from_macro(&content[..macro_end]),
-                Rules::PlusPlus => {
-                    polished_map_core::plusplus::event_kind_from_macro(&content[..macro_end])
-                }
-            };
+            let kind = lookup(&content[..macro_end]);
             let Some(kind) = kind else {
                 continue;
             };
@@ -213,18 +229,28 @@ impl EventDocument {
     pub fn open(path: &Path) -> Result<Self, ProjectError> {
         Self::open_with_rules(path, Rules::Master)
     }
+    /// Open using the union of the pinned event catalogs. Persistence retains
+    /// the parsed macro and source spans; opening does not convert the script.
+    pub fn open_unified(path: &Path) -> Result<Self, ProjectError> {
+        Self::open_parsed(path, EventScript::parse_unified)
+    }
     pub(crate) fn open_with_rules(path: &Path, rules: Rules) -> Result<Self, ProjectError> {
+        Self::open_parsed(path, |source| EventScript::parse_with_rules(source, rules))
+    }
+    fn open_parsed(
+        path: &Path,
+        parse: impl FnOnce(&str) -> Result<EventScript, EventScriptError>,
+    ) -> Result<Self, ProjectError> {
         let source = prepare_target(path)?;
         let bytes = read_bounded(source.path(), LIMIT)?;
         let text = std::str::from_utf8(&bytes).map_err(|e| ProjectError::Format {
             path: source.path.clone(),
             message: e.to_string(),
         })?;
-        let script =
-            EventScript::parse_with_rules(text, rules).map_err(|error| ProjectError::Format {
-                path: source.path.clone(),
-                message: error.to_string(),
-            })?;
+        let script = parse(text).map_err(|error| ProjectError::Format {
+            path: source.path.clone(),
+            message: error.to_string(),
+        })?;
         if Some(Sha256::digest(&bytes).into()) != source.hash {
             return Err(ProjectError::Conflict(source.path));
         }

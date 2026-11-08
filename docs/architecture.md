@@ -42,8 +42,9 @@ A shared map without a unique header requires the ordinary tileset choice.
 
 The next integration must bind capabilities to the successfully loaded document,
 retain the old session on failed/cancelled loads, keep palette sessions separate,
-and preserve the legacy launchers' exact parsing and output contracts. Union event
-macros, source imports and legacy layout support belong to the unified adapter;
+and preserve the legacy launchers' exact parsing and output contracts. Union event macros are available through `EventScript::parse_unified` and
+`EventDocument::open_unified`, sharing the existing guarded parser/persistence.
+Source imports and legacy layout support also belong to the unified adapter;
 they must not silently widen either parity launcher's accepted input.
 
 ## ADR 1: Separate domain logic from platform adapters immediately

@@ -211,7 +211,7 @@ jobs:
           git -C .reference/polishedcrystal remote add origin https://github.com/Rangi42/polishedcrystal.git
           git -C .reference/polishedcrystal fetch --depth 1 origin 1226ea17bb0bdf5de1bad706a688fe89af573981
           git -C .reference/polishedcrystal checkout --detach FETCH_HEAD
-      - run: cargo test -p polished-map-project --locked --test unified_detection -- --ignored --nocapture
+      - run: cargo test -p polished-map-project --locked --test unified_detection --test unified_events -- --ignored --nocapture
         env:
           POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal
           POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal

@@ -308,8 +308,9 @@ launchers. No mode selector and no silent format conversion. See the
 
 - [ ] **U1 — In progress:** Detect storage and capabilities from map/project and
   selected-tileset evidence, with actionable missing/conflicting-context errors.
-  Reconcile pinned master/plusplus drift, including master improvements absent
-  in plusplus. Acceptance: deterministic tests on both pinned projects, legacy
+  Storage detection and union event parsing are implemented; unified source
+  adapters and final drift reconciliation remain, including master improvements
+  absent in plusplus. Acceptance: deterministic tests on both pinned projects, legacy
   layouts, compound assets and mixed/conflicting evidence; document each drift
   disposition in [compatibility evidence](compatibility.md#unified-format-detection-and-upstream-drift).
 - [ ] **U2:** Deliver one automatically adapting binary with safe loading,
