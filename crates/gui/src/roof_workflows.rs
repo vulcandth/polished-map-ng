@@ -35,7 +35,7 @@ impl Editor {
         let Some((root, _)) = loaded.tileset_location() else {
             return;
         };
-        match self.profile().list_roofs(root) {
+        match self.application.list_roofs(self.profile(), root) {
             Ok(names) => {
                 let selected = loaded
                     .roof_name()
@@ -62,25 +62,20 @@ impl Editor {
         let loaded = self.loaded.as_mut().ok_or("No map is loaded")?;
         if let Some(assets) = &mut loaded.plus_assets {
             let modified = assets.roof.as_ref().is_some_and(|r| r.is_modified());
-            let roof = name
-                .filter(|n| !n.is_empty())
-                .map(|name| {
-                    let mut roof = polished_map_project::plusplus::RoofDocument::open_in_project(
-                        assets.tiles.root(),
-                        name,
-                        assets.tiles.png_platform(),
-                    )?;
-                    if modified {
-                        let value = roof.snapshot(0)?;
-                        roof.apply_batch(&[polished_map_core::plusplus::RawTileCommand::Set {
-                            tile: 0,
-                            value,
-                        }])?;
-                    }
-                    Ok::<_, polished_map_project::ProjectError>(roof)
-                })
-                .transpose()
-                .map_err(|e| e.to_string())?;
+            let roof =
+                name.filter(|n| !n.is_empty())
+                    .map(|name| {
+                        let mut roof = assets.open_roof(name)?;
+                        if modified {
+                            let value = roof.snapshot(0)?;
+                            roof.apply_batch(&[
+                                polished_map_core::plusplus::RawTileCommand::Set { tile: 0, value },
+                            ])?;
+                        }
+                        Ok::<_, polished_map_project::ProjectError>(roof)
+                    })
+                    .transpose()
+                    .map_err(|e| e.to_string())?;
             let graphics = assets.tiles.graphics(
                 assets.blocks.blockset(),
                 assets.palettes.colors(assets.palettes.selected()),

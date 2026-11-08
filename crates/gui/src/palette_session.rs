@@ -109,8 +109,8 @@ impl Editor {
         // Map_Options_Dialog inventories roofs when opening a project. Cache
         // availability once; never scan the filesystem while painting controls.
         self.roof_choices_available = loaded.tileset_location().is_some_and(|(root, _)| {
-            profile
-                .list_roofs(root)
+            self.application
+                .list_roofs(profile, root)
                 .is_ok_and(|names| !names.is_empty())
         });
         self.event_ui.drag = None;

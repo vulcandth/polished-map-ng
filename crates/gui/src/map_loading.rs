@@ -85,8 +85,12 @@ impl Loaded {
         let name = form.tileset_name(report.document.metadata())?;
         options.allow_256 = form.allow_256;
         options.roof = (!form.roof.is_empty()).then(|| form.roof.clone());
-        let (tileset, plan) =
-            MasterTilesetDocument::begin_for_map(&report.document, name, &options, &palettes)?;
+        let begin = if form.unified {
+            MasterTilesetDocument::begin_unified_for_map
+        } else {
+            MasterTilesetDocument::begin_for_map
+        };
+        let (tileset, plan) = begin(&report.document, name, &options, &palettes)?;
         let blocks = BlocksetDocument::open_in_project(&root, name)?;
         let graphics = tileset.graphics(blocks.blockset())?;
         let document = report.document.into();

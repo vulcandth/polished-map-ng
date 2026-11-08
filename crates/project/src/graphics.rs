@@ -70,6 +70,37 @@ pub(crate) fn graphics_path(directory: &Path, name: &str) -> PathBuf {
     )
 }
 
+pub(crate) fn unified_graphics_path(directory: &Path, name: &str) -> Result<PathBuf, ProjectError> {
+    validate_tileset(directory, name)?;
+    let candidates = ["png", "2bpp", "CHR", "2bpp.lz"]
+        .map(|extension| directory.join(format!("{name}.{extension}")));
+    for path in &candidates {
+        if crate::asset_paths::is_file(path)? {
+            return Ok(path.clone());
+        }
+    }
+    Ok(candidates[3].clone())
+}
+
+/// Resolve the selected asset, not merely the presence of a MAPDATA directory.
+/// Preserve each model's preferred location, then permit the other source layout.
+pub(crate) fn unified_graphics_directory(
+    root: &Path,
+    name: &str,
+    format: crate::ProjectFormat,
+) -> Result<PathBuf, ProjectError> {
+    let directories = match format {
+        crate::ProjectFormat::Master => [root.join("MAPDATA"), root.join("gfx/tilesets")],
+        crate::ProjectFormat::PlusPlus => [root.join("gfx/tilesets"), root.join("MAPDATA")],
+    };
+    for directory in &directories {
+        if crate::asset_paths::is_file(&unified_graphics_path(directory, name)?)? {
+            return Ok(directory.clone());
+        }
+    }
+    Ok(format.graphics_directory(root))
+}
+
 pub(crate) fn palette_map_path(root: &Path, tileset: &str) -> Result<PathBuf, ProjectError> {
     crate::asset_paths::AssetKind::PaletteMap.path(root, tileset)
 }
@@ -93,23 +124,62 @@ pub fn read_tiles(
     path: &Path,
     png_platform: crate::PngPlatform,
 ) -> Result<Vec<Tile>, ProjectError> {
+    read_tiles_for_storage(path, png_platform, crate::ProjectFormat::Master, true)
+}
+
+/// Unified graphics syntax with the detected model's physical tile capacity.
+/// Accepts master's CHR import without reducing attributed data to 256 tiles.
+pub fn read_unified_tiles(
+    path: &Path,
+    png_platform: crate::PngPlatform,
+    format: crate::ProjectFormat,
+) -> Result<Vec<Tile>, ProjectError> {
+    read_tiles_for_storage(path, png_platform, format, true)
+}
+
+pub(crate) fn read_tiles_for_storage(
+    path: &Path,
+    png_platform: crate::PngPlatform,
+    format: crate::ProjectFormat,
+    allow_asm: bool,
+) -> Result<Vec<Tile>, ProjectError> {
     let bytes = read_bounded(path, 8 * 1024 * 1024)?;
     let extension = path
         .extension()
         .and_then(|s| s.to_str())
         .unwrap_or("")
         .to_ascii_lowercase();
+    let decode = match format {
+        crate::ProjectFormat::Master => codecs::decode_2bpp,
+        crate::ProjectFormat::PlusPlus => codecs::decode_plusplus_2bpp,
+    };
     match extension.as_str() {
-        "2bpp" => codecs::decode_2bpp(&bytes).map_err(|e| ProjectError::codec(path, e)),
-        "lz" => codecs::decode_lz_tiles(&bytes).map_err(|e| ProjectError::codec(path, e)),
-        "chr" => codecs::decode_2bpp(
+        "2bpp" => decode(&bytes).map_err(|e| ProjectError::codec(path, e)),
+        "lz" => match format {
+            crate::ProjectFormat::Master => codecs::decode_lz_tiles(&bytes),
+            crate::ProjectFormat::PlusPlus => codecs::decode_plusplus_lz_tiles(&bytes),
+        }
+        .map_err(|e| ProjectError::codec(path, e)),
+        "chr" if allow_asm => decode(
             &codecs::parse_asm(&text(path, &bytes)?).map_err(|e| ProjectError::codec(path, e))?,
         )
         .map_err(|e| ProjectError::codec(path, e)),
-        "png" => crate::png_import::read_png_tiles(path, &bytes, png_platform),
+        "png" => match format {
+            crate::ProjectFormat::Master => {
+                crate::png_import::read_png_tiles(path, &bytes, png_platform)
+            }
+            crate::ProjectFormat::PlusPlus => {
+                crate::png_import::read_png_tiles_bounded(path, &bytes, png_platform, 512)
+            }
+        },
         _ => Err(ProjectError::Format {
             path: path.into(),
-            message: "unsupported graphics extension".into(),
+            message: if allow_asm {
+                "unsupported graphics extension"
+            } else {
+                "plusplus graphics require PNG, 2bpp or LZ"
+            }
+            .into(),
         }),
     }
 }

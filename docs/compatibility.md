@@ -3862,6 +3862,10 @@ The Open/New integration (`4812028`) passed all eight
 [cross-platform jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42434947611).
 Complete drift reconciliation and unified GUI/native acceptance remain open.
 
+The five-project expansion (`e18e739`) and document-local color fallback (`fa1d8cc`)
+also passed their full CI runs ([matrix](https://github.com/vulcandth/polished-map-ng/actions/runs/42435481959),
+[color](https://github.com/vulcandth/polished-map-ng/actions/runs/42435968073)).
+
 ### Pinned-source drift disposition — in progress
 
 The comparison uses `8b9bdc2b8aac8c865809516c2123af69c498da0b` against
@@ -3872,19 +3876,19 @@ missing features; the final behavior and existing Rust adapters are the evidence
 | Source family | Difference and disposition | Remaining unified work |
 |---|---|---|
 | `config.cpp`, `option-dialogs.cpp` | Different root markers, asset directories, map suffixes, metadata macros and legacy pokered layouts. Detection now uses union root markers and actual selected-asset evidence, reusing loader paths. | Merge discovery capabilities without changing parity discovery precedence; exercise mixed and legacy GUI opens. |
-| `map.cpp`, `parse-asm.*`, `tiled-image.cpp` | Master added ASM `.map`, `.CHR` and `.CEL` imports absent in plusplus. Shared bounded ASM codecs already exist. Detection treats map encoding separately from attributes. | Unified source imports must work with the appropriate attribute model and retain explicit binary Save As behavior. |
+| `map.cpp`, `parse-asm.*`, `tiled-image.cpp` | Master added ASM `.map`, `.CHR` and `.CEL` imports absent in plusplus. Shared bounded ASM codecs already exist. Detection treats map encoding separately from attributes. | ASM map import retains explicit binary Save As; CHR tiles/roofs now work with either attribute model. CEL stays the classic blockset source adapter, without invented occurrence-attribute conversion. See legacy-source evidence below. |
 | `metatileset.*`, `metatile.*`, `deep-tile.*`, `tile.*`, `palette-map.*` | Master stores tile palettes; plusplus stores per-occurrence bank/palette/flips/priority and expands to 512 tiles. Both models and guarded persistence already exist. | Bind controls and save operations to the detected document; never reinterpret bytes or widen master IDs globally. |
 | `tileset.cpp`, `image.cpp` | Different slot/bank order and undefined-tile/export handling. Plusplus's nonzero-offset export overread is already corrected and documented. | Preserve each model's valid ordering and keep shared bounded raster/export code. |
 | `map-events.cpp` | Master includes pokered `warp/sign/object/warp_to`; plusplus adds Pokémon/PC/base macros. Master distinguishes a four-argument map `warp` from a three-argument script command. Shared parser already contains this guard; parity catalogs stay distinct. | Backend `parse_unified`/`open_unified` now recognize their union with the same script guard and source-span persistence. Unified GUI automatic/manual event loading now uses this catalog. |
 | `main-window.cpp` palette loading/saving | Master monochrome fallback, priority palette-map output and suppressed monochrome roof-color import are intentional storage capabilities. Plusplus always uses game palettes/occurrence priority. | Keep capabilities context-sensitive; do not apply master's monochrome switch to attributed data. |
-| `config.cpp` collisions | Master also checks `data/tilesets/*_collision.bin`; plusplus omits that candidate. Both already support binary collision codecs. | Make this legacy path available in unified context, preserving parity precedence. |
+| `config.cpp` collisions | Master also checks `data/tilesets/*_collision.bin`; plusplus omits that candidate. Both already support binary collision codecs. | Unified attributed blocksets now use the union collision candidate list; each parity entry point keeps its original precedence. |
 | `main-window.cpp` save warning | Master's one-time 128-block engine warning is absent in plusplus. Current NG master preserves it. | Keep it for classic engine context; do not infer an engine limit solely from expanded tile-bank UI state. |
 | Block/palette/roof/tileset windows and `map-buttons.*` | Attribute ownership, flips, bank order and keyboard actions differ; master and plusplus GUI adapters already implement these separately. | Audit each final difference and consolidate shared workflows while preserving attribute-specific operations. |
 | `colors.*`, `ruler.cpp`, `widgets.cpp`, `version.h`, `main.cpp` | Palette model, themes, minor visual choices and application identity differ. M4/font/theme exceptions remain authoritative. | Finish final-source disposition; keep identity independent of active storage and avoid reviving deferred aesthetics. |
 
 This is an implementation audit, not U1 acceptance. ASM map import and GUI Open/New
-transitions now have the evidence below. Unified legacy graphics/metadata, expanded
-collision discovery and in-document cross-storage tileset changes remain incomplete.
+transitions and legacy graphics/collision adapters now have the evidence below.
+Unified metadata and in-document cross-storage tileset changes remain incomplete.
 
 The unified event entry points share the existing parser/save implementation,
 selecting the union lookup instead of adding another parser. Focused tests retain
@@ -3929,8 +3933,8 @@ desktop, DPI or full-project parity.
 The load worker now delegates through a shared typed request boundary; dimensions
 and selected-tileset validation are shared by both adapters. Palette caches and
 active settings change only after candidate graphics/textures succeed. General
-visual work remains deferred. Cross-storage Change Tileset, legacy graphics and
-metadata integration and final source-drift acceptance remain U1/U2 work; this
+visual work remains deferred. Cross-storage Change Tileset, legacy metadata
+integration and final source-drift acceptance remain U1/U2 work; this
 launcher is not yet a distributed unified development candidate.
 
 Windows validation for this integration passes fmt, workspace Clippy with warnings
@@ -3938,6 +3942,40 @@ denied, **515 tests with 49 explicit external/native cases ignored**, rustdoc an
 the production native dependency graph. The pinned GUI workflow above ran separately
 and passed. Documentation links/anchors and existing CLI/JSON examples also pass.
 
+
+### Unified legacy graphics and collision sources
+
+The unified loader shares one bounded PNG/2bpp/LZ/CHR decoder while keeping the
+physical capacities separate: 256 classic tiles or 512 attributed tiles. Both
+source directories are inventoried with the full suffix set. Loading resolves the
+selected asset in its model's preferred directory, then the alternate layout;
+compound components and PNG output destinations stay in that selected directory.
+Unreadable path components and malformed preferred files fail without fallback.
+Contextual special palettes follow the same directory. This is a deliberate
+[unified source adaptation](deviations.md#unified-source-capabilities).
+
+Open, graphics/roof previews, roof selection, and same-storage reloads retain the
+source policy. Attributed blocks discover master's additional binary collision
+path. Pixel edits export guarded PNG files and leave CHR originals untouched;
+roof input still requires exactly nine tiles. Classic CEL import remains on the
+classic blockset adapter. Both fixed launchers retain their previous syntax,
+capacity and discovery rules.
+
+[Source integration tests](../crates/project/tests/unified_sources.rs) exercise
+capacities, invalid operands/lengths, mixed directories, compound padding, output
+paths, source conflicts, roof bounds, collision precedence, and contextual palette
+paths. The [unified GUI test](../crates/gui/src/unified_tests.rs) opens an attributed
+CHR tileset, previews/selects a CHR roof, reloads while retaining map edits/history,
+and then opens a classic asset from the other directory. Metadata integration and
+cross-storage Change Tileset are separate remaining acceptance work.
+
+Validation: Windows fmt, workspace Clippy with warnings denied, **524 passing
+tests / 51 explicitly ignored external/native tests**, rustdoc and the production
+native dependency graph pass. The two external GUI tests were run separately and
+pass across all five pinned projects. Linux/WSL passes all seven source tests and
+seven focused unified GUI/preference tests. These are headless workflow checks,
+not native desktop acceptance. Documentation links/anchors and CLI/JSON examples
+also pass; no project/game assets were added.
 
 ### Five-project compatibility matrix
 

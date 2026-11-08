@@ -46,9 +46,31 @@ impl RoofDocument {
         attributes: [u8; 9],
         png_platform: crate::PngPlatform,
     ) -> Result<Self, ProjectError> {
+        Self::open_with_sources(root, name, attributes, png_platform, false)
+    }
+    /// Master's roof source syntax with checked unified asset resolution.
+    pub fn open_unified_in_project(
+        root: &Path,
+        name: &str,
+        attributes: [u8; 9],
+        png_platform: crate::PngPlatform,
+    ) -> Result<Self, ProjectError> {
+        Self::open_with_sources(root, name, attributes, png_platform, true)
+    }
+    fn open_with_sources(
+        root: &Path,
+        name: &str,
+        attributes: [u8; 9],
+        png_platform: crate::PngPlatform,
+        unified: bool,
+    ) -> Result<Self, ProjectError> {
         validate_tileset(root, name)?;
         let directory = root.join("gfx/tilesets/roofs");
-        let path = graphics_path(&directory, name);
+        let path = if unified {
+            crate::graphics::unified_graphics_path(&directory, name)?
+        } else {
+            graphics_path(&directory, name)
+        };
         let source = prepare_target(&path)?;
         let tiles = read_tiles(&path, png_platform)?;
         let tiles = tiles.try_into().map_err(|_| ProjectError::Format {

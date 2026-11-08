@@ -18,6 +18,17 @@ impl Default for Application {
 }
 
 impl Application {
+    pub fn list_roofs(
+        self,
+        profile: Profile,
+        root: &std::path::Path,
+    ) -> Result<Vec<String>, polished_map_project::ProjectError> {
+        if self.is_unified() {
+            polished_map_project::list_roofs(root)
+        } else {
+            profile.list_roofs(root)
+        }
+    }
     pub fn is_unified(self) -> bool {
         self == Self::Unified
     }

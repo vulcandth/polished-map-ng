@@ -44,7 +44,8 @@ pub use format::{
     unified_tileset_choices,
 };
 pub use graphics::{
-    load_master_graphics, load_master_map_graphics, write_new_png, write_png, write_png_export,
+    load_master_graphics, load_master_map_graphics, read_unified_tiles, write_new_png, write_png,
+    write_png_export,
 };
 pub use legacy_preferences::{
     LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_plusplus_preferences,

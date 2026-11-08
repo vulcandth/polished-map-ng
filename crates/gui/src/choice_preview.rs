@@ -15,6 +15,7 @@ pub(super) struct Request {
     profile: documents::Profile,
     name: Option<String>,
     roof: bool,
+    unified: bool,
 }
 
 impl Request {
@@ -24,6 +25,7 @@ impl Request {
             profile: editor.profile(),
             name: name.map(str::to_owned),
             roof,
+            unified: editor.application.is_unified(),
         })
     }
 
@@ -35,42 +37,54 @@ impl Request {
         let name = self.name.as_deref().expect("named preview request");
         let tiles = match (self.profile, self.roof) {
             (documents::Profile::Master, true) => {
-                polished_map_project::RoofDocument::open_in_project(&self.root, name, [0; 9])?
+                let open = if self.unified {
+                    polished_map_project::RoofDocument::open_unified_in_project
+                } else {
+                    polished_map_project::RoofDocument::open_in_project_with_png_platform
+                };
+                open(&self.root, name, [0; 9], Default::default())?
                     .roof()
                     .tileset()
                     .tiles()
                     .to_vec()
             }
             (documents::Profile::PlusPlus, true) => {
-                polished_map_project::plusplus::RoofDocument::open_in_project(
+                let open = if self.unified {
+                    polished_map_project::plusplus::RoofDocument::open_unified_in_project
+                } else {
+                    polished_map_project::plusplus::RoofDocument::open_in_project
+                };
+                open(&self.root, name, Default::default())?.tiles().to_vec()
+            }
+            (documents::Profile::Master, false) => {
+                let open = if self.unified {
+                    MasterTilesetDocument::open_unified_in_project
+                } else {
+                    MasterTilesetDocument::open_in_project
+                };
+                open(
                     &self.root,
                     name,
-                    Default::default(),
+                    &MasterGraphicsOptions {
+                        monochrome: true,
+                        allow_256: true,
+                        ..Default::default()
+                    },
                 )?
+                .tileset()
                 .tiles()
                 .to_vec()
             }
-            (documents::Profile::Master, false) => MasterTilesetDocument::open_in_project(
-                &self.root,
-                name,
-                &MasterGraphicsOptions {
-                    monochrome: true,
-                    allow_256: true,
-                    ..Default::default()
-                },
-            )?
-            .tileset()
-            .tiles()
-            .to_vec(),
             (documents::Profile::PlusPlus, false) => {
-                polished_map_project::plusplus::TilesetDocument::open_in_project(
-                    &self.root,
-                    name,
-                    Default::default(),
-                )?
-                .model()
-                .tiles()
-                .to_vec()
+                let open = if self.unified {
+                    polished_map_project::plusplus::TilesetDocument::open_unified_in_project
+                } else {
+                    polished_map_project::plusplus::TilesetDocument::open_in_project
+                };
+                open(&self.root, name, Default::default())?
+                    .model()
+                    .tiles()
+                    .to_vec()
             }
         };
         Ok(sheet(&tiles, self.roof))
@@ -241,6 +255,7 @@ mod tests {
     #[test]
     fn late_preview_cannot_replace_the_current_selection() {
         let old = Request {
+            unified: false,
             root: PathBuf::new(),
             profile: documents::Profile::Master,
             name: Some("old".into()),

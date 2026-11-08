@@ -62,6 +62,7 @@ pub struct MasterTilesetDocument {
     allow_256: bool,
     monochrome: bool,
     allow_priority: bool,
+    unified: bool,
 }
 
 /// Interpretation used when reloading master's graphics and palette map.
@@ -81,6 +82,24 @@ impl MasterTilesetDocument {
         options: &MasterGraphicsOptions,
         session: &PaletteDocument,
     ) -> Result<(Self, crate::MapPalettePlan), ProjectError> {
+        Self::begin_with_sources(doc, name, options, session, false)
+    }
+    /// Unified source-directory resolution while retaining per-tile attributes.
+    pub fn begin_unified_for_map(
+        doc: &MapDocument,
+        name: &str,
+        options: &MasterGraphicsOptions,
+        session: &PaletteDocument,
+    ) -> Result<(Self, crate::MapPalettePlan), ProjectError> {
+        Self::begin_with_sources(doc, name, options, session, true)
+    }
+    fn begin_with_sources(
+        doc: &MapDocument,
+        name: &str,
+        options: &MasterGraphicsOptions,
+        session: &PaletteDocument,
+        unified: bool,
+    ) -> Result<(Self, crate::MapPalettePlan), ProjectError> {
         let root = doc
             .metadata()
             .root
@@ -91,8 +110,8 @@ impl MasterTilesetDocument {
             })?;
         let mut options = options.clone();
         options.monochrome |= !palette_map_path(root, name)?.is_file();
-        let plan = crate::MapPalettePlan::for_map(doc, name, &options)?;
-        let tileset = Self::open_colors(root, name, &options, session.clone())?;
+        let plan = crate::MapPalettePlan::with_sources(doc, name, &options, unified)?;
+        let tileset = Self::open_colors(root, name, &options, session.clone(), unified)?;
         Ok((tileset, plan))
     }
     pub fn open_for_map(
@@ -112,7 +131,13 @@ impl MasterTilesetDocument {
         let mut options = options.clone();
         options.monochrome |= !palette_map_path(root, name)?.is_file();
         let (bank, selected) = map_palette_bank(doc, name, &options)?;
-        Self::open_colors(root, name, &options, PaletteDocument::new(bank, selected))
+        Self::open_colors(
+            root,
+            name,
+            &options,
+            PaletteDocument::new(bank, selected),
+            false,
+        )
     }
 
     /// DAY defaults without map metadata; use open_for_map for contextual colors.
@@ -121,7 +146,15 @@ impl MasterTilesetDocument {
         name: &str,
         options: &MasterGraphicsOptions,
     ) -> Result<Self, ProjectError> {
-        Self::open_colors(root, name, options, PaletteDocument::default())
+        Self::open_colors(root, name, options, PaletteDocument::default(), false)
+    }
+
+    pub fn open_unified_in_project(
+        root: &Path,
+        name: &str,
+        options: &MasterGraphicsOptions,
+    ) -> Result<Self, ProjectError> {
+        Self::open_colors(root, name, options, PaletteDocument::default(), true)
     }
 
     fn open_colors(
@@ -129,13 +162,18 @@ impl MasterTilesetDocument {
         name: &str,
         options: &MasterGraphicsOptions,
         palettes: PaletteDocument,
+        unified: bool,
     ) -> Result<Self, ProjectError> {
         validate_tileset(root, name)?;
-        let gfx = root.join(if root.join("MAPDATA").is_dir() {
-            "MAPDATA"
+        let gfx = if unified {
+            crate::graphics::unified_graphics_directory(root, name, crate::ProjectFormat::Master)?
         } else {
-            "gfx/tilesets"
-        });
+            root.join(if root.join("MAPDATA").is_dir() {
+                "MAPDATA"
+            } else {
+                "gfx/tilesets"
+            })
+        };
         let (before_name, after_name) = name
             .split_once('.')
             .map(|(_, suffix)| suffix.split_once(',').unwrap_or((suffix, "")))
@@ -147,7 +185,11 @@ impl MasterTilesetDocument {
                     return Ok((Vec::new(), None));
                 }
                 validate_tileset(&gfx, name)?;
-                let path = graphics_path(&gfx, name);
+                let path = if unified {
+                    crate::graphics::unified_graphics_path(&gfx, name)?
+                } else {
+                    graphics_path(&gfx, name)
+                };
                 if optional && !path.is_file() {
                     return Ok((Vec::new(), None));
                 }
@@ -215,7 +257,12 @@ impl MasterTilesetDocument {
             .roof
             .as_ref()
             .map(|name| {
-                RoofDocument::open_in_project_with_png_platform(
+                let open = if unified {
+                    RoofDocument::open_unified_in_project
+                } else {
+                    RoofDocument::open_in_project_with_png_platform
+                };
+                open(
                     root,
                     name,
                     std::array::from_fn(|i| ids.get(i + 0x0a).copied().unwrap_or(9)),
@@ -247,6 +294,7 @@ impl MasterTilesetDocument {
             });
         }
         Ok(Self {
+            unified,
             png_platform: options.png_platform,
             root: std::fs::canonicalize(root).map_err(|e| ProjectError::io(root, e))?,
             name: name.into(),
@@ -306,7 +354,13 @@ impl MasterTilesetDocument {
             roof: self.roof.as_ref().map(|r| r.name().to_owned()),
             ..Default::default()
         };
-        let mut tileset = Self::open_colors(&self.root, name, &options, self.palettes.clone())?;
+        let mut tileset = Self::open_colors(
+            &self.root,
+            name,
+            &options,
+            self.palettes.clone(),
+            self.unified,
+        )?;
         // Palette_Map only enables the global priority option; a plain new map
         // does not switch it off after an earlier priority-capable tileset.
         tileset.allow_priority |= self.allow_priority;
@@ -326,7 +380,12 @@ impl MasterTilesetDocument {
             .is_some_and(|roof| roof.roof().tileset().is_modified());
         let roof = name
             .map(|name| {
-                let mut roof = RoofDocument::open_in_project_with_png_platform(
+                let open = if self.unified {
+                    RoofDocument::open_unified_in_project
+                } else {
+                    RoofDocument::open_in_project_with_png_platform
+                };
+                let mut roof = open(
                     &self.root,
                     name,
                     std::array::from_fn(|i| self.model.attributes()[i + 0x0a]),

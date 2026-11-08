@@ -29,6 +29,7 @@ pub struct TilesetDocument {
     model: RawTileset,
     loaded_tiles: usize,
     parts: Vec<Part>,
+    unified: bool,
 }
 
 impl TilesetDocument {
@@ -37,9 +38,37 @@ impl TilesetDocument {
         name: &str,
         platform: PngPlatform,
     ) -> Result<Self, ProjectError> {
+        Self::open_with_sources(root, name, platform, false)
+    }
+    /// Attributed tiles with the union source layouts and CHR syntax.
+    pub fn open_unified_in_project(
+        root: &Path,
+        name: &str,
+        platform: PngPlatform,
+    ) -> Result<Self, ProjectError> {
+        Self::open_with_sources(root, name, platform, true)
+    }
+    /// Preserve the source policy when replacing graphics within a document.
+    pub fn replacement(&self, name: &str) -> Result<Self, ProjectError> {
+        Self::open_with_sources(&self.root, name, self.platform, self.unified)
+    }
+    fn open_with_sources(
+        root: &Path,
+        name: &str,
+        platform: PngPlatform,
+        unified: bool,
+    ) -> Result<Self, ProjectError> {
         validate_tileset(root, name)?;
         let root = std::fs::canonicalize(root).map_err(|e| ProjectError::io(root, e))?;
-        let directory = root.join("gfx/tilesets");
+        let directory = if unified {
+            crate::graphics::unified_graphics_directory(
+                &root,
+                name,
+                crate::ProjectFormat::PlusPlus,
+            )?
+        } else {
+            root.join("gfx/tilesets")
+        };
         let (before_name, after_name) = name
             .split_once('.')
             .map(|(_, s)| s.split_once(',').unwrap_or((s, "")))
@@ -51,12 +80,21 @@ impl TilesetDocument {
                 return Ok((Vec::new(), None));
             }
             validate_tileset(&directory, component)?;
-            let path = super::graphics_path(&directory, component);
+            let path = if unified {
+                crate::graphics::unified_graphics_path(&directory, component)?
+            } else {
+                super::graphics_path(&directory, component)
+            };
             if optional && !path.is_file() {
                 return Ok((Vec::new(), None));
             }
             let source = prepare_target(&path)?;
-            let tiles = super::read_tiles(&path, platform)?;
+            let tiles = crate::graphics::read_tiles_for_storage(
+                &path,
+                platform,
+                crate::ProjectFormat::PlusPlus,
+                unified,
+            )?;
             if optional_hash(&path)? != source.hash {
                 return Err(ProjectError::Conflict(path));
             }
@@ -118,6 +156,7 @@ impl TilesetDocument {
             model,
             loaded_tiles,
             parts,
+            unified,
         })
     }
     pub fn root(&self) -> &Path {

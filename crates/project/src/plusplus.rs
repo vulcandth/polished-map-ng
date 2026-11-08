@@ -118,11 +118,21 @@ impl BlocksetDocument {
         })
     }
     pub fn open_in_project(root: &Path, tileset: &str) -> Result<Self, ProjectError> {
+        Self::open_with_collisions_rule(root, tileset, crate::ProjectFormat::PlusPlus)
+    }
+    /// Union collision discovery; offsets/attributes retain their paired format.
+    pub fn open_unified_in_project(root: &Path, tileset: &str) -> Result<Self, ProjectError> {
+        Self::open_with_collisions_rule(root, tileset, crate::ProjectFormat::Master)
+    }
+    fn open_with_collisions_rule(
+        root: &Path,
+        tileset: &str,
+        rule: crate::ProjectFormat,
+    ) -> Result<Self, ProjectError> {
         crate::graphics::validate_tileset(root, tileset)?;
         let offsets = crate::asset_paths::AssetKind::PlusPlusBlocks.path(root, tileset)?;
         let attributes = crate::asset_paths::AssetKind::Attributes.path(root, tileset)?;
-        let collision = crate::asset_paths::AssetKind::Collisions(crate::ProjectFormat::PlusPlus)
-            .existing(root, tileset)?;
+        let collision = crate::asset_paths::AssetKind::Collisions(rule).existing(root, tileset)?;
         Self::open(&offsets, &attributes, collision.as_deref())
     }
     pub fn path(&self) -> &Path {
@@ -237,23 +247,5 @@ pub fn read_tiles(
     path: &Path,
     platform: crate::PngPlatform,
 ) -> Result<Vec<polished_map_core::Tile>, ProjectError> {
-    let bytes = read_bounded(path, 8 * 1024 * 1024)?;
-    match path
-        .extension()
-        .and_then(|s| s.to_str())
-        .unwrap_or("")
-        .to_ascii_lowercase()
-        .as_str()
-    {
-        "2bpp" => {
-            crate::codecs::decode_plusplus_2bpp(&bytes).map_err(|e| ProjectError::codec(path, e))
-        }
-        "lz" => crate::codecs::decode_plusplus_lz_tiles(&bytes)
-            .map_err(|e| ProjectError::codec(path, e)),
-        "png" => crate::png_import::read_png_tiles_bounded(path, &bytes, platform, 512),
-        _ => Err(ProjectError::Format {
-            path: path.into(),
-            message: "plusplus graphics require PNG, 2bpp or LZ".into(),
-        }),
-    }
+    crate::graphics::read_tiles_for_storage(path, platform, crate::ProjectFormat::PlusPlus, false)
 }

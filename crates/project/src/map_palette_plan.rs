@@ -41,6 +41,14 @@ impl MapPalettePlan {
         tileset: &str,
         options: &MasterGraphicsOptions,
     ) -> Result<Self, ProjectError> {
+        Self::with_sources(doc, tileset, options, false)
+    }
+    pub(crate) fn with_sources(
+        doc: &MapDocument,
+        tileset: &str,
+        options: &MasterGraphicsOptions,
+        unified: bool,
+    ) -> Result<Self, ProjectError> {
         crate::graphics::validate_tileset(doc.path(), tileset)?;
         let metadata = doc.metadata();
         let root = metadata
@@ -64,7 +72,11 @@ impl MapPalettePlan {
             missing_ok: true,
         }]);
         if options.special_palettes {
-            let gfx = doc.rules().graphics_directory(root);
+            let gfx = if unified {
+                crate::graphics::unified_graphics_directory(root, tileset, doc.rules())?
+            } else {
+                doc.rules().graphics_directory(root)
+            };
             let base = tileset.split('.').next().unwrap_or(tileset);
             let mut paths = Vec::new();
             if doc.has_backing_file() {

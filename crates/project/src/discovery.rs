@@ -369,12 +369,39 @@ pub(crate) fn tileset_options_with_rules(
     hint: Option<&str>,
     rules: Rules,
 ) -> Result<TilesetOptions, ProjectError> {
+    tileset_options_from_stems(root, hint, tileset_stems(root, rules)?)
+}
+
+pub(crate) fn unified_tileset_options(
+    root: &Path,
+    hint: Option<&str>,
+) -> Result<TilesetOptions, ProjectError> {
+    let mut names = Vec::new();
+    for directory in ["MAPDATA", "gfx/tilesets"] {
+        for name in crate::asset_names::graphics_stems(
+            &root.join(directory),
+            &[".2bpp.lz", ".2bpp.unique.lz", ".2bpp", ".chr", ".png"],
+            true,
+        )? {
+            if !names.contains(&name) {
+                names.push(name);
+            }
+        }
+    }
+    tileset_options_from_stems(root, hint, names)
+}
+
+fn tileset_options_from_stems(
+    root: &Path,
+    hint: Option<&str>,
+    names: Vec<String>,
+) -> Result<TilesetOptions, ProjectError> {
     let constants = tileset_constant_names(root)?;
     let mut options = TilesetOptions {
         choices: Vec::new(),
         matched: None,
     };
-    for name in tileset_stems(root, rules)? {
+    for name in names {
         let label = constants
             .iter()
             .find(|(number, _)| name.len() == 2 && number == &name)

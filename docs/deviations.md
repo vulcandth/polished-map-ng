@@ -631,3 +631,15 @@ next project's color palettes automatically. An explicit Monochrome checkbox
 choice still persists across applicable documents and restarts. Attributed data
 continues to use its occurrence palettes. This separates user intent from inferred
 capability as required by the unified application's automatic adaptation.
+
+## Unified source capabilities
+
+The unified application combines master's CHR imports and binary collision path
+with plusplus's occurrence-attribute model. The shared graphics decoder retains
+256/512-tile bounds according to storage; it does not truncate attributed sheets
+to fit master. Both source directories are inventoried, and an unrelated MAPDATA
+folder no longer hides a selected gfx/tilesets asset. Each model's preferred
+directory wins when both contain the selected asset; its compound components,
+special palettes and PNG outputs remain together. CHR originals are never
+rewritten. Fixed parity entry points preserve their original rules. Evidence is
+in [legacy-source compatibility](compatibility.md#unified-legacy-graphics-and-collision-sources).

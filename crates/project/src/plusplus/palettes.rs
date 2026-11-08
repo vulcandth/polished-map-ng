@@ -114,6 +114,21 @@ impl MapPalettePlan {
         tileset: &str,
         options: &PaletteOptions,
     ) -> Result<Self, ProjectError> {
+        Self::with_sources(doc, tileset, options, false)
+    }
+    pub fn for_unified_map(
+        doc: &MapDocument,
+        tileset: &str,
+        options: &PaletteOptions,
+    ) -> Result<Self, ProjectError> {
+        Self::with_sources(doc, tileset, options, true)
+    }
+    fn with_sources(
+        doc: &MapDocument,
+        tileset: &str,
+        options: &PaletteOptions,
+        unified: bool,
+    ) -> Result<Self, ProjectError> {
         let shared = MasterGraphicsOptions {
             palette: options.palette,
             dark_theme: options.dark_theme,
@@ -123,7 +138,7 @@ impl MapPalettePlan {
             ..Default::default()
         };
         Ok(Self {
-            inner: crate::MapPalettePlan::for_map(&doc.inner, tileset, &shared)?,
+            inner: crate::MapPalettePlan::with_sources(&doc.inner, tileset, &shared, unified)?,
         })
     }
     pub fn is_finished(&self) -> bool {

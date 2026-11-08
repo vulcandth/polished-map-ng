@@ -34,6 +34,9 @@ Binary-map metadata discovery adapts master `Map_Options_Dialog` guess methods,
 LGPL-3.0-only. The reference harness compiles unchanged snippets with inert widget
 storage and standard streams for synthetic ASCII paths. Generated source and
 snippet hashes remain in ignored storage; no project/game assets are distributed.
+The unified source adapters combine both pinned Config layouts and master CHR
+imports with the appropriate storage model, sharing bounded codecs and guarded
+PNG persistence. The fixed parity adapters keep their original source rules.
 
 Middle-click defaults adapt master `widgets.cpp::Default_Spinner`,
 `Default_Hex_Spinner` and `Default_Slider`, and the control default-capture calls

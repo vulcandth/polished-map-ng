@@ -31,6 +31,17 @@ pub struct RoofDocument {
 }
 
 impl RoofDocument {
+    /// Union source syntax; roof pixels remain raw and occurrence attributes stay
+    /// in the blockset. Exactly nine tiles are required by both source models.
+    pub fn open_unified_in_project(
+        root: &Path,
+        name: &str,
+        platform: PngPlatform,
+    ) -> Result<Self, ProjectError> {
+        Ok(Self {
+            inner: crate::RoofDocument::open_unified_in_project(root, name, [0; 9], platform)?,
+        })
+    }
     pub fn open_in_project(
         root: &Path,
         name: &str,

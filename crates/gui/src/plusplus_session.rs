@@ -17,6 +17,7 @@ pub(super) struct PlusPlusAssets {
     pub palettes: plusplus::PaletteDocument,
     pub order: BankOrder,
     pub allow_512: bool,
+    unified: bool,
 }
 impl PlusPlusAssets {
     pub fn replacement(
@@ -26,15 +27,17 @@ impl PlusPlusAssets {
         order: BankOrder,
     ) -> Result<Self, ProjectError> {
         let root = self.tiles.root();
-        let tiles =
-            plusplus::TilesetDocument::open_in_project(root, name, self.tiles.png_platform())?;
-        let blocks = plusplus::BlocksetDocument::open_in_project(root, name)?;
+        let tiles = self.tiles.replacement(name)?;
+        let open_blocks = if self.unified {
+            plusplus::BlocksetDocument::open_unified_in_project
+        } else {
+            plusplus::BlocksetDocument::open_in_project
+        };
+        let blocks = open_blocks(root, name)?;
         let roof = self
             .roof
             .as_ref()
-            .map(|r| {
-                plusplus::RoofDocument::open_in_project(root, r.name(), self.tiles.png_platform())
-            })
+            .map(|r| self.open_roof(r.name()))
             .transpose()?;
         Ok(Self {
             allow_512: allow_512
@@ -45,7 +48,16 @@ impl PlusPlusAssets {
             roof,
             order,
             palettes: self.palettes.clone(),
+            unified: self.unified,
         })
+    }
+    pub fn open_roof(&self, name: &str) -> Result<plusplus::RoofDocument, ProjectError> {
+        let open = if self.unified {
+            plusplus::RoofDocument::open_unified_in_project
+        } else {
+            plusplus::RoofDocument::open_in_project
+        };
+        open(self.tiles.root(), name, self.tiles.png_platform())
     }
     pub fn graphics(&self, palettes: &plusplus::PaletteDocument) -> MapGraphics {
         self.graphics_for_blocks(self.blocks.blockset(), palettes)
@@ -170,18 +182,35 @@ impl Loaded {
                 read(&form.path, &form.dimensions(), Some(&root))?
             };
             let name = form.tileset_name(report.document.metadata())?;
-            let blocks = plusplus::BlocksetDocument::open_in_project(&root, name)?;
-            let tiles =
-                plusplus::TilesetDocument::open_in_project(&root, name, Default::default())?;
+            let open_blocks = if form.unified {
+                plusplus::BlocksetDocument::open_unified_in_project
+            } else {
+                plusplus::BlocksetDocument::open_in_project
+            };
+            let open_tiles = if form.unified {
+                plusplus::TilesetDocument::open_unified_in_project
+            } else {
+                plusplus::TilesetDocument::open_in_project
+            };
+            let open_roof = if form.unified {
+                plusplus::RoofDocument::open_unified_in_project
+            } else {
+                plusplus::RoofDocument::open_in_project
+            };
+            let palette_plan = if form.unified {
+                plusplus::MapPalettePlan::for_unified_map
+            } else {
+                plusplus::MapPalettePlan::for_map
+            };
+            let blocks = open_blocks(&root, name)?;
+            let tiles = open_tiles(&root, name, Default::default())?;
             let roof = (!form.roof.is_empty())
-                .then(|| {
-                    plusplus::RoofDocument::open_in_project(&root, &form.roof, Default::default())
-                })
+                .then(|| open_roof(&root, &form.roof, Default::default()))
                 .transpose()?;
             let allow_512 = form.allow_512
                 || tiles.enables_512_tiles()
                 || blocks.blockset().enables_512_tiles(order);
-            let plan = plusplus::MapPalettePlan::for_map(&report.document, name, &options)?;
+            let plan = palette_plan(&report.document, name, &options)?;
             let assets = PlusPlusAssets {
                 blocks,
                 tiles,
@@ -189,6 +218,7 @@ impl Loaded {
                 palettes,
                 order,
                 allow_512,
+                unified: form.unified,
             };
             let graphics = assets.graphics(&assets.palettes);
             let document = report.document.into();

@@ -49,9 +49,13 @@ keep their fixed catalogs and settings. Shared load settings, size/tileset reque
 validation and worker orchestration prepare a full candidate before adoption.
 Unified automatic/manual event loading uses `EventDocument::open_unified`,
 sharing guarded parser/persistence. ASM map import also works with occurrence
-attributes, with explicit binary Save As and no source overwrite. Legacy graphics,
-metadata and in-document cross-storage tileset integration remain in progress;
-they must not silently widen either parity launcher's accepted input.
+attributes, with explicit binary Save As and no source overwrite. A shared bounded
+graphics decoder separates syntax from physical tile capacity. Unified asset
+entry points allow CHR and both source layouts, preserving that policy on reload;
+compound components, contextual palettes and output paths follow the selected
+asset directory. Attributed collision discovery includes master's binary path.
+Both parity launchers retain their accepted input and precedence. Legacy metadata
+and in-document cross-storage tileset integration remain in progress.
 
 ## ADR 1: Separate domain logic from platform adapters immediately
 

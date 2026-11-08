@@ -126,6 +126,67 @@ fn color(h: &mut Harness<'_, Editor>, rgb: [u8; 3]) {
 }
 
 #[test]
+fn unified_chr_assets_roof_previews_and_reload_use_the_same_source_policy() {
+    let dir = fixture();
+    let root = dir.path();
+    fs::create_dir_all(root.join("MAPDATA")).unwrap();
+    let chr = "\tdb 255,0,255,0,255,0,255,0,255,0,255,0,255,0,255,0\n";
+    fs::write(root.join("MAPDATA/modern.CHR"), chr.repeat(16)).unwrap();
+    fs::remove_file(root.join("gfx/tilesets/modern.2bpp")).unwrap();
+    fs::write(root.join("data/tilesets/modern_collision.bin"), [1; 8]).unwrap();
+    fs::create_dir_all(root.join("gfx/tilesets/roofs")).unwrap();
+    fs::write(root.join("gfx/tilesets/roofs/legacy.CHR"), chr.repeat(9)).unwrap();
+    let map = root.join("Modern.2x1.modern.blk");
+    fs::write(&map, [0, 1]).unwrap();
+    let mut h = editor();
+    open(&mut h, &map, Profile::PlusPlus);
+    assert!(h.state().can_change_roof());
+    h.state_mut().request_roof_change();
+    h.run();
+    h.get_by_label("(none)").click();
+    h.run();
+    h.get_by_label("legacy").click();
+    h.run();
+    choice_preview::wait_for_preview(&mut h);
+    h.get_by_label("Selected graphics preview");
+    h.get_by_label("OK").click();
+    h.run();
+    assert!(h.state().error.is_none(), "{:?}", h.state().error);
+    h.state_mut().apply(Command::Paint {
+        points: vec![Point { x: 0, y: 0 }],
+        block: 1,
+    });
+    let ctx = h.ctx.clone();
+    h.state_mut().request_tile_mode_reload(&ctx);
+    let loaded = h.state().loaded.as_ref().unwrap();
+    let assets = loaded.plus_assets.as_ref().unwrap();
+    assert_eq!(assets.roof.as_ref().unwrap().name(), "legacy");
+    assert!(
+        assets.tiles.sources()[0]
+            .path()
+            .ends_with("MAPDATA/modern.CHR")
+    );
+    assert!(
+        assets
+            .blocks
+            .collision_path()
+            .unwrap()
+            .ends_with("modern_collision.bin")
+    );
+    assert_eq!(loaded.document.map().blocks(), [1, 1]);
+    assert!(loaded.document.map().can_undo());
+    assert!(!root.join("MAPDATA/modern.png").exists());
+    assert!(!root.join("gfx/tilesets/roofs/legacy.png").exists());
+    // MAPDATA now exists, but the selected classic asset lives under gfx.
+    open(
+        &mut h,
+        &root.join("Classic.2x1.classic.blk"),
+        Profile::Master,
+    );
+    assert!(!h.state().palette_monochrome());
+}
+
+#[test]
 fn unified_alternating_documents_preserves_palette_sessions_and_uses_union_events() {
     let dir = fixture();
     let mut h = editor();
