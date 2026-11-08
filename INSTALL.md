@@ -86,6 +86,10 @@ cargo doc --workspace --no-deps --locked
 Additional reference, real-project, visual, native-adapter and license checks are
 defined in [CI](.github/workflows/ci.yml). Their fixtures and prerequisites differ
 from the normal suite; see [compatibility evidence](docs/compatibility.md).
+`python tools/fetch_project_fixtures.py` fetches the five immutable project
+fixtures from `upstream.lock.toml` into ignored `.reference/` checkouts. It refuses
+to change an existing checkout at another revision or with tracked edits. The
+`real-project` CI job lists the environment variables and exact test commands.
 Redistribution must also satisfy the [release requirements](docs/releases.md).
 
 Native modal lifetime checks create hidden windows and do not operate the desktop.

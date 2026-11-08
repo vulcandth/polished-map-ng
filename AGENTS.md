@@ -87,6 +87,10 @@ exist from day one; a partial slice is not a completed parity milestone.
   Preserve that appearance and the retained functional fixes; do not restore
   FLTK slider styling as part of parity work.
 - Do not claim pokecrystal/Polished Crystal parity from synthetic tests alone.
+- The unified compatibility targets are pokered, pokeyellow, pokegold, pokecrystal
+  and Polished Crystal (user direction, November 7). Pin all external fixtures in
+  `upstream.lock.toml`; keep their assets out of source and release archives.
+  Distinguish automated discovery/render/edit-save evidence from native acceptance.
 - Specify UTF-8 explicitly in text tooling (including Python on Windows); use
   byte-preserving operations for fixtures and assets with exact-byte contracts.
 

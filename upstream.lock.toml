@@ -15,6 +15,21 @@ repository = "https://github.com/pret/pokecrystal"
 commit = "bd983395006298e976ae1871ef092e87f3385506"
 purpose = "Contemporaneous master project fixture; fetched separately, assets not redistributed"
 
+[fixtures.pokered]
+repository = "https://github.com/pret/pokered"
+commit = "0dbf95cd12f5b1511c62ce69efe283000f780a8f"
+purpose = "November 7 compatibility target; fetched separately, no game/project assets redistributed"
+
+[fixtures.pokeyellow]
+repository = "https://github.com/pret/pokeyellow"
+commit = "b452f2ab07185075140061c5084ab866d5e4a794"
+purpose = "November 7 compatibility target; fetched separately, no game/project assets redistributed"
+
+[fixtures.pokegold]
+repository = "https://github.com/pret/pokegold"
+commit = "f2cde36f49b994c143bfd18582182302fdc76492"
+purpose = "November 7 compatibility target; fetched separately, no game/project assets redistributed"
+
 [fixtures.polishedcrystal]
 repository = "https://github.com/Rangi42/polishedcrystal"
 commit = "1226ea17bb0bdf5de1bad706a688fe89af573981"

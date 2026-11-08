@@ -197,40 +197,22 @@ jobs:
             crates/gui/tests/snapshots/**/*.new.png
   real-project:
     runs-on: ubuntu-24.04
+    env:
+      POLISHED_MAP_POKERED: ${{ github.workspace }}/.reference/pokered
+      POLISHED_MAP_POKEYELLOW: ${{ github.workspace }}/.reference/pokeyellow
+      POLISHED_MAP_POKEGOLD: ${{ github.workspace }}/.reference/pokegold
+      POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal
+      POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
     steps:
       - uses: actions/checkout@v4
       - name: Headless GUI build dependencies
         run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev pkg-config
-      - name: Fetch immutable pokecrystal fixture
-        run: |
-          git init .reference/pokecrystal
-          git -C .reference/pokecrystal remote add origin https://github.com/pret/pokecrystal.git
-          git -C .reference/pokecrystal fetch --depth 1 origin bd983395006298e976ae1871ef092e87f3385506
-          git -C .reference/pokecrystal checkout --detach FETCH_HEAD
-          git init .reference/polishedcrystal
-          git -C .reference/polishedcrystal remote add origin https://github.com/Rangi42/polishedcrystal.git
-          git -C .reference/polishedcrystal fetch --depth 1 origin 1226ea17bb0bdf5de1bad706a688fe89af573981
-          git -C .reference/polishedcrystal checkout --detach FETCH_HEAD
+      - name: Fetch five immutable project fixtures
+        run: python3 tools/fetch_project_fixtures.py
       - run: cargo test -p polished-map-project --locked --test unified_detection --test unified_events -- --ignored --nocapture
-        env:
-          POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal
-          POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
       - run: cargo test -p polished-map-project --locked --test real_project --test real_print -- --ignored --nocapture
-        env:
-          POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal
       - run: cargo test -p polished-map-project --locked --test plusplus --test plusplus_graphics -- --ignored
-        env:
-          POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
       - run: cargo test -p polished-map-project --locked --test plusplus_maps real_map_discovery_edit_save_reopen_preserves_bytes -- --ignored
-        env:
-          POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
       - run: cargo test -p polished-map-project --locked --test plusplus_events real_event_scripts_edit_save_reopen_without_changing_unowned_source -- --ignored --nocapture
-        env:
-          POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
       - run: cargo test -p polished-map-gui --locked --lib real_plusplus_ -- --ignored
-        env:
-          POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
       - run: cargo test -p polished-map-gui --locked --lib unified_pinned_projects -- --ignored
-        env:
-          POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal
-          POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal

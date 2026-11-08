@@ -322,11 +322,15 @@ launchers. No mode selector and no silent format conversion. See the
   identity are implemented. Cross-storage tileset changes within a document and
   complete legacy source integration remain. Evidence:
   [unified workflows](compatibility.md#unified-opennew-and-session-transitions).
-- [ ] **U3 — Acceptance:** Both pinned project suites pass through the unified
+- [ ] **U3 — In progress, acceptance open:** Pinned pokered, pokeyellow, pokegold,
+  pokecrystal and Polished Crystal suites pass through the unified
   workflow, including alternating projects and cancelled/failed loads. Missing
   or conflicting evidence requires corrected context, never a mode selector;
   wrong-format writes fail without modifying files. Native workflow checks
-  remain distinct from automated evidence.
+  remain distinct from automated evidence. Discovery, event parsing, classic-map
+  rendering/round trips and alternating representative GUI workflows are covered;
+  full native and cross-storage asset acceptance remain open. Evidence:
+  [five-project matrix](compatibility.md#five-project-compatibility-matrix).
 
 ## 4. Autonomous interface — stabilization not started
 

@@ -84,15 +84,18 @@ fn mixed_macro_edits_save_only_owned_fields_and_keep_conflict_protection() {
 }
 
 #[test]
-#[ignore = "requires pinned POLISHED_MAP_POKECRYSTAL and POLISHED_CRYSTAL_FIXTURE"]
-fn unified_catalog_reads_both_pinned_script_sets_without_changing_source() {
-    for (variable, plus, expected_count) in [
-        ("POLISHED_MAP_POKECRYSTAL", false, 388),
-        ("POLISHED_CRYSTAL_FIXTURE", true, 607),
+#[ignore = "requires all five pinned project fixture environment variables"]
+fn unified_catalog_reads_five_pinned_script_sets_without_changing_source() {
+    for (variable, directory, plus, expected_count) in [
+        ("POLISHED_MAP_POKERED", "data/maps/objects", false, 223),
+        ("POLISHED_MAP_POKEYELLOW", "data/maps/objects", false, 224),
+        ("POLISHED_MAP_POKEGOLD", "maps", false, 368),
+        ("POLISHED_MAP_POKECRYSTAL", "maps", false, 388),
+        ("POLISHED_CRYSTAL_FIXTURE", "maps", true, 607),
     ] {
         let root = PathBuf::from(std::env::var_os(variable).expect("set pinned project fixture"));
         let mut count = 0;
-        for entry in fs::read_dir(root.join("maps")).unwrap() {
+        for entry in fs::read_dir(root.join(directory)).unwrap() {
             let path = entry.unwrap().path();
             if path.extension().is_none_or(|e| e != "asm") {
                 continue;

@@ -3918,12 +3918,11 @@ with occurrence attributes, and restart/settings isolation. Two backend tests
 exercise ASM trailing-byte reports, malformed/short input, binary Save As and
 source-overwrite refusal. The plusplus parity entry point still rejects ASM.
 
-The external-fixture GUI test alternates **pokecrystal → Polished Crystal →
-pokecrystal → Polished Crystal**, opening NewBarkTown, editing a block, saving to
-a temporary directory and reopening with the actual project context each time.
-It asserts exact edited bytes and unchanged original map files. This passes on
-Windows through egui_kittest and is included in real-project CI. It does not
-establish native dialog, clipboard, desktop, DPI or full-project parity.
+The external-fixture GUI test initially alternated pokecrystal and Polished Crystal;
+it now covers the five-project cycle below. It asserts exact edited bytes and
+unchanged original map files, saving copies only in a temporary directory. It is
+included in real-project CI. This does not establish native dialog, clipboard,
+desktop, DPI or full-project parity.
 
 The load worker now delegates through a shared typed request boundary; dimensions
 and selected-tileset validation are shared by both adapters. Palette caches and
@@ -3936,3 +3935,60 @@ Windows validation for this integration passes fmt, workspace Clippy with warnin
 denied, **515 tests with 49 explicit external/native cases ignored**, rustdoc and
 the production native dependency graph. The pinned GUI workflow above ran separately
 and passed. Documentation links/anchors and existing CLI/JSON examples also pass.
+
+
+### Five-project compatibility matrix
+
+User direction on November 7 expanded unified compatibility targets to all five
+projects below. Each exact revision and upstream URL is recorded in
+[the fixture lock](../upstream.lock.toml). Red, Yellow and Gold use their November 7
+upstream heads; the existing contemporaneous Crystal/Polished Crystal parity
+fixtures stay pinned so earlier evidence remains reproducible. This is a test
+matrix, not a claim to support every revision or hack of these projects.
+
+| Pinned project | Maps with resolved asset context | Maps requiring a tileset choice | Exact-source event scripts | Unified representative GUI workflow | Native acceptance |
+|---|---:|---:|---:|---|---|
+| [pokered](https://github.com/pret/pokered/tree/0dbf95cd12f5b1511c62ce69efe283000f780a8f) | 202 | 23 | 223 | PalletTown passes | Open |
+| [pokeyellow](https://github.com/pret/pokeyellow/tree/b452f2ab07185075140061c5084ab866d5e4a794) | 203 | 23 | 224 | PalletTown passes | Open |
+| [pokegold](https://github.com/pret/pokegold/tree/f2cde36f49b994c143bfd18582182302fdc76492) | 205 | 34 | 368 | NewBarkTown passes | Open |
+| [pokecrystal](https://github.com/pret/pokecrystal/tree/bd983395006298e976ae1871ef092e87f3385506) | 236 | 18 | 388 | NewBarkTown passes | Open |
+| [Polished Crystal](https://github.com/Rangi42/polishedcrystal/tree/1226ea17bb0bdf5de1bad706a688fe89af573981) | 418 | 34 | 607 | NewBarkTown passes | Open |
+
+[Detection/integration tests](../crates/project/tests/unified_detection.rs) inspect
+all top-level binary maps and assert these counts. All 846 context-resolved
+classic maps load their actual graphics, render at map dimensions, accept an
+edit, save to temporary copies and reopen with exact bytes. The 418 attributed
+maps resolve/load their block companions; the existing plusplus asset/render/save
+suites remain additional evidence. Maps without a unique resolved tileset are
+explicitly counted; the GUI requires an actual selection rather than the first
+inventory item. Completing those maps' context-specific workflow acceptance is
+still part of U3.
+
+The [event catalog test](../crates/project/tests/unified_events.rs) reads Gen 1's
+`data/maps/objects` and Gen 2's `maps`, preserving every parity event and original
+source in all 1,810 files. The [GUI workflow](../crates/gui/src/unified_tests.rs)
+cycles through all five projects twice, edits/saves a temporary copy of each
+representative map and reopens it using its original project context. The original
+map bytes are checked unchanged. These expanded checks pass locally on Windows;
+cross-platform CI runs them separately from native GUI acceptance.
+
+Red and Yellow each have one intentional metadata/file-size disagreement:
+`UndergroundPathNorthSouth.blk` contains 92 bytes, while `map_constants.asm`
+declares 4×24 and explicitly comments that the file is actually 4×23. Pinned
+master `Map::read_blocks` also rejects the shorter file. The test asserts that
+rejection before exercising explicit 4×23 Open options, rendering and round-trip
+saving. No padding, automatic source rewrite or engine metadata change is made.
+This exception is a size-selection requirement, not evidence of file corruption.
+
+[The fixture fetcher](../tools/fetch_project_fixtures.py) reads the lockfile rather
+than duplicating SHA pins in CI; it verifies existing revisions and refuses tracked
+edits. Fixtures stay ignored and are excluded from packages. Automated loading
+and rendering do not independently prove pixel parity against the original editor;
+visual/reference comparisons, all editing domains and native OS workflows remain
+separate acceptance requirements. No new support claims were added to README.
+
+Windows validation after expanding the matrix passes fmt, warnings-denied
+workspace Clippy, **515 tests with 51 explicit external/native cases ignored**,
+and rustdoc. The two external-project backend catalog tests, one event-catalog
+test and two external-project GUI workflows above ran separately and passed.
+The preceding unified Open/New focused tests also passed on Linux/WSL.

@@ -266,23 +266,40 @@ fn unified_asm_map_uses_occurrence_assets_and_saves_only_to_explicit_binary_targ
 }
 
 #[test]
-#[ignore = "requires pinned POLISHED_MAP_POKECRYSTAL and POLISHED_CRYSTAL_FIXTURE"]
+#[ignore = "requires all five pinned project fixture environment variables"]
 fn unified_pinned_projects_alternate_open_edit_save_and_reopen() {
-    let master = PathBuf::from(
-        std::env::var_os("POLISHED_MAP_POKECRYSTAL").expect("set POLISHED_MAP_POKECRYSTAL"),
-    );
-    let plus = PathBuf::from(
-        std::env::var_os("POLISHED_CRYSTAL_FIXTURE").expect("set POLISHED_CRYSTAL_FIXTURE"),
-    );
+    let projects = [
+        ("POLISHED_MAP_POKERED", "PalletTown", "blk", Profile::Master),
+        (
+            "POLISHED_MAP_POKEYELLOW",
+            "PalletTown",
+            "blk",
+            Profile::Master,
+        ),
+        (
+            "POLISHED_MAP_POKEGOLD",
+            "NewBarkTown",
+            "blk",
+            Profile::Master,
+        ),
+        (
+            "POLISHED_MAP_POKECRYSTAL",
+            "NewBarkTown",
+            "blk",
+            Profile::Master,
+        ),
+        (
+            "POLISHED_CRYSTAL_FIXTURE",
+            "NewBarkTown",
+            "ablk",
+            Profile::PlusPlus,
+        ),
+    ];
     let mut h = editor();
     let output = tempfile::tempdir().unwrap();
-    for (root, extension, profile) in [
-        (&master, "blk", Profile::Master),
-        (&plus, "ablk", Profile::PlusPlus),
-        (&master, "blk", Profile::Master),
-        (&plus, "ablk", Profile::PlusPlus),
-    ] {
-        let path = root.join(format!("maps/NewBarkTown.{extension}"));
+    for (variable, name, extension, profile) in projects.into_iter().cycle().take(10) {
+        let root = PathBuf::from(std::env::var_os(variable).expect("set pinned project fixture"));
+        let path = root.join(format!("maps/{name}.{extension}"));
         let original = fs::read(&path).unwrap();
         open(&mut h, &path, profile);
         assert_eq!(
@@ -294,7 +311,7 @@ fn unified_pinned_projects_alternate_open_edit_save_and_reopen() {
             points: vec![Point { x: 0, y: 0 }],
             block,
         });
-        let target = output.path().join(format!("NewBarkTown.{extension}"));
+        let target = output.path().join(format!("{name}.{extension}"));
         let doc = &mut h.state_mut().loaded.as_mut().unwrap().document;
         let expected = doc.map().blocks().to_vec();
         doc.save_as(&target).unwrap();
@@ -310,6 +327,42 @@ fn unified_pinned_projects_alternate_open_edit_save_and_reopen() {
             h.state().loaded.as_ref().unwrap().document.map().blocks(),
             expected
         );
+        assert_eq!(fs::read(path).unwrap(), original);
+    }
+}
+
+#[test]
+#[ignore = "requires pinned POLISHED_MAP_POKERED and POLISHED_MAP_POKEYELLOW"]
+fn unified_pinned_projects_short_gen1_map_requires_explicit_size_choice() {
+    for variable in ["POLISHED_MAP_POKERED", "POLISHED_MAP_POKEYELLOW"] {
+        let root = PathBuf::from(std::env::var_os(variable).expect("set pinned project fixture"));
+        let path = root.join("maps/UndergroundPathNorthSouth.blk");
+        let original = fs::read(&path).unwrap();
+        let mut h = editor();
+        h.state_mut().prepare_open(path.clone());
+        let form = h.state().open_form.as_ref().unwrap();
+        assert_eq!((form.width, form.height), (4, 24));
+        submit(&mut h);
+        assert!(
+            h.state()
+                .error
+                .as_ref()
+                .unwrap()
+                .contains("expected 96 map bytes, found 92")
+        );
+        assert!(h.state().loaded.is_none());
+        h.state_mut().error = None;
+        h.state_mut().prepare_open(path.clone());
+        h.run();
+        h.get_by_label("Size").click();
+        h.run();
+        h.get_by_label("4 x 23").click();
+        h.run();
+        submit(&mut h);
+        assert!(h.state().error.is_none(), "{:?}", h.state().error);
+        let map = h.state().loaded.as_ref().unwrap().document.map();
+        assert_eq!((map.width(), map.height()), (4, 23));
+        assert_eq!(map.blocks(), original);
         assert_eq!(fs::read(path).unwrap(), original);
     }
 }
