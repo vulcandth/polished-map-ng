@@ -169,13 +169,8 @@ impl Loaded {
                     trailing_blocks: 0,
                 }
             } else {
-                let read = if form.unified
-                    && form
-                        .path
-                        .extension()
-                        .is_some_and(|e| e.eq_ignore_ascii_case("map"))
-                {
-                    plusplus::MapDocument::import_asm_with_report
+                let read = if form.unified {
+                    plusplus::MapDocument::open_unified_in_project_with_report
                 } else {
                     plusplus::MapDocument::open_in_project_with_report
                 };

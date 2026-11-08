@@ -96,6 +96,7 @@ pub struct MapDocument {
     map: Map,
     metadata: MapMetadata,
     rules: Rules,
+    unified: bool,
 }
 
 /// Result of the original editor's prefix-loading behavior. No bytes are written.
@@ -205,6 +206,12 @@ pub struct MapSummary<'a> {
     pub metadata: &'a MapMetadata,
 }
 
+struct ReadPolicy {
+    rules: Rules,
+    encoding: crate::MapEncoding,
+    unified: bool,
+}
+
 impl MapDocument {
     /// Create an unsaved zero-filled map. This never creates or overwrites a file.
     pub fn new_map(root: &Path, width: u16, height: u16) -> Result<Self, ProjectError> {
@@ -228,6 +235,7 @@ impl MapDocument {
         Ok(Self {
             path: root.join(format!("NewMap.{}", rules.default_extension())),
             rules,
+            unified: false,
             hash: None,
             map,
             metadata: MapMetadata {
@@ -288,9 +296,78 @@ impl MapDocument {
         rules: Rules,
         encoding: crate::MapEncoding,
     ) -> Result<MapOpenReport, ProjectError> {
+        Self::read_source(
+            path,
+            options,
+            root,
+            allow_trailing,
+            ReadPolicy {
+                rules,
+                encoding,
+                unified: false,
+            },
+        )
+    }
+
+    /// Unified metadata syntax with classic storage. Attribute selection remains
+    /// the caller's validated context; this does not convert any companion files.
+    pub fn open_unified_in_project_with_report(
+        path: &Path,
+        options: &OpenOptions,
+        root: Option<&Path>,
+    ) -> Result<MapOpenReport, ProjectError> {
+        Self::read_unified(path, options, root, Rules::Master)
+    }
+
+    pub(crate) fn read_unified(
+        path: &Path,
+        options: &OpenOptions,
+        root: Option<&Path>,
+        rules: Rules,
+    ) -> Result<MapOpenReport, ProjectError> {
+        let extension = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+        let encoding = if extension.eq_ignore_ascii_case("map") {
+            crate::MapEncoding::Assembly
+        } else if rules.binary_extension(extension) {
+            crate::MapEncoding::Binary
+        } else {
+            return Err(ProjectError::Format {
+                path: path.into(),
+                message: "map extension does not match the selected storage".into(),
+            });
+        };
+        Self::read_source(
+            path,
+            options,
+            root,
+            true,
+            ReadPolicy {
+                rules,
+                encoding,
+                unified: true,
+            },
+        )
+    }
+
+    fn read_source(
+        path: &Path,
+        options: &OpenOptions,
+        root: Option<&Path>,
+        allow_trailing: bool,
+        policy: ReadPolicy,
+    ) -> Result<MapOpenReport, ProjectError> {
+        let ReadPolicy {
+            rules,
+            encoding,
+            unified,
+        } = policy;
         let path = fs::canonicalize(path).map_err(|e| ProjectError::io(path, e))?;
         let bytes = read_bounded(&path, 4 * 1024 * 1024)?;
-        let metadata = discover_with_rules(&path, root, rules)?;
+        let metadata = if unified {
+            crate::discover_unified_map(&path, root)?
+        } else {
+            discover_with_rules(&path, root, rules)?
+        };
         let dimensions = metadata.dimensions;
         let width = options
             .width
@@ -316,6 +393,7 @@ impl MapDocument {
             path,
             metadata,
             rules,
+            unified,
         };
         Ok(MapOpenReport {
             document,
@@ -375,14 +453,17 @@ impl MapDocument {
                 .into(),
             });
         }
+        let root = if self.unified {
+            crate::find_unified_project_root(&target.path)?
+        } else {
+            self.rules.find_root(&target.path)
+        }
+        .or_else(|| self.metadata.root.clone());
         persist_bytes(&target.path, target.hash, self.map.blocks())?;
         self.path.clone_from(&target.path);
         self.hash = Some(Sha256::digest(self.map.blocks()).into());
         // Keep loaded map attributes/tileset; moving to another project changes the root.
-        self.metadata.root = self
-            .rules
-            .find_root(&self.path)
-            .or_else(|| self.metadata.root.clone());
+        self.metadata.root = root;
         self.map.mark_saved();
         Ok(())
     }

@@ -81,6 +81,37 @@ pub(crate) fn discover_with_rules(
     root: Option<&Path>,
     rules: Rules,
 ) -> Result<MapMetadata, ProjectError> {
+    Ok(discover_sources(map, root, rules, false)?.metadata)
+}
+
+/// Union metadata syntax, independent of the selected attribute model.
+/// Ambiguous tileset hints leave the choice unset; detection explains the conflict.
+pub fn discover_unified_map(map: &Path, root: Option<&Path>) -> Result<MapMetadata, ProjectError> {
+    Ok(discover_unified_context(map, root)?.metadata)
+}
+
+pub(crate) struct Discovery {
+    pub metadata: MapMetadata,
+    pub conflicting_tilesets: Option<(String, String)>,
+}
+
+pub(crate) fn discover_unified_context(
+    map: &Path,
+    root: Option<&Path>,
+) -> Result<Discovery, ProjectError> {
+    let root = match root {
+        Some(root) => Some(root.to_path_buf()),
+        None => crate::find_unified_project_root(map)?,
+    };
+    discover_sources(map, root.as_deref(), Rules::PlusPlus, true)
+}
+
+fn discover_sources(
+    map: &Path,
+    root: Option<&Path>,
+    rules: Rules,
+    unified: bool,
+) -> Result<Discovery, ProjectError> {
     let filename = map.file_name().and_then(|n| n.to_str()).unwrap_or("");
     let name = filename.split('.').next().unwrap_or("").to_owned();
     let mut metadata = MapMetadata {
@@ -95,7 +126,10 @@ pub(crate) fn discover_with_rules(
         metadata.dimensions_source = Some(map.into());
     }
     let Some(root) = metadata.root.clone() else {
-        return Ok(metadata);
+        return Ok(Discovery {
+            metadata,
+            conflicting_tilesets: None,
+        });
     };
     if metadata.dimensions.is_none()
         && let Some(path) = first_file(
@@ -107,13 +141,17 @@ pub(crate) fn discover_with_rules(
             ],
         )
     {
-        read_dimensions(&path, &mut metadata, rules)?;
+        read_dimensions(
+            &path,
+            &mut metadata,
+            if unified { Rules::Master } else { rules },
+        )?;
     }
     // Filename hints short-circuit header attributes in upstream too.
     if metadata.tileset_hint.is_none() {
         if let Some(path) = first_file(&root, &["data/maps/maps.asm", "maps/map_headers.asm"]) {
             read_headers(&path, &mut metadata, false)?;
-        } else if rules == Rules::Master
+        } else if (unified || rules == Rules::Master)
             && let Some(path) = first_file(
                 &root,
                 &[
@@ -125,10 +163,17 @@ pub(crate) fn discover_with_rules(
             read_headers(&path, &mut metadata, true)?;
         }
     }
-    let options = tileset_options_with_rules(&root, metadata.tileset_hint.as_deref(), rules)?;
+    let options = if unified {
+        unified_tileset_options(&root, metadata.tileset_hint.as_deref())?
+    } else {
+        tileset_options_with_rules(&root, metadata.tileset_hint.as_deref(), rules)?
+    };
     metadata.tileset = options.matched.map(|i| options.choices[i].name.clone());
     metadata.available_tilesets = options.choices.into_iter().map(|c| c.name).collect();
-    Ok(metadata)
+    Ok(Discovery {
+        metadata,
+        conflicting_tilesets: options.conflicting_tilesets,
+    })
 }
 
 fn filename_dimensions_with_rules(map: &Path, rules: Rules) -> Option<(u16, u16)> {
@@ -343,10 +388,11 @@ pub fn tileset_choices(root: &Path) -> Result<Vec<TilesetChoice>, ProjectError> 
 
 /// Source selector state; no hint match defaults to the first GUI choice.
 /// Metadata discovery separately retains `None` for an unmatched hint.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct TilesetOptions {
     choices: Vec<TilesetChoice>,
     matched: Option<usize>,
+    conflicting_tilesets: Option<(String, String)>,
 }
 
 impl TilesetOptions {
@@ -376,19 +422,34 @@ pub(crate) fn unified_tileset_options(
     root: &Path,
     hint: Option<&str>,
 ) -> Result<TilesetOptions, ProjectError> {
-    let mut names = Vec::new();
+    let mut options = TilesetOptions::default();
     for directory in ["MAPDATA", "gfx/tilesets"] {
-        for name in crate::asset_names::graphics_stems(
+        let names = crate::asset_names::graphics_stems(
             &root.join(directory),
             &[".2bpp.lz", ".2bpp.unique.lz", ".2bpp", ".chr", ".png"],
             true,
-        )? {
-            if !names.contains(&name) {
-                names.push(name);
+        )?;
+        let part = tileset_options_from_stems(root, hint, names)?;
+        let matched = part.matched.map(|i| part.choices[i].name.clone());
+        for choice in part.choices {
+            if !options.choices.iter().any(|c| c.name == choice.name) {
+                options.choices.push(choice);
             }
         }
+        if let Some(name) = matched {
+            if let Some(previous) = options.matched
+                && options.choices[previous].name != name
+            {
+                options.conflicting_tilesets =
+                    Some((options.choices[previous].name.clone(), name.clone()));
+            }
+            options.matched = options.choices.iter().position(|c| c.name == name);
+        }
     }
-    tileset_options_from_stems(root, hint, names)
+    if options.conflicting_tilesets.is_some() {
+        options.matched = None;
+    }
+    Ok(options)
 }
 
 fn tileset_options_from_stems(
@@ -397,10 +458,7 @@ fn tileset_options_from_stems(
     names: Vec<String>,
 ) -> Result<TilesetOptions, ProjectError> {
     let constants = tileset_constant_names(root)?;
-    let mut options = TilesetOptions {
-        choices: Vec::new(),
-        matched: None,
-    };
+    let mut options = TilesetOptions::default();
     for name in names {
         let label = constants
             .iter()

@@ -136,7 +136,7 @@ fn unified_chr_assets_roof_previews_and_reload_use_the_same_source_policy() {
     fs::write(root.join("data/tilesets/modern_collision.bin"), [1; 8]).unwrap();
     fs::create_dir_all(root.join("gfx/tilesets/roofs")).unwrap();
     fs::write(root.join("gfx/tilesets/roofs/legacy.CHR"), chr.repeat(9)).unwrap();
-    let map = root.join("Modern.2x1.modern.blk");
+    let map = root.join("Modern.2x1.modern.ablk");
     fs::write(&map, [0, 1]).unwrap();
     let mut h = editor();
     open(&mut h, &map, Profile::PlusPlus);

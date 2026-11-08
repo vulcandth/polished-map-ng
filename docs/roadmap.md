@@ -25,8 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Complete **U1** legacy source/discovery integration and pinned upstream
-drift reconciliation, and **U2** automatic tileset changes within a document.
+**Next:** Complete **U2** automatic tileset changes within a document and **U1**
+final pinned upstream drift reconciliation.
 Unified Open/New and alternating-project saves are implemented with automated
 workflow evidence; full unified/native acceptance remains open. The user authorized unified work
 on November 7 while retaining the separate parity launchers. Keep structural
@@ -309,8 +309,8 @@ launchers. No mode selector and no silent format conversion. See the
 
 - [ ] **U1 — In progress:** Detect storage and capabilities from map/project and
   selected-tileset evidence, with actionable missing/conflicting-context errors.
-  Storage detection, union events and legacy graphics/collision adapters are
-  implemented; metadata integration and final drift reconciliation remain, including master improvements
+  Storage detection, union events, legacy graphics/collision adapters and metadata
+  integration are implemented; final drift reconciliation remains, including master improvements
   absent in plusplus. Acceptance: deterministic tests on both pinned projects, legacy
   layouts, compound assets and mixed/conflicting evidence; document each drift
   disposition in [compatibility evidence](compatibility.md#unified-format-detection-and-upstream-drift).
@@ -319,8 +319,8 @@ launchers. No mode selector and no silent format conversion. See the
   separate from document storage; retain both parity launchers. Consolidate
   duplicated code as encountered without erasing format semantics. The third
   launcher, Open/New, union events, separate palette sessions and stable settings
-  identity are implemented. Cross-storage tileset changes within a document and
-  legacy metadata integration remain. Evidence:
+  identity and legacy metadata integration are implemented. Cross-storage tileset
+  changes within a document remain. Evidence:
   [unified workflows](compatibility.md#unified-opennew-and-session-transitions).
 - [ ] **U3 — In progress, acceptance open:** Pinned pokered, pokeyellow, pokegold,
   pokecrystal and Polished Crystal suites pass through the unified

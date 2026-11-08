@@ -44,7 +44,10 @@ impl OpenForm {
             match detect_map_format(&self.path, Some(root), None) {
                 Ok(detected) => Some(detected.metadata().clone()),
                 Err(FormatDetectionError::Project(error)) => return Err(error),
-                Err(_) => Some(polished_map_project::discover_map(&self.path, Some(root))?),
+                Err(_) => Some(polished_map_project::discover_unified_map(
+                    &self.path,
+                    Some(root),
+                )?),
             }
         };
         // Existing shared maps need an actual selection, not a guessed first

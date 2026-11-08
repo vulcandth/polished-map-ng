@@ -117,6 +117,20 @@ impl MapDocument {
             trailing_blocks: report.trailing_blocks,
         })
     }
+    /// Union metadata and ASM input with the occurrence-attribute storage model.
+    pub fn open_unified_in_project_with_report(
+        path: &Path,
+        options: &OpenOptions,
+        root: Option<&Path>,
+    ) -> Result<MapOpenReport, ProjectError> {
+        let report = crate::MapDocument::read_unified(path, options, root, Rules::PlusPlus)?;
+        Ok(MapOpenReport {
+            document: Self {
+                inner: report.document,
+            },
+            trailing_blocks: report.trailing_blocks,
+        })
+    }
     /// Unified source import using master's bounded ASM decoder with plusplus
     /// storage. Parity Open remains binary-only. In-place source saves fail;
     /// callers must choose an explicit binary Save As destination.

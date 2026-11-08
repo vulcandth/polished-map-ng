@@ -80,7 +80,12 @@ impl Loaded {
                 trailing_blocks: 0,
             }
         } else {
-            MapDocument::open_in_project_with_report(&form.path, &form.dimensions(), Some(&root))?
+            let open = if form.unified {
+                MapDocument::open_unified_in_project_with_report
+            } else {
+                MapDocument::open_in_project_with_report
+            };
+            open(&form.path, &form.dimensions(), Some(&root))?
         };
         let name = form.tileset_name(report.document.metadata())?;
         options.allow_256 = form.allow_256;

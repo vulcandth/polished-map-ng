@@ -12,7 +12,7 @@ use thiserror::Error;
 use crate::{
     MapMetadata, ProjectError,
     asset_paths::{AssetKind, is_file},
-    discovery::{Rules, discover_with_rules},
+    discovery::discover_unified_context,
 };
 
 /// The on-disk attribute model, independent of application identity/preferences.
@@ -180,21 +180,18 @@ pub fn detect_map_format(
         Some(root) => Some(root.to_path_buf()),
         None => find_unified_project_root(map)?,
     };
-    let master = discover_with_rules(map, root.as_deref(), Rules::Master)?;
-    let plusplus = discover_with_rules(map, root.as_deref(), Rules::PlusPlus)?;
+    let discovered = discover_unified_context(map, root.as_deref())?;
+    let mut metadata = discovered.metadata;
     let selected = if let Some(name) = tileset {
         Some(name.to_owned())
+    } else if let Some((master, plusplus)) = discovered.conflicting_tilesets {
+        return Err(FormatDetectionError::ConflictingTilesets {
+            path: map.into(),
+            master,
+            plusplus,
+        });
     } else {
-        match (&master.tileset, &plusplus.tileset) {
-            (Some(a), Some(b)) if a != b => {
-                return Err(FormatDetectionError::ConflictingTilesets {
-                    path: map.into(),
-                    master: a.clone(),
-                    plusplus: b.clone(),
-                });
-            }
-            (a, b) => a.as_ref().or(b.as_ref()).cloned(),
-        }
+        metadata.tileset.clone()
     };
     let mut evidence = Vec::new();
     if let Some(format) = extension_format {
@@ -217,10 +214,6 @@ pub fn detect_map_format(
             evidence,
         });
     }
-    let mut metadata = match format {
-        ProjectFormat::Master => master,
-        ProjectFormat::PlusPlus => plusplus,
-    };
     if selected.is_some() {
         metadata.tileset = selected;
     }

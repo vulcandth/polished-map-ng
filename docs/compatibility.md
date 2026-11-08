@@ -3875,7 +3875,7 @@ missing features; the final behavior and existing Rust adapters are the evidence
 
 | Source family | Difference and disposition | Remaining unified work |
 |---|---|---|
-| `config.cpp`, `option-dialogs.cpp` | Different root markers, asset directories, map suffixes, metadata macros and legacy pokered layouts. Detection now uses union root markers and actual selected-asset evidence, reusing loader paths. | Merge discovery capabilities without changing parity discovery precedence; exercise mixed and legacy GUI opens. |
+| `config.cpp`, `option-dialogs.cpp` | Different root markers, asset directories, map suffixes, metadata macros and legacy pokered layouts. Detection uses union root markers and selected-asset evidence. | Shared unified discovery now accepts legacy dimensions/headers with either storage model, preserves filename/header precedence and detects conflicting layout aliases. Parity discovery remains unchanged. |
 | `map.cpp`, `parse-asm.*`, `tiled-image.cpp` | Master added ASM `.map`, `.CHR` and `.CEL` imports absent in plusplus. Shared bounded ASM codecs already exist. Detection treats map encoding separately from attributes. | ASM map import retains explicit binary Save As; CHR tiles/roofs now work with either attribute model. CEL stays the classic blockset source adapter, without invented occurrence-attribute conversion. See legacy-source evidence below. |
 | `metatileset.*`, `metatile.*`, `deep-tile.*`, `tile.*`, `palette-map.*` | Master stores tile palettes; plusplus stores per-occurrence bank/palette/flips/priority and expands to 512 tiles. Both models and guarded persistence already exist. | Bind controls and save operations to the detected document; never reinterpret bytes or widen master IDs globally. |
 | `tileset.cpp`, `image.cpp` | Different slot/bank order and undefined-tile/export handling. Plusplus's nonzero-offset export overread is already corrected and documented. | Preserve each model's valid ordering and keep shared bounded raster/export code. |
@@ -3888,7 +3888,7 @@ missing features; the final behavior and existing Rust adapters are the evidence
 
 This is an implementation audit, not U1 acceptance. ASM map import and GUI Open/New
 transitions and legacy graphics/collision adapters now have the evidence below.
-Unified metadata and in-document cross-storage tileset changes remain incomplete.
+Unified metadata is now integrated; in-document cross-storage tileset changes remain incomplete.
 
 The unified event entry points share the existing parser/save implementation,
 selecting the union lookup instead of adding another parser. Focused tests retain
@@ -3933,8 +3933,8 @@ desktop, DPI or full-project parity.
 The load worker now delegates through a shared typed request boundary; dimensions
 and selected-tileset validation are shared by both adapters. Palette caches and
 active settings change only after candidate graphics/textures succeed. General
-visual work remains deferred. Cross-storage Change Tileset, legacy metadata
-integration and final source-drift acceptance remain U1/U2 work; this
+visual work remains deferred. Cross-storage Change Tileset and final source-drift
+acceptance remain U1/U2 work; this
 launcher is not yet a distributed unified development candidate.
 
 Windows validation for this integration passes fmt, workspace Clippy with warnings
@@ -3966,8 +3966,8 @@ capacities, invalid operands/lengths, mixed directories, compound padding, outpu
 paths, source conflicts, roof bounds, collision precedence, and contextual palette
 paths. The [unified GUI test](../crates/gui/src/unified_tests.rs) opens an attributed
 CHR tileset, previews/selects a CHR roof, reloads while retaining map edits/history,
-and then opens a classic asset from the other directory. Metadata integration and
-cross-storage Change Tileset are separate remaining acceptance work.
+and then opens a classic asset from the other directory. Cross-storage Change
+Tileset remains separate acceptance work; metadata integration is described below.
 
 Validation: Windows fmt, workspace Clippy with warnings denied, **524 passing
 tests / 51 explicitly ignored external/native tests**, rustdoc and the production
@@ -3976,6 +3976,35 @@ pass across all five pinned projects. Linux/WSL passes all seven source tests an
 seven focused unified GUI/preference tests. These are headless workflow checks,
 not native desktop acceptance. Documentation links/anchors and CLI/JSON examples
 also pass; no project/game assets were added.
+
+### Unified metadata discovery
+
+One shared metadata pass replaces the previous separate master/plusplus scans.
+Unified binary filename hints accept both `.blk` and `.ablk`; legacy `mapconst`
+dimensions and individual `data/maps/headers` / `data/mapHeaders` sources apply
+independently of attribute storage. Dimension argument order, group accumulation,
+filename-before-header priority, macro parsing and platform label case rules
+remain those of the pinned source. Full graphics inventories resolve numbered
+aliases and CHR assets in either layout. Different matches in MAPDATA and
+gfx/tilesets require an actual tileset choice rather than silently choosing one.
+
+The GUI chooser, fallback size discovery, actual map loader and contextual palette
+plan now see the same metadata. Unified Save As resolves the destination's union
+root markers before writing; original ASM source still requires an explicit
+binary destination. Both parity loaders retain their narrower rules.
+
+[Metadata tests](../crates/project/tests/unified_metadata.rs) cover attributed
+maps with legacy dimensions/headers, `.ablk` CHR hints, ambiguous aliases with
+explicit resolution, and ASM Save As across different root-marker layouts. The
+CHR GUI workflow now opens `.ablk` directly, including an unrelated MAPDATA folder.
+
+Validation passes on Windows: fmt, warning-free workspace Clippy, **528 tests /
+51 explicitly ignored external/native cases**, and rustdoc. Both external
+detection/round-trip tests and both external GUI workflows pass with the five
+pinned projects; their classified-map counts are unchanged. Linux/WSL passes the
+four metadata tests and seven focused unified GUI/preference tests. Local
+documentation links/anchors and CLI/JSON examples pass. Native acceptance remains
+open.
 
 ### Five-project compatibility matrix
 

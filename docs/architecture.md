@@ -54,8 +54,12 @@ graphics decoder separates syntax from physical tile capacity. Unified asset
 entry points allow CHR and both source layouts, preserving that policy on reload;
 compound components, contextual palettes and output paths follow the selected
 asset directory. Attributed collision discovery includes master's binary path.
-Both parity launchers retain their accepted input and precedence. Legacy metadata
-and in-document cross-storage tileset integration remain in progress.
+Both parity launchers retain their accepted input and precedence. Unified metadata
+uses one shared discovery pass: union binary filename hints, master's legacy
+dimensions/headers and the full asset inventory. Conflicting directory aliases
+leave the choice unset and produce an actionable detection error. Both the
+chooser and actual load worker consume these rules. In-document cross-storage
+tileset integration remains in progress.
 
 ## ADR 1: Separate domain logic from platform adapters immediately
 
