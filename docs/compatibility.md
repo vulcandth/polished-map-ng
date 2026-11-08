@@ -4477,7 +4477,49 @@ changed in the synthetic fixture. All reference originals were unchanged, and
 the application closed normally. Ignored fixtures, outputs and audit manifests
 are excluded from source and release archives.
 
-Remaining U3 native gates include legacy/plusplus-specific event variants,
-external clipboard/desktop exchange, focus/DPI, Linux/macOS workflows and
-original-application comparisons. This check found no product defect and does
-not close those gates or require a replacement development package.
+Representative legacy/plusplus-specific event checks are recorded below.
+External clipboard/desktop exchange, focus/DPI, Linux/macOS workflows and
+original-application comparisons remain U3 gates. This check found no product
+defect and does not close those gates or require a replacement development package.
+
+### Unified Windows combined event catalog
+
+The published `5332c83` Windows executable opened a generated four-by-four
+classic map whose script mixed legacy `object`, Y-first `xy_trigger`,
+`treebase_left_event_1` without optional fields, and `pokemon_event`. All four
+appeared, while the three-operand script `warp` remained excluded. Native Event
+Options accepted a single-line object prefix change from `SPRITE_RED` to
+`SPRITE_BLUE` with Enter. The trigger displayed its source coordinates in X/Y
+order and incremented X from 1 to 2; the tree-base dialog omitted prefix/suffix
+controls and incremented X from 3 to 4.
+
+In the wrapped Pokémon suffix field, replacing a token and pressing Enter kept
+the dialog open and inserted a newline without changing its window size.
+Escape discarded that draft; reopening restored the original suffix. A separate
+accepted coordinate edit moved X from 5 to 6. Before saving, Change Tileset
+selected attributed assets in the same document. All four pending edits survived
+the automatic storage transition. Save Event Script and Reload retained their
+macros and coordinates; reopening the object dialog displayed `SPRITE_BLUE`.
+Exact-byte comparison proved only the four intended edits changed. The script
+command, unrelated macro, comments, mixed CRLF/LF endings and absent final
+newline survived. Both maps/assets and all other synthetic inputs were unchanged.
+
+The same executable then opened the pinned Polished Crystal copy's
+`BattleTower2F.ablk`, automatically selecting `battle_tower_inside` and the
+11-by-5 dimensions. It loaded all 18 events, including the Pokémon event on
+source line 28. Event Options moved that event from `(18, 8)` to `(19, 8)`;
+Save Event Script, Reload and reopening the dialog retained `(19, 8)` and its
+wrapped suffix. Comparing the entire ASM file to the pinned original proved
+that only this X operand changed, preserving all remaining script bytes.
+
+SHA-256 audits covered 7,781 copied project inputs and their reference originals,
+plus all nine generated fixture files. Only the two intended event scripts
+changed relative to their pre-check baselines. Reference originals were
+unchanged and the application closed normally. Fixtures and audit manifests
+remain ignored and excluded from distributions. These are representative native
+event-field and storage-transition checks, complemented by the existing
+[combined-catalog regressions](../crates/project/tests/unified_events.rs) and
+[all-26 plusplus GUI macro tests](../crates/gui/src/documents/tests.rs);
+they do not claim individual native coverage of every macro. No product change
+or replacement package was required. U3 remains open for external clipboard and
+desktop exchange, focus/DPI, Linux/macOS workflows and original-app comparisons.
