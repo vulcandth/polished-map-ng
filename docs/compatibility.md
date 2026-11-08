@@ -4676,3 +4676,10 @@ the checks used startup paths and real file-manager drops. The Windows Explorer
 attempt separately stopped at the automation API's rejection of an endpoint
 outside its source window, without delivering a drop. These limits remain U3
 verification work, not reported application defects.
+
+The subsequent unified Wayland attempt displayed the startup Map Options dialog
+under nested Weston, but synthetic host input did not operate it. No clipboard
+transfer or completed workflow was verified in that attempt, and it establishes
+no product defect. The attempt stopped when the user handed remaining native
+testing to humans on November 8. The [tester guide](testing-unified.md) owns the
+handoff checklist; the open acceptance gates remain in the roadmap.

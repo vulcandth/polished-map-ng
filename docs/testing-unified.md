@@ -6,6 +6,10 @@ tileset. There is no mode selector. The separate [master](testing.md) and
 These are development builds; native acceptance is still open. See
 [release availability and evidence](releases.md) before downloading a package.
 
+Human testers own the remaining native acceptance checks, per the November 8
+handoff. Use the checklist below and report functional issues; the handoff does
+not mark untested platforms or workflows as passing.
+
 | Platform | Package suffix | Start the editor |
 |---|---|---|
 | Windows x86-64 | `x86_64-pc-windows-msvc.zip` | `polished-map-unified.exe` |

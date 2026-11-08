@@ -83,6 +83,10 @@ exist from day one; a partial slice is not a completed parity milestone.
 - Refactor continuously for maintainability: simplify functions and consolidate
   duplicate code when encountered. Do not defer structural cleanup to milestone
   5; distinguish it from future feature suggestions and deliberate behavior changes.
+- On November 8, the user handed remaining native acceptance testing to human
+  testers. Do not continue autonomous GUI/platform test campaigns unless asked.
+  Keep acceptance gates open, collect tester reports, and fix reported functional
+  issues with appropriate automated regression checks.
 - The user prefers the earlier rounded egui palette sliders (2026-10-31).
   Preserve that appearance and the retained functional fixes; do not restore
   FLTK slider styling as part of parity work.
