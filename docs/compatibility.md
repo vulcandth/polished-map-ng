@@ -4385,7 +4385,51 @@ unrelated assets stayed byte-identical. The application closed normally.
 
 This establishes representative native roof and tileset save/reload paths for
 both storage models, including valid compound component routing and classic
-palette trimming. Native palette/collision editing, other event variants,
-external clipboard exchange, desktop transfers, focus/DPI, Linux/macOS workflows
+palette trimming. Color palette and ASM collision checks follow below; other
+event variants, external clipboard exchange, desktop transfers, focus/DPI, Linux/macOS workflows
 and the remaining original-application comparisons are still separate U3 gates.
 No product change or replacement package was needed for this acceptance check.
+
+### Unified Windows palette and collision persistence
+
+The published `5332c83` Windows package continued with the same disposable pinned
+pokecrystal and Polished Crystal copies. In each native Edit Block window,
+changing only block 0's top-left collision to `FLOOR`, accepting, saving the
+blockset and reloading through Change Tileset preserved the new operand.
+Classic retained the other three `01` operands; attributed retained the other
+three `VOID` operands. Byte comparison against the pinned inputs proved exactly
+one operand replacement per collision ASM, with all other bytes preserved.
+Metatile and occurrence-attribute binaries were unchanged. The attributed
+window exposed palette/flip/priority controls automatically; no format selector
+was used.
+
+In the classic native palette editor, entering hex `081018` for Night's first
+Gray swatch displayed RGB5 `(1, 2, 3)` and updated the map after OK. Data → Export
+Palettes wrote six sets and 48 game-palette rows through the Windows save dialog.
+Opening the attributed project and importing that file restored the same color.
+Changing Night's first Red swatch to `182028` displayed `(3, 4, 5)`. Attempting to
+load the original export raised the edited-palette warning; Escape cancelled
+replacement. The subsequent attributed export differed from the classic export
+only in that one RGB triple, proving the cancelled import retained the edit and
+all other imported colors survived.
+
+After returning to the classic project, loading the attributed export and
+exporting again produced byte-identical output across all six sets. Export
+feedback named each destination. These workflows retain the pinned branches'
+`Main_Window::load_palettes` edited-color guard and explicit export lifecycle,
+and `Color::write_palettes` RGB5 channel/hue ordering; the already documented
+set-label correction remains in effect. The application exited normally.
+
+A fresh SHA-256 baseline covered all 3,799 copied inputs after the earlier
+roof/tileset checks. Only the two collision files changed during this check;
+exactly three requested palette exports were added, and nothing was deleted.
+All reference originals matched their initial hashes. Maps, events, graphics,
+palette-map ASM, block definitions and attributed binaries retained their
+pre-check bytes. The audit scripts/manifests and palette outputs remain ignored
+test artifacts; no project assets enter source or release archives.
+
+This verifies representative native color-palette editing/import/export and
+ASM-collision persistence in both storage contexts. Monochrome palette and
+binary-collision native cases, other event variants, external clipboard/desktop
+transfers, focus/DPI, Linux/macOS interaction and original-application acceptance
+remain open in U3. No product change or replacement package was needed.
