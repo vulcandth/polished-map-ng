@@ -4338,7 +4338,9 @@ event-script edit; all graphics and other files remained unchanged.
 This verifies native image-clipboard copy/paste across the two storage contexts,
 draft cancellation, and one event move/save/reload/reopen path. It does not prove
 clipboard exchange with another application, roof clipboard behavior, desktop
-drag/drop, mixed-monitor DPI, or Linux/macOS native interaction.
+drag/drop, mixed-monitor DPI, or Linux/macOS native interaction. Subsequent
+[Windows Paint exchange](#unified-windows-external-image-clipboard) covers the
+tile/roof clipboard paths with the final package.
 
 The final packaged `5332c83` Windows executable also reopened
 `Mixed.2x1.johto_traditional.ablk` with the full compound tileset selected,
@@ -4523,3 +4525,38 @@ event-field and storage-transition checks, complemented by the existing
 they do not claim individual native coverage of every macro. No product change
 or replacement package was required. U3 remains open for external clipboard and
 desktop exchange, focus/DPI, Linux/macOS workflows and original-app comparisons.
+
+### Unified Windows external image clipboard
+
+On November 8, the published `5332c83` Windows executable exchanged images with
+Microsoft Paint using a generated 8×8, four-shade pattern and disposable
+classic/attributed assets. Paint opened the PNG, selected its full canvas and
+copied it. Ctrl+Shift+V in the classic Edit Tileset window displayed the pattern
+with the destination palette. Changing pixel `(0, 0)` to black and copying with
+Ctrl+Shift+C placed the modified grayscale image on the system clipboard.
+Escape discarded the asset draft.
+
+Change Tileset selected attributed assets without a format selector. Its tile
+editor pasted the exported pattern, including the changed black pixel. Changing
+`(1, 0)` to white, copying and canceling produced the second test payload. Paint
+pasted it into a blank 8×8 PNG and saved. The decoded RGB image matched all 64
+expected pixels: exactly the two deliberate changes from the independent input,
+with no remaining differences. Its RGB SHA-256 is
+`ea2a872e1976a64ac7cd82ac648ef16fb84de9af2e2dd0edd73bdc502e024349`.
+Distinct edits at each step rule out an unchanged, stale clipboard payload.
+
+A generated nine-tile roof then exercised the separate native roof window.
+The initial `$0:10` tile pasted the same payload; changing `(2, 0)` to white and
+copying before canceling returned a third distinct image to Paint. Its saved
+8×8 RGB pixels matched the expected three edits exactly (SHA-256
+`f71b0553d1a0c9209f4617c7c7b4a0d22616edfaa1d475e197afacce091d65e6`).
+Hash audits proved all ten original project inputs, and then all eleven inputs
+including the added roof, remained unchanged. Both applications closed normally.
+All generated inputs, Paint outputs and audit results remain ignored scratch
+evidence; no project/game graphics were used.
+
+This verifies Windows external image transfer through classic and attributed
+tile drafts, the attributed roof draft, clipboard lifetime after child-window
+closure, and draft cancellation in the packaged unified app. Native Print
+exchange, desktop capture/file drops, focus/DPI, Linux X11/Wayland and macOS
+acceptance remain separate U3 work. No product change or new package was needed.
