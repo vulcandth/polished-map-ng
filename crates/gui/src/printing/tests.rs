@@ -371,6 +371,7 @@ fn worker_output_handoff_success_errors_and_modal_close_guard() {
     // Repeated shortcuts cannot replace a pending copy or open a file picker.
     h.key_press(egui::Key::Enter);
     h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::C);
+    h.input_mut().events.push(egui::Event::Copy);
     h.run();
     assert!(h.state().print_request.is_none());
     egui_winit::image_clipboard::dispatch_with(&ctx, egui::ViewportId::ROOT, |image| {

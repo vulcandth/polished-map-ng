@@ -248,16 +248,15 @@ impl Editor {
     pub(super) fn block_shortcuts(&mut self, ctx: &egui::Context) {
         // eframe translates OS clipboard shortcuts to these events; the clipboard
         // contents are intentionally private, as in master, and never parsed as blocks.
-        let (copy, paste, cut) = ctx.input(|i| {
+        let (paste, cut) = ctx.input(|i| {
             (
-                i.events.iter().any(|e| matches!(e, egui::Event::Copy)),
                 i.events
                     .iter()
                     .any(|e| matches!(e, egui::Event::Paste(_) | egui::Event::PasteImage(_))),
                 i.events.iter().any(|e| matches!(e, egui::Event::Cut)),
             )
         });
-        if copy || ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::C)) {
+        if ctx.input_mut(shortcuts::consume_copy) {
             self.copy_block();
         }
         if paste || ctx.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::V)) {

@@ -4558,5 +4558,48 @@ evidence; no project/game graphics were used.
 This verifies Windows external image transfer through classic and attributed
 tile drafts, the attributed roof draft, clipboard lifetime after child-window
 closure, and draft cancellation in the packaged unified app. Native Print
-exchange, desktop capture/file drops, focus/DPI, Linux X11/Wayland and macOS
-acceptance remain separate U3 work. No product change or new package was needed.
+exchange is recorded below; desktop capture/file drops, focus/DPI, Linux
+X11/Wayland and macOS acceptance remain separate U3 work. The tile/roof checks
+required no product change or new package.
+
+### Unified Windows native Print exchange
+
+Native verification on November 8 found that `5332c83` ignored Ctrl+C in Print
+Options, although clicking Copy succeeded. Pinned master and plusplus
+`option-dialogs.cpp` explicitly bind Copy to `FL_COMMAND + 'c'`.
+egui-winit translates that key-down into `egui::Event::Copy`, while Print had
+only consumed raw keypresses. The shared [copy-input helper](../crates/gui/src/shortcuts.rs)
+now consumes either representation once; Print and block shortcuts reuse it.
+Tile/palette editors retain their per-event handling and private clipboard rules.
+
+The [unified regression](../crates/gui/src/unified_tests.rs) failed before the
+fix and passes afterward. It injects native Copy plus key/modifier release,
+opens both storage contexts automatically, queues Print without changing map
+state or the private block clipboard, and retains the dialog until completion.
+The helper test preserves unrelated events and prevents duplicate consumption;
+the [worker regression](../crates/gui/src/printing/tests.rs) also checks native
+Copy while a clipboard operation is pending. Windows formatting, warnings-denied
+workspace Clippy, 543 tests (53 explicitly ignored), rustdoc and the production
+native-adapter graph pass.
+
+The rebuilt Windows executable then accepted actual Ctrl+C in Print Options
+under both classic and attributed storage. Each copy reported success. Grid,
+IDs, Priority, Events and Warp IDs remained enabled across Change Tileset;
+no format selector was used. The generated fixture included legacy object and
+trigger events, a tree-base event, a Pokémon event, a numbered warp and an
+attributed priority tile. For each context, the native Export chooser wrote a
+separate PNG. Paint pasted the clipboard output into an independent 128×128
+canvas and saved it. All 16,384 decoded RGB pixels matched the corresponding
+export, including overlays. RGB SHA-256 values were:
+
+| Context | Complete-image RGB SHA-256 |
+|---|---|
+| Classic | `41b5bb8cf6e74655886f0785cfd8034c47f6b27bd42be2beec48be4fa28d2b72` |
+| Attributed | `a57835753b9ebaaa81df0fc95aa183e5e97c0daf1ad78b7ef68fa98636b1f587` |
+
+The different results also confirm that Print used the newly selected assets.
+All eleven project inputs remained byte-identical. Generated fixtures, Paint
+outputs and audit manifests stay ignored and outside release archives. This
+verifies the corrected Windows keyboard/Print/clipboard/export path; it is not
+an original-application pixel comparison or native Linux/macOS acceptance.
+Cross-platform checks and refreshed package delivery remain in progress.

@@ -171,6 +171,44 @@ fn choose_tileset(h: &mut Harness<'_, Editor>, from: &str, to: &str) {
 }
 
 #[test]
+fn native_print_copy_works_after_automatic_storage_changes() {
+    let dir = fixture();
+    let mut h = editor();
+    for (filename, profile) in [
+        ("Classic.2x1.classic.blk", Profile::Master),
+        ("Modern.2x1.modern.ablk", Profile::PlusPlus),
+    ] {
+        open(&mut h, &dir.path().join(filename), profile);
+        h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::P);
+        h.run();
+        assert!(h.state().print_form.is_some());
+        // egui-winit translates native Ctrl/Cmd+C key-down into Copy, while
+        // key-up and modifier release can arrive in the same frame.
+        h.input_mut().events.extend([
+            egui::Event::Copy,
+            egui::Event::Key {
+                key: egui::Key::C,
+                physical_key: Some(egui::Key::C),
+                pressed: false,
+                repeat: false,
+                modifiers: egui::Modifiers::COMMAND,
+            },
+            egui::Event::ModifiersChanged(egui::Modifiers::NONE),
+        ]);
+        h.run();
+        assert!(
+            h.state().print_request.is_some(),
+            "native Print Copy ignored"
+        );
+        assert!(h.state().print_form.is_some());
+        assert!(h.state().block_clipboard.is_none());
+        assert!(!h.state().is_modified());
+        h.state_mut().print_request = None;
+        h.state_mut().print_form = None;
+    }
+}
+
+#[test]
 fn unified_tileset_change_adapts_both_ways_preserving_map_events_and_palette_sessions() {
     let dir = fixture();
     let root = dir.path();

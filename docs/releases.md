@@ -8,7 +8,7 @@ the development policy below; the full checklist remains the final release gate.
 
 | Application | Current development download | Testing guide |
 |---|---|---|
-| Unified editor | [November 7 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-4edcbc6) | [Unified testing](testing-unified.md) |
+| Unified editor | [November 7 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-5332c83) | [Unified testing](testing-unified.md) |
 | Fixed master parity | [November 7 master build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-618aefd) | [Master testing](testing.md) |
 | Fixed plusplus parity | [November 7 plusplus build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-618aefd) | [Plusplus testing](testing-plusplus.md) |
 

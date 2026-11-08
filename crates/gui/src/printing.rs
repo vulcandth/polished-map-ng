@@ -242,7 +242,7 @@ impl Editor {
                 .on_hover_text("Cancel (Esc)")
                 .clicked();
             cancel |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Escape));
-            copy |= ui.input_mut(|i| i.consume_key(egui::Modifiers::COMMAND, egui::Key::C));
+            copy |= ui.input_mut(shortcuts::consume_copy);
             export |= ui.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::Enter));
         });
         cancel &= !busy;

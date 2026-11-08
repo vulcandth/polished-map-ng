@@ -25,8 +25,9 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Continue **U3** with native Print exchange, desktop-transfer,
-focus and DPI workflows, and remaining cross-platform clipboard checks on
+**Next:** Complete **U3**'s cross-platform verification and package refresh for
+the [native Print copy-shortcut correction](compatibility.md#unified-windows-native-print-exchange),
+then continue desktop-transfer, focus and DPI workflows and remaining clipboard checks on
 Windows, Linux X11/Wayland and both macOS targets, using the
 [unified build](releases.md#unified-development-packaging) and five-project tester
 guide. The Windows project cycle and mixed-storage map/block save/reopen checks
@@ -39,6 +40,8 @@ also have focused Windows evidence, with synthetic binary fixtures identified se
 have representative Windows coverage across storage changes and a real Polished Crystal map.
 [External tile/roof clipboard exchange with Paint](compatibility.md#unified-windows-external-image-clipboard)
 also passes in the Windows package with exact returned-pixel comparisons.
+[Native Print Copy/Export/Paint comparisons](compatibility.md#unified-windows-native-print-exchange)
+pass for both storage contexts in the corrected Windows build.
 Open/New,
 automatic tileset changes and asset saves have automated workflow evidence;
 full unified/native acceptance remains open. The user authorized unified work
@@ -353,7 +356,9 @@ launchers. No mode selector and no silent format conversion. See the
   transfer between storage contexts and external Paint tile/roof exchange,
   roof/tileset and ASM/binary collision save/reload,
   color/monochrome palette transfer/export, Gen 1 and combined-catalog event saves
-  and the compound filename correction pass native checks. Refreshed
+  and the compound filename correction pass native checks. Native Print keyboard
+  copying and exact external-image comparison pass after a shared shortcut fix;
+  its cross-platform verification and package refresh are in progress. Earlier
   cross-platform packages and matching source are
   [published](releases.md#unified-development-packaging). Remaining
   native workflows and other platforms stay open. Evidence:
@@ -366,7 +371,8 @@ launchers. No mode selector and no silent format conversion. See the
   [palettes and collisions](compatibility.md#unified-windows-palette-and-collision-persistence),
   [Gen 1 and binary checks](compatibility.md#unified-windows-monochrome-binary-collision-and-gen-1-events),
   [combined event catalog](compatibility.md#unified-windows-combined-event-catalog),
-  [external image clipboard](compatibility.md#unified-windows-external-image-clipboard).
+  [external image clipboard](compatibility.md#unified-windows-external-image-clipboard),
+  [native Print exchange](compatibility.md#unified-windows-native-print-exchange).
 
 ## 4. Autonomous interface — stabilization not started
 
