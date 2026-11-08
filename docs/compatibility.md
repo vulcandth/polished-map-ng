@@ -4193,3 +4193,31 @@ external/native cases**, rustdoc and the production native-adapter graph. These
 checks also include separate successful runs of all three five-project GUI
 workflows on Windows and Linux/WSL. They do not close the broader U3 native
 acceptance gate.
+
+### Unified cross-storage asset persistence
+
+The additional real-project GUI test makes a private pokecrystal copy and adds
+Polished Crystal's complete Johto traditional compound tileset: its main/common
+graphics and matching block, attribute and collision files. A synthetic two-cell
+map/event script exercises both models in that one project; this is editor
+acceptance, not a claim that either game's engine supports mixed storage.
+
+The actual Change Tileset dialog switches classic → attributed → classic. In
+each selected model the test edits/saves block contents, collisions, tile pixels,
+the retained roof, event coordinates and palette colors, then saves/reopens the
+map and compares complete asset snapshots. Attributed block edits include palette
+7 and X flip. Companion saves leave the explicit map Save As guard intact. The
+inactive model's tileset files, original source map and every copied external
+input stay byte-for-byte unchanged. A compound filename's base hint resolves its
+full selected asset name on reopen. Shared roof/event files intentionally remain
+the same resources across the two contexts.
+
+The five-project and mixed-project tests now reuse the same small edit/save,
+snapshot comparison and byte-preserving fixture-copy helpers. The chooser helper
+scrolls targets into view before pointer input, including real inventories longer
+than the popup. All four external unified GUI workflows pass on Windows and
+Linux/WSL. Windows fmt, warnings-denied Clippy, **537 tests / 53 explicitly ignored
+external/native cases**, and rustdoc pass. These changes add acceptance evidence
+without changing production code since package candidate `4edcbc6`. Native
+cross-storage asset interaction and original-application comparison remain part
+of U3; headless persistence does not waive them.

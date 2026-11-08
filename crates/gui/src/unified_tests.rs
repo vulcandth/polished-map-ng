@@ -160,6 +160,8 @@ fn choose_tileset(h: &mut Harness<'_, Editor>, from: &str, to: &str) {
     h.run();
     h.get_by_label(from).click();
     h.run();
+    h.get_by_label(to).scroll_to_me();
+    h.run();
     h.get_by_label(to).click();
     h.run();
     choice_preview::wait_for_preview(h);

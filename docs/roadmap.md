@@ -334,8 +334,10 @@ launchers. No mode selector and no silent format conversion. See the
   remain distinct from automated evidence. Discovery, event parsing, classic-map
   rendering/round trips and alternating representative GUI workflows are covered;
   representative block/tile/palette/event edits and available collision/roof saves
-  also pass. Full native and cross-storage asset acceptance remain open. Evidence:
-  [five-project matrix](compatibility.md#five-project-compatibility-matrix).
+  also pass. Real-asset cross-storage editing/saving/reopening passes in both
+  directions; full native acceptance remains open. Evidence:
+  [five-project matrix](compatibility.md#five-project-compatibility-matrix) and
+  [cross-storage assets](compatibility.md#unified-cross-storage-asset-persistence).
 
 ## 4. Autonomous interface — stabilization not started
 
