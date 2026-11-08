@@ -4347,3 +4347,45 @@ rendered the two saved blocks and moved warp, enabled Priority and displayed
 The Linux package created a visible 800×600 X11 window under Xvfb/WSL; the
 bounded test terminated its own process after startup. These package checks
 do not expand the native acceptance claims above.
+
+### Unified Windows roof and tileset persistence
+
+The published `5332c83` Windows package edited disposable copies of pinned
+pokecrystal and Polished Crystal in one native session. Open detected each map's
+10×9 dimensions and selected its classic/compound tileset automatically. Native
+roof selection, pixel edits, separate File saves, success confirmations and
+same-asset reloads through Change Roof/Change Tileset all completed normally.
+
+In both projects, selecting the bottom-left roof tile (`$0A` / `$0:0A`) and
+painting its first pixel white changed exactly PNG coordinate `(0, 0)` from
+black to white. Each roof remained 24×24. This follows the reversed display-row
+mapping in pinned `roof-window.cpp`; `Tileset::print_roof_rgb` retains file order.
+Reloading the saved assets and reopening Edit Roof displayed that white pixel.
+
+The classic base sheet's first pixel changed from white to black. Save Tileset
+also performed upstream's trailing-unused-tile trimming: `johto.png` changed
+from 128×96 to 128×80, removing only all-white rows. All retained pixels matched
+the original except `(0, 0)`. Its palette-map ASM lost exactly the corresponding
+four trailing unused `tilepal` rows; all other bytes were preserved. This matches
+pinned master's `Main_Window::save_tileset` and `Metatileset::trim_tileset`.
+Native reload and Edit Tileset displayed the saved black pixel.
+
+In Polished Crystal, edits to raw tile 0 and raw tile 128 went to the common
+and main compound components respectively. `johto_common.png` retained 128×64
+dimensions with only `(0, 0)` changed from white to black;
+`johto_traditional.johto_common.png` retained 128×80 with only `(0, 0)` changed
+from gray 170 to white. Native reload displayed both edits and the independently
+saved roof. Occurrence attributes, block definitions and palettes were unchanged.
+
+A SHA-256 audit covered all 3,799 distinct copied inputs and their reference
+originals (the preparation manifest also recorded two case aliases for Makefile
+on Windows). Exactly those six asset files changed, no files were added/deleted,
+and all reference originals remained unchanged. Maps, events, collisions and
+unrelated assets stayed byte-identical. The application closed normally.
+
+This establishes representative native roof and tileset save/reload paths for
+both storage models, including valid compound component routing and classic
+palette trimming. Native palette/collision editing, other event variants,
+external clipboard exchange, desktop transfers, focus/DPI, Linux/macOS workflows
+and the remaining original-application comparisons are still separate U3 gates.
+No product change or replacement package was needed for this acceptance check.
