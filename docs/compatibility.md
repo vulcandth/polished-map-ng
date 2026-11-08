@@ -4308,16 +4308,15 @@ original fixture files found only byte 0's intended `0x00` → `0x01` change in
 each selected metatile file. Both new map outputs contained `[1, 1]`; the
 original map remained `[0, 1]`, and all other original files were unchanged.
 
-The initial compound correction passed Windows format, warnings-denied workspace
-Clippy, workspace tests (540 passed,
-53 explicitly ignored), rustdoc and the production native-adapter graph pass.
+The final shared hint guard in `5332c83` passes Windows format, warnings-denied
+workspace Clippy, workspace tests (541 passed, 53 explicitly ignored), rustdoc
+and the production native-adapter graph.
 All four external unified workflows pass on Windows and Linux/WSL; Linux also
 passes the discovery suite and compound Save As GUI regression. These checks
 cover map/block persistence and context transitions, not every native asset
 domain. Remaining asset/event workflows, clipboard/desktop transfers, focus/DPI,
 Linux X11/Wayland, macOS interaction and original-application comparison remain
-part of U3. The additional plain-name guard is undergoing the same required
-checks before refreshed package publication.
+part of U3.
 
 ### Unified Windows event and image-clipboard checks
 
@@ -4340,3 +4339,11 @@ This verifies native image-clipboard copy/paste across the two storage contexts,
 draft cancellation, and one event move/save/reload/reopen path. It does not prove
 clipboard exchange with another application, roof clipboard behavior, desktop
 drag/drop, mixed-monitor DPI, or Linux/macOS native interaction.
+
+The final packaged `5332c83` Windows executable also reopened
+`Mixed.2x1.johto_traditional.ablk` with the full compound tileset selected,
+rendered the two saved blocks and moved warp, enabled Priority and displayed
+248 blocks, then closed normally. Its packaged CLI ran locally on Windows/WSL.
+The Linux package created a visible 800×600 X11 window under Xvfb/WSL; the
+bounded test terminated its own process after startup. These package checks
+do not expand the native acceptance claims above.

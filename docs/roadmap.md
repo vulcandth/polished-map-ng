@@ -25,8 +25,7 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Continue **U3** by verifying and packaging the compound-tileset Save As
-correction across all four targets. Then complete remaining native asset/event,
+**Next:** Continue **U3** by completing remaining native asset/event,
 clipboard, desktop-transfer, focus and DPI workflows on Windows, Linux
 X11/Wayland and both macOS targets, using the
 [unified build](releases.md#unified-development-packaging) and five-project tester
@@ -343,7 +342,8 @@ launchers. No mode selector and no silent format conversion. See the
   saves/reopens, and Open cancellation also pass in the packaged Windows GUI.
   Windows mixed-storage map/block saves, event move/save/reload, image-clipboard
   transfer between storage contexts and the compound filename correction pass
-  native checks; refreshed cross-platform packages are pending. Remaining
+  native checks; refreshed cross-platform packages and matching source are
+  [published](releases.md#unified-development-packaging). Remaining
   native workflows and other platforms stay open. Evidence:
   [five-project matrix](compatibility.md#five-project-compatibility-matrix) and
   [cross-storage assets](compatibility.md#unified-cross-storage-asset-persistence),
