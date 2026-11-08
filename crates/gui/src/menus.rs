@@ -210,6 +210,7 @@ impl Editor {
                         if menu_popup::checkbox(ui, true, &mut self.monochrome, "Monochrome")
                             .changed()
                         {
+                            self.set_monochrome_preference(self.monochrome);
                             self.request_tile_mode_reload(&ctx);
                         }
                         if menu_popup::checkbox(ui, true, &mut self.allow_priority, "Tile Priority")

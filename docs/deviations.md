@@ -620,3 +620,14 @@ a required directory can be reported as PATH_NOT_FOUND; the resolver checks the
 nearest existing parent before treating that as an absent candidate. Valid
 compound-name and directory precedence remain unchanged. This prevents detection
 and loading from disagreeing about the files that determine storage.
+
+## Unified monochrome fallback follows document context
+
+Pinned master `Palette_Map::read_from` sets a global Monochrome flag when a palette
+map is absent and leaves it enabled for later projects. The master parity launcher
+retains that behavior. In the unified editor, the missing-palette fallback belongs
+to the current document: opening Red/Yellow followed by Gold/Crystal restores the
+next project's color palettes automatically. An explicit Monochrome checkbox
+choice still persists across applicable documents and restarts. Attributed data
+continues to use its occurrence palettes. This separates user intent from inferred
+capability as required by the unified application's automatic adaptation.

@@ -90,7 +90,7 @@ impl Preferences {
             auto_special_palettes: editor.auto_special_palettes,
             auto_roof_colors: editor.auto_roof_colors,
             allow_priority: editor.allow_priority,
-            monochrome: editor.monochrome,
+            monochrome: editor.monochrome_preference(),
             allow_256: editor.allow_256,
             allow_512: (editor.application.is_unified()
                 || editor.profile() == documents::Profile::PlusPlus)
@@ -127,7 +127,7 @@ impl Preferences {
         editor.auto_roof_colors = self.auto_roof_colors;
         if editor.application.is_unified() || editor.profile() == documents::Profile::Master {
             editor.allow_priority = self.allow_priority;
-            editor.monochrome = self.monochrome;
+            editor.set_monochrome_preference(self.monochrome);
             editor.allow_256 = self.allow_256;
         }
         if editor.application.is_unified() || editor.profile() == documents::Profile::PlusPlus {

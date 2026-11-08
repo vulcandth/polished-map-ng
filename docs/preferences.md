@@ -37,6 +37,11 @@ The Dark Theme checkbox retains the existing v1 `dark` boolean (false for Greybi
 true for Dark), so earlier settings need no migration. Choosing either theme
 updates its check mark and the shared UI style without changing document colors.
 
+In the unified launcher, missing-palette Monochrome fallback affects the current
+document only. A later project with palette data opens in color unless you
+explicitly enabled Monochrome. That explicit choice is the saved preference.
+The fixed master launcher retains upstream's persistent fallback behavior.
+
 The three auto-load toggles affect subsequent opens, not the current document.
 Special palettes and roof colors are independent; turning either off skips
 that optional import entirely, including its parsing and prompts. Manual palette

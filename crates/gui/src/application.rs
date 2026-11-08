@@ -45,6 +45,21 @@ impl Application {
 }
 
 impl Editor {
+    /// Automatic fallback is document context, not a request to force the next
+    /// project into monochrome. The fixed master launcher keeps its sticky flag.
+    pub(super) fn monochrome_preference(&self) -> bool {
+        if self.application.is_unified() {
+            self.monochrome_override
+        } else {
+            self.monochrome
+        }
+    }
+
+    pub(super) fn set_monochrome_preference(&mut self, enabled: bool) {
+        self.monochrome_override = enabled;
+        self.monochrome = enabled;
+    }
+
     /// Derive capabilities from the document, never from a pending open request.
     pub(super) fn profile(&self) -> Profile {
         match self.application {

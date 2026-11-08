@@ -19,7 +19,9 @@ fn unified_preferences_survive_restart_with_both_capability_sets_and_separate_id
     let mut h = restore(&storage);
     assert!(!h.state().dark && !h.state().monochrome && !h.state().allow_512);
     let editor = h.state_mut();
-    editor.monochrome = true;
+    editor.monochrome = true; // Effective fallback must not become a preference.
+    assert!(!Preferences::capture(editor).monochrome);
+    editor.set_monochrome_preference(true);
     editor.allow_256 = true;
     editor.allow_512 = true;
     editor.allow_priority = true;

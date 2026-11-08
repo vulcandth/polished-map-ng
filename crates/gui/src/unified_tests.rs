@@ -47,7 +47,7 @@ fn fixture() -> tempfile::TempDir {
         .unwrap();
     }
     fs::write(
-        root.join("data/tilesets/classic_palette_map.asm"),
+        root.join("gfx/tilesets/classic_palette_map.asm"),
         "\ttilepal 0, GRAY, RED, GREEN, TEXT\n",
     )
     .unwrap();
@@ -207,6 +207,48 @@ fn unified_failed_or_cancelled_open_preserves_active_document_and_history() {
 }
 
 #[test]
+fn unified_monochrome_fallback_does_not_override_next_project_but_user_choice_does() {
+    let dir = fixture();
+    let root = dir.path();
+    for (source, target) in [
+        ("gfx/tilesets/classic.2bpp", "gfx/tilesets/legacy.2bpp"),
+        (
+            "data/tilesets/classic_metatiles.bin",
+            "data/tilesets/legacy_metatiles.bin",
+        ),
+    ] {
+        fs::copy(root.join(source), root.join(target)).unwrap();
+    }
+    let legacy = root.join("Legacy.2x1.legacy.blk");
+    fs::write(&legacy, [0, 1]).unwrap();
+    let classic = root.join("Classic.2x1.classic.blk");
+    let mut h = editor();
+    open(&mut h, &legacy, Profile::Master);
+    assert!(h.state().palette_monochrome());
+    assert!(!h.state().monochrome_preference());
+    open(&mut h, &classic, Profile::Master);
+    assert!(!h.state().palette_monochrome());
+    h.get_by_label("Options").click();
+    h.run();
+    h.get_by_label("Monochrome").click();
+    h.run();
+    assert!(h.state().palette_monochrome() && h.state().monochrome_preference());
+    open(
+        &mut h,
+        &root.join("Modern.2x1.modern.ablk"),
+        Profile::PlusPlus,
+    );
+    assert!(!h.state().palette_monochrome());
+    open(&mut h, &classic, Profile::Master);
+    assert!(h.state().palette_monochrome());
+    h.get_by_label("Options").click();
+    h.run();
+    h.get_by_label("Monochrome").click();
+    h.run();
+    assert!(!h.state().palette_monochrome() && !h.state().monochrome_preference());
+}
+
+#[test]
 fn unified_new_map_uses_selected_assets_and_shared_map_requires_actual_context() {
     let dir = fixture();
     let mut h = editor();
@@ -302,6 +344,11 @@ fn unified_pinned_projects_alternate_open_edit_save_and_reopen() {
         let path = root.join(format!("maps/{name}.{extension}"));
         let original = fs::read(&path).unwrap();
         open(&mut h, &path, profile);
+        assert_eq!(
+            h.state().palette_monochrome(),
+            matches!(variable, "POLISHED_MAP_POKERED" | "POLISHED_MAP_POKEYELLOW"),
+            "{variable}: only Gen 1 should use automatic monochrome fallback"
+        );
         assert_eq!(
             h.state().loaded.as_ref().unwrap().document.map().blocks(),
             original

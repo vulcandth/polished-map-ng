@@ -109,6 +109,7 @@ impl Editor {
     }
 
     fn change_loaded_tileset(&mut self, ctx: &egui::Context, name: &str) -> Result<(), String> {
+        let monochrome = self.monochrome_preference();
         let loaded = self.loaded.as_mut().ok_or("No map is loaded")?;
         if let Some(previous) = &loaded.plus_assets {
             let assets = previous
@@ -128,36 +129,23 @@ impl Editor {
             .prepare_replacement_in_mode(
                 name,
                 polished_map_project::MasterTileMode {
-                    monochrome: self.monochrome,
+                    monochrome,
                     allow_256: self.allow_256,
                 },
             )
             .map_err(|e| e.to_string())?;
-        let graphics = tileset
+        let graphics: MapGraphics = tileset
             .graphics(blocks.blockset())
-            .map_err(|e| e.to_string())?;
-        let images = (0..graphics.block_count())
-            .map(|id| graphics.render_block(id as u8))
-            .collect::<Result<Vec<_>, _>>()
-            .map_err(|e| e.to_string())?;
-        let textures: Vec<_> = images
-            .into_iter()
-            .enumerate()
-            .map(|(id, rgb)| {
-                ctx.load_texture(
-                    format!("block-{id}"),
-                    egui::ColorImage::from_rgb([32, 32], &rgb.pixels),
-                    egui::TextureOptions::NEAREST,
-                )
-            })
-            .collect();
+            .map_err(|e| e.to_string())?
+            .into();
+        let textures = documents::block_textures(ctx, &graphics)?;
         // Preserve all map IDs/history, even when some IDs no longer have definitions.
         self.allow_priority = tileset.allow_priority();
         self.monochrome = tileset.monochrome();
         loaded.allow_256 = tileset.allow_256();
         loaded.tileset = Some(tileset);
         loaded.blockset = Some(blocks);
-        loaded.graphics = graphics.into();
+        loaded.graphics = graphics;
         self.textures = textures;
         self.finish_tileset_change(name);
         Ok(())

@@ -3858,6 +3858,8 @@ The detection foundation (`6b5437c`) also passed all eight
 including Windows/Linux/macOS, MSRV, dependencies, source references, real projects
 and visuals. The union-event change (`bf18f26`) also passed all eight
 [cross-platform jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42433112936).
+The Open/New integration (`4812028`) passed all eight
+[cross-platform jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42434947611).
 Complete drift reconciliation and unified GUI/native acceptance remain open.
 
 ### Pinned-source drift disposition — in progress
@@ -3910,7 +3912,7 @@ missing/conflicting context before loading. The window, About, Help identity and
 settings namespace remain unified while document-specific controls adapt.
 The separate master/plusplus launchers retain their fixed behavior and namespaces.
 
-Five focused GUI tests cover mixed-project alternation, per-storage edited palette
+Focused GUI tests cover mixed-project alternation, per-storage edited palette
 retention/import consent, closed-map sessions, union events, map edits and explicit
 Save As, New with either asset model, a shared map needing a real tileset choice,
 cancelled/malformed loads retaining the previous map/history/colors, ASM import
@@ -3969,8 +3971,8 @@ The [event catalog test](../crates/project/tests/unified_events.rs) reads Gen 1'
 source in all 1,810 files. The [GUI workflow](../crates/gui/src/unified_tests.rs)
 cycles through all five projects twice, edits/saves a temporary copy of each
 representative map and reopens it using its original project context. The original
-map bytes are checked unchanged. These expanded checks pass locally on Windows;
-cross-platform CI runs them separately from native GUI acceptance.
+map bytes are checked unchanged. These expanded checks pass locally on Windows
+and Linux/WSL; cross-platform CI runs them separately from native GUI acceptance.
 
 Red and Yellow each have one intentional metadata/file-size disagreement:
 `UndergroundPathNorthSouth.blk` contains 92 bytes, while `map_constants.asm`
@@ -3987,8 +3989,17 @@ and rendering do not independently prove pixel parity against the original edito
 visual/reference comparisons, all editing domains and native OS workflows remain
 separate acceptance requirements. No new support claims were added to README.
 
-Windows validation after expanding the matrix passes fmt, warnings-denied
-workspace Clippy, **515 tests with 51 explicit external/native cases ignored**,
+Windows validation after expanding the matrix and fixing color transitions passes fmt, warnings-denied
+workspace Clippy, **516 tests with 51 explicit external/native cases ignored**,
 and rustdoc. The two external-project backend catalog tests, one event-catalog
 test and two external-project GUI workflows above ran separately and passed.
 The preceding unified Open/New focused tests also passed on Linux/WSL.
+
+The five-project color transition also exposed master's sticky automatic
+Monochrome fallback. Unified loading now separates explicit preference from the
+effective fallback, with an intentional [document-context adaptation](deviations.md#unified-monochrome-fallback-follows-document-context).
+The GUI cycle asserts monochrome for Red/Yellow and color for Gold/Crystal/
+Polished Crystal. A focused regression switches between absent/present palette
+maps and attributed data, toggles the actual menu checkbox, and verifies that
+only explicit preference persists. Classic and attributed tileset reloads now
+share the same block-texture creation helper instead of duplicating it.
