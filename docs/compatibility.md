@@ -4177,8 +4177,9 @@ The GUI regression reproduced that conflict before the fix.
 Unified Save As now proposes the current dimensions, selected tileset and storage
 extension whenever an explicit destination is required. Filename encoding shares
 the project's discovery grammar, including its map identity before the first dot.
-Names that cannot represent a tileset hint omit it rather than guessing an alias;
-they still require explicit context on Open. Fixed parity launchers keep their
+Compound names now use a verified unambiguous base hint, as detailed in the
+[mixed-storage native check](#unified-windows-mixed-storage-native-checks).
+Names with no safe hint still require explicit context on Open. Fixed parity launchers keep their
 existing filename suggestions. Ordinary saves do not rename a backed document.
 The shared Open/New completion step now records the selected tileset alongside
 the loaded assets, including newly created maps and explicit context corrections.
@@ -4256,7 +4257,56 @@ changes, no added/deleted project files, and unchanged reference originals.
 No game assets or screenshots from this check are distributed.
 
 This establishes the representative Windows project cycle and the two stated
-save/reopen operations. It does not close U3: native mixed-storage asset editing,
+save/reopen operations. Subsequent mixed-storage checks are recorded below;
+this project cycle does not close U3. Remaining asset editing,
 remaining asset/event workflows, clipboard/desktop transfers, mixed-monitor DPI,
 Linux X11/Wayland and macOS interaction, and original-application comparisons
-remain separate checks. No production code changed or new package was needed.
+remain separate checks. This project cycle alone required no production change.
+
+### Unified Windows mixed-storage native checks
+
+The published `4edcbc6` Windows build opened a disposable pokecrystal project
+with Polished Crystal's compound Johto tileset added, plus a synthetic 2×1 map
+and warp script. Selecting `new_bark`, painting the first cell and changing from
+`johto` to `johto_traditional.johto_common` preserved the map edit, native
+undo/redo, event overlay and roof availability. The combined inventory scrolled
+within the native chooser. Saving an attributed block edit changed only the
+selected metatile file's first byte (`0x00` → `0x01`); all inactive assets and
+the original map remained unchanged. Ctrl+S still required Save As after that
+companion save, and the new map contained exactly `[1, 1]`.
+
+That check exposed an avoidable context loss: the compound name was omitted
+from the suggested `Mixed.2x1.ablk`, so native reopening required selecting its
+tileset again. No wrong asset was selected or source file overwritten. Unified
+Save As now checks the current inventory and encodes the compound base only
+when discovery resolves it uniquely back to the selected full name. Competing
+bases/numeric aliases, conflicting directories, missing assets and unreadable
+metadata do not justify a shortened hint. Fixed-launcher suggestions and the
+original filename parser remain unchanged.
+
+Discovery now shares matched-name lookup and reads tileset constants once for
+the combined inventory. The GUI regression reproduces the old missing hint,
+then saves/reopens the generated path without a context correction. Project
+tests cover fresh inventory changes, duplicate source formats, numeric aliases,
+cross-directory conflicts, unsupported hints and malformed metadata. The real
+mixed-project asset workflow now verifies and uses the generated suggestion
+instead of constructing the expected basename itself.
+
+The rebuilt Windows application suggested `Mixed.2x1.johto_traditional.ablk`;
+native Save As and Open Recent restored the full compound selection without
+correction. Switching back to `johto` restored classic controls while preserving
+the map, roof availability and event overlay. Saving a classic block edit still
+left the map's Save As guard active. Choosing `maps/Mixed.2x1.johto.blk` and
+reopening restored the classic context and edited map. A byte audit of all 1,725
+original fixture files found only byte 0's intended `0x00` → `0x01` change in
+each selected metatile file. Both new map outputs contained `[1, 1]`; the
+original map remained `[0, 1]`, and all other original files were unchanged.
+
+Windows format, warnings-denied workspace Clippy, workspace tests (540 passed,
+53 explicitly ignored), rustdoc and the production native-adapter graph pass.
+All four external unified workflows pass on Windows and Linux/WSL; Linux also
+passes the discovery suite and compound Save As GUI regression. These checks
+cover map/block persistence and context transitions, not every native asset
+domain. Remaining asset/event workflows, clipboard/desktop transfers, focus/DPI,
+Linux X11/Wayland, macOS interaction and original-application comparison remain
+part of U3.

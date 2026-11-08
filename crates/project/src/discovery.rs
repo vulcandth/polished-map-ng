@@ -64,6 +64,34 @@ pub struct MapMetadata {
     pub palette: String,
 }
 
+impl MapMetadata {
+    /// Encode the selected tileset as a unified map filename hint when possible.
+    ///
+    /// Compound names use their base only when a fresh unified inventory proves
+    /// that the hint uniquely resolves back to the selected name. Conflicts,
+    /// missing assets/roots and unrepresentable names require explicit Open
+    /// context instead. The fixed launchers retain their original save naming.
+    pub fn filename_tileset_hint(&self) -> Result<Option<&str>, ProjectError> {
+        let Some(name) = self.tileset.as_deref() else {
+            return Ok(None);
+        };
+        if valid_tileset_hint(name) {
+            return Ok(Some(name));
+        }
+        let Some((base, _)) = name.split_once('.') else {
+            return Ok(None);
+        };
+        let Some(root) = self.root.as_deref().filter(|_| valid_tileset_hint(base)) else {
+            return Ok(None);
+        };
+        let options = unified_tileset_options(root, Some(base))?;
+        Ok(
+            (options.matching_names.len() == 1 && options.matched_name() == Some(name))
+                .then_some(base),
+        )
+    }
+}
+
 /// Locate the nearest ancestor containing Makefile or makefile, as upstream does.
 pub fn find_project_root(map: &Path) -> Option<PathBuf> {
     Rules::Master.find_root(map)
@@ -168,7 +196,7 @@ fn discover_sources(
     } else {
         tileset_options_with_rules(&root, metadata.tileset_hint.as_deref(), rules)?
     };
-    metadata.tileset = options.matched.map(|i| options.choices[i].name.clone());
+    metadata.tileset = options.matched_name().map(str::to_owned);
     metadata.available_tilesets = options.choices.into_iter().map(|c| c.name).collect();
     Ok(Discovery {
         metadata,
@@ -225,6 +253,8 @@ fn filename_tileset(map: &Path, rules: Rules) -> Option<String> {
 /// Unrepresentable tileset names are omitted instead of inventing a lossy alias;
 /// reopening those maps still requires explicit context. Non-UTF-8 paths and
 /// nonbinary extensions have no hint representation and return `None`.
+/// Use [`MapMetadata::filename_tileset_hint`] to validate a compound name's base
+/// against the current project inventory before passing it to this encoder.
 pub fn map_path_with_context(
     path: &Path,
     dimensions: (u8, u8),
@@ -240,15 +270,17 @@ pub fn map_path_with_context(
     }
     let (width, height) = dimensions;
     let mut filename = format!("{name}.{width}x{height}");
-    if let Some(tileset) =
-        tileset.filter(|name| valid_suffix(name) && dimensions_suffix(name).is_none())
-    {
+    if let Some(tileset) = tileset.filter(|name| valid_tileset_hint(name)) {
         filename.push('.');
         filename.push_str(tileset);
     }
     filename.push('.');
     filename.push_str(extension);
     Some(path.with_file_name(filename))
+}
+
+fn valid_tileset_hint(value: &str) -> bool {
+    valid_suffix(value) && dimensions_suffix(value).is_none()
 }
 
 fn valid_suffix(value: &str) -> bool {
@@ -432,9 +464,14 @@ pub struct TilesetOptions {
     choices: Vec<TilesetChoice>,
     matched: Option<usize>,
     conflicting_tilesets: Option<(String, String)>,
+    matching_names: Vec<String>,
 }
 
 impl TilesetOptions {
+    fn matched_name(&self) -> Option<&str> {
+        self.matched.map(|i| self.choices[i].name.as_str())
+    }
+
     pub fn choices(&self) -> &[TilesetChoice] {
         &self.choices
     }
@@ -454,7 +491,11 @@ pub(crate) fn tileset_options_with_rules(
     hint: Option<&str>,
     rules: Rules,
 ) -> Result<TilesetOptions, ProjectError> {
-    tileset_options_from_stems(root, hint, tileset_stems(root, rules)?)
+    Ok(tileset_options_from_stems(
+        hint,
+        tileset_stems(root, rules)?,
+        &tileset_constant_names(root)?,
+    ))
 }
 
 pub(crate) fn unified_tileset_options(
@@ -462,14 +503,20 @@ pub(crate) fn unified_tileset_options(
     hint: Option<&str>,
 ) -> Result<TilesetOptions, ProjectError> {
     let mut options = TilesetOptions::default();
+    let constants = tileset_constant_names(root)?;
     for directory in ["MAPDATA", "gfx/tilesets"] {
         let names = crate::asset_names::graphics_stems(
             &root.join(directory),
             &[".2bpp.lz", ".2bpp.unique.lz", ".2bpp", ".chr", ".png"],
             true,
         )?;
-        let part = tileset_options_from_stems(root, hint, names)?;
-        let matched = part.matched.map(|i| part.choices[i].name.clone());
+        let part = tileset_options_from_stems(hint, names, &constants);
+        let matched = part.matched_name().map(str::to_owned);
+        for name in part.matching_names {
+            if !options.matching_names.contains(&name) {
+                options.matching_names.push(name);
+            }
+        }
         for choice in part.choices {
             if !options.choices.iter().any(|c| c.name == choice.name) {
                 options.choices.push(choice);
@@ -492,11 +539,10 @@ pub(crate) fn unified_tileset_options(
 }
 
 fn tileset_options_from_stems(
-    root: &Path,
     hint: Option<&str>,
     names: Vec<String>,
-) -> Result<TilesetOptions, ProjectError> {
-    let constants = tileset_constant_names(root)?;
+    constants: &[(String, String)],
+) -> TilesetOptions {
     let mut options = TilesetOptions::default();
     for name in names {
         let label = constants
@@ -515,11 +561,14 @@ fn tileset_options_from_stems(
             .find(|(number, _)| number == base)
             .map(|(_, token)| token.to_ascii_lowercase());
         if hint.is_some_and(|h| h == base || Some(h) == alias.as_deref()) {
+            if !options.matching_names.contains(&name) {
+                options.matching_names.push(name);
+            }
             // Source assigns size()-2, even when add_tileset found a duplicate.
             options.matched = options.choices.len().checked_sub(1);
         }
     }
-    Ok(options)
+    options
 }
 
 fn tileset_constant_names(root: &Path) -> Result<Vec<(String, String)>, ProjectError> {

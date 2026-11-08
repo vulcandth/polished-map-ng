@@ -94,6 +94,70 @@ fn filename_overrides_metadata_and_explicit_dimensions_override_filename() {
 }
 
 #[test]
+fn compound_save_hints_require_a_unique_current_discovery_match() {
+    use polished_map_project::{MapMetadata, discover_unified_map, map_path_with_context};
+    for (extra, expected) in [
+        ("gfx/tilesets/johto.common.2bpp", Some("johto")),
+        ("MAPDATA/johto.common.CHR", Some("johto")),
+        ("gfx/tilesets/johto.other.png", None),
+        ("gfx/tilesets/johto.png", None),
+        ("MAPDATA/johto.other.CHR", None),
+        ("gfx/tilesets/01.png", None),
+    ] {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path();
+        write(root, "gfx/tilesets/johto.common.png", "");
+        write(
+            root,
+            "constants/tileset_constants.asm",
+            "\tconst TILESET_JOHTO\n",
+        );
+        let metadata = MapMetadata {
+            root: Some(root.into()),
+            tileset: Some("johto.common".into()),
+            available_tilesets: vec!["johto.common".into()],
+            ..Default::default()
+        };
+        assert_eq!(metadata.filename_tileset_hint().unwrap(), Some("johto"));
+        // The saved metadata is unchanged; fresh inventory must notice a newly
+        // competing base or numeric alias, including the other graphics root.
+        write(root, extra, "");
+        let hint = metadata.filename_tileset_hint().unwrap();
+        assert_eq!(hint, expected, "{extra}");
+        if hint.is_some() {
+            let path = map_path_with_context(&root.join("Town.ablk"), (2, 1), hint).unwrap();
+            let reopened = discover_unified_map(&path, Some(root)).unwrap();
+            assert_eq!(reopened.tileset, metadata.tileset);
+        }
+    }
+}
+
+#[test]
+fn compound_save_hints_do_not_guess_missing_or_invalid_context() {
+    use polished_map_project::MapMetadata;
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    write(root, "gfx/tilesets/2x3.common.png", "");
+    for name in ["missing.common", "2x3.common", "../escape", "", "é"] {
+        let metadata = MapMetadata {
+            root: Some(root.into()),
+            tileset: Some(name.into()),
+            ..Default::default()
+        };
+        assert_eq!(metadata.filename_tileset_hint().unwrap(), None, "{name}");
+    }
+    let mut metadata = MapMetadata {
+        tileset: Some("johto.common".into()),
+        ..Default::default()
+    };
+    assert_eq!(metadata.filename_tileset_hint().unwrap(), None);
+    metadata.root = Some(root.into());
+    write(root, "gfx/tilesets/johto.common.png", "");
+    write(root, "constants/tileset_constants.asm", [255]);
+    assert!(metadata.filename_tileset_hint().is_err());
+}
+
+#[test]
 fn suggested_context_paths_roundtrip_hints_without_inventing_tileset_aliases() {
     use polished_map_project::{discover_unified_map, map_path_with_context};
     let dir = tempfile::tempdir().unwrap();

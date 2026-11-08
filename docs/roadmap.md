@@ -25,12 +25,13 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Continue **U3** native cross-storage asset acceptance on Windows,
-then alternating-project and asset workflows on Linux X11/Wayland and both
-macOS targets, using the [published unified build](releases.md#unified-development-packaging)
-and five-project tester guide. The representative Windows project cycle and two
-native save/reopen operations are [verified](compatibility.md#unified-windows-five-project-native-checks).
-Keep remaining clipboard, desktop transfers, focus and DPI checks explicit. Open/New,
+**Next:** Continue **U3** by verifying and packaging the compound-tileset Save As
+correction across all four targets. Then complete remaining native asset/event,
+clipboard, desktop-transfer, focus and DPI workflows on Windows, Linux
+X11/Wayland and both macOS targets, using the
+[unified build](releases.md#unified-development-packaging) and five-project tester
+guide. The Windows project cycle and mixed-storage map/block save/reopen checks
+are [verified](compatibility.md#unified-windows-mixed-storage-native-checks). Open/New,
 automatic tileset changes and asset saves have automated workflow evidence;
 full unified/native acceptance remains open. The user authorized unified work
 on November 7 while retaining the separate parity launchers. Keep structural
@@ -339,11 +340,14 @@ launchers. No mode selector and no silent format conversion. See the
   representative block/tile/palette/event edits and available collision/roof saves
   also pass. Real-asset cross-storage editing/saving/reopening passes in both
   directions. The representative five-project cycle, map and attributed-block
-  saves/reopens, and Open cancellation also pass in the packaged Windows GUI;
-  remaining native workflows and other platforms stay open. Evidence:
+  saves/reopens, and Open cancellation also pass in the packaged Windows GUI.
+  Windows mixed-storage map/block saves and the compound filename correction
+  pass native checks; refreshed cross-platform packages are pending. Remaining
+  native workflows and other platforms stay open. Evidence:
   [five-project matrix](compatibility.md#five-project-compatibility-matrix) and
   [cross-storage assets](compatibility.md#unified-cross-storage-asset-persistence),
-  [Windows native checks](compatibility.md#unified-windows-five-project-native-checks).
+  [Windows project cycle](compatibility.md#unified-windows-five-project-native-checks) and
+  [mixed-storage native checks](compatibility.md#unified-windows-mixed-storage-native-checks).
 
 ## 4. Autonomous interface — stabilization not started
 

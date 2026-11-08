@@ -441,11 +441,14 @@ fn unified_pinned_projects_cross_storage_asset_saves_follow_selected_context() {
         let document = &mut h.state_mut().loaded.as_mut().unwrap().document;
         assert!(document.needs_save_as());
         assert!(document.save().is_err());
-        let path = root.join(format!(
-            "maps/Mixed.2x1.{}.{}",
+        let suggested = document.save_path_suggestion(true);
+        let filename = format!(
+            "Mixed.2x1.{}.{}",
             to.split('.').next().unwrap(),
             profile.extension()
-        ));
+        );
+        assert_eq!(suggested.file_name().unwrap(), filename.as_str());
+        let path = root.join("maps").join(suggested.file_name().unwrap());
         document.save_as(&path).unwrap();
         open(&mut h, &path, profile);
         select_roof(&mut h, "NewBarkTown");

@@ -27,7 +27,7 @@ shared with master. See the [roadmap](roadmap.md) for remaining acceptance gates
 
 ## Unified development editor
 
-The source-built `polished-map-unified` launcher uses its own preferences and
+The `polished-map-unified` launcher uses its own preferences and
 automatically follows the selected map and tileset. There is no mode selector.
 It accepts legacy map/graphics sources with the appropriate attribute model;
 missing or conflicting context requires a project folder or tileset choice.

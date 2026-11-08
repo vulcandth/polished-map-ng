@@ -151,7 +151,9 @@ impl MapDocument {
             polished_map_project::map_path_with_context(
                 &suggested,
                 (self.map().width(), self.map().height()),
-                self.metadata().tileset.as_deref(),
+                // A failed inventory read cannot justify a compound alias.
+                // Omitting the hint keeps Save As usable and Open explicit.
+                self.metadata().filename_tileset_hint().ok().flatten(),
             )
             .unwrap_or(suggested)
         } else {

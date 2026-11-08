@@ -290,6 +290,35 @@ fn unified_storage_change_save_suggestion_reopens_with_the_selected_assets() {
 }
 
 #[test]
+fn unified_compound_tileset_save_suggestion_reopens_without_context_correction() {
+    let dir = fixture();
+    let root = dir.path();
+    fs::rename(
+        root.join("gfx/tilesets/modern.2bpp"),
+        root.join("gfx/tilesets/modern.common.2bpp"),
+    )
+    .unwrap();
+    fs::write(root.join("gfx/tilesets/common.2bpp"), [0; 16 * 16]).unwrap();
+    let source = root.join("Classic.2x1.classic.blk");
+    let mut h = editor();
+    open(&mut h, &source, Profile::Master);
+    h.state_mut().apply(Command::Paint {
+        points: vec![Point { x: 0, y: 0 }],
+        block: 1,
+    });
+    choose_tileset(&mut h, "classic", "modern.common");
+    let doc = &mut h.state_mut().loaded.as_mut().unwrap().document;
+    let suggested = doc.save_path_suggestion(true);
+    assert_eq!(suggested.file_name().unwrap(), "Classic.2x1.modern.ablk");
+    doc.save_as(&suggested).unwrap();
+    open(&mut h, &suggested, Profile::PlusPlus);
+    let doc = &h.state().loaded.as_ref().unwrap().document;
+    assert_eq!(doc.metadata().tileset.as_deref(), Some("modern.common"));
+    assert_eq!(doc.map().blocks(), [1, 1]);
+    assert_eq!(fs::read(source).unwrap(), [0, 1]);
+}
+
+#[test]
 fn unified_failed_cross_storage_tileset_change_preserves_all_live_domains() {
     let dir = fixture();
     let mut h = editor();
