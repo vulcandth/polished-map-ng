@@ -1002,7 +1002,7 @@ fn automatic_events_discovery_new_map_skip_and_failed_script_warning() {
     )
     .unwrap()
     .into();
-    let (events, warning) = super::event_workflows::auto_load_events(&doc, true);
+    let (events, warning) = super::event_workflows::auto_load_events(&doc, true, false);
     assert!(warning.is_none());
     assert_eq!(
         events.unwrap().script().events().entries()[0]
@@ -1011,19 +1011,19 @@ fn automatic_events_discovery_new_map_skip_and_failed_script_warning() {
         1
     );
     assert!(
-        super::event_workflows::auto_load_events(&doc, false)
+        super::event_workflows::auto_load_events(&doc, false, false)
             .0
             .is_none()
     );
     let new = MapDocument::new_map(dir.path(), 2, 1).unwrap().into();
     assert!(
-        super::event_workflows::auto_load_events(&new, true)
+        super::event_workflows::auto_load_events(&new, true, false)
             .0
             .is_none()
     );
     std::fs::remove_file(dir.path().join("maps/Map.asm")).unwrap();
     assert_eq!(
-        super::event_workflows::auto_load_events(&doc, true)
+        super::event_workflows::auto_load_events(&doc, true, false)
             .0
             .unwrap()
             .script()

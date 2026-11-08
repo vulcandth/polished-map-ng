@@ -88,7 +88,7 @@ impl Editor {
             return;
         };
         match self
-            .profile
+            .profile()
             .tileset_options(root, None)
             .map(|options| options.choices().to_vec())
         {

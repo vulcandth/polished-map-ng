@@ -326,7 +326,7 @@ fn plusplus_automatic_events_and_warp_paths_follow_the_owning_document() {
         if !root {
             fs::remove_file(dir.path().join("maps/Map.asm")).unwrap();
         }
-        let (events, warning) = crate::event_workflows::auto_load_events(document, true);
+        let (events, warning) = crate::event_workflows::auto_load_events(document, true, false);
         assert!(warning.is_none());
         assert_eq!(
             events.unwrap().script().events().entries()[0]
@@ -336,7 +336,7 @@ fn plusplus_automatic_events_and_warp_paths_follow_the_owning_document() {
         );
     }
     assert!(
-        crate::event_workflows::auto_load_events(document, false)
+        crate::event_workflows::auto_load_events(document, false, false)
             .0
             .is_none()
     );
@@ -353,7 +353,7 @@ fn plusplus_automatic_events_and_warp_paths_follow_the_owning_document() {
         .unwrap()
         .into();
     assert!(
-        crate::event_workflows::auto_load_events(&new, true)
+        crate::event_workflows::auto_load_events(&new, true, false)
             .0
             .is_none()
     );

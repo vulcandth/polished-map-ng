@@ -117,6 +117,38 @@ impl MapDocument {
             trailing_blocks: report.trailing_blocks,
         })
     }
+    /// Unified source import using master's bounded ASM decoder with plusplus
+    /// storage. Parity Open remains binary-only. In-place source saves fail;
+    /// callers must choose an explicit binary Save As destination.
+    pub fn import_asm_with_report(
+        path: &Path,
+        options: &OpenOptions,
+        root: Option<&Path>,
+    ) -> Result<MapOpenReport, ProjectError> {
+        if !path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("map"))
+        {
+            return Err(ProjectError::Format {
+                path: path.into(),
+                message: "ASM map imports require a .map file".into(),
+            });
+        }
+        let report = crate::MapDocument::read_encoded(
+            path,
+            options,
+            root,
+            true,
+            Rules::PlusPlus,
+            crate::MapEncoding::Assembly,
+        )?;
+        Ok(MapOpenReport {
+            document: Self {
+                inner: report.document,
+            },
+            trailing_blocks: report.trailing_blocks,
+        })
+    }
     pub fn path(&self) -> &Path {
         self.inner.path()
     }

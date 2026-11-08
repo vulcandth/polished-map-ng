@@ -402,7 +402,7 @@ impl Editor {
         };
         if loaded.document.profile() != profile
             || loaded.graphics.profile() != profile
-            || self.profile != profile
+            || !self.application.accepts(profile)
         {
             return Err("Tile draft belongs to another editor profile".into());
         }

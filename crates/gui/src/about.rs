@@ -70,19 +70,30 @@ impl Default for AboutDialog {
 }
 
 impl AboutDialog {
-    pub(super) fn show(&mut self, ctx: &egui::Context, profile: documents::Profile) -> bool {
-        let plus = profile == documents::Profile::PlusPlus;
-        let title = if plus {
+    pub(super) fn show(&mut self, ctx: &egui::Context, application: Application) -> bool {
+        let plus = application == Application::Parity(documents::Profile::PlusPlus);
+        let unified = application.is_unified();
+        let title = if unified {
+            "About Polished Map NG Unified"
+        } else if plus {
             "About Polished Map NG++"
         } else {
             TITLE
         };
-        let subject = if plus {
+        let subject = if unified {
+            SUBJECT.replacen("Polished Map NG", "Polished Map NG Unified", 1)
+        } else if plus {
             SUBJECT.replacen("Polished Map NG", "Polished Map NG++", 1)
         } else {
             SUBJECT.into()
         };
-        let message = if plus {
+        let message = if unified {
+            MESSAGE.replacen(
+                "Polished Map 4.7.1",
+                "Polished Map 4.7.1 and Polished Map++ 2.7.1",
+                1,
+            )
+        } else if plus {
             MESSAGE.replacen("Polished Map 4.7.1", "Polished Map++ 2.7.1", 1)
         } else {
             MESSAGE.into()
@@ -237,7 +248,7 @@ mod tests {
         h.key_press(egui::Key::Escape);
         h.run();
         assert!(h.state().about.is_none());
-        assert!(h.state().profile == documents::Profile::PlusPlus);
+        assert!(h.state().profile() == documents::Profile::PlusPlus);
     }
 
     #[test]

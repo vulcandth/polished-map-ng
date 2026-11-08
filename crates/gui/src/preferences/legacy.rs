@@ -28,7 +28,7 @@ struct Imported {
 /// wins, including unreadable/future records. No legacy source is ever written.
 #[derive(Default)]
 pub struct NativeStartup {
-    profile: documents::Profile,
+    application: Application,
     imported: Option<Imported>,
     error: Option<String>,
 }
@@ -41,6 +41,15 @@ impl NativeStartup {
     /// Discover only plusplus settings and construct a separately identified app.
     pub fn discover_plusplus() -> Self {
         Self::discover_profile(documents::Profile::PlusPlus)
+    }
+
+    /// The unified application has independent NG settings. Neither legacy
+    /// editor's preferences are silently selected or rewritten on its behalf.
+    pub fn discover_unified() -> Self {
+        Self {
+            application: Application::Unified,
+            ..Self::default()
+        }
     }
 
     fn discover_profile(profile: documents::Profile) -> Self {
@@ -79,12 +88,12 @@ impl NativeStartup {
     ) -> Self {
         match result {
             Ok(imported) => Self {
-                profile,
+                application: Application::Parity(profile),
                 imported,
                 error: None,
             },
             Err(error) => Self {
-                profile,
+                application: Application::Parity(profile),
                 imported: None,
                 error: Some(error.to_string()),
             },
@@ -116,7 +125,7 @@ impl NativeStartup {
     /// eframe capture a usable restore size before the first native transition.
     pub fn viewport(&self) -> egui::ViewportBuilder {
         let mut viewport = egui::ViewportBuilder::default()
-            .with_app_id(self.profile.app_id())
+            .with_app_id(self.application.app_id())
             .with_icon(crate::application_icon())
             .with_inner_size(self.imported.as_ref().map_or([800.0, 600.0], |i| i.size))
             .with_min_inner_size([335.0, 262.0]);
@@ -131,9 +140,9 @@ impl NativeStartup {
             && self.error.is_none()
             && cc
                 .storage
-                .and_then(|s| s.get_string(key(self.profile)))
+                .and_then(|s| s.get_string(application_key(self.application)))
                 .is_none();
-        let mut editor = Editor::new_for_profile(cc, self.profile);
+        let mut editor = Editor::new_for_application(cc, self.application);
         editor.native_fonts = Some(fonts::install_native(&cc.egui_ctx));
         self.apply(&mut editor, cc.storage, &cc.egui_ctx);
         if fresh_theme && editor.preferences_writable {
@@ -142,10 +151,10 @@ impl NativeStartup {
         editor
     }
 
-    /// Run the fixed-profile native application, sharing platform/window setup.
+    /// Run the selected launcher with shared native platform/window setup.
     pub fn run(self) -> eframe::Result {
         eframe::run_native(
-            self.profile.title(),
+            self.application.title(),
             eframe::NativeOptions {
                 viewport: self.viewport(),
                 persist_window: true,
@@ -168,9 +177,9 @@ impl NativeStartup {
         ctx: &egui::Context,
     ) {
         // A native storage file could appear between preflight and construction.
-        if self.profile != editor.profile
+        if self.application != editor.application
             || storage
-                .and_then(|s| s.get_string(key(self.profile)))
+                .and_then(|s| s.get_string(application_key(self.application)))
                 .is_some()
             || !editor.preferences_writable
         {

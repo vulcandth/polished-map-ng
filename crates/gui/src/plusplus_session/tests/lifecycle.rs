@@ -81,7 +81,7 @@ fn every_plusplus_dirty_domain_guards_open_close_and_exit_without_writes() {
         h.get_by_label("OK").click();
         h.run();
         assert!(h.state().loaded.is_none());
-        assert!(h.state().profile == documents::Profile::PlusPlus);
+        assert!(h.state().profile() == documents::Profile::PlusPlus);
         assert_eq!(
             h.state().palette_document().colors(PaletteSet::Day).len(),
             8

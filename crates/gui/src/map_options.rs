@@ -212,6 +212,7 @@ impl Editor {
                     &format!("({} B)", sizes.block_count()),
                 );
             }
+            let previous_tileset = form.tileset.clone();
             let current = form
                 .tilesets
                 .iter()
@@ -229,6 +230,9 @@ impl Editor {
                     }
                 },
             );
+            if form.unified && form.tileset != previous_tileset {
+                form.resolve_profile();
+            }
             let current = if form.roof.is_empty() {
                 "(none)".to_owned()
             } else {
@@ -247,8 +251,7 @@ impl Editor {
                     }
                 },
             );
-            let enabled = form.root == form.choices_root
-                && form.tilesets.iter().any(|c| c.name == form.tileset);
+            let enabled = form.ready();
             client.add_enabled_ui(enabled, |ui| {
                 let response = ui.put(rect(layout.ok), egui::Button::new("OK"));
                 response.widget_info(|| {
@@ -269,6 +272,9 @@ impl Editor {
                 .on_hover_text("Cancel (Esc)")
                 .clicked();
             // Keep NG project overrides outside the measured source client.
+            if let Some(error) = &form.detection_error {
+                ui.label(error);
+            }
             egui::CollapsingHeader::new("Project options")
                 .open((form.root != form.choices_root).then_some(true))
                 .show(ui, |ui| {
@@ -305,8 +311,7 @@ impl Editor {
             ui.add_space(10.0);
             // Advanced controls run after the source client: revalidate after
             // editing the root so Enter cannot submit stale asset choices.
-            let enabled = form.root == form.choices_root
-                && form.tilesets.iter().any(|c| c.name == form.tileset);
+            let enabled = form.ready();
             accept &= enabled;
             if !choosing && !egui::Popup::is_any_open(ctx) {
                 accept |= enabled

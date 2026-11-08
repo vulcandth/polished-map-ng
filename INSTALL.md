@@ -46,9 +46,21 @@ The default GUI is master. To launch the separate experimental plusplus editor:
 cargo run -p polished-map-gui --bin polished-map-plusplus --locked --
 ```
 
-Both launchers accept an optional map path after `--`. Plusplus uses separate
-settings and does not automatically switch formats. Its parity acceptance is
-still in progress; the published master tester packages do not include it.
+Both parity launchers accept an optional map path after `--`, retain separate
+settings and stay fixed to their respective formats. Their parity acceptance is
+still in progress; master and plusplus tester packages are published separately.
+
+The in-progress unified application is also available from source:
+
+```text
+cargo run -p polished-map-gui --bin polished-map-unified --locked --
+```
+
+It detects storage from the map and selected tileset, uses its own settings, and
+has no mode selector. Open/New and alternating-project saves have automated
+coverage; legacy source integration and changing between differently stored
+tilesets within one map remain incomplete. Follow the [unified roadmap](docs/roadmap.md#3-unified-editor--in-progress)
+before using this development launcher for acceptance testing.
 
 For optimized binaries:
 

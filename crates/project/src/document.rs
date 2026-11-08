@@ -268,6 +268,26 @@ impl MapDocument {
         allow_trailing: bool,
         rules: Rules,
     ) -> Result<MapOpenReport, ProjectError> {
+        let encoding = if rules == Rules::Master
+            && path
+                .extension()
+                .is_some_and(|e| e.eq_ignore_ascii_case("map"))
+        {
+            crate::MapEncoding::Assembly
+        } else {
+            crate::MapEncoding::Binary
+        };
+        Self::read_encoded(path, options, root, allow_trailing, rules, encoding)
+    }
+
+    pub(crate) fn read_encoded(
+        path: &Path,
+        options: &OpenOptions,
+        root: Option<&Path>,
+        allow_trailing: bool,
+        rules: Rules,
+        encoding: crate::MapEncoding,
+    ) -> Result<MapOpenReport, ProjectError> {
         let path = fs::canonicalize(path).map_err(|e| ProjectError::io(path, e))?;
         let bytes = read_bounded(&path, 4 * 1024 * 1024)?;
         let metadata = discover_with_rules(&path, root, rules)?;
@@ -280,9 +300,9 @@ impl MapDocument {
             .height
             .or(dimensions.map(|d| d.1))
             .ok_or(ProjectError::DimensionsRequired)?;
-        let mut blocks = match rules {
-            Rules::Master => decode_map_blocks(&path, &bytes)?,
-            Rules::PlusPlus => bytes.clone(),
+        let mut blocks = match encoding {
+            crate::MapEncoding::Assembly => decode_map_blocks(&path, &bytes)?,
+            crate::MapEncoding::Binary => bytes.clone(),
         };
         let mut trailing_blocks = 0;
         if allow_trailing && (1..=255).contains(&width) && (1..=255).contains(&height) {
@@ -378,7 +398,10 @@ impl MapDocument {
         {
             return Err(ProjectError::Format {
                 path: self.path.clone(),
-                message: "ASM map import requires a .blk Save As destination".into(),
+                message: format!(
+                    "ASM map import requires a .{} Save As destination",
+                    self.rules.default_extension()
+                ),
             });
         }
         let current = read_bounded(&self.path, 4 * 1024 * 1024)?;

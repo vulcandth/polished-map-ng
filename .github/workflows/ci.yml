@@ -230,3 +230,7 @@ jobs:
       - run: cargo test -p polished-map-gui --locked --lib real_plusplus_ -- --ignored
         env:
           POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
+      - run: cargo test -p polished-map-gui --locked --lib unified_pinned_projects -- --ignored
+        env:
+          POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal
+          POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal

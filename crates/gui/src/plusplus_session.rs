@@ -157,28 +157,19 @@ impl Loaded {
                     trailing_blocks: 0,
                 }
             } else {
-                plusplus::MapDocument::open_in_project_with_report(
-                    &form.path,
-                    &OpenOptions {
-                        width: (form.width != 0).then_some(form.width),
-                        height: (form.height != 0).then_some(form.height),
-                    },
-                    Some(&root),
-                )?
+                let read = if form.unified
+                    && form
+                        .path
+                        .extension()
+                        .is_some_and(|e| e.eq_ignore_ascii_case("map"))
+                {
+                    plusplus::MapDocument::import_asm_with_report
+                } else {
+                    plusplus::MapDocument::open_in_project_with_report
+                };
+                read(&form.path, &form.dimensions(), Some(&root))?
             };
-            let name = if form.tileset.is_empty() {
-                report
-                    .document
-                    .metadata()
-                    .tileset
-                    .as_deref()
-                    .ok_or_else(|| ProjectError::Format {
-                        path: form.path.clone(),
-                        message: "Choose a tileset".into(),
-                    })?
-            } else {
-                &form.tileset
-            };
+            let name = form.tileset_name(report.document.metadata())?;
             let blocks = plusplus::BlocksetDocument::open_in_project(&root, name)?;
             let tiles =
                 plusplus::TilesetDocument::open_in_project(&root, name, Default::default())?;
@@ -201,7 +192,8 @@ impl Loaded {
             };
             let graphics = assets.graphics(&assets.palettes);
             let document = report.document.into();
-            let (events, event_warning) = event_workflows::auto_load_events(&document, auto_events);
+            let (events, event_warning) =
+                event_workflows::auto_load_events(&document, auto_events, form.unified);
             Ok(Self {
                 recent_path: (!form.new_map).then_some(form.path),
                 trailing_blocks: report.trailing_blocks,
@@ -226,7 +218,7 @@ impl Editor {
         ctx: &egui::Context,
         order: BankOrder,
     ) -> Result<(), String> {
-        if self.profile != documents::Profile::PlusPlus {
+        if self.profile() != documents::Profile::PlusPlus {
             return Err("Bank ordering requires plusplus".into());
         }
         if let Some(loaded) = &mut self.loaded {

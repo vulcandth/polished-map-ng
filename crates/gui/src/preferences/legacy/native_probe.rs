@@ -63,7 +63,7 @@ impl App for Probe {
             "settings must not autosave before exit"
         );
         App::save(&mut self.editor, storage);
-        let own_key = key(self.editor.profile);
+        let own_key = key(self.editor.profile());
         if self.phase == "future" {
             // Simulate a later NG version's record using the real storage writer.
             storage.set_string(own_key, FUTURE.into());
@@ -74,7 +74,7 @@ impl App for Probe {
                 serde_json::from_str(&storage.get_string(own_key).unwrap()).unwrap();
             assert_eq!(actual, Preferences::capture(&self.editor));
         }
-        let other = match self.editor.profile {
+        let other = match self.editor.profile() {
             documents::Profile::Master => documents::Profile::PlusPlus,
             documents::Profile::PlusPlus => documents::Profile::Master,
         };
@@ -151,7 +151,7 @@ pub fn run(directory: &Path, profile: &str, phase: &str) -> eframe::Result {
                 );
             }
             let mut editor = startup.create_editor(cc);
-            assert!(editor.profile == profile);
+            assert!(editor.profile() == profile);
             if phase == "preserve" {
                 assert!(!editor.preferences_writable);
                 assert!(editor.grid && !editor.rulers && !editor.allow_512);

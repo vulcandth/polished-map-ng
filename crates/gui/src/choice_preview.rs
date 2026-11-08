@@ -21,7 +21,7 @@ impl Request {
     pub(super) fn new(editor: &Editor, name: Option<&str>, roof: bool) -> Option<Self> {
         Some(Self {
             root: editor.loaded.as_ref()?.tileset_location()?.0.to_owned(),
-            profile: editor.profile,
+            profile: editor.profile(),
             name: name.map(str::to_owned),
             roof,
         })

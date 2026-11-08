@@ -145,6 +145,17 @@ pub fn find_unified_project_root(map: &Path) -> Result<Option<PathBuf>, ProjectE
     Ok(None)
 }
 
+/// Inventory both graphics layouts without choosing storage from the first item.
+pub fn unified_tileset_choices(root: &Path) -> Result<Vec<crate::TilesetChoice>, ProjectError> {
+    let mut choices = crate::tileset_choices(root)?;
+    for choice in crate::plusplus::tileset_choices(root)? {
+        if !choices.iter().any(|existing| existing.name == choice.name) {
+            choices.push(choice);
+        }
+    }
+    Ok(choices)
+}
+
 /// Determine the storage model using the map's actual metadata or an explicitly
 /// selected *tileset*, never a global mode or the first directory-list entry.
 /// Missing/broken attributes do not trigger a fallback after choosing plusplus.

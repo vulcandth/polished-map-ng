@@ -1,5 +1,7 @@
 //! FLTK-derived logical geometry and egui adapter. LGPL-3.0-only.
 mod about;
+mod application;
+use application::Application;
 mod artwork;
 mod asset_drag;
 pub use artwork::application_icon;
@@ -26,6 +28,7 @@ mod help;
 mod icons;
 mod map_buttons;
 mod map_labels;
+mod map_loading;
 #[cfg(test)]
 mod map_open_tests;
 mod map_options;
@@ -68,6 +71,9 @@ mod tileset_workflows;
 #[cfg(test)]
 mod toolbar_tests;
 mod transparency;
+mod unified_open;
+#[cfg(test)]
+mod unified_tests;
 mod window_title;
 mod workspace_pan;
 #[cfg(test)]
@@ -116,6 +122,8 @@ type LoadResult = Result<Loaded, String>;
 
 #[derive(Default)]
 struct OpenForm {
+    unified: bool,
+    detection_error: Option<String>,
     profile: documents::Profile,
     allow_512: bool,
     new_map: bool,
@@ -138,6 +146,9 @@ struct OpenForm {
 
 impl OpenForm {
     fn refresh_choices(&mut self) -> Result<(), polished_map_project::ProjectError> {
+        if self.unified {
+            return self.refresh_unified_choices();
+        }
         let root = std::path::Path::new(&self.root);
         let metadata = if self.new_map {
             None
@@ -185,7 +196,8 @@ struct ResizeForm {
 }
 
 pub struct Editor {
-    profile: documents::Profile,
+    application: Application,
+    inactive_palettes: Option<documents::PaletteDocument>,
     allow_512: bool,
     bank_order: polished_map_core::plusplus::BankOrder,
     last_window_title: Option<String>,
@@ -288,7 +300,8 @@ pub struct Editor {
 impl Default for Editor {
     fn default() -> Self {
         Self {
-            profile: Default::default(),
+            application: Default::default(),
+            inactive_palettes: None,
             allow_512: false,
             bank_order: Default::default(),
             last_window_title: None,
@@ -409,18 +422,32 @@ impl Editor {
         Self::new_for_profile(cc, documents::Profile::PlusPlus)
     }
 
+    pub fn new_unified(cc: &eframe::CreationContext<'_>) -> Self {
+        Self::new_for_application(cc, Application::Unified)
+    }
+
     fn new_for_profile(cc: &eframe::CreationContext<'_>, profile: documents::Profile) -> Self {
+        Self::new_for_application(cc, Application::Parity(profile))
+    }
+
+    fn new_for_application(cc: &eframe::CreationContext<'_>, application: Application) -> Self {
+        let profile = application.initial_profile();
         fonts::install_bundled(&cc.egui_ctx);
         let mut editor = Self {
-            profile,
+            application,
             ..Self::default()
         };
+        editor.help_window.application = application;
         editor.help_window.profile = profile;
         if profile == documents::Profile::PlusPlus {
             editor.unloaded_palettes =
                 polished_map_project::plusplus::PaletteDocument::default().into();
             editor.status =
                 "Open a map to begin. Development build: plusplus parity is incomplete.".into();
+        }
+        if application.is_unified() {
+            editor.status =
+                "Open a map to begin. Development build: unified editing is incomplete.".into();
         }
         editor.restore_preferences(cc.storage);
         // Ctrl+= belongs to map zoom and Ctrl+0 to block assignment. Letting
@@ -488,7 +515,9 @@ impl Editor {
         if let Some(path) = rfd::FileDialog::new()
             .add_filter(
                 "Map blocks",
-                if self.profile == documents::Profile::PlusPlus {
+                if self.application.is_unified() {
+                    &["ablk", "blk", "map"]
+                } else if self.profile() == documents::Profile::PlusPlus {
                     &["ablk", "blk"]
                 } else {
                     &["blk", "map"]
@@ -525,10 +554,11 @@ impl Editor {
 
     pub fn prepare_new_in(&mut self, root: PathBuf) {
         let mut form = OpenForm {
+            unified: self.application.is_unified(),
             new_map: true,
-            profile: self.profile,
+            profile: self.profile(),
             allow_512: self.allow_512,
-            path: root.join(format!("NewMap.{}", self.profile.extension())),
+            path: root.join(format!("NewMap.{}", self.profile().extension())),
             root: root.to_string_lossy().into_owned(),
             width: 10,
             height: 9,
@@ -542,7 +572,7 @@ impl Editor {
     }
 
     pub fn prepare_open(&mut self, path: PathBuf) {
-        let metadata = match self.profile.discover_map(&path, None) {
+        let metadata = match self.open_metadata(&path) {
             Ok(metadata) => metadata,
             Err(error) => {
                 self.error = Some(error.to_string());
@@ -550,7 +580,8 @@ impl Editor {
             }
         };
         let mut form = OpenForm {
-            profile: self.profile,
+            unified: self.application.is_unified(),
+            profile: self.profile(),
             allow_512: self.allow_512,
             root: metadata
                 .root
@@ -569,117 +600,39 @@ impl Editor {
         }
     }
 
-    fn start_load(&mut self, form: OpenForm, ctx: &egui::Context) {
-        if form.profile != self.profile {
+    fn start_load(&mut self, mut form: OpenForm, ctx: &egui::Context) {
+        if form.unified {
+            form.resolve_profile();
+            if let Some(error) = &form.detection_error {
+                self.error = Some(error.clone());
+                self.open_form = Some(form);
+                return;
+            }
+        }
+        if !self.application.accepts(form.profile) {
             self.error = Some("Open options belong to the other editor profile".into());
             return;
         }
         self.pending_map_warning = None;
         self.pending_palette_warnings.clear();
-        self.allow_256 = form.allow_256;
         let (sender, receiver) = mpsc::channel();
         let ctx = ctx.clone();
-        let dark_theme = self.dark;
-        let palette_session = self.palette_document().to_owned();
-        let bank_order = self.bank_order;
-        let auto_events = self.event_ui.auto_load;
-        let roof_layout = self.roof_palette_layout;
-        let special_palettes = self.auto_special_palettes;
-        let roof_colors = self.auto_roof_colors;
-        let allow_priority = self.allow_priority;
-        let monochrome = self.monochrome;
+        let palettes = self.palettes_for_open(form.profile);
+        let settings = map_loading::LoadSettings {
+            graphics: MasterGraphicsOptions {
+                dark_theme: self.dark,
+                roof_layout: self.roof_palette_layout,
+                special_palettes: self.auto_special_palettes,
+                roof_colors: self.auto_roof_colors,
+                allow_priority: self.allow_priority,
+                monochrome: self.monochrome,
+                ..Default::default()
+            },
+            bank_order: self.bank_order,
+            auto_events: self.event_ui.auto_load,
+        };
         std::thread::spawn(move || {
-            let result = (|| {
-                if form.profile == documents::Profile::PlusPlus {
-                    let documents::PaletteDocument::PlusPlus(palettes) = palette_session else {
-                        return Err("Plusplus Open requires its own palette session".into());
-                    };
-                    return Loaded::open_plusplus(
-                        form,
-                        palettes,
-                        polished_map_project::plusplus::PaletteOptions {
-                            dark_theme,
-                            special_palettes,
-                            roof_colors,
-                            roof_layout,
-                            ..Default::default()
-                        },
-                        bank_order,
-                        auto_events,
-                    );
-                }
-                let documents::PaletteDocument::Master(palette_session) = palette_session else {
-                    return Err("Master Open requires its own palette session".into());
-                };
-                let root = PathBuf::from(&form.root);
-                let report = if form.new_map {
-                    MapDocument::new_map(&root, form.width, form.height).map(|document| {
-                        polished_map_project::MapOpenReport {
-                            document,
-                            trailing_blocks: 0,
-                        }
-                    })
-                } else {
-                    MapDocument::open_in_project_with_report(
-                        &form.path,
-                        &OpenOptions {
-                            width: (form.width != 0).then_some(form.width),
-                            height: (form.height != 0).then_some(form.height),
-                        },
-                        Some(&root),
-                    )
-                }
-                .map_err(|e| e.to_string())?;
-                let document = report.document;
-                let tileset = if form.tileset.is_empty() {
-                    document
-                        .metadata()
-                        .tileset
-                        .as_deref()
-                        .ok_or("Choose a tileset")?
-                } else {
-                    &form.tileset
-                };
-                let (source, palette_plan) = MasterTilesetDocument::begin_for_map(
-                    &document,
-                    tileset,
-                    &MasterGraphicsOptions {
-                        allow_256: form.allow_256,
-                        monochrome,
-                        allow_priority,
-                        dark_theme,
-                        roof_layout,
-                        special_palettes,
-                        roof_colors,
-                        roof: (!form.roof.is_empty()).then_some(form.roof),
-                        ..Default::default()
-                    },
-                    &palette_session,
-                )
-                .map_err(|e| e.to_string())?;
-                let blockset =
-                    BlocksetDocument::open_in_project(&root, tileset).map_err(|e| e.to_string())?;
-                let graphics = source
-                    .graphics(blockset.blockset())
-                    .map_err(|e| e.to_string())?;
-                let document = document.into();
-                let (events, event_warning) =
-                    event_workflows::auto_load_events(&document, auto_events);
-                Ok(Loaded {
-                    recent_path: (!form.new_map).then_some(form.path),
-                    trailing_blocks: report.trailing_blocks,
-                    events,
-                    event_warning,
-                    palette_plan: Some(documents::PalettePlan::Master(palette_plan)),
-                    plus_assets: None,
-                    document,
-                    graphics: graphics.into(),
-                    blockset: Some(blockset),
-                    tileset: Some(source),
-                    allow_256: form.allow_256,
-                })
-            })();
-            let _ = sender.send(result);
+            let _ = sender.send(Loaded::open(form, palettes, settings));
             ctx.request_repaint();
         });
         self.loading = Some(receiver);
@@ -1065,7 +1018,7 @@ impl Editor {
             return;
         }
         if let Some(mut about) = self.about.take() {
-            if !about.show(ctx, self.profile) {
+            if !about.show(ctx, self.application) {
                 self.about = Some(about);
             }
             return;
@@ -1263,7 +1216,7 @@ impl Editor {
         }
         if ui
             .add_enabled(
-                self.allow_priority || self.profile == documents::Profile::PlusPlus,
+                self.allow_priority || self.profile() == documents::Profile::PlusPlus,
                 Button::new(Icon::Priority, "Show Priority").selected(self.show_priority),
             )
             .on_hover_text("Show Priority (Ctrl/Cmd+Shift+P)")
@@ -1981,7 +1934,7 @@ impl Editor {
             }) {
                 self.hex = !self.hex;
             }
-            if (self.allow_priority || self.profile == documents::Profile::PlusPlus)
+            if (self.allow_priority || self.profile() == documents::Profile::PlusPlus)
                 && ctx.input_mut(|i| {
                     i.consume_key(
                         egui::Modifiers::COMMAND | egui::Modifiers::SHIFT,

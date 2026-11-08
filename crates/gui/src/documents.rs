@@ -195,34 +195,47 @@ impl MapDocument {
             Self::PlusPlus(_) => plusplus::EventDocument::open(path).map(Into::into),
         }
     }
+    pub fn open_unified_events(&self, path: &Path) -> Result<EventDocument, ProjectError> {
+        polished_map_project::EventDocument::open_unified(path).map(EventDocument::Unified)
+    }
     pub fn auto_load_events(&self) -> Result<Option<EventDocument>, ProjectError> {
+        self.auto_load_event_catalog(false)
+    }
+    pub fn auto_load_unified_events(&self) -> Result<Option<EventDocument>, ProjectError> {
+        self.auto_load_event_catalog(true)
+    }
+    fn auto_load_event_catalog(
+        &self,
+        unified: bool,
+    ) -> Result<Option<EventDocument>, ProjectError> {
         if !self.has_backing_file() {
             return Ok(None);
         }
-        match self {
-            Self::PlusPlus(d) => {
-                plusplus::EventDocument::open_for_map(d).map(|d| d.map(Into::into))
+        if !unified && let Self::PlusPlus(d) = self {
+            return plusplus::EventDocument::open_for_map(d).map(|d| d.map(Into::into));
+        }
+        let discovered = self
+            .metadata()
+            .root
+            .as_deref()
+            .map(|root| polished_map_project::event_script_path(root, &self.metadata().name))
+            .transpose()?;
+        let path = discovered
+            .filter(|p| p.is_file())
+            .unwrap_or_else(|| self.path().with_extension("asm"));
+        let opened = if unified {
+            self.open_unified_events(&path)
+        } else {
+            self.open_events(&path)
+        };
+        match opened {
+            Ok(document) => Ok(Some(document)),
+            Err(ProjectError::Io { source, .. })
+                if source.kind() == std::io::ErrorKind::NotFound =>
+            {
+                Ok(None)
             }
-            Self::Master(d) => {
-                let discovered = d
-                    .metadata()
-                    .root
-                    .as_deref()
-                    .map(|root| polished_map_project::event_script_path(root, &d.metadata().name))
-                    .transpose()?;
-                let path = discovered
-                    .filter(|p| p.is_file())
-                    .unwrap_or_else(|| d.path().with_extension("asm"));
-                match self.open_events(&path) {
-                    Ok(d) => Ok(Some(d)),
-                    Err(ProjectError::Io { source, .. })
-                        if source.kind() == std::io::ErrorKind::NotFound =>
-                    {
-                        Ok(None)
-                    }
-                    Err(e) => Err(e),
-                }
-            }
+            Err(error) => Err(error),
         }
     }
     pub fn warp_path(&self, destination: &str) -> Result<PathBuf, String> {
@@ -253,6 +266,7 @@ impl MapDocument {
 
 #[derive(Clone, Debug)]
 pub(super) enum EventDocument {
+    Unified(polished_map_project::EventDocument),
     Master(polished_map_project::EventDocument),
     PlusPlus(plusplus::EventDocument),
 }
@@ -270,25 +284,25 @@ impl From<plusplus::EventDocument> for EventDocument {
 impl EventDocument {
     pub fn source(&self) -> &SaveTarget {
         match self {
-            Self::Master(d) => d.source(),
+            Self::Master(d) | Self::Unified(d) => d.source(),
             Self::PlusPlus(d) => d.source(),
         }
     }
     pub fn script(&self) -> &EventScript {
         match self {
-            Self::Master(d) => d.script(),
+            Self::Master(d) | Self::Unified(d) => d.script(),
             Self::PlusPlus(d) => d.script(),
         }
     }
     pub fn apply(&mut self, commands: &[EventCommand]) -> Result<(), ProjectError> {
         match self {
-            Self::Master(d) => d.apply(commands),
+            Self::Master(d) | Self::Unified(d) => d.apply(commands),
             Self::PlusPlus(d) => d.apply(commands),
         }
     }
     pub fn save(&mut self) -> Result<(), ProjectError> {
         match self {
-            Self::Master(d) => d.save(),
+            Self::Master(d) | Self::Unified(d) => d.save(),
             Self::PlusPlus(d) => d.save(),
         }
     }

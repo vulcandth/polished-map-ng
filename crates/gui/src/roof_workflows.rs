@@ -35,7 +35,7 @@ impl Editor {
         let Some((root, _)) = loaded.tileset_location() else {
             return;
         };
-        match self.profile.list_roofs(root) {
+        match self.profile().list_roofs(root) {
             Ok(names) => {
                 let selected = loaded
                     .roof_name()

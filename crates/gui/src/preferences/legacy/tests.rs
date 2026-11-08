@@ -128,7 +128,7 @@ fn plusplus_legacy_keys_defaults_and_identity_use_separate_startup() {
     assert_eq!(viewport.min_inner_size, Some(Vec2::new(335.0, 262.0)));
     assert_ne!(viewport.app_id, NativeStartup::default().viewport().app_id);
     let h = Harness::builder().build_eframe(|cc| startup.create_editor(cc));
-    assert!(h.state().profile == profile);
+    assert!(h.state().profile() == profile);
     assert_eq!(Preferences::capture(h.state()), expected);
     assert_eq!(
         h.state().palette_document().colors(PaletteSet::Day).len(),

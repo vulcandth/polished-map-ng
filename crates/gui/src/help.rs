@@ -87,6 +87,7 @@ fn viewport_id() -> egui::ViewportId {
 }
 
 pub(super) struct HelpWindow {
+    pub(super) application: Application,
     pub(super) profile: documents::Profile,
     pub(super) open: bool,
     reposition: bool,
@@ -102,6 +103,7 @@ pub(super) struct HelpWindow {
 impl Default for HelpWindow {
     fn default() -> Self {
         Self {
+            application: Application::default(),
             profile: documents::Profile::Master,
             open: false,
             reposition: false,
@@ -118,7 +120,9 @@ impl Default for HelpWindow {
 
 impl HelpWindow {
     fn title(&self) -> &'static str {
-        if self.profile == documents::Profile::PlusPlus {
+        if self.application.is_unified() {
+            "Polished Map NG Unified Help"
+        } else if self.profile == documents::Profile::PlusPlus {
             "Polished Map NG++ Help"
         } else {
             TITLE
@@ -223,6 +227,10 @@ impl HelpWindow {
                     }
                     let result = scroll.show(ui, |ui| {
                         ui.style_mut().interaction.selectable_labels = true;
+                        if self.application.is_unified() {
+                            ui.label("Controls adapt to the loaded map's assets. The reference below follows its current attribute storage; unified development is in progress.");
+                            ui.add_space(8.0);
+                        }
                         let note = if self.profile == documents::Profile::PlusPlus {
                             "Polished Map++ 2.7.1 reference — NG parity is in progress."
                         } else {

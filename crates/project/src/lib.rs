@@ -41,6 +41,7 @@ pub use events::{EventDocument, EventScript, EventScriptError, event_script_path
 pub use format::{
     AttributeStorage, DetectedFormat, FormatDetectionError, FormatEvidence, FormatEvidenceKind,
     MapEncoding, ProjectFormat, detect_map_format, find_unified_project_root,
+    unified_tileset_choices,
 };
 pub use graphics::{
     load_master_graphics, load_master_map_graphics, write_new_png, write_png, write_png_export,

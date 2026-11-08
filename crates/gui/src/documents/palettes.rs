@@ -85,6 +85,12 @@ impl PaletteRef<'_> {
     }
 }
 impl PaletteDocument {
+    pub fn profile(&self) -> super::Profile {
+        match self {
+            Self::Master(_) => super::Profile::Master,
+            Self::PlusPlus(_) => super::Profile::PlusPlus,
+        }
+    }
     #[cfg(test)]
     pub fn content_hash(&self) -> String {
         self.view().content_hash()

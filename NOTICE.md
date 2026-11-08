@@ -390,3 +390,9 @@ Ordered internal asset transfers adapt pinned master/plusplus `map-buttons.cpp`
 Metatile_Button, Deep_Tile_Button and Color_Button drag handlers, under
 LGPL-3.0-only. The shared adapter preserves swap/copy, live palette RGB8 and
 profile-specific block/tile data while handling batched native events.
+
+The unified launcher adapts both pinned branches' Open/New, palette-session and
+event workflows under LGPL-3.0-only. Its ASM map import reuses the master decoder
+with either attribute model; original assembly is retained until explicit binary
+Save As. The fixed parity launchers retain their original input catalogs. No new
+artwork or external game fixtures accompany this integration.

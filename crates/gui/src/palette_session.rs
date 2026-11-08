@@ -64,22 +64,28 @@ impl Editor {
     }
 
     fn finish_open(&mut self, mut loaded: Loaded, ctx: &egui::Context) -> Result<(), String> {
-        if loaded.document.profile() != self.profile || loaded.graphics.profile() != self.profile {
+        let profile = loaded.document.profile();
+        if !self.application.accepts(profile) || loaded.graphics.profile() != profile {
             return Err("Map and graphics must belong to this editor profile".into());
         }
         if loaded.palette_plan.take().is_some() {
             loaded.graphics = loaded.refresh_graphics()?;
         }
-        if let Some(assets) = &loaded.plus_assets {
-            if loaded.tileset.is_some()
+        if loaded.plus_assets.is_some()
+            && (loaded.tileset.is_some()
                 || loaded.blockset.is_some()
-                || !matches!(loaded.document, documents::MapDocument::PlusPlus(_))
-            {
-                return Err("Plusplus assets require a separate plusplus document".into());
-            }
-            self.allow_512 = assets.allow_512;
+                || !matches!(loaded.document, documents::MapDocument::PlusPlus(_)))
+        {
+            return Err("Plusplus assets require a separate plusplus document".into());
         }
         let textures = documents::block_textures(ctx, &loaded.graphics)?;
+        if self.profile() != profile {
+            self.inactive_palettes = Some(self.palette_document().to_owned());
+        }
+        if let Some(assets) = &loaded.plus_assets {
+            self.allow_512 = assets.allow_512;
+        }
+        self.help_window.profile = profile;
         self.status = if loaded.document.has_backing_file() {
             loaded.document.path().display().to_string()
         } else {
@@ -103,7 +109,7 @@ impl Editor {
         // Map_Options_Dialog inventories roofs when opening a project. Cache
         // availability once; never scan the filesystem while painting controls.
         self.roof_choices_available = loaded.tileset_location().is_some_and(|(root, _)| {
-            self.profile
+            profile
                 .list_roofs(root)
                 .is_ok_and(|names| !names.is_empty())
         });

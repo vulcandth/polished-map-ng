@@ -78,11 +78,16 @@ pub(super) struct EventForm {
 pub(super) fn auto_load_events(
     map: &documents::MapDocument,
     enabled: bool,
+    unified: bool,
 ) -> (Option<EventDocument>, Option<String>) {
     if !enabled || !map.has_backing_file() {
         return (None, None);
     }
-    match map.auto_load_events() {
+    match if unified {
+        map.auto_load_unified_events()
+    } else {
+        map.auto_load_events()
+    } {
         Ok(doc) => (doc, None),
         Err(error) => (
             None,
@@ -528,7 +533,11 @@ impl Editor {
             }
         };
         if let Some(path) = path {
-            match loaded.document.open_events(&path) {
+            match if self.application.is_unified() {
+                loaded.document.open_unified_events(&path)
+            } else {
+                loaded.document.open_events(&path)
+            } {
                 Ok(doc) => {
                     loaded.events = Some(doc);
                     self.event_ui.drag = None;

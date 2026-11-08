@@ -32,7 +32,7 @@ impl Loaded {
 
 impl Editor {
     fn window_title(&self) -> String {
-        let title = self.profile.title();
+        let title = self.application.title();
         match &self.loaded {
             Some(loaded) => format!("{title} - {}", loaded.display_name().to_string_lossy()),
             None => title.into(),

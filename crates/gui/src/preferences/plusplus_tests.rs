@@ -18,7 +18,7 @@ fn plusplus_restart_restores_own_options_and_recent_files_without_master_state()
     let master = r#"{"version":1,"dark":true,"monochrome":true,"allow_256":true,"recent_maps":[{"utf8":"master.blk"}]}"#;
     storage.set_string(KEY, master.into());
     let mut h = restore(&storage);
-    assert!(h.state().profile == documents::Profile::PlusPlus);
+    assert!(h.state().profile() == documents::Profile::PlusPlus);
     assert!(!h.state().dark && !h.state().monochrome && !h.state().allow_256);
     assert!(!h.state().allow_512 && h.state().bank_order == BankOrder::Bank1First);
     assert_eq!(
@@ -59,7 +59,7 @@ fn plusplus_restart_restores_own_options_and_recent_files_without_master_state()
         cc.storage = Some(&storage);
         Editor::new(cc)
     });
-    assert!(h.state().profile == documents::Profile::Master);
+    assert!(h.state().profile() == documents::Profile::Master);
     assert!(h.state().monochrome && h.state().allow_256 && !h.state().allow_512);
     assert_eq!(storage.get_string(PLUSPLUS_KEY).unwrap(), serialized);
 }

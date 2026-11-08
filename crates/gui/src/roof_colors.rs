@@ -48,7 +48,7 @@ impl Editor {
             self.error = Some("The map's project root is unknown!".into());
             return;
         };
-        let path = if self.profile == documents::Profile::PlusPlus {
+        let path = if self.profile() == documents::Profile::PlusPlus {
             root.join("gfx/tilesets/roofs.pal")
         } else {
             roof_palette_path(root)

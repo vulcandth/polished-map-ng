@@ -3856,9 +3856,9 @@ The production Windows adapter graph and documentation links/examples pass.
 The detection foundation (`6b5437c`) also passed all eight
 [cross-platform CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42432428716),
 including Windows/Linux/macOS, MSRV, dependencies, source references, real projects
-and visuals. The subsequent union-event change passes the local workspace checks;
-its cross-platform result is pending. Complete drift reconciliation and unified
-GUI/native acceptance remain open.
+and visuals. The union-event change (`bf18f26`) also passed all eight
+[cross-platform jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42433112936).
+Complete drift reconciliation and unified GUI/native acceptance remain open.
 
 ### Pinned-source drift disposition — in progress
 
@@ -3873,16 +3873,16 @@ missing features; the final behavior and existing Rust adapters are the evidence
 | `map.cpp`, `parse-asm.*`, `tiled-image.cpp` | Master added ASM `.map`, `.CHR` and `.CEL` imports absent in plusplus. Shared bounded ASM codecs already exist. Detection treats map encoding separately from attributes. | Unified source imports must work with the appropriate attribute model and retain explicit binary Save As behavior. |
 | `metatileset.*`, `metatile.*`, `deep-tile.*`, `tile.*`, `palette-map.*` | Master stores tile palettes; plusplus stores per-occurrence bank/palette/flips/priority and expands to 512 tiles. Both models and guarded persistence already exist. | Bind controls and save operations to the detected document; never reinterpret bytes or widen master IDs globally. |
 | `tileset.cpp`, `image.cpp` | Different slot/bank order and undefined-tile/export handling. Plusplus's nonzero-offset export overread is already corrected and documented. | Preserve each model's valid ordering and keep shared bounded raster/export code. |
-| `map-events.cpp` | Master includes pokered `warp/sign/object/warp_to`; plusplus adds Pokémon/PC/base macros. Master distinguishes a four-argument map `warp` from a three-argument script command. Shared parser already contains this guard; parity catalogs stay distinct. | Backend `parse_unified`/`open_unified` now recognize their union with the same script guard and source-span persistence. GUI integration remains. |
+| `map-events.cpp` | Master includes pokered `warp/sign/object/warp_to`; plusplus adds Pokémon/PC/base macros. Master distinguishes a four-argument map `warp` from a three-argument script command. Shared parser already contains this guard; parity catalogs stay distinct. | Backend `parse_unified`/`open_unified` now recognize their union with the same script guard and source-span persistence. Unified GUI automatic/manual event loading now uses this catalog. |
 | `main-window.cpp` palette loading/saving | Master monochrome fallback, priority palette-map output and suppressed monochrome roof-color import are intentional storage capabilities. Plusplus always uses game palettes/occurrence priority. | Keep capabilities context-sensitive; do not apply master's monochrome switch to attributed data. |
 | `config.cpp` collisions | Master also checks `data/tilesets/*_collision.bin`; plusplus omits that candidate. Both already support binary collision codecs. | Make this legacy path available in unified context, preserving parity precedence. |
 | `main-window.cpp` save warning | Master's one-time 128-block engine warning is absent in plusplus. Current NG master preserves it. | Keep it for classic engine context; do not infer an engine limit solely from expanded tile-bank UI state. |
 | Block/palette/roof/tileset windows and `map-buttons.*` | Attribute ownership, flips, bank order and keyboard actions differ; master and plusplus GUI adapters already implement these separately. | Audit each final difference and consolidate shared workflows while preserving attribute-specific operations. |
 | `colors.*`, `ruler.cpp`, `widgets.cpp`, `version.h`, `main.cpp` | Palette model, themes, minor visual choices and application identity differ. M4/font/theme exceptions remain authoritative. | Finish final-source disposition; keep identity independent of active storage and avoid reviving deferred aesthetics. |
 
-This is an implementation audit, not U1 acceptance. In particular, unified source imports, expanded legacy collision discovery and
-GUI session transitions remain unimplemented; the existing parity adapters are not evidence they already
-work through one automatically adapting application.
+This is an implementation audit, not U1 acceptance. ASM map import and GUI Open/New
+transitions now have the evidence below. Unified legacy graphics/metadata, expanded
+collision discovery and in-document cross-storage tileset changes remain incomplete.
 
 The unified event entry points share the existing parser/save implementation,
 selecting the union lookup instead of adding another parser. Focused tests retain
@@ -3890,7 +3890,7 @@ the three-argument script `warp`, edit legacy and plusplus records together, kee
 mixed line endings/unowned text and reject external-write conflicts. All **388
 pokecrystal + 607 Polished Crystal scripts** parse without losing any parity
 record or changing rendered source. The parity parser entry points still select
-their original catalogs. The GUI has not switched to these entry points yet.
+their original catalogs. The unified GUI now uses the union for automatic and manual loading.
 
 Further source reconciliation confirms all 192 default game palette RGB triples
 are identical; master's extra monochrome palettes remain a distinct capability.
@@ -3900,3 +3900,39 @@ also resets scroll on opening. These are functional behaviors to retain, not
 reasons to resume aesthetic matching. Raw plusplus tile/roof editing stays
 grayscale because palette ownership is on block occurrences; master's tile
 palette/priority controls remain available for per-tile storage.
+
+
+### Unified Open/New and session transitions
+
+The third `polished-map-unified` binary has no mode selector. Open/New derives
+storage from map/selected-tileset evidence, rechecks it at submission, and exposes
+missing/conflicting context before loading. The window, About, Help identity and
+settings namespace remain unified while document-specific controls adapt.
+The separate master/plusplus launchers retain their fixed behavior and namespaces.
+
+Five focused GUI tests cover mixed-project alternation, per-storage edited palette
+retention/import consent, closed-map sessions, union events, map edits and explicit
+Save As, New with either asset model, a shared map needing a real tileset choice,
+cancelled/malformed loads retaining the previous map/history/colors, ASM import
+with occurrence attributes, and restart/settings isolation. Two backend tests
+exercise ASM trailing-byte reports, malformed/short input, binary Save As and
+source-overwrite refusal. The plusplus parity entry point still rejects ASM.
+
+The external-fixture GUI test alternates **pokecrystal → Polished Crystal →
+pokecrystal → Polished Crystal**, opening NewBarkTown, editing a block, saving to
+a temporary directory and reopening with the actual project context each time.
+It asserts exact edited bytes and unchanged original map files. This passes on
+Windows through egui_kittest and is included in real-project CI. It does not
+establish native dialog, clipboard, desktop, DPI or full-project parity.
+
+The load worker now delegates through a shared typed request boundary; dimensions
+and selected-tileset validation are shared by both adapters. Palette caches and
+active settings change only after candidate graphics/textures succeed. General
+visual work remains deferred. Cross-storage Change Tileset, legacy graphics and
+metadata integration and final source-drift acceptance remain U1/U2 work; this
+launcher is not yet a distributed unified development candidate.
+
+Windows validation for this integration passes fmt, workspace Clippy with warnings
+denied, **515 tests with 49 explicit external/native cases ignored**, rustdoc and
+the production native dependency graph. The pinned GUI workflow above ran separately
+and passed. Documentation links/anchors and existing CLI/JSON examples also pass.

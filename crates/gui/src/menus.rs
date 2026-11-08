@@ -127,7 +127,7 @@ impl Editor {
                     menu_popup::checkbox(ui, true, &mut self.hex, "Hexadecimal");
                     menu_popup::checkbox(
                         ui,
-                        self.allow_priority || self.profile == documents::Profile::PlusPlus,
+                        self.allow_priority || self.profile() == documents::Profile::PlusPlus,
                         &mut self.show_priority,
                         "Show Priority",
                     );
@@ -180,8 +180,8 @@ impl Editor {
                         self.prepare_palettes();
                     }
                 });
-                menu_popup::menu_for_profile(ui, "Options", self.profile, |ui| {
-                    if self.profile == documents::Profile::PlusPlus {
+                menu_popup::menu_for_profile(ui, "Options", self.profile(), |ui| {
+                    if self.profile() == documents::Profile::PlusPlus {
                         if menu_popup::checkbox(ui, true, &mut self.allow_512, "512 Tiles")
                             .changed()
                         {

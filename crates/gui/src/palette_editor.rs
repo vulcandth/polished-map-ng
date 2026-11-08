@@ -211,7 +211,7 @@ impl Editor {
     ) -> Result<(), String> {
         let palettes = palettes.into();
         if !matches!(
-            (self.profile, &palettes),
+            (self.profile(), &palettes),
             (documents::Profile::Master, PaletteDocument::Master(_))
                 | (documents::Profile::PlusPlus, PaletteDocument::PlusPlus(_))
         ) {

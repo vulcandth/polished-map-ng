@@ -40,11 +40,17 @@ compound-name/directory resolution. Detection does not validate asset contents:
 the selected loader must fail on malformed input without retrying another model.
 A shared map without a unique header requires the ordinary tileset choice.
 
-The next integration must bind capabilities to the successfully loaded document,
-retain the old session on failed/cancelled loads, keep palette sessions separate,
-and preserve the legacy launchers' exact parsing and output contracts. Union event macros are available through `EventScript::parse_unified` and
-`EventDocument::open_unified`, sharing the existing guarded parser/persistence.
-Source imports and legacy layout support also belong to the unified adapter;
+The third `polished-map-unified` launcher now binds controls to the successfully
+loaded document, retaining the old session on failed/cancelled loads. Its stable
+application identity owns preferences and native windows; the current map owns
+attribute capabilities. It retains one palette session per storage model, including
+dirty-import consent when returning to an edited session. Both parity launchers
+keep their fixed catalogs and settings. Shared load settings, size/tileset request
+validation and worker orchestration prepare a full candidate before adoption.
+Unified automatic/manual event loading uses `EventDocument::open_unified`,
+sharing guarded parser/persistence. ASM map import also works with occurrence
+attributes, with explicit binary Save As and no source overwrite. Legacy graphics,
+metadata and in-document cross-storage tileset integration remain in progress;
 they must not silently widen either parity launcher's accepted input.
 
 ## ADR 1: Separate domain logic from platform adapters immediately
