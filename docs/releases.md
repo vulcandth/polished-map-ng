@@ -245,8 +245,11 @@ packaging rather than substituting another launcher.
 
 Nine packaging regression tests pass, including all four target layouts,
 distinct bundle identities, source/binary mismatch rejection, notices and offline
-tester-guide links. Actual unified artifact production, archive verification and
-publication are still pending. The existing offline source rebuild, licensing,
+tester-guide links. Candidate commit `254d57e2c306cc78f20127e110bd09c3f7349225` is
+building in [package run 42440191285](https://github.com/vulcandth/polished-map-ng/actions/runs/42440191285),
+with [CI 42440177458](https://github.com/vulcandth/polished-map-ng/actions/runs/42440177458)
+for the same source. Artifact completion, archive verification and publication
+are still pending. The existing offline source rebuild, licensing,
 lockfile and checksum requirements apply unchanged. No unified parity release
 is claimed.
 

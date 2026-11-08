@@ -4154,5 +4154,7 @@ of adding another divergent fixture list or keyboard-input path.
 Windows passes fmt, warnings-denied workspace Clippy, **535 tests / 52 explicitly
 ignored external/native cases**, rustdoc and the production native adapter graph.
 All three external unified GUI tests pass separately, including the asset workflow.
+Linux/WSL also passes the numeric outdoor regression and all three external unified
+GUI tests with the same five fixture copies and persistence assertions.
 These are headless input/persistence checks; native clipboard, desktop drag/drop,
 dialogs, focus, DPI and original-application interoperability remain open.
