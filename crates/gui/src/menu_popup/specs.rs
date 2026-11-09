@@ -72,7 +72,6 @@ pub(super) fn group(name: &str) -> &'static [Spec<'static>] {
         "View" => {
             const {
                 &[
-                    Spec::new("Dark Theme", Check, "", true).mnemonic(egui::Key::T),
                     Spec::new("Grid", Check, "C+G", false).mnemonic(egui::Key::G),
                     Spec::new("Rulers", Check, "CS+R", false).mnemonic(egui::Key::R),
                     Spec::new("Zoom", Check, "C+=", false).mnemonic(egui::Key::Z),
@@ -83,6 +82,7 @@ pub(super) fn group(name: &str) -> &'static [Spec<'static>] {
                     Spec::new("Show Events", Check, "CS+V", false).mnemonic(egui::Key::E),
                     Spec::new("Show Warp IDs", Check, "CS+3", true).mnemonic(egui::Key::W),
                     Spec::new("Palettes", Submenu, "", true).mnemonic(egui::Key::L),
+                    Spec::new("Dark Theme", Check, "F9", false).mnemonic(egui::Key::T),
                     Spec::new("Transparent", Check, "F10", false).mnemonic(egui::Key::A),
                     Spec::new("Full Screen", Check, "F11", false).mnemonic(egui::Key::S),
                 ]

@@ -37,6 +37,7 @@ fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
     let graphics =
         polished_map_core::plusplus::Graphics::new(raw, blocks, palettes, BankOrder::default());
     let loaded = crate::Loaded {
+        roof_layout: None,
         recent_path: Some(path),
         trailing_blocks: 0,
         events: None,

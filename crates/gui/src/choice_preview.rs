@@ -129,6 +129,21 @@ pub(super) struct Preview {
 }
 
 impl Preview {
+    pub(super) fn tileset_client_height(&self, ctx: &egui::Context) -> f32 {
+        let image_height = self
+            .result
+            .as_ref()
+            .and_then(|r| r.as_ref().ok())
+            .map_or(256.0, |texture| texture.size_vec2().y * 2.0);
+        let screen = if ctx.embed_viewports() {
+            ctx.content_rect().size()
+        } else {
+            ctx.input(|i| i.viewport().monitor_size)
+                .unwrap_or(Vec2::new(800.0, 600.0))
+        };
+        tileset_client_height(image_height, screen.y)
+    }
+
     pub(super) fn show(&mut self, ui: &mut egui::Ui, request: Option<Request>) {
         if self.wanted != request {
             self.wanted = request;
@@ -151,6 +166,7 @@ impl Preview {
                     }));
                 }
                 self.worker = None;
+                ui.ctx().request_repaint();
             }
         }
         let Some(request) = &self.wanted else { return };
@@ -192,6 +208,13 @@ impl Preview {
             }
         }
     }
+}
+
+fn tileset_client_height(image_height: f32, screen_height: f32) -> f32 {
+    // 44 above the preview, 14 before actions, 22 for buttons, 10 below.
+    // Leave room for the host heading, borders and native decorations. Only
+    // oversized sheets scroll; growing selector lists have their own limit.
+    (image_height.max(256.0) + 90.0).min((screen_height - 96.0).max(180.0))
 }
 
 #[cfg(test)]
@@ -248,6 +271,14 @@ pub(super) fn scroll_to_last_choice(
 mod tests {
     use super::*;
     use egui_kittest::{Harness, kittest::Queryable};
+
+    #[test]
+    fn tileset_preview_fits_full_sheets_or_reserves_screen_space() {
+        assert_eq!(tileset_client_height(256.0, 768.0), 346.0);
+        assert_eq!(tileset_client_height(512.0, 768.0), 602.0);
+        assert_eq!(tileset_client_height(512.0, 600.0), 504.0);
+        assert_eq!(tileset_client_height(4096.0, 1080.0), 984.0);
+    }
 
     #[test]
     fn sheet_uses_grayscale_hues_and_editor_roof_row_order() {

@@ -42,6 +42,7 @@ impl Loaded {
         palettes: documents::PaletteDocument,
         settings: LoadSettings,
     ) -> LoadResult {
+        let roof_layout = Some(settings.graphics.roof_layout);
         let selected_tileset = form.unified.then(|| form.tileset.clone());
         let mut loaded = match (form.profile, palettes) {
             (documents::Profile::Master, documents::PaletteDocument::Master(palettes)) => {
@@ -74,6 +75,7 @@ impl Loaded {
                 .select_tileset(&name)
                 .map_err(|e| e.to_string())?;
         }
+        loaded.roof_layout = roof_layout;
         Ok(loaded)
     }
 
@@ -116,6 +118,7 @@ impl Loaded {
         let (events, event_warning) =
             event_workflows::auto_load_events(&document, auto_events, form.unified);
         Ok(Self {
+            roof_layout: None,
             recent_path: (!form.new_map).then_some(form.path),
             trailing_blocks: report.trailing_blocks,
             document,

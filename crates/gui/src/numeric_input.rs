@@ -251,6 +251,7 @@ impl<T: egui::emath::Numeric> Widget for IntegerInput<'_, T> {
         })
         .id(id)
         .font(font)
+        .align(egui::Align2::LEFT_CENTER)
         .desired_width(input_rect.width())
         .min_size(input_rect.size())
         .show(&mut ui.new_child(egui::UiBuilder::new().max_rect(input_rect)));

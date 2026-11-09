@@ -1,5 +1,54 @@
 # Compatibility evidence
 
+## November 8-9 unified review
+
+The Sylvie/Rangi42 Discord review was read through the November 9 popup follow-up
+and the latest messages. Unrelated RGBDS and overworld-sprite-tool discussion is
+outside this task. U4 owns implementation and verification; broader native
+acceptance remains with human testers.
+
+| Feedback | Disposition |
+|---|---|
+| macOS 11/2013 MacBook GUI fails at startup; `WGPU_VALIDATION_INDIRECT_CALL=0` works | Implemented: native startup disables only indirect-call validation on macOS; ordinary validation, backends and device limits remain intact. Explicit environment overrides remain supported. |
+| macOS UI uses Arial and lacks monospace/bold faces; Print Copy/Export fails with Events | Implemented: system UI discovery with ordered macOS fallbacks; Menlo/SF Mono/Monaco/Courier fallbacks shared by UI and Print. Synthetic font selection/Print regressions pass; older-Mac retest remains with testers. |
+| Options contents change between project types | Implemented: both format groups remain visible, separated and disabled without an applicable map; headless input tests cover empty/master/plusplus states. |
+| Roof palette inference and Project options control; detected project description | Implemented: group count and RGB count select unambiguous layouts; recognized order comments distinguish three-set layouts. Project options exposes an override and detected storage/capacity. Cancel/failure do not commit a setting. |
+| Dark Theme grouping and F9 | Implemented: Dark Theme precedes Transparent/Full Screen; F9 uses the same action and respects modal/text input. |
+| Menu separator spacing, square menu-name highlight and consistent status bar | Implemented: eight-point separator gaps, square menu-name highlights and toolbar-matching status fill. Offscreen geometry/pixel checks pass; no general M4 matching. |
+| Filename/project-root window title | Implemented for unified: filename [project root] - application title. Parity launcher titles and the status modified indication are preserved. |
+| Map Options right padding; Change Tileset preview dimensions; numeric text centering | Implemented: long selectors retain ten-point right padding; tileset previews fit 256/512-point sheets when screen space permits and scroll otherwise; numeric text is vertically centered. |
+| Basic input/output CI coverage on every OS | Existing workspace and native settings/font checks already run on Windows/Linux/macOS. Added a named representative CLI read/edit/write/atomic-failure smoke step to every OS job. |
+| Popups extending outside parent windows | Investigation complete: the merged winit primitive targets a newer API and does not provide egui integration or complete X11 support. Keep bounded scrolling menus; [integration proposal](architecture.md#november-89-deferred-suggestions-and-popup-investigation) is deferred. |
+| Executable size and memory | Implemented the memory-oriented allocator hint, retaining every backend and limit. Published-binary section measurements and limits are in the [footprint investigation](releases.md#november-9-unified-footprint-investigation). No measured RAM savings claimed. |
+| Native macOS menu bar, native-theme widgets and searchable collision choices | Future improvements; tracked separately in [I3 proposals](architecture.md#november-89-deferred-suggestions-and-popup-investigation), not implemented. |
+| Publish a unified parity release before new features | Consistent with delivery sequencing; retain parity launchers for comparisons and open acceptance gates. |
+
+The memory policy uses wgpu 30.0.1 `MemoryHints::MemoryUsage`, retaining the
+default requested limits and backend selection. The macOS workaround addresses
+the tester-confirmed startup path: egui-wgpu renders direct indexed draws and
+this editor supplies no indirect GPU commands. Its native settings CI probe
+uses the same renderer configuration. Actual old-Mac retesting remains pending.
+
+
+Regression evidence includes [native font selection and Print](../crates/project/src/native_fonts.rs),
+[roof-table inference](../crates/project/src/roof_layout.rs),
+[unified menu/context/title workflows](../crates/gui/src/unified_tests.rs),
+[preview geometry](../crates/gui/src/choice_preview.rs),
+[numeric centering](../crates/gui/src/numeric_input/tests.rs) and
+[menu geometry/pixels](../crates/gui/src/menu_popup/tests.rs).
+Windows passes formatting, workspace Clippy with warnings denied, all 553
+nonignored workspace tests, rustdoc, the production adapter audit and native-test
+feature Clippy. The pinned pokecrystal/Polished Crystal roof-table check and the
+five-project unified open/edit/save/reopen regression also pass on Windows.
+Linux/WSL passes the GUI visual suite (348 unit tests plus four integration
+checks) with snapshot updates disabled. All 97 changed baselines were inspected:
+58 differ only in the status strip; the remaining 39 cover the reviewed menu,
+status, numeric and preview changes. The default WSL Vulkan selection crashed
+before the first screenshot; explicitly selecting installed Mesa lavapipe
+isolated the offscreen renderer and completed the checks. This does not change
+the application's backend configuration. CI verification of the final commit
+is pending. These checks are not native GUI acceptance or a RAM benchmark.
+
 The [roadmap](roadmap.md) owns current task status and execution order. Use the
 [current coverage matrix](#current-coverage-matrix) for the implementation summary.
 The feature records below retain source calculations and verification results;
@@ -996,15 +1045,19 @@ Desktop startup now calls `Editor::new_native`, using `NativeFonts` from the
 GUI-independent project layer. The policy follows pinned master
 `themes.cpp::use_native_fonts`: Windows' `NONCLIENTMETRICS.lfMessageFont` first,
 then Segoe UI/Tahoma/MS Sans Serif; Consolas/Lucida Console/Courier New for
-regular and bold monospace independently. Linux and macOS both try
+regular and bold monospace independently. Linux tries
 Ubuntu/Noto Sans/Droid Sans/DejaVu Sans and their Mono families in source order.
+As of the November 8–9 review, macOS first tries the system UI family, then
+San Francisco/SF Pro Text/Helvetica Neue/Lucida Grande/Helvetica. Its regular
+and bold monospace roles independently try Menlo/SF Mono/Monaco/Courier New/Courier.
 Family names are compared exactly. A failed Windows settings query or invalid
 UTF-16 name falls through safely instead of reading an uninitialized structure.
 
 Unmatched lists fall through to the pinned FLTK 1.4.5 backend defaults: Microsoft
 Sans Serif/Courier New on Windows, Arial/Courier on macOS, and Fontconfig generic
 sans/mono on Linux. Helvetica Bold remains a separate role because the original
-does not remap it with the UI family. These defaults were checked in the pinned
+does not remap it with the UI family. macOS now prefers a real system-UI bold
+face or the reviewed macOS sans fallbacks for this role. These defaults were checked in the pinned
 GDI, Quartz and Xlib/Xft `*_font*.cxx` sources. The Pango backend and platform
 font-name aliases still require differential verification.
 
@@ -1495,7 +1548,9 @@ passed all eight jobs, including installed-font tests on all three OSes.
 
 ## Print fonts and autonomous PNG output
 
-`PrintFonts` now supplies bounded CPU masks for source Print font requests.
+Historical initial Print adapter evidence (current family selection is shared
+with [installed GUI font roles](#installed-gui-font-roles)):
+`PrintFonts` supplies bounded CPU masks for source Print font requests.
 Fontique selects installed bold faces through DirectWrite/Core Text/Fontconfig;
 explicit TTF/OTF bytes and collection indices are also supported. Windows tries
 Courier New and Arial first; other systems try Courier and Helvetica first.

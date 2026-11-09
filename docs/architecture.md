@@ -1,5 +1,26 @@
 # Architecture decisions
 
+## November 8–9 deferred suggestions and popup investigation
+
+These are recorded for I3 and are **not started**: a native macOS menu bar,
+searchable collision choices, and assessing native-theme/native-theme-egui-widgets
+for a future theme implementation. They do not reopen general M4 aesthetics.
+The [macOS menu example](https://github.com/emilk/egui/issues/3411#issuecomment-3398463201)
+is an application-side Objective-C integration example, not a switch in eframe.
+
+The reviewed [winit popup PR 4543](https://github.com/rust-windowing/winit/pull/4543)
+merged on July 27, 2026 at `9674d8ceef6976326fe9583a81f2e684daac05d6`. It adds a
+new popup window type and parent relationship in the reorganized winit-core,
+winit-appkit, winit-wayland and winit-win32 API. Its X11 implementation remains
+unchecked. Our pinned winit 0.30.13 has the older platform_impl API, and
+[egui's separate context-menu window request](https://github.com/emilk/egui/issues/5144)
+remains open. Using the new primitive would require a winit/egui integration
+migration or substantial platform backports, plus focus/grab/dismissal handling;
+it is not a small dependency toggle. Keep bounded scrolling dropdowns now.
+Evaluate external popup integration as a separate proposal with Windows, macOS,
+X11 and Wayland acceptance, preserving parent ownership and keyboard behavior.
+
+
 ## November 7 future suggestions
 
 These suggestions from Sylvie/Rangi42's November 7 review are **not started**.
@@ -21,8 +42,9 @@ They belong to I1/I3 after parity and the unified-editor work, not M9:
 
 Roof/tileset selection previews were initially classified as future work. The
 user explicitly requested them in this review follow-up to make the enlarged
-native dropdown clients useful; they are now part of M9. The fixed-size preview
-and dropdown each scroll independently as graphics or choice counts grow.
+native dropdown clients useful; they are now part of M9. The November 9 correction expands the tileset client to fit the selected sheet
+within screen limits. Oversized previews and growing dropdown lists still scroll
+independently. Roof previews keep the existing compact client.
 See [review evidence](compatibility.md#november-7-upstream-review).
 
 ## Unified application boundary

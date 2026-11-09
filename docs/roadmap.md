@@ -12,7 +12,7 @@ and design decisions in [architecture](architecture.md).
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
 | 2. Plusplus parity | **In progress — awaiting native acceptance** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
-| 3. Unified editor | **In progress — awaiting human testing** | U1 source/detection reconciliation and U2 unified package delivery are complete. Five-project and cross-storage persistence checks pass; U3 integrated/native acceptance remains with human testers. The parity launchers remain available. |
+| 3. Unified editor | **In progress — review fixes** | U4 review fixes and local automated checks are complete; CI verification remains. U1 source/detection reconciliation and U2 unified package delivery are complete. Five-project and cross-storage persistence checks pass; U3 integrated/native acceptance remains with human testers. The parity launchers remain available. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Measured improvements | Not started | Deliberate behavior changes follow compatibility acceptance. Structural refactoring is ongoing during unified work. |
 | 6. Platform delivery | In progress — development builds available | Unified and separate master/plusplus Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
@@ -25,7 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Collect human tester results for **U3** using the
+**Next:** Finish CI verification for **U4**, then collect human
+tester results for **U3** using the
 [published unified build](releases.md#unified-development-packaging) and
 [five-project tester guide](testing-unified.md), then resolve reported functional
 issues. On November 8 the user handed remaining native testing to humans;
@@ -304,6 +305,15 @@ Authorized on November 7 before native parity acceptance; retain both parity
 launchers. No mode selector and no silent format conversion. See the
 [sequencing decision](deviations.md#unified-work-before-native-parity-acceptance).
 
+- [ ] **U4 — In progress, final CI verification:** Implemented the November 8–9
+  macOS startup and
+  Print fixes, stable unified options/project context, reviewed dialog/input
+  adjustments and cross-platform input/output smoke coverage. Popup integration
+  and future suggestions have separate dispositions; graphics compatibility is
+  retained. Windows workspace/five-project and Linux offscreen checks pass;
+  complete final CI verification, then hand native retesting to U3. Evidence:
+  [review disposition](compatibility.md#november-8-9-unified-review).
+
 - [x] **U1 — Complete:** Detect storage and capabilities from map/project and
   selected-tileset evidence, with actionable missing/conflicting-context errors.
   Storage detection, union events, legacy graphics/collision adapters and metadata
@@ -385,7 +395,9 @@ duplicate paths as encountered while keeping both compatibility suites running.
   until after parity; it is not part of M8 tester builds.
   The [November 7 suggestions](architecture.md#november-7-future-suggestions)
   add NPC sprite previews with a custom-movement fallback and optional extensions,
-  plus replacement application artwork. These remain unstarted.
+  plus replacement application artwork. The [November 8–9 suggestions](architecture.md#november-89-deferred-suggestions-and-popup-investigation) add native macOS menus,
+  searchable collision choices, theme-library assessment and external popup
+  integration. These remain unstarted.
 - [ ] **I4 — Acceptance:** Each chosen change has a stated benefit, appropriate
   regression/benchmark evidence and documented intentional differences. Unselected
   proposals are explicitly deferred rather than silently expanding scope.

@@ -34,6 +34,13 @@ impl Editor {
     fn window_title(&self) -> String {
         let title = self.application.title();
         match &self.loaded {
+            Some(loaded) if self.application.is_unified() => {
+                let name = loaded.display_name().to_string_lossy();
+                match loaded.document.metadata().root.as_deref() {
+                    Some(root) => format!("{name} [{}] - {title}", root.display()),
+                    None => format!("{name} - {title}"),
+                }
+            }
             Some(loaded) => format!("{title} - {}", loaded.display_name().to_string_lossy()),
             None => title.into(),
         }

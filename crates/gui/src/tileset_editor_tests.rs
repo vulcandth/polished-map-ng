@@ -52,6 +52,7 @@ pub(super) fn fixture(
     crate::message_dialog::test_font_size(&h.ctx, 12.0);
     let (tx, rx) = mpsc::channel();
     tx.send(Ok(Loaded {
+        roof_layout: None,
         recent_path: None,
         trailing_blocks: 0,
         palette_plan: None,

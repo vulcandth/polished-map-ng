@@ -1,7 +1,10 @@
 //! Exercise automatic context through actual Open/New dialogs and load workers.
 use super::*;
 use documents::Profile;
-use egui_kittest::{Harness, kittest::Queryable};
+use egui_kittest::{
+    Harness,
+    kittest::{NodeT, Queryable},
+};
 use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
 use std::{
     fs,
@@ -832,4 +835,99 @@ fn unified_pinned_projects_short_gen1_map_requires_explicit_size_choice() {
         assert_eq!(map.blocks(), original);
         assert_eq!(fs::read(path).unwrap(), original);
     }
+}
+
+#[test]
+fn unified_options_keep_both_format_groups_and_disable_inapplicable_actions() {
+    let dir = fixture();
+    let mut h = editor();
+    for profile in [None, Some(Profile::Master), Some(Profile::PlusPlus)] {
+        if let Some(profile) = profile {
+            let path = if profile == Profile::Master {
+                "Classic.2x1.classic.blk"
+            } else {
+                "Modern.2x1.modern.ablk"
+            };
+            open(&mut h, &dir.path().join(path), profile);
+            let loaded = h.state().loaded.as_ref().unwrap();
+            assert_eq!(
+                h.state().last_window_title.as_deref(),
+                Some(
+                    format!(
+                        "{} [{}] - {}",
+                        path,
+                        loaded.document.metadata().root.as_ref().unwrap().display(),
+                        h.state().application.title()
+                    )
+                    .as_str()
+                )
+            );
+        }
+        h.get_by_label("Options").click();
+        h.run();
+        for (label, family) in [
+            ("Monochrome", Profile::Master),
+            ("Tile Priority", Profile::Master),
+            ("256 Tiles", Profile::Master),
+            ("512 Tiles", Profile::PlusPlus),
+        ] {
+            assert_eq!(
+                h.get_by_label(label).accesskit_node().is_disabled(),
+                profile != Some(family),
+                "{label}"
+            );
+        }
+        h.key_press(egui::Key::Escape);
+        h.run();
+    }
+}
+
+#[test]
+fn unified_open_exposes_context_and_keeps_roof_override_transactional() {
+    let dir = fixture();
+    fs::create_dir_all(dir.path().join("constants")).unwrap();
+    fs::write(
+        dir.path().join("constants/map_constants.asm"),
+        "\tnewgroup A\n",
+    )
+    .unwrap();
+    fs::write(
+        dir.path().join("gfx/tilesets/roofs.pal"),
+        format!(
+            "; morn/day, nite, eve\n{}",
+            "\tRGB 1,2,3, 4,5,6\n".repeat(6)
+        ),
+    )
+    .unwrap();
+    let mut h = editor();
+    let original = h.state().roof_palette_layout;
+    h.state_mut()
+        .prepare_open(dir.path().join("Modern.2x1.modern.ablk"));
+    let form = h.state().open_form.as_ref().unwrap();
+    assert!(form.detected_context.contains("512-tile"));
+    assert_eq!(
+        form.roof_layout,
+        Some(polished_map_project::RoofPaletteLayout::DayNiteCustom)
+    );
+    h.run();
+    h.key_press(egui::Key::Escape);
+    h.run();
+    assert_eq!(h.state().roof_palette_layout, original);
+    h.state_mut()
+        .prepare_open(dir.path().join("Classic.2x1.classic.blk"));
+    assert!(
+        h.state()
+            .open_form
+            .as_ref()
+            .unwrap()
+            .detected_context
+            .contains("256-tile")
+    );
+    h.state_mut().open_form.as_mut().unwrap().roof_layout =
+        Some(polished_map_project::RoofPaletteLayout::Custom);
+    submit(&mut h);
+    assert_eq!(
+        h.state().roof_palette_layout,
+        polished_map_project::RoofPaletteLayout::Custom
+    );
 }

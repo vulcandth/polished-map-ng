@@ -15,7 +15,7 @@ keyboard and headless counterparts where applicable.
 | File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Native clipboard delivery, chooser and close behavior need platform testing; exact fonts are deferred. |
 | Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialog hosting is implemented; integrated desktop delivery needs testing. |
 | Edit | Undo, Redo, Copy/Paste/Swap Block | The temporary Edit Block entry is removed. Right-release on the same sidebar block opens its editor, matching upstream; native input/child-window verification remains pending. |
-| View | Dark Theme checkbox, Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Transparent, Full Screen | Other themes/fonts are deferred; Wayland opacity integration is implemented with capability checks, while compositor acceptance remains open. |
+| View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Dark Theme (F9), Transparent, Full Screen | Other themes/fonts are deferred; Wayland opacity integration is implemented with capability checks, while compositor acceptance remains open. |
 | Mode | Blocks, Events, Switch Mode | Alt+letter menu access and item mnemonics are implemented; native keyboard verification remains. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
 | Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
 | Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Drag and Drop; Overworld Map Size | Remaining native/persistence gaps are tracked in `preferences.md`. |
@@ -122,7 +122,8 @@ Sans Symbols 2 font because the existing bundled faces lack some glyphs. Its
 dedicated family does not alter ordinary UI text or claim native macOS metrics.
 See `assets.md` and `crates/gui/assets/fonts/NOTICE.md` for provenance.
 
-View starts with **Dark Theme**, a checkbox switching between the supported light
+View places **Dark Theme** immediately before Transparent and Full Screen.
+F9 toggles it outside text entry and modals; it is a checkbox switching between the supported light
 (Greybird) and dark styles. This simplifies the original multi-theme submenu at
 the upstream reviewer's request; other themes remain deferred. T toggles it while
 View is open. The change updates shared UI/icon styles without reloading graphics
@@ -290,3 +291,12 @@ pending; the current egui modal reproduces wording, button order and actions.
 - Keep native OS behavior separate from egui headless evidence. Screenshots and
   synthetic interaction tests do not prove native font, menu, DPI or dialog
   equivalence on any platform.
+
+
+In the unified application, Options always shows both format-specific groups:
+Monochrome/Tile Priority/256 Tiles, then 512 Tiles/`$0:80-FF Before $1:80-FF`. Choices
+for the inactive format are disabled; both groups are disabled before a map is
+open. Common options follow the groups. The separate parity launchers retain
+their own format's choices. Menu dividers reserve eight points of separation;
+menu-name highlights are square. These are reviewed usability changes, not a
+claim of exact FLTK appearance.

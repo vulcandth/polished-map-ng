@@ -51,8 +51,8 @@ impl Layout {
             dimensions,
             height,
             bytes: rect(end + 10.0, 36.0, 280.0 - end),
-            tileset: rect(offset, 62.0, tileset + 12.0 + 22.0),
-            roof: rect(offset, 88.0, roof + 12.0 + 22.0),
+            tileset: rect(offset, 62.0, (tileset + 12.0 + 22.0).min(290.0 - offset)),
+            roof: rect(offset, 88.0, (roof + 12.0 + 22.0).min(290.0 - offset)),
             ok: rect(ok, 126.0, 80.0),
             cancel: rect(cancel, 126.0, 80.0),
         }
@@ -85,6 +85,7 @@ fn combo(
             .selected_text(selected)
             .show_ui(ui, contents)
             .response
+            .on_hover_text(selected)
             .widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, enabled, name));
     });
 }
@@ -278,6 +279,12 @@ impl Editor {
             egui::CollapsingHeader::new("Project options")
                 .open((form.root != form.choices_root).then_some(true))
                 .show(ui, |ui| {
+                    if form.unified
+                        && form.root == form.choices_root
+                        && !form.detected_context.is_empty()
+                    {
+                        ui.label(&form.detected_context);
+                    }
                     let label = ui.label("Project folder");
                     ui.text_edit_singleline(&mut form.root)
                         .labelled_by(label.id);
@@ -305,6 +312,21 @@ impl Editor {
                         ui.checkbox(&mut form.allow_512, "Allow all 512 tiles");
                     } else {
                         ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
+                    }
+                    let selected = form.roof_layout.unwrap_or(self.roof_palette_layout);
+                    let name = roof_colors::LAYOUTS
+                        .iter()
+                        .find(|(layout, _)| *layout == selected)
+                        .map_or("", |(_, name)| *name);
+                    egui::ComboBox::from_label("Roof palettes")
+                        .selected_text(name)
+                        .show_ui(ui, |ui| {
+                            for (layout, name) in roof_colors::LAYOUTS {
+                                ui.selectable_value(&mut form.roof_layout, Some(layout), name);
+                            }
+                        });
+                    if form.unified && !form.roof_layout_note.is_empty() {
+                        ui.label(&form.roof_layout_note);
                     }
                     ui.add_space(10.0);
                 });

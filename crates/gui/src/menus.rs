@@ -111,15 +111,6 @@ impl Editor {
                     self.block_menu(ui);
                 });
                 menu_popup::menu(ui, "View", |ui| {
-                    if menu_popup::checkbox(ui, true, &mut self.dark, "Dark Theme").changed() {
-                        self.startup_theme = None;
-                        ctx.set_theme(if self.dark {
-                            egui::Theme::Dark
-                        } else {
-                            egui::Theme::Light
-                        });
-                        ctx.request_repaint();
-                    }
                     menu_popup::checkbox(ui, true, &mut self.grid, "Grid");
                     menu_popup::checkbox(ui, true, &mut self.rulers, "Rulers");
                     menu_popup::checkbox(ui, true, &mut self.zoom, "Zoom");
@@ -135,6 +126,9 @@ impl Editor {
                     menu_popup::checkbox(ui, true, &mut self.event_ui.show, "Show Events");
                     menu_popup::checkbox(ui, true, &mut self.event_ui.warp_ids, "Show Warp IDs");
                     menu_popup::submenu(ui, "Palettes", |ui| self.palette_set_menu(ui, true));
+                    if menu_popup::checkbox(ui, true, &mut self.dark, "Dark Theme").changed() {
+                        self.apply_theme_choice(&ctx);
+                    }
                     self.transparency.menu(ui);
                     super::fullscreen::menu(ui);
                 });
@@ -180,10 +174,44 @@ impl Editor {
                         self.prepare_palettes();
                     }
                 });
-                menu_popup::menu_for_profile(ui, "Options", self.profile(), |ui| {
-                    if self.profile() == documents::Profile::PlusPlus {
-                        if menu_popup::checkbox(ui, true, &mut self.allow_512, "512 Tiles")
+                let unified = self.application.is_unified();
+                let plusplus = self.profile() == documents::Profile::PlusPlus;
+                let has_context = !unified || self.loaded.is_some();
+                menu_popup::options_menu(ui, unified, self.profile(), |ui| {
+                    if unified || !plusplus {
+                        let enabled = has_context && !plusplus;
+                        if menu_popup::checkbox(ui, enabled, &mut self.monochrome, "Monochrome")
                             .changed()
+                        {
+                            self.set_monochrome_preference(self.monochrome);
+                            self.request_tile_mode_reload(&ctx);
+                        }
+                        if menu_popup::checkbox(
+                            ui,
+                            enabled,
+                            &mut self.allow_priority,
+                            "Tile Priority",
+                        )
+                        .changed()
+                            && let Some(tileset) =
+                                self.loaded.as_mut().and_then(|l| l.tileset.as_mut())
+                        {
+                            tileset.set_allow_priority(self.allow_priority);
+                        }
+                        if menu_popup::checkbox(ui, enabled, &mut self.allow_256, "256 Tiles")
+                            .changed()
+                        {
+                            self.request_tile_mode_reload(&ctx);
+                        }
+                    }
+                    if unified || plusplus {
+                        if menu_popup::checkbox(
+                            ui,
+                            has_context && plusplus,
+                            &mut self.allow_512,
+                            "512 Tiles",
+                        )
+                        .changed()
                         {
                             self.request_tile_mode_reload(&ctx);
                         }
@@ -191,7 +219,7 @@ impl Editor {
                         let mut first = self.bank_order == BankOrder::Bank0First;
                         if menu_popup::checkbox(
                             ui,
-                            self.allow_512,
+                            has_context && plusplus && self.allow_512,
                             &mut first,
                             "$0:80-FF Before $1:80-FF",
                         )
@@ -205,25 +233,6 @@ impl Editor {
                             if let Err(e) = self.change_bank_order(&ctx, order) {
                                 self.error = Some(e);
                             }
-                        }
-                    } else {
-                        if menu_popup::checkbox(ui, true, &mut self.monochrome, "Monochrome")
-                            .changed()
-                        {
-                            self.set_monochrome_preference(self.monochrome);
-                            self.request_tile_mode_reload(&ctx);
-                        }
-                        if menu_popup::checkbox(ui, true, &mut self.allow_priority, "Tile Priority")
-                            .changed()
-                            && let Some(tileset) =
-                                self.loaded.as_mut().and_then(|l| l.tileset.as_mut())
-                        {
-                            tileset.set_allow_priority(self.allow_priority);
-                        }
-                        if menu_popup::checkbox(ui, true, &mut self.allow_256, "256 Tiles")
-                            .changed()
-                        {
-                            self.request_tile_mode_reload(&ctx);
                         }
                     }
                     self.roof_palette_menu(ui);
@@ -281,7 +290,7 @@ mod tests {
         assert!(h.query_by_label("Dark appearance").is_none());
         assert!(
             h.get_by_label("Dark Theme").rect().bottom()
-                <= h.get_by_role_and_label(egui::Role::CheckBox, "Grid")
+                <= h.get_by_role_and_label(egui::Role::CheckBox, "Transparent")
                     .rect()
                     .top()
         );

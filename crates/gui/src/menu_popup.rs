@@ -13,6 +13,7 @@ mod tests;
 
 const TAG: &str = "polished-map-popup";
 const LEADING: f32 = 4.0;
+const SEPARATOR_HEIGHT: f32 = 8.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) enum Mark {
@@ -68,6 +69,7 @@ struct Metrics {
     row: f32,
     key_width: f32,
     count: usize,
+    separators: usize,
 }
 
 impl Metrics {
@@ -89,6 +91,7 @@ impl Metrics {
             row,
             key_width: keys,
             count: items.len(),
+            separators: 0,
         }
     }
 
@@ -96,7 +99,7 @@ impl Metrics {
         if self.count == 0 {
             5.0
         } else {
-            self.count as f32 * self.row + 1.0
+            self.count as f32 * self.row + self.separators as f32 * SEPARATOR_HEIGHT + 1.0
         }
     }
 
@@ -222,10 +225,9 @@ impl Prepared {
                 }
             })
             .collect();
-        Self {
-            items,
-            metrics: Metrics::measured(&measured, text(title.into()).size().x.ceil()),
-        }
+        let mut metrics = Metrics::measured(&measured, text(title.into()).size().x.ceil());
+        metrics.separators = specs.iter().filter(|item| item.divider).count();
+        Self { items, metrics }
     }
 }
 
@@ -305,11 +307,44 @@ pub(super) fn menu_for_profile<R>(
     profile: documents::Profile,
     contents: impl FnOnce(&mut egui::Ui) -> R,
 ) {
-    let response = ui.menu_button(name, |ui| {
-        mnemonics::within(ui, name, |ui| {
-            popup_scope(ui, name, specs::group_for_profile(name, profile), contents)
+    menu_with_specs(ui, name, specs::group_for_profile(name, profile), contents);
+}
+
+pub(super) fn options_menu<R>(
+    ui: &mut egui::Ui,
+    unified: bool,
+    profile: documents::Profile,
+    contents: impl FnOnce(&mut egui::Ui) -> R,
+) {
+    if !unified {
+        return menu_for_profile(ui, "Options", profile, contents);
+    }
+    let mut items = specs::group("Options")[..3].to_vec();
+    items[2].divider = true;
+    items
+        .extend_from_slice(&specs::group_for_profile("Options", documents::Profile::PlusPlus)[..2]);
+    items[4].divider = true;
+    items.extend_from_slice(&specs::group("Options")[3..]);
+    menu_with_specs(ui, "Options", &items, contents);
+}
+
+fn menu_with_specs<R>(
+    ui: &mut egui::Ui,
+    name: &str,
+    specs: &[Spec<'_>],
+    contents: impl FnOnce(&mut egui::Ui) -> R,
+) {
+    let response = ui
+        .scope(|ui| {
+            let widgets = &mut ui.visuals_mut().widgets;
+            widgets.inactive.corner_radius = egui::CornerRadius::ZERO;
+            widgets.hovered.corner_radius = egui::CornerRadius::ZERO;
+            widgets.active.corner_radius = egui::CornerRadius::ZERO;
+            ui.menu_button(name, |ui| {
+                mnemonics::within(ui, name, |ui| popup_scope(ui, name, specs, contents))
+            })
         })
-    });
+        .inner;
     mnemonics::remember(
         ui.ctx(),
         name,
@@ -475,11 +510,22 @@ pub(super) fn row_at(
             painter.add(egui::containers::menu::SubMenuButton::arrow_shape(r, fg));
         }
         if item.divider {
-            let bounds = Rect::from_min_size(
-                rect.min - Vec2::new(1.0, 1.0 + index as f32 * m.row),
-                Vec2::new(m.width, m.height()),
-            );
-            marks::paint_divider(&painter, bounds, dark, m.row, index);
+            let (gap, _) =
+                ui.allocate_exact_size(Vec2::new(m.width - 2.0, SEPARATOR_HEIGHT), Sense::hover());
+            let y = gap.center().y - 1.0;
+            for (dy, gray) in [
+                (0.0, if dark { 56 } else { 186 }),
+                (1.0, if dark { 116 } else { 218 }),
+            ] {
+                painter.rect_filled(
+                    Rect::from_min_size(
+                        Pos2::new(gap.left() + 3.0, y + dy),
+                        Vec2::new(gap.width() - 6.0, 1.0),
+                    ),
+                    0.0,
+                    Color32::from_gray(gray),
+                );
+            }
         }
         if response.clicked() && response.has_focus() {
             // A command can open a modal later in this same frame. Do not let

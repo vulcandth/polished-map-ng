@@ -87,6 +87,8 @@ fn tileset_selector_preserves_map_events_colors_and_prunes_removed_blocks() {
     h.state_mut().sidebar_reveal = Some(1);
     menu(&mut h, "Tools", "Change Tileset…");
     assert!(!h.state().confirm_tileset_change);
+    choice_preview::wait_for_preview(&mut h);
+    h.run();
     assert_eq!(
         h.state()
             .tileset_choice_form
@@ -94,7 +96,7 @@ fn tileset_selector_preserves_map_events_colors_and_prunes_removed_blocks() {
             .unwrap()
             .bounds
             .size(),
-        Vec2::new(280.0, 300.0)
+        Vec2::new(280.0, 504.0)
     );
     choose(&mut h, "demo", "other");
     assert!(h.state().error.is_none(), "{:?}", h.state().error);

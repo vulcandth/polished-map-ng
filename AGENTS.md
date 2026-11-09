@@ -87,6 +87,9 @@ exist from day one; a partial slice is not a completed parity milestone.
   testers. Do not continue autonomous GUI/platform test campaigns unless asked.
   Keep acceptance gates open, collect tester reports, and fix reported functional
   issues with appropriate automated regression checks.
+- On November 9 the user authorized the November 8–9 review fixes and bounded
+  menu/dialog adjustments. Keep native-menu/theme/search suggestions separate;
+  limit size/memory work to small changes without reducing compatibility.
 - The user prefers the earlier rounded egui palette sliders (2026-10-31).
   Preserve that appearance and the retained functional fixes; do not restore
   FLTK slider styling as part of parity work.

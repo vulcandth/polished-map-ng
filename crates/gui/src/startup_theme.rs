@@ -3,6 +3,16 @@
 use super::*;
 
 impl Editor {
+    pub(super) fn apply_theme_choice(&mut self, ctx: &egui::Context) {
+        self.startup_theme = None;
+        ctx.set_theme(if self.dark {
+            egui::Theme::Dark
+        } else {
+            egui::Theme::Light
+        });
+        ctx.request_repaint();
+    }
+
     pub(super) fn detect_startup_theme(&mut self, ctx: &egui::Context) {
         if let Some(theme) = ctx.system_theme() {
             self.dark = theme == egui::Theme::Dark;
@@ -48,6 +58,24 @@ impl Editor {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn f9_changes_theme_and_cancels_delayed_detection_but_respects_modals() {
+        let (_dir, mut h) = crate::tileset_editor_tests::fixture(false, false);
+        let (tx, rx) = mpsc::channel();
+        h.state_mut().startup_theme = Some(rx);
+        let original = h.state().dark;
+        h.key_press(egui::Key::F9);
+        h.run();
+        assert_eq!(h.state().dark, !original);
+        assert!(h.state().startup_theme.is_none());
+        assert!(tx.send(Some(original)).is_err());
+        h.state_mut().error = Some("Test modal".into());
+        h.run();
+        h.key_press(egui::Key::F9);
+        h.run();
+        assert_eq!(h.state().dark, !original);
+    }
 
     #[test]
     fn delayed_detection_is_once_only_and_manual_choice_cancels_it() {

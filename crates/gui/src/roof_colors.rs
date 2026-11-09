@@ -3,7 +3,7 @@
 use super::*;
 use polished_map_project::{RoofPaletteLayout, roof_palette_path};
 
-const LAYOUTS: [(RoofPaletteLayout, &str); 5] = [
+pub(super) const LAYOUTS: [(RoofPaletteLayout, &str); 5] = [
     (RoofPaletteLayout::Custom, "Custom"),
     (RoofPaletteLayout::DayNite, "Morn + Day, Night"),
     (RoofPaletteLayout::MornDayNite, "Morn, Day, Night"),

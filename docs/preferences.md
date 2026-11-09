@@ -209,3 +209,9 @@ child-window isolation and invalid-size rejection without an intervening save.
 These headless tests do not establish native filesystem shutdown delivery or
 compositor placement. The separate native probe supplies the platform-specific
 evidence linked above; it does not close integrated desktop acceptance.
+
+
+Unified Open/New can infer Roof Palettes from the selected project and exposes
+an override in Project options. It commits the chosen layout only after a
+successful open. The global Options setting still controls manual imports and
+remains the fallback for projects without an unambiguous layout.

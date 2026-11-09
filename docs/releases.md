@@ -320,3 +320,40 @@ Measured GUI executable sizes (bytes, uncompressed):
 These are complete-build comparisons, not an isolated optimization benchmark.
 Linux is about 16% smaller; both Macs about 14%; Windows is essentially unchanged.
 Further compression/size tradeoffs are deferred to measured improvements.
+
+
+### November 9 unified footprint investigation
+
+The published Windows `66ca4b6` unified executable is 19,182,080 bytes
+(18.29 MiB): PE sections contain 13,565,952 bytes of machine code and
+5,209,600 bytes of read-only data, with the rest in unwind/resource/relocation
+sections and headers. The release profile already uses thin LTO, one codegen
+unit and symbol stripping. This is not an accidentally distributed debug build.
+Rust dependencies, egui/eframe, wgpu, shader translation, platform adapters and
+bundled fonts contribute to the linked executable. These section sizes do not
+attribute an exact number of bytes to each dependency. Both format adapters
+share one GUI stack; the unified binary does not embed two independent apps.
+
+The reported 165 MB versus 14.9 MB process memory is not yet a controlled
+measurement. The newer GPU renderer introduces driver/resource allocations,
+font atlases and rendering caches absent from the original FLTK design. Resident
+memory, private committed memory and GPU memory are different measurements;
+a single Task Manager reading does not establish a leak or an exact breakdown.
+
+The small review change selects wgpu 30.0.1
+[`MemoryHints::MemoryUsage`](https://docs.rs/wgpu/30.0.1/wgpu/enum.MemoryHints.html),
+keeping every backend and the existing limits. In wgpu-hal's allocator policy,
+initial device/host block sizes change from 128/64 MiB to 8/4 MiB. Those are
+allocation-policy parameters, **not measured process savings**; some backends
+ignore the hint. No before/after resident-memory or latency result is claimed.
+Human testing should compare the same release configuration, project, map and
+window size on one machine, after idle and after repeated map changes.
+
+The current block renderer also uploads one 32×32 texture per block. An atlas
+is a concrete profiling candidate for reducing per-texture overhead, but is not
+part of this small policy change.
+
+Further work, if warranted by measurement, is a dependency size profile and a
+comparison of size-oriented compiler optimization against render/edit speed.
+Changing renderer, removing backends or deleting font coverage is deferred;
+compatibility takes priority over matching the original executable size.

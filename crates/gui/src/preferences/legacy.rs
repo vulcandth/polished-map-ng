@@ -158,6 +158,7 @@ impl NativeStartup {
             eframe::NativeOptions {
                 viewport: self.viewport(),
                 persist_window: true,
+                wgpu_options: crate::graphics_setup::configuration(),
                 ..Default::default()
             },
             Box::new(move |cc| {

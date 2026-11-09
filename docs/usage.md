@@ -60,7 +60,13 @@ at 10×9. Headless opens still require explicit dimensions when metadata is abse
 Tileset choices show the project's discovered graphics, including numbered labels
 and compound names. Roof choices start at `(none)`; the control is disabled when
 no roofs exist. Expand Project options and use Browse… to choose a project
-folder and refresh its choices. If typing the folder manually, use Reload project
+folder and refresh its choices. Unified Project options describes the detected
+attribute storage and tile capacity; project names there are examples of the
+format, not a promise about every fork. Roof palettes is also selectable here.
+Unified opens infer its layout from the roof table and group count when
+unambiguous. Three-set tables need a recognized ordering comment; otherwise
+check the retained setting. An explicit choice overrides inference for that open,
+and Cancel leaves the active session unchanged. If typing the folder manually, use Reload project
 options before opening. Canceling the chooser keeps the existing folder. An empty tileset inventory disables OK. Enter
 accepts valid options unless a numeric field is being edited; there it commits
 the number first. Escape closes an open dropdown first, then cancels the dialog.

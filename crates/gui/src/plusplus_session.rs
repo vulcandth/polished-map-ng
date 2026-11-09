@@ -237,6 +237,7 @@ impl Loaded {
             let (events, event_warning) =
                 event_workflows::auto_load_events(&document, auto_events, form.unified);
             Ok(Self {
+                roof_layout: None,
                 recent_path: (!form.new_map).then_some(form.path),
                 trailing_blocks: report.trailing_blocks,
                 document,

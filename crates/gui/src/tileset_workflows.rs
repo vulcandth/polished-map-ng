@@ -237,9 +237,9 @@ impl Editor {
         let choosing = egui::Popup::is_any_open(ctx);
         dialog_host::client(ctx, egui::Id::unique("change-tileset"), |ui| {
             dialog_host::heading(ui, "Change Tileset");
-            // Bounded reviewed client: selector, scrollable preview, actions.
-            let (area, _) =
-                ui.allocate_exact_size(Vec2::new(280.0, choice_preview::HEIGHT), Sense::hover());
+            // Fit the full selected sheet when the screen permits.
+            let height = form.preview.tileset_client_height(ctx);
+            let (area, _) = ui.allocate_exact_size(Vec2::new(280.0, height), Sense::hover());
             #[cfg(test)]
             {
                 form.bounds = area;
@@ -284,7 +284,7 @@ impl Editor {
                         .on_hover_text(current);
                 },
             );
-            let preview_area = rect(10.0, 44.0, 260.0, 210.0);
+            let preview_area = rect(10.0, 44.0, 260.0, height - 90.0);
             ui.scope_builder(egui::UiBuilder::new().max_rect(preview_area), |ui| {
                 ui.set_clip_rect(preview_area.intersect(ui.clip_rect()));
                 form.preview.show(
@@ -302,14 +302,11 @@ impl Editor {
                 (190.0, 96.0)
             };
             accept = ui
-                .put(
-                    rect(ok, choice_preview::BUTTON_Y, 80.0, 22.0),
-                    egui::Button::new("OK"),
-                )
+                .put(rect(ok, height - 32.0, 80.0, 22.0), egui::Button::new("OK"))
                 .clicked();
             cancel = ui
                 .put(
-                    rect(no, choice_preview::BUTTON_Y, 80.0, 22.0),
+                    rect(no, height - 32.0, 80.0, 22.0),
                     egui::Button::new("Cancel"),
                 )
                 .clicked();

@@ -315,8 +315,8 @@ recorded in `crates/gui/assets/fonts/NOTICE.md`. `tools/font_assets.py` verifies
 the font and license offline in CI. Headless tests verify all three required
 modifier glyphs; actual macOS font metrics remain a separate parity gate.
 
-Native startup selects installed faces using the reference's platform preference
-lists; deterministic tests and missing-role fallbacks use egui's bundled fonts,
+Native startup selects installed faces using the reference's Windows/Linux
+preference lists and the reviewed macOS system-font fallbacks; deterministic tests and missing-role fallbacks use egui's bundled fonts,
 whose notices are retained under `LICENSES/egui-fonts/`. Print shares the selected
 bold faces, collection indices and variable-font coordinates. Windows currently
 uses an explicitly reported Arial Bold substitute when Microsoft Sans Serif Bold

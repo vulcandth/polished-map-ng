@@ -1,12 +1,12 @@
 //! Installed-font policy from pinned master's themes.cpp::use_native_fonts.
 //! LGPL-3.0-only. Fonts are read locally, never copied into project outputs.
 //! FLTK 1.4.5 backend defaults are used after the application's ordered lists.
+//! macOS uses system UI and native monospace fallbacks per the November 8 review.
 use fontique::{Collection, FontStyle, FontWeight, FontWidth, GenericFamily};
 use skrifa::{FontRef, MetadataProvider};
 use std::sync::Arc;
 
-/// The reference uses the same preference lists on Linux and macOS, but their
-/// underlying FLTK default families differ.
+/// Platform-specific native font discovery policy.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FontPlatform {
     Windows,
@@ -84,10 +84,11 @@ impl NativeFonts {
         message_font: Option<&str>,
     ) -> Self {
         let (ui, mono) = preferences(platform);
-        let system_ui = (platform == FontPlatform::Windows)
-            .then_some(message_font)
-            .flatten()
-            .and_then(|name| select(db, &[name], false));
+        let system_ui = match platform {
+            FontPlatform::Windows => message_font.and_then(|name| select(db, &[name], false)),
+            FontPlatform::Mac => generic_face(db, GenericFamily::SystemUi, false),
+            FontPlatform::Unix => None,
+        };
         Self {
             platform,
             ui: system_ui
@@ -96,16 +97,22 @@ impl NativeFonts {
             mono: select(db, mono, false).or_else(|| default_face(db, platform, true, false)),
             mono_bold: select(db, mono, true).or_else(|| default_face(db, platform, true, true)),
             // Unlike Courier Bold, FL_HELVETICA_BOLD is never remapped by themes.cpp.
-            sans_bold: default_face(db, platform, false, true).or_else(|| {
-                if platform != FontPlatform::Windows {
-                    return None;
-                }
-                // GDI synthesizes this source face. Until the shared renderer
-                // can do that, retain a real, explicitly reported bold fallback.
-                let mut face = select(db, &["Arial"], true)?;
-                face.substituted_for = Some("Microsoft Sans Serif Bold");
-                Some(face)
-            }),
+            sans_bold: (platform == FontPlatform::Mac)
+                .then(|| {
+                    generic_face(db, GenericFamily::SystemUi, true).or_else(|| select(db, ui, true))
+                })
+                .flatten()
+                .or_else(|| default_face(db, platform, false, true))
+                .or_else(|| {
+                    if platform != FontPlatform::Windows {
+                        return None;
+                    }
+                    // GDI synthesizes this source face. Until the shared renderer
+                    // can do that, retain a real, explicitly reported bold fallback.
+                    let mut face = select(db, &["Arial"], true)?;
+                    face.substituted_for = Some("Microsoft Sans Serif Bold");
+                    Some(face)
+                }),
         }
     }
 
@@ -124,7 +131,17 @@ fn preferences(platform: FontPlatform) -> (&'static [&'static str], &'static [&'
             &["Segoe UI", "Tahoma", "MS Sans Serif"],
             &["Consolas", "Lucida Console", "Courier New"],
         ),
-        FontPlatform::Mac | FontPlatform::Unix => (
+        FontPlatform::Mac => (
+            &[
+                "San Francisco",
+                "SF Pro Text",
+                "Helvetica Neue",
+                "Lucida Grande",
+                "Helvetica",
+            ],
+            &["Menlo", "SF Mono", "Monaco", "Courier New", "Courier"],
+        ),
+        FontPlatform::Unix => (
             &["Ubuntu", "Noto Sans", "Droid Sans", "DejaVu Sans"],
             &[
                 "Ubuntu Mono",
@@ -159,13 +176,17 @@ fn default_face(
             } else {
                 GenericFamily::SansSerif
             };
-            let ids: Vec<_> = db.generic_families(generic).collect();
-            ids.into_iter().find_map(|id| {
-                let family = db.family(id)?;
-                load_face(&family, bold)
-            })
+            generic_face(db, generic, bold)
         }
     }
+}
+
+fn generic_face(db: &mut Collection, generic: GenericFamily, bold: bool) -> Option<NativeFontFace> {
+    let ids: Vec<_> = db.generic_families(generic).collect();
+    ids.into_iter().find_map(|id| {
+        let family = db.family(id)?;
+        load_face(&family, bold)
+    })
 }
 
 fn select(db: &mut Collection, names: &[&str], bold: bool) -> Option<NativeFontFace> {
@@ -295,8 +316,8 @@ mod tests {
     }
 
     #[test]
-    fn unix_preferences_are_shared_with_mac_and_names_are_exact() {
-        for platform in [FontPlatform::Mac, FontPlatform::Unix] {
+    fn unix_preferences_and_names_are_exact() {
+        for platform in [FontPlatform::Unix] {
             let mut db = collection();
             for name in [
                 "Droid Sans",
@@ -314,6 +335,58 @@ mod tests {
             assert_eq!(selected.mono.unwrap().family(), "Ubuntu Mono");
             assert_eq!(selected.mono_bold.unwrap().family(), "Noto Sans Mono");
             assert!(select(&mut db, &["ubuntu"], false).is_none());
+        }
+    }
+
+    #[test]
+    fn mac_system_ui_and_menlo_support_print_without_optional_courier_fonts() {
+        let mut db = collection();
+        let system = add(&mut db, "Current system UI", false);
+        add(&mut db, "Current system UI", true);
+        db.set_generic_families(GenericFamily::SystemUi, [system].into_iter());
+        add(&mut db, "Helvetica Neue", false);
+        add(&mut db, "Menlo", false);
+        add(&mut db, "Menlo", true);
+        let fonts = NativeFonts::from_collection(&mut db, FontPlatform::Mac, None);
+        assert_eq!(fonts.ui.as_ref().unwrap().family(), "Current system UI");
+        assert_eq!(fonts.mono.as_ref().unwrap().family(), "Menlo");
+        let print = crate::PrintFonts::from_native(&fonts).unwrap();
+        for (role, label) in [
+            (polished_map_core::PrintFont::CourierBold14, "FF"),
+            (polished_map_core::PrintFont::HelveticaBold14, "W"),
+        ] {
+            assert!(print.rasterize(role, label).is_ok());
+        }
+    }
+
+    #[test]
+    fn mac_older_system_fallbacks_are_ordered_and_bold_roles_are_independent() {
+        for name in [
+            "Helvetica",
+            "Lucida Grande",
+            "Helvetica Neue",
+            "San Francisco",
+        ] {
+            let mut db = collection();
+            for fallback in [
+                "Helvetica",
+                "Lucida Grande",
+                "Helvetica Neue",
+                "San Francisco",
+            ] {
+                add(&mut db, fallback, false);
+                if fallback == name {
+                    break;
+                }
+            }
+            add(&mut db, "Helvetica", true);
+            add(&mut db, "Monaco", false);
+            add(&mut db, "Courier New", true);
+            let fonts = NativeFonts::from_collection(&mut db, FontPlatform::Mac, None);
+            assert_eq!(fonts.ui.as_ref().unwrap().family(), name);
+            assert_eq!(fonts.mono.as_ref().unwrap().family(), "Monaco");
+            assert_eq!(fonts.mono_bold.as_ref().unwrap().family(), "Courier New");
+            assert!(crate::PrintFonts::from_native(&fonts).is_ok());
         }
     }
 

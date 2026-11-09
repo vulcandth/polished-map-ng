@@ -301,9 +301,21 @@ fn theme_frame_separator_pixels_and_narrow_clipping_match_source() {
                 h.run();
                 let image = h.render().unwrap();
                 let (background, upper, lower, sep_upper, sep_lower) = if dark {
-                    (83, 106, 40, 56, 116)
+                    (
+                        h.ctx.style_of(egui::Theme::Dark).visuals.panel_fill.r(),
+                        106,
+                        40,
+                        56,
+                        116,
+                    )
                 } else {
-                    (206, 218, 193, 186, 218)
+                    (
+                        h.ctx.style_of(egui::Theme::Light).visuals.panel_fill.r(),
+                        218,
+                        193,
+                        186,
+                        218,
+                    )
                 };
                 let x = h.get_by_label("Blocks: 256").rect().right() as u32;
                 for (x, y, expected) in [

@@ -364,3 +364,24 @@ fn integer_input_resize_enter_commits_field_escape_discards_and_default_enter_ap
     assert!(h.state().resize_form.is_none());
     assert_eq!(h.state().loaded.as_ref().unwrap().document.map().width(), 3);
 }
+
+#[test]
+fn numeric_text_is_vertically_centered_in_the_field() {
+    let mut h = fixture(false);
+    h.run();
+    let field = h.get_by_label("Number").rect();
+    let text = h
+        .output()
+        .shapes
+        .iter()
+        .find_map(|shape| match &shape.shape {
+            egui::Shape::Text(text) if text.galley.text() == "10" => Some(text),
+            _ => None,
+        })
+        .expect("numeric galley");
+    let center = text.pos.y + text.galley.size().y / 2.0;
+    assert!(
+        (center - field.center().y).abs() <= 1.0,
+        "text center={center}, field={field:?}"
+    );
+}

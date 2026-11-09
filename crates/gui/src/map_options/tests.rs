@@ -2,6 +2,17 @@ use super::*;
 use egui_kittest::kittest::Queryable;
 
 #[test]
+fn long_asset_names_preserve_the_right_hand_padding() {
+    for windows in [false, true] {
+        let layout = Layout::measured(true, windows, |s| s.len() as f32 * 8.0, 900.0, 700.0);
+        for control in [layout.tileset, layout.roof] {
+            assert_eq!(control.right(), layout.size.x - 10.0);
+            assert!(control.width() > 22.0);
+        }
+    }
+}
+
+#[test]
 fn source_map_options_geometry_preserves_fixed_rows_and_platform_buttons() {
     let measure = |s: &str| match s {
         "Width:" => 30.0,

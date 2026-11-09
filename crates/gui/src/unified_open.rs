@@ -71,6 +71,18 @@ impl OpenForm {
             (self.width, self.height) = sizes.dimensions();
         }
         self.choices_root = self.root.clone();
+        match polished_map_project::infer_roof_palette_layout(root) {
+            Ok(Some(layout)) => {
+                self.roof_layout = Some(layout);
+                self.roof_layout_note =
+                    "Roof palettes detected from the project table; override if needed.".into();
+            }
+            Ok(None) => {
+                self.roof_layout_note =
+                    "Roof palette layout is not unambiguous; check the selected setting.".into()
+            }
+            Err(error) => self.roof_layout_note = format!("Could not infer roof palettes: {error}"),
+        }
         self.resolve_profile();
         Ok(())
     }
@@ -88,13 +100,32 @@ impl OpenForm {
         ) {
             Ok(detected) => {
                 self.profile = detected.format().into();
+                self.detected_context = match self.profile {
+                    documents::Profile::PlusPlus => {
+                        "Per-block attributes · 512-tile capacity (Polished Crystal style)"
+                    }
+                    documents::Profile::Master
+                        if detected.evidence().iter().any(|e| {
+                            e.kind == polished_map_project::FormatEvidenceKind::PaletteMap
+                        }) =>
+                    {
+                        "Tile palette map · 256-tile capacity (pokecrystal style)"
+                    }
+                    documents::Profile::Master => {
+                        "Monochrome tiles · 256-tile capacity (pokered style)"
+                    }
+                }
+                .into();
                 self.detection_error = if self.tileset.is_empty() {
                     Some("Choose a tileset for this shared map.".into())
                 } else {
                     None
                 };
             }
-            Err(error) => self.detection_error = Some(error.to_string()),
+            Err(error) => {
+                self.detected_context.clear();
+                self.detection_error = Some(error.to_string());
+            }
         }
     }
 }

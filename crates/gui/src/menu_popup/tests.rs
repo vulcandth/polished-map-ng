@@ -238,7 +238,7 @@ fn held_alt_prefers_open_items_and_submenus_fall_back_to_the_parent() {
 
 #[cfg(feature = "visual-tests")]
 #[test]
-fn popup_panel_corners_and_full_width_dividers_match_source_at_both_scales() {
+fn popup_panels_and_reviewed_divider_gaps_are_pixel_aligned_at_both_scales() {
     for dark in [false, true] {
         for size in [12.0, 13.0] {
             for dpi in [1_u32, 2] {
@@ -257,8 +257,19 @@ fn popup_panel_corners_and_full_width_dividers_match_source_at_both_scales() {
                     h.remove_cursor();
                     h.run();
                     let items = specs::group(group);
-                    let first = h.get_by_label(items.first().unwrap().name).rect();
-                    let last = h.get_by_label(items.last().unwrap().name).rect();
+                    let role = |item: &Spec<'_>| match item.mark {
+                        Mark::Check => egui::Role::CheckBox,
+                        Mark::Radio => egui::Role::RadioButton,
+                        Mark::Blank | Mark::Submenu => egui::Role::MenuItem,
+                    };
+                    let first_item = items.first().unwrap();
+                    let last_item = items.last().unwrap();
+                    let first = h
+                        .get_by_role_and_label(role(first_item), first_item.name)
+                        .rect();
+                    let last = h
+                        .get_by_role_and_label(role(last_item), last_item.name)
+                        .rect();
                     let bounds = Rect::from_min_max(
                         first.min - Vec2::splat(1.0),
                         last.max + Vec2::splat(1.0),
@@ -296,16 +307,20 @@ fn popup_panel_corners_and_full_width_dividers_match_source_at_both_scales() {
                             Mark::Blank | Mark::Submenu => egui::Role::MenuItem,
                         };
                         let row = h.get_by_role_and_label(role, item.name).rect();
-                        let (upper, lower) = if dark { (3, 216) } else { (110, 247) };
-                        // Menu-bar anchors may land on a half logical point at
-                        // 2x DPI; preserve that physical-pixel-aligned origin.
-                        for column in 0..bounds.width() as u32 {
-                            let x = bounds.left() + column as f32;
-                            // Dividers are part of the preceding row, overwrite
-                            // both panel edges, and occupy exactly two pixels.
-                            pixel(x, row.bottom() - 2.0, upper);
-                            pixel(x, row.bottom() - 1.0, lower);
+                        let (upper, lower) = if dark { (56, 116) } else { (186, 218) };
+                        // The reviewed divider sits in its own eight-point gap,
+                        // inset from both panel borders, with three points above
+                        // and below the two-pixel bevel.
+                        for column in 3..row.width() as u32 - 3 {
+                            let x = row.left() + column as f32;
+                            pixel(x, row.bottom() + 3.0, upper);
+                            pixel(x, row.bottom() + 4.0, lower);
                         }
+                        pixel(
+                            row.left() + 2.0,
+                            row.bottom() + 3.0,
+                            if dark { 83 } else { 206 },
+                        );
                     }
                 };
                 h.get_by_label("File").click();
@@ -372,18 +387,28 @@ fn popup_rows_reserve_images_and_align_shortcuts_at_both_font_sizes_and_dpi_scal
             h.remove_cursor();
             h.run();
             let mut previous: Option<Rect> = None;
+            let mut previous_divider = false;
             let mut width: Option<f32> = None;
             for item in specs::group("File") {
                 let node = h.get_by_role_and_label(egui::Role::MenuItem, item.name);
                 let rect = node.rect();
                 if let Some(previous) = previous {
-                    assert_eq!(rect.top(), previous.bottom(), "divider must not add a row");
+                    assert_eq!(
+                        rect.top(),
+                        previous.bottom()
+                            + if previous_divider {
+                                SEPARATOR_HEIGHT
+                            } else {
+                                0.0
+                            }
+                    );
                 }
                 if let Some(width) = width {
                     assert_eq!(rect.width(), width);
                 }
                 assert_eq!(rect.height(), if item.name == "Exit" { 19.0 } else { 20.0 });
                 previous = Some(rect);
+                previous_divider = item.divider;
                 width = Some(rect.width());
             }
             assert_eq!(

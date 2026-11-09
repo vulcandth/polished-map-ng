@@ -24,6 +24,7 @@ mod file_workflows;
 mod fonts;
 mod fullscreen;
 pub mod geometry;
+mod graphics_setup;
 mod help;
 mod icons;
 mod map_buttons;
@@ -106,6 +107,7 @@ use polished_map_project::{
 pub const WINDOW_TITLE: &str = "Polished Map NG — development";
 
 struct Loaded {
+    roof_layout: Option<polished_map_project::RoofPaletteLayout>,
     // Retain chosen spelling for history/title independently of canonical I/O paths.
     recent_path: Option<PathBuf>,
     trailing_blocks: usize,
@@ -123,6 +125,9 @@ type LoadResult = Result<Loaded, String>;
 
 #[derive(Default)]
 struct OpenForm {
+    roof_layout: Option<polished_map_project::RoofPaletteLayout>,
+    detected_context: String,
+    roof_layout_note: String,
     unified: bool,
     detection_error: Option<String>,
     profile: documents::Profile,
@@ -558,6 +563,7 @@ impl Editor {
     pub fn prepare_new_in(&mut self, root: PathBuf) {
         let mut form = OpenForm {
             unified: self.application.is_unified(),
+            roof_layout: Some(self.roof_palette_layout),
             new_map: true,
             profile: self.profile(),
             allow_512: self.allow_512,
@@ -584,6 +590,7 @@ impl Editor {
         };
         let mut form = OpenForm {
             unified: self.application.is_unified(),
+            roof_layout: Some(self.roof_palette_layout),
             profile: self.profile(),
             allow_512: self.allow_512,
             root: metadata
@@ -624,7 +631,7 @@ impl Editor {
         let settings = map_loading::LoadSettings {
             graphics: MasterGraphicsOptions {
                 dark_theme: self.dark,
-                roof_layout: self.roof_palette_layout,
+                roof_layout: form.roof_layout.unwrap_or(self.roof_palette_layout),
                 special_palettes: self.auto_special_palettes,
                 roof_colors: self.auto_roof_colors,
                 allow_priority: self.allow_priority,
@@ -1885,6 +1892,11 @@ impl Editor {
             }
             if ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F11)) {
                 fullscreen::toggle(&ctx);
+            }
+            if ctx.input_mut(|i| shortcuts::consume_exact(i, egui::Modifiers::NONE, egui::Key::F9))
+            {
+                self.dark = !self.dark;
+                self.apply_theme_choice(&ctx);
             }
             if ctx.input_mut(|i| shortcuts::consume_exact(i, egui::Modifiers::NONE, egui::Key::F10))
             {

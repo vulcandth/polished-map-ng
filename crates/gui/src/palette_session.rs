@@ -123,6 +123,9 @@ impl Editor {
         });
         self.event_ui.drag = None;
         self.event_ui.form = None;
+        if let Some(layout) = loaded.roof_layout {
+            self.roof_palette_layout = layout;
+        }
         self.loaded = Some(loaded);
         self.textures = textures;
         self.selected = 0;

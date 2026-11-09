@@ -140,6 +140,7 @@ pub fn run(directory: &Path, profile: &str, phase: &str) -> eframe::Result {
             viewport,
             persistence_path: Some(file.clone()),
             persist_window: true,
+            wgpu_options: crate::graphics_setup::configuration(),
             ..Default::default()
         },
         Box::new(move |cc| {

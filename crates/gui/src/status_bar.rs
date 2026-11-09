@@ -122,12 +122,12 @@ fn draw(ui: &mut egui::Ui, bounds: Rect, fields: &[String; 5], diagnostic: &str)
     let clip = bounds.intersect(ui.clip_rect());
     let painter = ui.painter().with_clip_rect(clip);
     let dark = ui.visuals().dark_mode;
-    let (background, foreground, upper, lower, separator_upper, separator_lower) = if dark {
-        (83, 255, 106, 40, 56, 116)
+    let (foreground, upper, lower, separator_upper, separator_lower) = if dark {
+        (255, 106, 40, 56, 116)
     } else {
-        (206, 60, 218, 193, 186, 218)
+        (60, 218, 193, 186, 218)
     };
-    painter.rect_filled(bounds, 0.0, Color32::from_gray(background));
+    painter.rect_filled(bounds, 0.0, ui.visuals().panel_fill);
     let font = egui::FontId::proportional(if ui.ctx().os() == egui::os::OperatingSystem::Windows {
         12.0
     } else {

@@ -31,7 +31,10 @@ jobs:
         run: python tools/native_features.py
       - run: cargo fmt --all -- --check
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
-      - run: cargo test --workspace --locked
+      - name: Smoke-test file input, edit and output on every OS
+        run: cargo test -p polished-map-cli --locked --test commands preview_then_apply_and_failed_batch_never_partially_writes -- --exact
+      - name: Verify complete workspace
+        run: cargo test --workspace --locked
       - name: Verify original Windows executable icons
         if: runner.os == 'Windows'
         run: python tools/windows_icon_resources.py target/debug/polished-map-gui.exe target/debug/polished-map-plusplus.exe

@@ -669,3 +669,27 @@ both graphics directories. Names without a safe hint still need explicit context
 reopen. Fixed parity launchers retain their original suggestions. No existing project filename,
 header or companion asset is changed by generating a suggestion. See
 [native and regression evidence](compatibility.md#unified-native-save-context).
+
+
+## November 8–9 review adjustments
+
+The reviewed unified editor keeps both format-specific Options groups visible,
+disables inapplicable actions, identifies detected storage in Project options,
+and infers unambiguous roof layouts with an explicit override. Filename/project
+root precede the application identity in the unified title; parity launcher
+titles and the existing status-bar modified indication remain unchanged.
+
+Specific review adjustments add spaced menu separators, square menu highlights,
+a status background matching the toolbar, F9/theme grouping, centered numeric
+text and sufficient tileset preview space within screen limits. They do not
+resume general M4 matching or change the preferred rounded palette sliders.
+
+macOS now prefers the system UI family and platform fallbacks, with independently
+selected Menlo/SF Mono/Monaco/Courier monospace and bold faces for Print. This
+replaces the previous Linux-oriented preference/Arial-Courier fallback on Mac;
+original-font matching remains deferred. The older Intel Metal startup workaround
+disables only indirect-call validation on macOS; the application uses direct
+indexed drawing. Other validation, limits, all backends and explicit environment
+overrides remain. The memory allocator hint is a small policy adjustment, not a
+claim of measured savings. See [review evidence](compatibility.md#november-8-9-unified-review)
+and the [footprint investigation](releases.md#november-9-unified-footprint-investigation).

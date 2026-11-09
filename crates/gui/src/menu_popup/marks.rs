@@ -240,6 +240,7 @@ fn panel(dark: bool, width: i32, height: i32) -> Drawing {
     d
 }
 
+#[cfg(test)]
 fn divider(dark: bool, width: i32, row: i32, index: i32) -> Drawing {
     // FL_DARK3/FL_LIGHT3 after Fl::background(206) or Fl::background(83), not
     // the theme's panel-frame colors. Verified against the unchanged gray-ramp
@@ -258,20 +259,6 @@ pub(super) fn paint_panel(painter: &egui::Painter, bounds: Rect, dark: bool) {
         painter,
         bounds.min,
         panel(dark, bounds.width() as i32, bounds.height() as i32),
-    );
-}
-
-pub(super) fn paint_divider(
-    painter: &egui::Painter,
-    bounds: Rect,
-    dark: bool,
-    row: f32,
-    index: usize,
-) {
-    paint_drawing(
-        &painter.with_clip_rect(painter.clip_rect().intersect(bounds)),
-        bounds.min,
-        divider(dark, bounds.width() as i32, row as i32, index as i32),
     );
 }
 
