@@ -338,7 +338,10 @@ launchers. No mode selector and no silent format conversion. See the
   workflow, including alternating projects and cancelled/failed loads. Missing
   or conflicting evidence requires corrected context, never a mode selector;
   wrong-format writes fail without modifying files. Automated five-project and
-  cross-storage edit/save/reopen suites pass. Focused Windows project, asset,
+  cross-storage edit/save/reopen suites pass. The reported palette Hex text
+  alignment fix is implemented and automatically verified, awaiting the next build (see
+  [review evidence](compatibility.md#november-8-9-unified-review)).
+  Focused Windows project, asset,
   event, palette/collision and external clipboard workflows pass. Linux X11
   original-app Print/tile exchange and bidirectional file-manager drops also pass.
   Completion still requires remaining integrated desktop, native chooser,

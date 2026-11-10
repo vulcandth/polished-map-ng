@@ -629,6 +629,7 @@ impl Editor {
             let hex = ui.put(
                 rect(ox + hw, oy + 78.0, hex_width, 22.0),
                 egui::TextEdit::singleline(&mut form.hex)
+                    .align(egui::Align2::LEFT_CENTER)
                     .char_limit(6)
                     .font(egui::TextStyle::Monospace),
             );

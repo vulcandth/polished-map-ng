@@ -7,6 +7,16 @@ and the latest messages. Unrelated RGBDS and overworld-sprite-tool discussion is
 outside this task. U4 owns implementation and verification; broader native
 acceptance remains with human testers.
 
+The follow-up Hex field alignment report is addressed in
+[the palette editor](../crates/gui/src/palette_editor.rs): its single-line text
+uses left/vertical-center alignment within the existing 22-point field, matching
+the numeric controls. Palette editing behavior and dialog geometry are unchanged.
+Windows formatting, workspace Clippy/tests and rustdoc pass. All nine existing
+palette tests pass with Linux offscreen rendering and snapshot updates disabled;
+the four inspected color/monochrome, Windows/Unix-button-order baselines change
+only the hex glyphs inside the field. This follow-up is not included in the
+published `0350275` packages below.
+
 | Feedback | Disposition |
 |---|---|
 | macOS 11/2013 MacBook GUI fails at startup; `WGPU_VALIDATION_INDIRECT_CALL=0` works | Implemented: native startup disables only indirect-call validation on macOS; ordinary validation, backends and device limits remain intact. Explicit environment overrides remain supported. |
