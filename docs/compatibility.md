@@ -16,8 +16,11 @@ palette tests pass with Linux offscreen rendering and snapshot updates disabled;
 the four inspected color/monochrome, Windows/Unix-button-order baselines change
 only the hex glyphs inside the field. CI also identified the drag-feedback
 snapshot showing this field; its inspected baseline changes only the same glyphs,
-and the focused drag-feedback test passes with updates disabled. This follow-up is not included in the
-published `0350275` packages below.
+and the focused drag-feedback test passes with updates disabled. All eight
+[CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42753810997)
+pass for `603d038f25aaa9227edd887c9ee344de77057a1a`; audited four-target
+[development packages](releases.md#unified-development-packaging) include this fix.
+The older `0350275` evidence below is historical; its prerelease was replaced.
 
 | Feedback | Disposition |
 |---|---|

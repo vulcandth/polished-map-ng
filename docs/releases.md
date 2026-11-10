@@ -8,7 +8,7 @@ the development policy below; the full checklist remains the final release gate.
 
 | Application | Current development download | Testing guide |
 |---|---|---|
-| Unified editor | [November 9 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-09-0350275) | [Unified testing](testing-unified.md) |
+| Unified editor | [November 9 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-09-603d038) | [Unified testing](testing-unified.md) |
 | Fixed master parity | [November 7 master build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-618aefd) | [Master testing](testing.md) |
 | Fixed plusplus parity | [November 7 plusplus build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-618aefd) | [Plusplus testing](testing-plusplus.md) |
 
@@ -241,12 +241,12 @@ No binaries should be presented as production-ready before these gates pass.
 
 ## Unified development packaging
 
-The [latest unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-09-0350275)
-is published from `035027528b0ab2e74b5e5038b7c612c72c30af3e` for Windows x86-64,
-Linux x86-64, Apple Silicon and Intel macOS. It delivers the
-[November 8–9 review fixes](compatibility.md#november-8-9-unified-review).
-All eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42723824870)
-and all five [packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42725428016)
+The [latest unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-09-603d038)
+is published from `603d038f25aaa9227edd887c9ee344de77057a1a` for Windows x86-64,
+Linux x86-64, Apple Silicon and Intel macOS. It centers the Hex field text in
+Edit Current Palettes and retains the [November 8–9 review fixes](compatibility.md#november-8-9-unified-review).
+All eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42753810997)
+and all five [packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42753811875)
 passed. This is a development prerelease, not a parity or latest stable release.
 
 Complete matching source, licenses, lockfile, rebuild/relink instructions and
@@ -266,14 +266,20 @@ the historical native GUI checks below do not establish acceptance of this build
 The memory allocation hint has no measured RAM savings yet; see the
 [footprint investigation](#november-9-unified-footprint-investigation).
 
+The four earlier unified prereleases (`0350275`, `66ca4b6`, `5332c83` and
+`4edcbc6`) were deleted at the maintainer's request after this replacement was
+published and audited. Their Git tags and source history remain; separate
+master/plusplus releases are unchanged. Historical evidence below refers to those
+older commits, not currently downloadable binary releases.
+
 ### Historical November 8 candidate
 
-The [November 8 unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-08-66ca4b6)
-is published from `66ca4b6cd528d0859b30b6b8ba05291cd00ccd6b` for Windows x86-64,
+The [November 8 unified development build](https://github.com/vulcandth/polished-map-ng/commit/66ca4b6cd528d0859b30b6b8ba05291cd00ccd6b)
+was published from `66ca4b6cd528d0859b30b6b8ba05291cd00ccd6b` for Windows x86-64,
 Linux x86-64, Apple Silicon and Intel macOS. Complete source and all five SHA-256
-files accompany the four binaries. The tag resolves to that exact commit; all ten
-uploaded sizes and server-reported digests match the locally verified files. It
-is a prerelease and is not marked latest stable.
+files accompanied the four binaries. The retained tag resolves to that exact
+commit; all ten uploaded sizes and server-reported digests matched the locally
+verified files. It was a prerelease and was not marked latest stable.
 
 This refresh fixes native Ctrl+C/Cmd+C in Print Options. Print and block editing
 reuse a helper that handles translated Copy events and raw shortcuts without
@@ -315,14 +321,14 @@ and [event/clipboard workflows](compatibility.md#unified-windows-event-and-image
 Full native acceptance remains open; no parity or clean-machine release claim is
 made. Offline source, licensing, lockfile and checksum requirements apply unchanged.
 
-The [previous unified release, `5332c83`](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-5332c83),
+The [previous unified release, `5332c83`](https://github.com/vulcandth/polished-map-ng/commit/5332c83e74676a95e07b6ceebcb22658513460e1),
 preserved compound tileset context in Save As and rejected ambiguous
 plain/compound filename hints using the current inventory. Its native compound
 reopen check is retained in the [mixed-storage evidence](compatibility.md#unified-windows-mixed-storage-native-checks).
 The November 8 release retains those changes and adds the Print shortcut correction.
 
-The [first unified release, `4edcbc6`](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-4edcbc6),
-remains available for comparison. It corrected stale simple Save As hints but did
+The [first unified release, `4edcbc6`](https://github.com/vulcandth/polished-map-ng/commit/4edcbc6289b4d7d84729c419d5a05e92dc906670),
+is retained in source history. It corrected stale simple Save As hints but did
 not retain compound tileset hints. Candidate `1baa7a1` passed CI but was not
 published: its packages were superseded by the shared plain/compound hint guard.
 The earlier `254d57e` candidate was also not published after native verification
