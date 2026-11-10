@@ -46,8 +46,14 @@ checks) with snapshot updates disabled. All 97 changed baselines were inspected:
 status, numeric and preview changes. The default WSL Vulkan selection crashed
 before the first screenshot; explicitly selecting installed Mesa lavapipe
 isolated the offscreen renderer and completed the checks. This does not change
-the application's backend configuration. CI verification of the final commit
-is pending. These checks are not native GUI acceptance or a RAM benchmark.
+the application's backend configuration. [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42723824870)
+pass for `035027528b0ab2e74b5e5038b7c612c72c30af3e`, including Windows/Linux/macOS
+workspace and installed-font Print checks, MSRV, dependency/license audit,
+source-reference comparisons, real-project integration and offscreen visuals.
+Refreshed Windows/Linux/macOS packages and matching source are published from
+that commit after archive, licensing, checksum and packaged CLI verification;
+see [delivery evidence](releases.md#unified-development-packaging). These checks
+are not full native GUI acceptance or a RAM benchmark.
 
 The [roadmap](roadmap.md) owns current task status and execution order. Use the
 [current coverage matrix](#current-coverage-matrix) for the implementation summary.

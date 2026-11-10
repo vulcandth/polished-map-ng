@@ -11,8 +11,8 @@ is an application-side Objective-C integration example, not a switch in eframe.
 The reviewed [winit popup PR 4543](https://github.com/rust-windowing/winit/pull/4543)
 merged on July 27, 2026 at `9674d8ceef6976326fe9583a81f2e684daac05d6`. It adds a
 new popup window type and parent relationship in the reorganized winit-core,
-winit-appkit, winit-wayland and winit-win32 API. Its X11 implementation remains
-unchecked. Our pinned winit 0.30.13 has the older platform_impl API, and
+winit-appkit, winit-wayland and winit-win32 API. Its X11 `WindowType::Popup`
+branch explicitly returns `RequestError::NotSupported`. Our pinned winit 0.30.13 has the older platform_impl API, and
 [egui's separate context-menu window request](https://github.com/emilk/egui/issues/5144)
 remains open. Using the new primitive would require a winit/egui integration
 migration or substantial platform backports, plus focus/grab/dismissal handling;

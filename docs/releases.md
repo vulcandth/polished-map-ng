@@ -8,7 +8,7 @@ the development policy below; the full checklist remains the final release gate.
 
 | Application | Current development download | Testing guide |
 |---|---|---|
-| Unified editor | [November 8 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-08-66ca4b6) | [Unified testing](testing-unified.md) |
+| Unified editor | [November 9 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-09-0350275) | [Unified testing](testing-unified.md) |
 | Fixed master parity | [November 7 master build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-618aefd) | [Master testing](testing.md) |
 | Fixed plusplus parity | [November 7 plusplus build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-618aefd) | [Plusplus testing](testing-plusplus.md) |
 
@@ -241,7 +241,34 @@ No binaries should be presented as production-ready before these gates pass.
 
 ## Unified development packaging
 
-The [latest unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-08-66ca4b6)
+The [latest unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-09-0350275)
+is published from `035027528b0ab2e74b5e5038b7c612c72c30af3e` for Windows x86-64,
+Linux x86-64, Apple Silicon and Intel macOS. It delivers the
+[November 8–9 review fixes](compatibility.md#november-8-9-unified-review).
+All eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42723824870)
+and all five [packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42725428016)
+passed. This is a development prerelease, not a parity or latest stable release.
+
+Complete matching source, licenses, lockfile, rebuild/relink instructions and
+five SHA-256 files accompany the four platform archives. The source audit checks
+every tracked file against Git and all 460 vendored registry sources against
+Cargo.lock/checksums. Binary audits check architecture, executable modes,
+launcher/commit identity, tester instructions, notices, 470 dependency records,
+macOS bundle/signature metadata and all five Windows icon resources. No external
+project/game fixtures are distributed. All ten uploaded asset sizes and digests
+match the audited files; the release tag resolves to the exact source commit.
+
+Each binary was built offline from the matching source archive. Packaged CLI
+smoke checks pass on all native build runners and locally on Windows/WSL. macOS
+bundles are ad-hoc signed, not Developer ID signed or notarized. The older Intel
+Mac startup/Print retest and broader native acceptance remain with human testers;
+the historical native GUI checks below do not establish acceptance of this build.
+The memory allocation hint has no measured RAM savings yet; see the
+[footprint investigation](#november-9-unified-footprint-investigation).
+
+### Historical November 8 candidate
+
+The [November 8 unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-08-66ca4b6)
 is published from `66ca4b6cd528d0859b30b6b8ba05291cd00ccd6b` for Windows x86-64,
 Linux x86-64, Apple Silicon and Intel macOS. Complete source and all five SHA-256
 files accompany the four binaries. The tag resolves to that exact commit; all ten
@@ -275,7 +302,7 @@ The binaries are rebuilt offline from the matching source archive. Nine packagin
 regression tests cover all targets and mismatch rejection.
 
 The packaged CLI runs on all native build runners and locally on Windows/WSL.
-The latest Windows package reopens the generated mixed-event map through Recent,
+The November 8 Windows package reopens the generated mixed-event map through Recent,
 retains all five Print flags, copies successfully with Ctrl+C and closes normally.
 The Linux package also passes [X11 original-app clipboard comparisons and
 file-manager drops](compatibility.md#unified-linux-x11-original-app-exchange-and-file-drops)
@@ -292,7 +319,7 @@ The [previous unified release, `5332c83`](https://github.com/vulcandth/polished-
 preserved compound tileset context in Save As and rejected ambiguous
 plain/compound filename hints using the current inventory. Its native compound
 reopen check is retained in the [mixed-storage evidence](compatibility.md#unified-windows-mixed-storage-native-checks).
-The current release retains those changes and adds the Print shortcut correction.
+The November 8 release retains those changes and adds the Print shortcut correction.
 
 The [first unified release, `4edcbc6`](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-07-4edcbc6),
 remains available for comparison. It corrected stale simple Save As hints but did
@@ -333,6 +360,10 @@ Rust dependencies, egui/eframe, wgpu, shader translation, platform adapters and
 bundled fonts contribute to the linked executable. These section sizes do not
 attribute an exact number of bytes to each dependency. Both format adapters
 share one GUI stack; the unified binary does not embed two independent apps.
+
+The refreshed `0350275` Windows executable is 19,213,312 bytes (18.32 MiB),
+essentially unchanged after the review fixes. The allocator hint targets runtime
+allocation; no executable-size reduction is claimed.
 
 The reported 165 MB versus 14.9 MB process memory is not yet a controlled
 measurement. The newer GPU renderer introduces driver/resource allocations,
