@@ -14,7 +14,9 @@ the numeric controls. Palette editing behavior and dialog geometry are unchanged
 Windows formatting, workspace Clippy/tests and rustdoc pass. All nine existing
 palette tests pass with Linux offscreen rendering and snapshot updates disabled;
 the four inspected color/monochrome, Windows/Unix-button-order baselines change
-only the hex glyphs inside the field. This follow-up is not included in the
+only the hex glyphs inside the field. CI also identified the drag-feedback
+snapshot showing this field; its inspected baseline changes only the same glyphs,
+and the focused drag-feedback test passes with updates disabled. This follow-up is not included in the
 published `0350275` packages below.
 
 | Feedback | Disposition |
