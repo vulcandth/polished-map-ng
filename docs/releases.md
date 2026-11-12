@@ -8,7 +8,7 @@ the development policy below; the full checklist remains the final release gate.
 
 | Application | Current development download | Testing guide |
 |---|---|---|
-| Unified editor | [November 9 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-09-603d038) | [Unified testing](testing-unified.md) |
+| Unified editor | [November 11 unified build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-11-6d8a2ea) | [Unified testing](testing-unified.md) |
 | Fixed master parity | [November 7 master build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-618aefd) | [Master testing](testing.md) |
 | Fixed plusplus parity | [November 7 plusplus build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-618aefd) | [Plusplus testing](testing-plusplus.md) |
 
@@ -241,12 +241,15 @@ No binaries should be presented as production-ready before these gates pass.
 
 ## Unified development packaging
 
-The [latest unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-09-603d038)
-is published from `603d038f25aaa9227edd887c9ee344de77057a1a` for Windows x86-64,
-Linux x86-64, Apple Silicon and Intel macOS. It centers the Hex field text in
-Edit Current Palettes and retains the [November 8–9 review fixes](compatibility.md#november-8-9-unified-review).
-All eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42753810997)
-and all five [packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42753811875)
+The [latest unified development build](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-11-6d8a2ea)
+is published from `6d8a2ea173db791a2a83f4f560de56d6059d0a92` for Windows x86-64,
+Linux x86-64, Apple Silicon and Intel macOS. It includes the
+[November 10–11 review corrections](compatibility.md#november-1011-unified-review):
+aligned Project options, unclipped multiline event fields, theme-matched menus
+and a toolbar-consistent status bar. The earlier Hex field alignment and
+November 8–9 fixes are retained; `paletteswap` remains deferred.
+All eight [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43130466411)
+and all five [packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43139014277)
 passed. This is a development prerelease, not a parity or latest stable release.
 
 Complete matching source, licenses, lockfile, rebuild/relink instructions and
@@ -266,11 +269,12 @@ the historical native GUI checks below do not establish acceptance of this build
 The memory allocation hint has no measured RAM savings yet; see the
 [footprint investigation](#november-9-unified-footprint-investigation).
 
-The four earlier unified prereleases (`0350275`, `66ca4b6`, `5332c83` and
-`4edcbc6`) were deleted at the maintainer's request after this replacement was
-published and audited. Their Git tags and source history remain; separate
-master/plusplus releases are unchanged. Historical evidence below refers to those
-older commits, not currently downloadable binary releases.
+The previous `603d038` unified prerelease was deleted at the maintainer's request
+after this replacement was published and audited. The four older unified
+prereleases (`0350275`, `66ca4b6`, `5332c83` and `4edcbc6`) had already been
+removed. Their Git tags and source history remain; separate master/plusplus
+releases are unchanged. Historical evidence below refers to older commits, not
+currently downloadable binary releases.
 
 ### Historical November 8 candidate
 

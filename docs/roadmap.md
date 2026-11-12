@@ -304,12 +304,13 @@ Authorized on November 7 before native parity acceptance; retain both parity
 launchers. No mode selector and no silent format conversion. See the
 [sequencing decision](deviations.md#unified-work-before-native-parity-acceptance).
 
-- [x] **U5 — Complete, implementation and automated verification:** Corrected
+- [x] **U5 — Complete, implementation and development delivery:** Corrected
   Project options alignment, multiline event field clipping, menu colors and
   status-bar consistency from the November 10–11 review. Focused geometry/input
   checks, inspected light/dark snapshots and required workspace checks pass.
   `paletteswap` is deferred until after the initial release; native acceptance
-  remains U3. These fixes are not yet in the published development packages.
+  remains U3. Audited Windows/Linux/macOS development packages and matching
+  source are published; all five packaging jobs pass. See [delivery](releases.md#unified-development-packaging).
   Evidence: [review and verification](compatibility.md#november-1011-unified-review).
 
 - [x] **U4 — Complete, implementation and development delivery:** Implemented the November 8–9

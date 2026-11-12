@@ -35,7 +35,10 @@ documentation links/examples and `git diff --check` pass. All eight
 pass, including Windows/Linux/macOS workspace and existing native-adapter probes,
 five-project compatibility, visuals, upstream references, MSRV and dependency/license
 checks. These automated probes do not close U3's human acceptance gates. The
-corrections are not yet included in the published `603d038` development packages.
+corrections are included in the audited November 11 four-target
+[development packages](releases.md#unified-development-packaging), with matching
+source and checksums. All five packaging jobs pass. The prior `603d038` unified
+prerelease was retired after publishing this replacement.
 
 ## November 8-9 unified review
 
