@@ -4827,3 +4827,16 @@ so an embedded modal's extra exterior margin cannot hide a missing native inset.
 The existing aligned-row and Cancel assertions remain. The focused Windows test
 passes; Linux light/dark snapshots were regenerated, visually inspected and
 rechecked without update mode. Full native acceptance remains with human testers.
+
+
+Verification for promoted `main` commit
+`4f595496f1ce7001e9dff528e413ff79c7782f4e`:
+[all eight CI jobs passed](https://github.com/vulcandth/polished-map-ng/actions/runs/43147110142).
+This includes fmt/Clippy/workspace tests/docs on Windows, Linux and macOS,
+MSRV, original-reference comparisons, visual snapshots, five-project integration
+and the expanded deny/about license job. Its uploaded report contains 388
+selected crates and the verified supplemental notices. Locally, Windows fmt,
+Clippy, documentation and the focused padding regression passed; the full
+workspace suite ran under Linux/WSL (553 passed, 61 opt-in tests ignored), along
+with the focused visual recheck. No additional desktop acceptance campaign
+was performed.

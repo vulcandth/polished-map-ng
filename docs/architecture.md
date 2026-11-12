@@ -549,6 +549,12 @@ work and normal CI target `main`; the manual development packaging workflow
 defaults to `unified`, while explicit `master` and `plusplus` profiles remain.
 
 The former `main` had three review commits outside unified's ancestry; their
-shared fixes were already backported before unified work. The promotion retains
+shared fixes were already backported in `d2c1875` before unified work. The promotion retains
 that ancestry with a merge selecting the unified tree, so no force push or
 history deletion is necessary. Native acceptance remains open in the roadmap.
+
+
+The promotion commit is `4f595496f1ce7001e9dff528e413ff79c7782f4e`.
+Historical tips remain `f8f0d96ded4f7c9e626ec1d8d52ef49b227bac9a`
+(`codex/master-review`) and `9100684f07e6287b8cba9afc9c35fb14c38037b1`
+(`codex/plusplus-port`).

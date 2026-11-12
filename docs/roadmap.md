@@ -12,7 +12,7 @@ and design decisions in [architecture](architecture.md).
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
 | 2. Plusplus parity | **In progress — awaiting native acceptance** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
-| 3. Unified editor | **In progress — awaiting native acceptance** | U1, U2, U4 and U5 are complete; U6 maintenance and main promotion are in progress. November 10–11 layout/theme corrections pass automated checks with inspected snapshots. Five-project and cross-storage persistence checks pass; U3 integrated/native acceptance remains with human testers. The parity launchers remain available. |
+| 3. Unified editor | **In progress — awaiting native acceptance** | U1, U2, U4, U5 and U6 are complete. The unified editor is now main; maintenance and license CI pass. November 10–11 layout/theme corrections pass automated checks with inspected snapshots. Five-project and cross-storage persistence checks pass; U3 integrated/native acceptance remains with human testers. The parity launchers remain available. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Measured improvements | Not started | Deliberate behavior changes follow compatibility acceptance. Structural refactoring is ongoing during unified work. |
 | 6. Platform delivery | In progress — development builds available | Unified and separate master/plusplus Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
@@ -25,8 +25,7 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Complete **U6**, the main-branch promotion and maintenance review below,
-then collect human tester results for **U3** using the
+**Next:** Collect human tester results for **U3** using the
 [published unified build](releases.md#unified-development-packaging) and
 [five-project tester guide](testing-unified.md), then resolve reported functional
 issues. On November 8 the user handed remaining native testing to humans;
@@ -305,14 +304,14 @@ Authorized on November 7 before native parity acceptance; retain both parity
 launchers. No mode selector and no silent format conversion. See the
 [sequencing decision](deviations.md#unified-work-before-native-parity-acceptance).
 
-- [ ] **U6 — In progress:** Preserve Project options right padding in native and
-  embedded dialogs; promote unified to `main` while retaining historical parity
-  branches; add an attributed application screenshot; enforce formatting, Clippy, deny and
-  cargo-about CI checks with supplemental licenses; audit each vendored patch.
-  Acceptance: geometry/input and required workspace checks pass, the screenshot
-  is inspected, license output is verified, vendor retention/removal has evidence,
-  and the promoted main branch passes CI. Native parity remains U3.
-  Evidence: [padding](compatibility.md#project-options-right-padding),
+- [x] **U6 — Complete:** Fixed Project options right padding; promoted unified to
+  `main` while preserving both historical parity branches; added the requested
+  Cherrygrove City screenshot; enforced fmt, Clippy, deny and cargo-about with
+  supplemental notices. Audited and retained all five necessary vendored patches.
+  Geometry/input checks, inspected snapshots, workspace verification and all eight
+  [promoted-main CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43147110142)
+  pass. Native parity remains U3.
+  Evidence: [padding and verification](compatibility.md#project-options-right-padding),
   [vendor audit and licenses](dependencies.md#vendor-necessity-audit--november-11-2026),
   [screenshot](assets.md#readme-screenshot) and
   [branch policy](architecture.md#unified-main-branch).
