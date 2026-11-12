@@ -12,7 +12,7 @@ and design decisions in [architecture](architecture.md).
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
 | 2. Plusplus parity | **In progress — awaiting native acceptance** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
-| 3. Unified editor | **In progress — review corrections** | U5 November 10–11 layout/theme corrections are implemented; verification is in progress. U1, U2 and U4 are complete. Five-project and cross-storage persistence checks pass; U3 integrated/native acceptance remains with human testers. The parity launchers remain available. |
+| 3. Unified editor | **In progress — awaiting native acceptance** | U1, U2, U4 and U5 are complete. November 10–11 layout/theme corrections pass automated checks with inspected snapshots. Five-project and cross-storage persistence checks pass; U3 integrated/native acceptance remains with human testers. The parity launchers remain available. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Measured improvements | Not started | Deliberate behavior changes follow compatibility acceptance. Structural refactoring is ongoing during unified work. |
 | 6. Platform delivery | In progress — development builds available | Unified and separate master/plusplus Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
@@ -25,8 +25,7 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Complete **U5**, the November 10–11 review corrections, then collect
-human tester results for **U3** using the
+**Next:** Collect human tester results for **U3** using the
 [published unified build](releases.md#unified-development-packaging) and
 [five-project tester guide](testing-unified.md), then resolve reported functional
 issues. On November 8 the user handed remaining native testing to humans;
@@ -305,11 +304,13 @@ Authorized on November 7 before native parity acceptance; retain both parity
 launchers. No mode selector and no silent format conversion. See the
 [sequencing decision](deviations.md#unified-work-before-native-parity-acceptance).
 
-- [ ] **U5 — In progress:** Correct Project options alignment, multiline event
-  field clipping, menu colors and status-bar consistency from the November 10–11
-  review. Acceptance requires focused geometry/input checks, inspected light/dark
-  snapshots and the required workspace checks. Record feature suggestions for
-  after the initial release; native acceptance remains U3.
+- [x] **U5 — Complete, implementation and automated verification:** Corrected
+  Project options alignment, multiline event field clipping, menu colors and
+  status-bar consistency from the November 10–11 review. Focused geometry/input
+  checks, inspected light/dark snapshots and required workspace checks pass.
+  `paletteswap` is deferred until after the initial release; native acceptance
+  remains U3. These fixes are not yet in the published development packages.
+  Evidence: [review and verification](compatibility.md#november-1011-unified-review).
 
 - [x] **U4 — Complete, implementation and development delivery:** Implemented the November 8–9
   macOS startup and

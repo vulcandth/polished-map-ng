@@ -27,9 +27,15 @@ Project options label/control alignment with a transactional roof override.
 Menu/status pixel checks cover both themes at 1×/2×. All 97 changed baselines and
 four new event/Project options images were inspected before acceptance; changes
 outside the reviewed dialogs/menus follow the status strip and shorter viewport.
-Final verification is in progress under U5. These corrections are not yet
-included in the published `603d038` development packages; native acceptance
-remains U3.
+Windows formatting, Clippy with warnings denied, workspace tests, rustdoc and
+production-native-feature checks pass. Linux offscreen verification passes with
+snapshot updates disabled: 350 GUI tests and four integration tests. The
+documentation links/examples and `git diff --check` pass. All eight
+[CI jobs for `6d8a2ea`](https://github.com/vulcandth/polished-map-ng/actions/runs/43130466411)
+pass, including Windows/Linux/macOS workspace and existing native-adapter probes,
+five-project compatibility, visuals, upstream references, MSRV and dependency/license
+checks. These automated probes do not close U3's human acceptance gates. The
+corrections are not yet included in the published `603d038` development packages.
 
 ## November 8-9 unified review
 
