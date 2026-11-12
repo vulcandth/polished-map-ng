@@ -27,6 +27,12 @@ allow = ["BSL-1.0"]
 crate = "error-code"
 allow = ["BSL-1.0"]
 
+# Optional visual-test dependency: dify -> colored 2.2.0. Its MPL sources and
+# notice remain in the full offline source bundle; not a runtime dependency.
+[[licenses.exceptions]]
+crate = "colored"
+allow = ["MPL-2.0"]
+
 [bans]
 multiple-versions = "warn"
 wildcards = "deny"

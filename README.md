@@ -15,6 +15,10 @@ from source. Work on
 project copies while compatibility testing is incomplete; project game assets are not
 included.
 
+![Polished Map NG editing Cherrygrove City](docs/images/editor.jpg)
+
+Cherrygrove City from [Polished Crystal](https://github.com/Rangi42/polishedcrystal).
+
 Browse the menus, toolbar and Help window to explore the editor. Basic controls:
 
 | Action | Blocks mode | Events mode | Tileset editor |

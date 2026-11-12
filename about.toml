@@ -1,0 +1,97 @@
+# License collection policy; see docs/dependencies.md.
+accepted = ["LGPL-3.0-only", "MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "Zlib", "Unicode-3.0", "OFL-1.1", "CC0-1.0", "CC-BY-3.0", "LGPL-2.0-or-later WITH FLTK-exception"]
+targets = ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin"]
+ignore-build-dependencies = false
+ignore-dev-dependencies = false
+ignore-transitive-dependencies = false
+
+[epaint_default_fonts]
+accepted = ["Ubuntu-font-1.0"]
+
+[clipboard-win]
+accepted = ["BSL-1.0"]
+
+[error-code]
+accepted = ["BSL-1.0"]
+
+# Visual-test image comparison (dify -> colored), not a shipped runtime crate.
+[colored]
+accepted = ["MPL-2.0"]
+
+[polished-map-core.clarify]
+license = "LGPL-3.0-only"
+
+[[polished-map-core.clarify.files]]
+path = "../../LICENSE.md"
+license = "LGPL-3.0-only"
+checksum = "1e950a32358912876fcd3ea0bdd975c9ea8a7822eddc3cda662817c3abe99b1c"
+
+[polished-map-project.clarify]
+license = "LGPL-3.0-only"
+
+[[polished-map-project.clarify.files]]
+path = "../../LICENSE.md"
+license = "LGPL-3.0-only"
+checksum = "1e950a32358912876fcd3ea0bdd975c9ea8a7822eddc3cda662817c3abe99b1c"
+
+[polished-map-platform.clarify]
+license = "LGPL-3.0-only"
+
+[[polished-map-platform.clarify.files]]
+path = "../../LICENSE.md"
+license = "LGPL-3.0-only"
+checksum = "1e950a32358912876fcd3ea0bdd975c9ea8a7822eddc3cda662817c3abe99b1c"
+
+[polished-map-cli.clarify]
+license = "LGPL-3.0-only"
+
+[[polished-map-cli.clarify.files]]
+path = "../../LICENSE.md"
+license = "LGPL-3.0-only"
+checksum = "1e950a32358912876fcd3ea0bdd975c9ea8a7822eddc3cda662817c3abe99b1c"
+
+# Bundled non-Cargo components. Original UI artwork provenance remains in
+# docs/assets.md and NOTICE.md; no independent third-party rights are claimed.
+[polished-map-gui.clarify]
+license = "LGPL-3.0-only AND CC-BY-3.0 AND OFL-1.1 AND (LGPL-2.0-or-later WITH FLTK-exception)"
+
+[[polished-map-gui.clarify.files]]
+path = "../../LICENSE.md"
+license = "LGPL-3.0-only"
+checksum = "1e950a32358912876fcd3ea0bdd975c9ea8a7822eddc3cda662817c3abe99b1c"
+
+[[polished-map-gui.clarify.files]]
+path = "../../LICENSES/CC-BY-3.0.txt"
+license = "CC-BY-3.0"
+checksum = "e6bc9e9c474700b708f568bac9e5a8a9bcb2b1dad53442f5ba449fcb848b8e76"
+
+[[polished-map-gui.clarify.files]]
+path = "../../LICENSES/egui-fonts/NotoSansSymbols2-OFL.txt"
+license = "OFL-1.1"
+checksum = "b118dd41337806a5d4797052c77caf3bd096aed783e5eb21b4d11154351e1ac0"
+
+[[polished-map-gui.clarify.files]]
+path = "../../LICENSES/FLTK.txt"
+license = "LGPL-2.0-or-later WITH FLTK-exception"
+checksum = "e64000bbecf10c6a5718d0da5ab638c5d59a1914ed25eb84c57f69052b727140"
+
+[winit.clarify]
+license = "Apache-2.0 AND MIT"
+
+[[winit.clarify.files]]
+path = "LICENSE"
+license = "Apache-2.0"
+checksum = "6dc0e068dcf3a5bc8e054205b85b7720e1d49265bbc64bf515d2cf79197df69a"
+
+[[winit.clarify.files]]
+path = "../licenses/SCTK-MIT.txt"
+license = "MIT"
+checksum = "13c0147abe1c7607fde840e2dffcde75bf925aea504b2845b7be4869a5af2afc"
+
+# Select the published Apache alternative; avoid scanning its legacy GPL identifier.
+[self_cell.clarify]
+license = "Apache-2.0"
+
+[[self_cell.clarify.files]]
+path = "LICENSE-APACHE"
+checksum = "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"

@@ -886,9 +886,18 @@ fn unified_options_keep_both_format_groups_and_disable_inapplicable_actions() {
 fn project_options_align_labels_controls_and_keep_roof_override_on_cancel() {
     #[cfg(feature = "visual-tests")]
     let mut snapshots = egui_kittest::SnapshotResults::new();
-    for dark in [false, true] {
+    for (dark, windows, scale) in [
+        (false, false, 1.0),
+        (true, false, 1.0),
+        (false, true, 2.0),
+        (true, true, 2.0),
+    ] {
         let dir = fixture();
         let mut h = editor();
+        h.set_pixels_per_point(scale);
+        h.ctx.data_mut(|d| {
+            d.insert_temp(egui::Id::unique("test-map-options-windows"), windows);
+        });
         h.state_mut().dark = dark;
         h.ctx.set_theme(if dark {
             egui::Theme::Dark
@@ -912,16 +921,32 @@ fn project_options_align_labels_controls_and_keep_roof_override_on_cancel() {
         assert!((folder.left() - control.left()).abs() < 1.0);
         assert!(h.get_by_label("Browse…").rect().left() >= folder.right());
         assert!(control.bottom() < 600.0);
+        let right = h
+            .state()
+            .open_form
+            .as_ref()
+            .unwrap()
+            .client_bounds
+            .unwrap()
+            .right();
+        for rect in [control, folder, h.get_by_label("Browse…").rect()] {
+            assert!(
+                right - rect.right() >= 9.5,
+                "missing right padding: {right}, {rect:?}"
+            );
+        }
         // Avoid machine-specific fixture paths in visual baselines.
         h.state_mut().open_form.as_mut().unwrap().root = "example-project".into();
         h.state_mut().open_form.as_mut().unwrap().choices_root = "example-project".into();
         h.remove_cursor();
         h.run();
         #[cfg(feature = "visual-tests")]
-        snapshots.add(h.try_snapshot(format!(
-            "project-options-{}",
-            if dark { "dark" } else { "light" }
-        )));
+        if !windows {
+            snapshots.add(h.try_snapshot(format!(
+                "project-options-{}",
+                if dark { "dark" } else { "light" }
+            )));
+        }
         let original = h.state().roof_palette_layout;
         h.get_by_role_and_label(egui::Role::ComboBox, "Roof palettes")
             .click();

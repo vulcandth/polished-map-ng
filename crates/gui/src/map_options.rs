@@ -279,7 +279,10 @@ impl Editor {
             egui::CollapsingHeader::new("Project options")
                 .open((form.root != form.choices_root).then_some(true))
                 .show(ui, |ui| {
-                    ui.set_max_width(layout.size.x - 18.0);
+                    // The collapsed body's indent is not a right margin. Native
+                    // dialogs have no enclosing Modal frame to supply padding.
+                    let right = bounds.right() - 10.0;
+                    ui.set_max_width((right - ui.max_rect().left()).max(0.0));
                     ui.style_mut().override_font_id = Some(font.clone());
                     ui.spacing_mut().item_spacing.y = 8.0;
                     if form.unified
@@ -288,8 +291,11 @@ impl Editor {
                     {
                         ui.label(&form.detected_context);
                     }
-                    let control_width =
-                        (ui.available_width() - measure("Project folder:") - 8.0).max(150.0);
+                    let label_width = ["Project folder:", "Tile capacity:", "Roof palettes:"]
+                        .map(measure)
+                        .into_iter()
+                        .fold(0.0, f32::max);
+                    let control_width = (ui.available_width() - label_width - 8.0).max(0.0);
                     let mut browse = false;
                     egui::Grid::new("project-option-fields")
                         .num_columns(2)
@@ -299,9 +305,13 @@ impl Editor {
                             let label = ui.label("Project folder:");
                             ui.horizontal(|ui| {
                                 ui.set_width(control_width);
+                                let browse_width =
+                                    measure("Browse…") + 2.0 * ui.spacing().button_padding.x;
+                                let folder_width =
+                                    control_width - browse_width - ui.spacing().item_spacing.x;
                                 ui.add(
                                     egui::TextEdit::singleline(&mut form.root)
-                                        .desired_width((control_width - 62.0).max(60.0)),
+                                        .desired_width(folder_width),
                                 )
                                 .labelled_by(label.id);
                                 browse = ui
@@ -325,6 +335,7 @@ impl Editor {
                                 .map_or("", |(_, name)| *name);
                             let response = egui::ComboBox::from_id_salt("project-roof-palettes")
                                 .width(control_width)
+                                .truncate()
                                 .selected_text(name)
                                 .show_ui(ui, |ui| {
                                     for (layout, name) in roof_colors::LAYOUTS {

@@ -77,6 +77,9 @@ cargo test --workspace --locked
 cargo doc --workspace --no-deps --locked
 ```
 
+The GUI package defaults to the unified launcher. License collection and its
+pinned tools are documented in [dependency checks](docs/dependencies.md#continuous-license-checks).
+
 Additional reference, real-project, visual, native-adapter and license checks are
 defined in [CI](.github/workflows/ci.yml). Their fixtures and prerequisites differ
 from the normal suite; see [compatibility evidence](docs/compatibility.md).

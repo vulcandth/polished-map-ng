@@ -201,3 +201,77 @@ no production package version was added. Egui-winit explicitly enables the
 existing image crate's PNG/BMP features for asynchronous codecs. The standalone
 Smithay protocol test uses its own lockfile and upstream test-only xkbcommon
 0.8.0 requirement; it is outside the production graph.
+
+
+## Vendor necessity audit — November 11, 2026
+
+**Retain all five patched crates at the current locked versions.** Each is used
+by the production graph and carries behavior required by the editor. None is an
+unused or unmodified copy. This is a review of the current patches, not a claim
+that every patch must remain forever.
+
+| Local crate | Why the registry version cannot currently replace it | Removal gate |
+|---|---|---|
+| winit 0.30.13 | Complete positioned file drops; native modal ownership; Wayland clipboard offers, opacity and frame focus. Windows OLE corrections also preserve safe transfers. | A supported replacement must expose equivalent transfer/window APIs and pass the platform/protocol regressions. |
+| egui-winit 0.37.0 | Connects those native operations to egui viewports, tracks Copy/Paste results, supplies standard Wayland image transfer, and preserves restore/fullscreen settings. | Equivalent viewport adapters and clipboard/settings behavior must exist upstream or in a smaller maintained adapter. |
+| eframe 0.37.0 | Registers renderer-owned windows for modals, tracks normal window geometry, and avoids presenting hidden dialog sizing passes. | Equivalent lifecycle hooks must preserve modal ownership, settings and first-frame dialog sizing. |
+| arboard 3.7.0 | Reads original FLTK image/bmp clipboard offers on Linux, preserving PNG preference and bounded decoding. The X11 application path still needs this even with the separate Wayland adapter. | Registry replacement passes the original-image clipboard interoperability tests, including BMP-only offers and malformed data. |
+| smithay-clipboard 0.7.3 | Adds bounded asynchronous binary MIME transfers through the existing standard Wayland clipboard owner; the registry API is insufficient for this image path. | Equivalent binary transfers, ownership, cancellation and limits pass the independent protocol probe. |
+
+The [vendor manifest](../vendor/sources.json), [modification notices](../vendor/NOTICE.md)
+and [patches](../vendor/patches) identify every source change. The separate SCTK
+fallback-frame adaptation is part of winit, not an additional whole vendored
+crate; its MIT attribution and source record remain necessary.
+
+The audit verified all 326 crate files and patches against the pinned Cargo
+archives with `tools/vendor_sources.py --archives`, plus the SCTK adaptation.
+`tools/native_features.py --target` passed for Windows, Linux and both macOS
+architectures with dev dependencies excluded. The five source trees total about
+3.75 MiB before patch/manifest overhead. Removing source copies alone does not
+reduce executable size or runtime memory; those depend on linked code/features.
+
+The much larger registry source tree generated during release packaging is a
+separate, ignored offline rebuild bundle. It is not committed in `vendor/`.
+Retain it under the matching-source/rebuild delivery policy. Future dependency
+updates should revisit each removal gate above, rather than deleting patches
+that supply currently tested functionality.
+
+## Continuous license checks
+
+[CI](../.github/workflows/ci.yml) enforces formatting and warning-free Clippy on
+Windows, Linux and macOS. Its dependency job pins cargo-deny 0.18.9 and cargo-about
+0.9.3, checks all workspace features, and uploads a JSON/HTML license report.
+The latter version correctly includes the renamed Linux Fontconfig dependency.
+`tools/license_report.py` checks coverage against Cargo's dependency graph for
+all four distribution targets and rejects missing packages, empty terms or
+missing clarified license texts.
+
+[about.toml](../about.toml) includes checksummed clarifications for workspace
+LGPL terms and non-Cargo components: Fugue CC BY 3.0 icons, the OFL fallback font,
+FLTK adaptations with their exception, and the MIT SCTK frame adaptation.
+These combined collection expressions do not relicense the application code or
+establish rights to original UI/game artwork. See [asset provenance](assets.md).
+The report also retains all 57 [pinned supplemental notice records](dependency-notices.json)
+and project/asset notices that automatic harvesting alone would omit.
+
+Enabling all features exposed `colored` 2.2.0, used only by visual-test image
+comparison through dify. A crate-specific MPL-2.0 exception permits that test
+dependency; its source and notices remain in the full dependency source bundle.
+It is absent from the shipped runtime graph. The existing advisory exceptions
+are unchanged; no vulnerability exception was added. Local collection verified
+388 selected crates, all clarified texts and the 57 supplements.
+
+To reproduce the dependency job after installing its pinned tools:
+
+```sh
+cargo deny --all-features check
+cargo fetch --locked
+mkdir -p .scratch
+cargo about generate --workspace --all-features --locked --offline --fail --format json -o .scratch/licenses.json
+python3 tools/license_report.py .scratch/licenses.json --output .scratch/licenses.html
+python3 -m unittest discover -s tools -p test_license_report.py
+```
+
+The [cargo-about configuration reference](https://embarkstudios.github.io/cargo-about/cli/generate/config.html)
+describes clarification precedence and checksum validation. Release packaging
+continues to retain matching sources and its full notice inventory separately.

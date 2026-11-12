@@ -110,8 +110,9 @@ and companion files remain untouched by context changes. See
 `polished-map-core` owns validated models, commands, history and deterministic
 RGB rendering. It has no filesystem, egui or GPU dependency. `project` owns
 discovery, codecs and persistence. `gui` and `cli` depend on these libraries.
-Master remains the default application entry point; `polished-map-plusplus`
-launches the separate plusplus editor through the same startup code. Plusplus uses explicit
+`polished-map-unified` is the default application entry point on `main`.
+`polished-map-gui` and `polished-map-plusplus` retain the separate parity editors
+through the same startup code. Plusplus uses explicit
 `core::plusplus` and `project::plusplus` modules, with separate attribute-bearing
 block documents. Shared code must not erase their differences. Public interfaces
 are experimental until objective four.
@@ -537,3 +538,17 @@ The [independent protocol probe](../tools/wayland_clipboard_probe.py) exercises
 real Unix sockets and descriptor passing, without a display server. Actual
 application and compositor limits are tracked separately in
 [compatibility evidence](compatibility.md#plusplus-wayland-image-clipboard-gap).
+
+
+## Unified main branch
+
+The maintainer selected the unified editor as `main` on November 11, 2026.
+`codex/master-review` and `codex/plusplus-port` retain their existing historical
+review tips. Their launchers also remain available in the shared source. New
+work and normal CI target `main`; the manual development packaging workflow
+defaults to `unified`, while explicit `master` and `plusplus` profiles remain.
+
+The former `main` had three review commits outside unified's ancestry; their
+shared fixes were already backported before unified work. The promotion retains
+that ancestry with a merge selecting the unified tree, so no force push or
+history deletion is necessary. Native acceptance remains open in the roadmap.

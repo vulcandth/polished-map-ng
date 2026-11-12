@@ -399,3 +399,10 @@ event workflows under LGPL-3.0-only. Its ASM map import reuses the master decode
 with either attribute model; original assembly is retained until explicit binary
 Save As. The fixed parity launchers retain their original input catalogs. No new
 artwork or external game fixtures accompany this integration.
+
+
+The README application screenshot depicts Cherrygrove City from
+[Polished Crystal](https://github.com/Rangi42/polishedcrystal), by Rangi42 and
+contributors, based on Pokémon Crystal. Game artwork retains its separate rights;
+it is not licensed under this project's LGPL code license. See
+[screenshot provenance](docs/assets.md#readme-screenshot).

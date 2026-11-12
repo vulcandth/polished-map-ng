@@ -346,8 +346,26 @@ for its format. The audit found no repository-wide LICENSE/COPYING grant;
 
 Keep the checkout in ignored `.reference/polishedcrystal`. Tests make temporary
 copies; do not edit the checkout, commit fixtures, upload game screenshots/pixel
-outputs, or include them in releases/source packages. CI fetches the immutable
+outputs, or include them in releases/source packages, except for the explicitly
+authorized README illustration below. CI fetches the immutable
 commit separately and retains only test results. Synthetic differential inputs
 and original-editor algorithm harnesses are distinct from game assets. The user's
 original UI artwork selection does not establish redistribution rights for this
 fixture. Structural/roundtrip evidence is in the [plusplus audit](compatibility.md#plusplus-source-audit).
+
+
+## README screenshot
+
+[The application screenshot](images/editor.jpg) shows Cherrygrove City opened
+from the maintainer's `polishedcrystal-up/maps/CherrygroveCity.ablk` checkout in
+the Windows unified editor, with Day palettes. The maintainer explicitly requested
+this illustration on November 11, 2026. It is a native application capture, not
+an upstream screenshot or an independent compatibility test. No map edits were
+saved and the underlying project assets are not bundled.
+
+Map and tileset artwork comes from [Polished Crystal](https://github.com/Rangi42/polishedcrystal)
+by Rangi42 and contributors, based on Pokémon Crystal. Game artwork is not
+relicensed under NG's LGPL code license; this attribution does not establish
+independent third-party redistribution rights. This one documentation image is
+an explicit exception to the fixture-output policy above. Existing UI icon,
+font and artwork notices still apply to the application surrounding the map.

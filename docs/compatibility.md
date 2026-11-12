@@ -4809,3 +4809,21 @@ transfer or completed workflow was verified in that attempt, and it establishes
 no product defect. The attempt stopped when the user handed remaining native
 testing to humans on November 8. The [tester guide](testing-unified.md) owns the
 handoff checklist; the open acceptance gates remain in the roadmap.
+
+
+## Project options right padding
+
+The November 11 follow-up fixes the expanded Project options controls reaching
+the right edge of a native Map Options window. The layout now reserves ten
+logical pixels inside the dialog's measured client bounds, then subtracts the
+actual label, inter-item spacing and Browse button widths. Long roof selections
+truncate inside that width; their popup list remains independent of the dialog
+width. Project configuration and Cancel behavior are unchanged.
+
+`project_options_align_labels_controls_and_keep_roof_override_on_cancel` checks
+light/dark themes, Windows metrics at 2× scale and non-Windows metrics at 1×.
+It measures Roof palettes, the folder input and Browse against the client bounds,
+so an embedded modal's extra exterior margin cannot hide a missing native inset.
+The existing aligned-row and Cancel assertions remain. The focused Windows test
+passes; Linux light/dark snapshots were regenerated, visually inspected and
+rechecked without update mode. Full native acceptance remains with human testers.

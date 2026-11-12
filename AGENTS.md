@@ -123,7 +123,9 @@ exist from day one; a partial slice is not a completed parity milestone.
 
 For code or build changes, run `cargo fmt --all -- --check`, `cargo clippy --workspace --all-targets --locked
 -- -D warnings`, `cargo test --workspace --locked`, and `cargo doc --workspace
---no-deps --locked`. CI also checks MSRV, `cargo deny check`, and the production
+--no-deps --locked`. CI also checks MSRV, `cargo deny --all-features check`, and `cargo about`
+with all workspace features and verified supplemental notices (see
+`docs/dependencies.md#continuous-license-checks`), plus the production
 native-adapter graph with `python tools/native_features.py` (no dev dependencies).
 
 For documentation-only changes, verify local links/anchors, examples against
@@ -141,7 +143,10 @@ Report which platform checks actually ran; compilation is not native verificatio
 
 Derivative Rust code is LGPL-3.0-only. Preserve upstream attribution and record
 adaptations in `NOTICE.md`. Audit new assets independently; do not distribute
-project/game fixture graphics. The user explicitly selected original upstream
+project/game fixture graphics. The user specifically authorized the Cherrygrove
+City README screenshot on November 11; preserve its attribution and the narrow
+screenshot exception in `docs/assets.md`. This does not authorize bundling game
+assets or relabeling their license. The user explicitly selected original upstream
 UI artwork with upstream attribution on 2026-10-29, including previously
 unresolved toolbar/application images. Preserve that choice and the provenance
 limitations in `docs/assets.md`; do not replace those images with placeholders

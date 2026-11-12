@@ -153,7 +153,8 @@ acceptance, using the same shared-source revision as the master candidate above.
 [All eight CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42385507344)
 and [all five packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/42385529178)
 passed. The manual packaging workflow accepts `profile: plusplus`; the
-default remains `master`. Source and binaries record the selected profile in
+default was `master` at that delivery. Following the unified promotion to `main`,
+the workflow defaults to `unified`. Source and binaries record the selected profile in
 BUILD-INFO.json. Binary packaging inherits it from the matching source and rejects
 an inconsistent override. Plusplus archives use `polished-map-ng-plusplus-dev-`
 names and contain `polished-map-plusplus` (with `.exe` on Windows), or a separate

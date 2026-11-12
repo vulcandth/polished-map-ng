@@ -29,15 +29,17 @@ jobs:
         run: rustup show
       - name: Verify production native adapters
         run: python tools/native_features.py
-      - run: cargo fmt --all -- --check
-      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Enforce Rust formatting
+        run: cargo fmt --all -- --check
+      - name: Enforce Clippy without warnings
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Smoke-test file input, edit and output on every OS
         run: cargo test -p polished-map-cli --locked --test commands preview_then_apply_and_failed_batch_never_partially_writes -- --exact
       - name: Verify complete workspace
         run: cargo test --workspace --locked
       - name: Verify original Windows executable icons
         if: runner.os == 'Windows'
-        run: python tools/windows_icon_resources.py target/debug/polished-map-gui.exe target/debug/polished-map-plusplus.exe
+        run: python tools/windows_icon_resources.py target/debug/polished-map-gui.exe target/debug/polished-map-plusplus.exe target/debug/polished-map-unified.exe
       - name: Check native settings probe
         run: cargo clippy -p polished-map-gui --all-targets --features native-tests --locked -- -D warnings
       - name: Verify native settings shutdown and restart
@@ -107,8 +109,26 @@ jobs:
       - run: python3 tools/vendor_sources.py
       - run: python3 tools/font_assets.py
       - run: python3 tools/help_assets.py
-      - run: cargo install cargo-deny --locked
-      - run: cargo deny check
+      - name: Install pinned license and dependency tools
+        run: |
+          cargo install cargo-deny --version 0.18.9 --locked
+          cargo install cargo-about --version 0.9.3 --locked --features cli
+      - name: Audit all features, including visual-test dependencies
+        run: cargo deny --all-features check
+      - name: Collect licenses and verify supplemental notices
+        run: |
+          mkdir -p .scratch
+          cargo fetch --locked
+          cargo about generate --workspace --all-features --locked --offline --fail --format json -o .scratch/licenses.json
+          python3 tools/license_report.py .scratch/licenses.json --output .scratch/licenses.html
+          python3 -m unittest discover -s tools -p test_license_report.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dependency-license-report
+          path: |
+            .scratch/licenses.json
+            .scratch/licenses.html
+          if-no-files-found: error
   reference:
     runs-on: ubuntu-24.04
     steps:
