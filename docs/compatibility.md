@@ -1,5 +1,36 @@
 # Compatibility evidence
 
+## November 10–11 unified review
+
+The Discord PM was read from November 10 at 12:10 PM through November 11's
+latest messages, including the attached Project options, event-field and theme
+screenshots. Mon-palette, game-specific and unrelated discussion is excluded.
+
+| Feedback | Disposition |
+|---|---|
+| Cramped Project options; Roof palettes label follows the dropdown | Implemented aligned left-label/right-control rows, shared spacing and a folder/Browse row. Detection and explicit overrides keep their existing semantics. |
+| Two-line event inputs scroll unnecessarily and lose their bottom edge | Implemented renderer-based opening height, one-row minimum and an outer frame independent of the scrolling contents. Opening single/multiline mode stays fixed; text growth scrolls internally. |
+| Menu background clashes with the surrounding light/dark controls | Implemented egui popup surface/border colors with existing menu geometry, keyboard behavior, indicators and approved inset dividers. |
+| Status-bar height, frame and separators differ from toolbar | Implemented matching 26-point strip/24-point content, panel fill and one-line egui separators, without an outer frame. Fixed field widths, formatting and feedback tooltip remain. |
+| Menu dividers and editing/input responsiveness work well | Retained; this feedback is positive evidence, not full platform acceptance. |
+| Interpret `paletteswap` rectangles in previews | Documented as a [post-initial-release proposal](architecture.md#paletteswap-preview-after-the-initial-release); no implementation. |
+
+The three additional status-strip points reduce the canvas/sidebar height by
+three points. Existing scroll, reveal and pan formulas remain intact; independent
+viewport vectors account for that change, including the original strict margin
+threshold during Open. The multiline correction reads the pinned
+`option-dialogs.cpp::Event_Options_Dialog::refresh_content` behavior but measures
+the actual egui wrapped text and padding rather than borrowing FLTK box heights.
+Regression coverage includes the reported two-line event suffix, no initial
+scrolling, fixed bounds/frame after text growth, cancellation without edits, and
+Project options label/control alignment with a transactional roof override.
+Menu/status pixel checks cover both themes at 1×/2×. All 97 changed baselines and
+four new event/Project options images were inspected before acceptance; changes
+outside the reviewed dialogs/menus follow the status strip and shorter viewport.
+Final verification is in progress under U5. These corrections are not yet
+included in the published `603d038` development packages; native acceptance
+remains U3.
+
 ## November 8-9 unified review
 
 The Sylvie/Rangi42 Discord review was read through the November 9 popup follow-up
@@ -437,9 +468,10 @@ inputs honor the dialog font override. Event headings align left inside their
 source rectangles; coordinate and prefix/suffix labels sit three points outside
 the controls, with top alignment for multiline fields. Existing long-selector
 clipping remains the separately recorded [difference](deviations.md).
-Multiline field heights include the original theme's input border: six points
-for Greybird, four for Dark, measured once at opening. A two-theme test verifies
-both field heights and the resulting total client height without editing data.
+The initial port used FLTK input-border heights (six points for Greybird, four
+for Dark). The [November 10–11 correction](#november-1011-unified-review) replaces
+that approximation with actual wrapped egui text height plus fixed inner padding,
+measured once at opening. Growth scrolls inside a stationary outer frame.
 
 [Resize tests](../crates/gui/src/resize_dialog/tests.rs) check independent formula
 vectors, both platform button orders at 1×/2×, actual text font sizes, all anchor
@@ -864,6 +896,11 @@ differential. The warning's native window and exact geometry remain open; origin
 
 ## Popup panel frames and full-width separators
 
+Historical source-comparison evidence: November 8–9 replaced the full-width
+dividers with inset bevels in eight-point gaps; November 10–11 replaced popup
+surface/border colors with the active egui theme. The following records the
+earlier FLTK drawing comparison, not the current popup appearance.
+
 Popup panels adapt `themes.cpp::{greybird,dark}_panel_thin_up_box/frame` and
 FLTK 1.4.5 `menuwindow::drawentry`. One-point filled rectangles preserve the
 original inclusive line endpoints and corner ownership. Greybird uses gray
@@ -1120,13 +1157,16 @@ baseline. The installed-font tests are executed separately from that suite.
 
 `status_bar.rs` ports master `Main_Window::initialize`, `update_status` and
 `update_event_cursor`, with `Toolbar::draw`/`Label` placement and the Greybird/Dark
-frame functions in `themes.cpp`. The 23-point bar has a one-point frame, five
-21-point labels and four two-point separators. Each field keeps the measured
+frame functions in `themes.cpp`. Historically the 23-point bar had a one-point
+frame, five 21-point labels and four two-point separators. The
+[November 10–11 review](#november-1011-unified-review) changes the strip to match
+the toolbar: 26 points high, 24-point fields, no outer frame and single-line egui
+separators. Each field keeps the measured
 width of its original sample (`Blocks: 999`, `Map: 999 x 999`, `ID: $99`,
 `X/Y ($99, $99)`, `Event: X/Y ($999, $999)`) plus 16 points. FLTK 1.4.5's
 three-point left/right label inset is preserved. Narrow windows clip the row;
-they do not squeeze or wrap fields. Frame corner ownership follows the original
-`fl_yxline`/`fl_xyline` order, with the outer frame painted after its children.
+they do not squeeze or wrap fields. The former frame's source comparison below
+is historical; its `fl_yxline`/`fl_xyline` corner ownership is no longer used.
 
 Map/blockset changes refresh the count and dimensions, which always use decimal.
 The other fields follow global decimal/hex display, padding only the hex ID to
@@ -1411,12 +1451,13 @@ share a renderer derived from master `Main_Window::initialize`, `widgets.h` and
 FLTK 1.4.5 `Fl_Menu.cxx`. The latter is pinned in `upstream.lock.toml`, with its
 original license and attribution retained. Layout uses supplied font metrics,
 one/nine label padding spaces, blank-image/check reserves, four-point leading,
-separate shortcut columns and preceding-row divider lines. Source 12/13-point
-sizes, Greybird/Dark background colors and square popup frames are implemented.
+separate shortcut columns and eight-point divider gaps with inset bevels. Source
+12/13-point sizes and square popup frames are retained; popup backgrounds and
+borders use egui's active theme after the November 10–11 review.
 
 Independent numeric vectors check maximum-width/height/title/shortcut rules.
 Interaction tests check every File row's bounds at both font sizes and 1×/2×
-DPI, zero extra divider rows, image-column text offset, aligned shortcut keys,
+DPI, the reviewed divider gaps, image-column text offset, aligned shortcut keys,
 accessible shortcuts, disabled entries, arrow-key submenu opening and Enter
 activation. A regression test prevents activating Enter from also dismissing
 the newly opened About modal. Duplicate recent names retain distinct rows and

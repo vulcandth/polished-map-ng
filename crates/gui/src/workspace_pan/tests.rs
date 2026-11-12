@@ -39,10 +39,10 @@ fn large_map() -> (tempfile::TempDir, Harness<'static, Editor>) {
 fn map_middle_pan_uses_press_anchor_integer_deltas_and_source_bounds_without_editing() {
     for scale in [1.0, 2.0] {
         for (zoom, rulers, maximum) in [
-            (false, false, Vec2::new(832.0, 958.0)),
-            (false, true, Vec2::new(848.0, 974.0)),
-            (true, false, Vec2::new(2432.0, 2430.0)),
-            (true, true, Vec2::new(2448.0, 2446.0)),
+            (false, false, Vec2::new(832.0, 961.0)),
+            (false, true, Vec2::new(848.0, 977.0)),
+            (true, false, Vec2::new(2432.0, 2433.0)),
+            (true, true, Vec2::new(2448.0, 2449.0)),
         ] {
             let (dir, mut h) = large_map();
             h.set_pixels_per_point(scale);
@@ -134,7 +134,7 @@ fn sidebar_middle_pan_preempts_child_selection_and_transfer_in_both_modes() {
             button(&mut h, start, true);
             h.hover_at(Pos2::new(400.0, -2000.0));
             h.run();
-            assert_eq!(h.state().sidebar_scroll, if zoom { 1518.0 } else { 494.0 });
+            assert_eq!(h.state().sidebar_scroll, if zoom { 1521.0 } else { 497.0 });
             assert_eq!(h.state().canvas_scroll, Vec2::ZERO);
             h.hover_at(start - Vec2::new(0.0, 17.0));
             h.run();
@@ -285,8 +285,8 @@ fn workspace_limits_account_for_coupled_bars_and_retained_blank_space() {
 #[test]
 fn minimum_window_pan_uses_the_actual_narrow_viewport() {
     for (rulers, expected) in [
-        (false, Vec2::new(2897.0, 2768.0)),
-        (true, Vec2::new(2913.0, 2784.0)),
+        (false, Vec2::new(2897.0, 2771.0)),
+        (true, Vec2::new(2913.0, 2787.0)),
     ] {
         let (_dir, mut h) = large_map();
         h.set_size(Vec2::new(335.0, 262.0));
@@ -302,7 +302,7 @@ fn minimum_window_pan_uses_the_actual_narrow_viewport() {
                 bar.rect()
             );
             assert!(
-                bar.rect().bottom() <= 239.0,
+                bar.rect().bottom() <= 236.0,
                 "scrollbar overlaps status: {:?}",
                 bar.rect()
             );
@@ -333,7 +333,7 @@ fn pan_clamps_zoom_retained_blank_space_to_the_natural_content() {
     button(&mut h, start, true);
     h.hover_at(start - Vec2::splat(1.0));
     h.run();
-    assert_eq!(h.state().canvas_scroll, Vec2::new(832.0, 958.0));
+    assert_eq!(h.state().canvas_scroll, Vec2::new(832.0, 961.0));
     button(&mut h, start - Vec2::splat(1.0), false);
     assert_eq!(h.state().ruler_scroll, h.state().canvas_scroll);
 }

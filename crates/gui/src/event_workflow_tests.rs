@@ -24,7 +24,7 @@ fn event_options_measurement_uses_source_word_boundaries_and_integer_threshold()
 }
 
 #[test]
-fn event_multiline_client_height_uses_the_source_theme_input_border() {
+fn event_multiline_client_height_uses_renderer_metrics_in_both_themes() {
     let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
     let path = dir.path().join("Map.asm");
     std::fs::write(
@@ -59,10 +59,91 @@ fn event_multiline_client_height_uses_the_source_theme_input_border() {
         h.get_by_label("Cancel").click();
         h.run();
     }
-    assert_eq!(heights[0].0 - heights[1].0, 2.0);
-    assert_eq!(heights[0].1 - heights[1].1, 2.0);
-    assert_eq!(heights[0].2 - heights[1].2, 4.0);
+    assert_eq!(heights[0], heights[1]);
     assert!(!h.state().is_modified());
+}
+
+#[test]
+fn event_two_line_suffix_fits_without_scrolling_and_keeps_its_frame_when_edited() {
+    #[cfg(feature = "visual-tests")]
+    let mut snapshots = egui_kittest::SnapshotResults::new();
+    for dark in [false, true] {
+        let (dir, mut h) = super::tileset_editor_tests::fixture(false, false);
+        h.state_mut().dark = dark;
+        h.ctx.set_theme(if dark {
+            egui::Theme::Dark
+        } else {
+            egui::Theme::Light
+        });
+        let path = dir.path().join("Map.asm");
+        std::fs::write(
+            &path,
+            "\tbg_event 13, 7, BGEVENT_READ, FuchsiaCityZooKangaskhanSign\n",
+        )
+        .unwrap();
+        h.state_mut().request_event_change(EventChange::Load(path));
+        let ctx = h.ctx.clone();
+        h.state_mut().event_action(EventAction::Options(0), &ctx);
+        h.run();
+        let rect = h.get_by_label("Event suffix").rect();
+        assert!(rect.height() > 22.0);
+        let text_shape = |h: &egui_kittest::Harness<'_, Editor>| {
+            h.output()
+                .shapes
+                .iter()
+                .find_map(|shape| {
+                    if let egui::Shape::Text(text) = &shape.shape
+                        && text.galley.text().contains("FuchsiaCityZooKangaskhanSign")
+                    {
+                        Some((
+                            Rect::from_min_size(text.pos, text.galley.size()),
+                            shape.clip_rect,
+                        ))
+                    } else {
+                        None
+                    }
+                })
+                .unwrap()
+        };
+        let before = text_shape(&h);
+        assert!(
+            before.1.contains_rect(before.0),
+            "text must fit its clip: {before:?}"
+        );
+        h.hover_at(rect.center());
+        h.event(egui::Event::MouseWheel {
+            unit: egui::MouseWheelUnit::Point,
+            phase: egui::TouchPhase::Move,
+            delta: Vec2::new(0.0, -100.0),
+            source: egui::MouseWheelSource::Unknown,
+            modifiers: egui::Modifiers::NONE,
+        });
+        h.run();
+        assert_eq!(text_shape(&h), before, "initial text must not scroll");
+        #[cfg(feature = "visual-tests")]
+        {
+            h.remove_cursor();
+            h.run();
+            snapshots.add(h.try_snapshot(format!(
+                "event-multiline-{}",
+                if dark { "dark" } else { "light" }
+            )));
+        }
+        h.get_by_label("Event suffix").focus();
+        h.run();
+        h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::End);
+        h.run();
+        h.get_by_label("Event suffix")
+            .type_text(&" EXTRA".repeat(100));
+        h.run();
+        assert_eq!(h.get_by_label("Event suffix").rect(), rect);
+        assert!(h.output().shapes.iter().any(|s| matches!(&s.shape, egui::Shape::Rect(r) if r.rect == rect && r.stroke.width > 0.0) && s.clip_rect.contains_rect(rect)), "the full input frame must stay visible");
+        h.key_press(egui::Key::Escape);
+        h.run();
+        assert!(!h.state().is_modified());
+    }
+    #[cfg(feature = "visual-tests")]
+    snapshots.unwrap();
 }
 
 #[test]

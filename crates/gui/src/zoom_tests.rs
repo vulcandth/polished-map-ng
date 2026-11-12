@@ -167,7 +167,7 @@ fn zoom_out_retains_far_edge_space_until_scrolling_back() {
     wheel(&mut h, Pos2::new(400.0, 300.0), Vec2::splat(600.0));
     assert_eq!(h.state().canvas_scroll, Vec2::splat(550.0));
     wheel(&mut h, Pos2::new(400.0, 300.0), Vec2::splat(-600.0));
-    assert_eq!(h.state().canvas_scroll, Vec2::new(832.0, 958.0));
+    assert_eq!(h.state().canvas_scroll, Vec2::new(832.0, 961.0));
 }
 
 #[test]

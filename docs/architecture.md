@@ -1,5 +1,16 @@
 # Architecture decisions
 
+## Paletteswap preview after the initial release
+
+Sylvie's November 11 request is to interpret project `paletteswap` rectangles
+and show the corresponding colors in map previews. This is **not started** and
+is explicitly deferred until after the initial release (I3), not a parity fix.
+A future proposal must define supported declarations, rectangle coordinates and
+overlap order, palette/time-of-day interactions, and behavior for unsupported
+script expressions. Rendering and Print should agree without rewriting map or
+script data. Use project fixtures and original-game/reference outputs to verify
+the selected semantics when that work is authorized.
+
 ## November 8–9 deferred suggestions and popup investigation
 
 These are recorded for I3 and are **not started**: a native macOS menu bar,

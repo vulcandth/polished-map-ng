@@ -279,19 +279,74 @@ impl Editor {
             egui::CollapsingHeader::new("Project options")
                 .open((form.root != form.choices_root).then_some(true))
                 .show(ui, |ui| {
+                    ui.set_max_width(layout.size.x - 18.0);
+                    ui.style_mut().override_font_id = Some(font.clone());
+                    ui.spacing_mut().item_spacing.y = 8.0;
                     if form.unified
                         && form.root == form.choices_root
                         && !form.detected_context.is_empty()
                     {
                         ui.label(&form.detected_context);
                     }
-                    let label = ui.label("Project folder");
-                    ui.text_edit_singleline(&mut form.root)
-                        .labelled_by(label.id);
-                    if ui
-                        .button("Browse…")
-                        .on_hover_text("Choose project folder")
-                        .clicked()
+                    let control_width =
+                        (ui.available_width() - measure("Project folder:") - 8.0).max(150.0);
+                    let mut browse = false;
+                    egui::Grid::new("project-option-fields")
+                        .num_columns(2)
+                        .spacing(Vec2::new(8.0, 8.0))
+                        .min_row_height(22.0)
+                        .show(ui, |ui| {
+                            let label = ui.label("Project folder:");
+                            ui.horizontal(|ui| {
+                                ui.set_width(control_width);
+                                ui.add(
+                                    egui::TextEdit::singleline(&mut form.root)
+                                        .desired_width((control_width - 62.0).max(60.0)),
+                                )
+                                .labelled_by(label.id);
+                                browse = ui
+                                    .button("Browse…")
+                                    .on_hover_text("Choose project folder")
+                                    .clicked();
+                            });
+                            ui.end_row();
+                            ui.label("Tile capacity:");
+                            if form.profile == documents::Profile::PlusPlus {
+                                ui.checkbox(&mut form.allow_512, "Allow all 512 tiles");
+                            } else {
+                                ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
+                            }
+                            ui.end_row();
+                            let label = ui.label("Roof palettes:");
+                            let selected = form.roof_layout.unwrap_or(self.roof_palette_layout);
+                            let name = roof_colors::LAYOUTS
+                                .iter()
+                                .find(|(layout, _)| *layout == selected)
+                                .map_or("", |(_, name)| *name);
+                            let response = egui::ComboBox::from_id_salt("project-roof-palettes")
+                                .width(control_width)
+                                .selected_text(name)
+                                .show_ui(ui, |ui| {
+                                    for (layout, name) in roof_colors::LAYOUTS {
+                                        ui.selectable_value(
+                                            &mut form.roof_layout,
+                                            Some(layout),
+                                            name,
+                                        );
+                                    }
+                                })
+                                .response
+                                .labelled_by(label.id);
+                            response.widget_info(|| {
+                                egui::WidgetInfo::labeled(
+                                    egui::Role::ComboBox,
+                                    true,
+                                    "Roof palettes",
+                                )
+                            });
+                            ui.end_row();
+                        });
+                    if browse
                         && let Some(root) = rfd::FileDialog::new()
                             .set_title("Choose project folder")
                             .set_directory(&form.root)
@@ -308,23 +363,6 @@ impl Editor {
                     {
                         self.error = Some(error.to_string());
                     }
-                    if form.profile == documents::Profile::PlusPlus {
-                        ui.checkbox(&mut form.allow_512, "Allow all 512 tiles");
-                    } else {
-                        ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");
-                    }
-                    let selected = form.roof_layout.unwrap_or(self.roof_palette_layout);
-                    let name = roof_colors::LAYOUTS
-                        .iter()
-                        .find(|(layout, _)| *layout == selected)
-                        .map_or("", |(_, name)| *name);
-                    egui::ComboBox::from_label("Roof palettes")
-                        .selected_text(name)
-                        .show_ui(ui, |ui| {
-                            for (layout, name) in roof_colors::LAYOUTS {
-                                ui.selectable_value(&mut form.roof_layout, Some(layout), name);
-                            }
-                        });
                     if form.unified && !form.roof_layout_note.is_empty() {
                         ui.label(&form.roof_layout_note);
                     }

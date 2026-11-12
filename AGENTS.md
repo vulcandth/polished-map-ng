@@ -93,6 +93,10 @@ exist from day one; a partial slice is not a completed parity milestone.
 - The user prefers the earlier rounded egui palette sliders (2026-10-31).
   Preserve that appearance and the retained functional fixes; do not restore
   FLTK slider styling as part of parity work.
+- On November 11 the user authorized the November 10–11 review corrections:
+  Project options layout, multiline event fields, menu colors and status-bar
+  consistency. Record new features such as `paletteswap` for after the initial
+  release; exclude mon-palette and Polished Crystal game discussion.
 - Do not claim pokecrystal/Polished Crystal parity from synthetic tests alone.
 - The unified compatibility targets are pokered, pokeyellow, pokegold, pokecrystal
   and Polished Crystal (user direction, November 7). Pin all external fixtures in

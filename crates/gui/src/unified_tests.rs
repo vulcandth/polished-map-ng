@@ -883,6 +883,61 @@ fn unified_options_keep_both_format_groups_and_disable_inapplicable_actions() {
 }
 
 #[test]
+fn project_options_align_labels_controls_and_keep_roof_override_on_cancel() {
+    #[cfg(feature = "visual-tests")]
+    let mut snapshots = egui_kittest::SnapshotResults::new();
+    for dark in [false, true] {
+        let dir = fixture();
+        let mut h = editor();
+        h.state_mut().dark = dark;
+        h.ctx.set_theme(if dark {
+            egui::Theme::Dark
+        } else {
+            egui::Theme::Light
+        });
+        h.state_mut()
+            .prepare_open(dir.path().join("Modern.2x1.modern.ablk"));
+        h.run();
+        h.get_by_label("Project options").click();
+        h.run();
+        let label = h.get_by_label("Roof palettes:").rect();
+        let control = h
+            .get_by_role_and_label(egui::Role::ComboBox, "Roof palettes")
+            .rect();
+        assert!(label.right() < control.left());
+        assert!((label.center().y - control.center().y).abs() < 2.0);
+        let folder = h
+            .get_by_role_and_label(egui::Role::TextInput, "Project folder:")
+            .rect();
+        assert!((folder.left() - control.left()).abs() < 1.0);
+        assert!(h.get_by_label("Browse…").rect().left() >= folder.right());
+        assert!(control.bottom() < 600.0);
+        // Avoid machine-specific fixture paths in visual baselines.
+        h.state_mut().open_form.as_mut().unwrap().root = "example-project".into();
+        h.state_mut().open_form.as_mut().unwrap().choices_root = "example-project".into();
+        h.remove_cursor();
+        h.run();
+        #[cfg(feature = "visual-tests")]
+        snapshots.add(h.try_snapshot(format!(
+            "project-options-{}",
+            if dark { "dark" } else { "light" }
+        )));
+        let original = h.state().roof_palette_layout;
+        h.get_by_role_and_label(egui::Role::ComboBox, "Roof palettes")
+            .click();
+        h.run();
+        h.get_by_label("Custom").click();
+        h.run();
+        h.key_press(egui::Key::Escape);
+        h.run();
+        assert!(h.state().open_form.is_none());
+        assert_eq!(h.state().roof_palette_layout, original);
+    }
+    #[cfg(feature = "visual-tests")]
+    snapshots.unwrap();
+}
+
+#[test]
 fn unified_open_exposes_context_and_keeps_roof_override_transactional() {
     let dir = fixture();
     fs::create_dir_all(dir.path().join("constants")).unwrap();

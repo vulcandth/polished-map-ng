@@ -14,13 +14,13 @@ const SAMPLES: [&str; 5] = [
 ];
 
 fn field_rects(bounds: Rect, text_widths: [f32; 5]) -> [Rect; 5] {
-    // Toolbar frame has a one-point inset. Each label is 21 high and keeps
-    // text_width(sample, 8); only the final empty spacer absorbs window resize.
+    // Match the toolbar's one-point vertical inset and retain fixed source
+    // field widths; only the final empty spacer absorbs window resize.
     let mut x = bounds.left() + 1.0;
     text_widths.map(|width| {
         let rect = Rect::from_min_size(
             Pos2::new(x, bounds.top() + 1.0),
-            Vec2::new(width.ceil() + 16.0, 21.0),
+            Vec2::new(width.ceil() + 16.0, (bounds.height() - 2.0).max(0.0)),
         );
         x = rect.right() + 2.0;
         rect
@@ -94,46 +94,16 @@ impl Editor {
     }
 }
 
-fn frame(painter: &egui::Painter, rect: Rect, upper: u8, lower: u8) {
-    // Exact fl_yxline/fl_xyline corner ownership, drawn as pixel-aligned quads.
-    for (min, size, color) in [
-        (rect.min, Vec2::new(rect.width() - 1.0, 1.0), upper),
-        (rect.min, Vec2::new(1.0, rect.height() - 1.0), upper),
-        (
-            Pos2::new(rect.left(), rect.bottom() - 1.0),
-            Vec2::new(rect.width(), 1.0),
-            lower,
-        ),
-        (
-            Pos2::new(rect.right() - 1.0, rect.top()),
-            Vec2::new(1.0, rect.height()),
-            lower,
-        ),
-    ] {
-        painter.rect_filled(
-            Rect::from_min_size(min, size),
-            0.0,
-            Color32::from_gray(color),
-        );
-    }
-}
-
 fn draw(ui: &mut egui::Ui, bounds: Rect, fields: &[String; 5], diagnostic: &str) {
     let clip = bounds.intersect(ui.clip_rect());
     let painter = ui.painter().with_clip_rect(clip);
-    let dark = ui.visuals().dark_mode;
-    let (foreground, upper, lower, separator_upper, separator_lower) = if dark {
-        (255, 106, 40, 56, 116)
-    } else {
-        (60, 218, 193, 186, 218)
-    };
     painter.rect_filled(bounds, 0.0, ui.visuals().panel_fill);
     let font = egui::FontId::proportional(if ui.ctx().os() == egui::os::OperatingSystem::Windows {
         12.0
     } else {
         13.0
     });
-    let color = Color32::from_gray(foreground);
+    let color = ui.visuals().text_color();
     let widths = SAMPLES.map(|sample| {
         painter
             .layout_no_wrap(sample.into(), font.clone(), color)
@@ -162,17 +132,13 @@ fn draw(ui: &mut egui::Ui, bounds: Rect, fields: &[String; 5], diagnostic: &str)
             color,
         );
         if index < 4 {
-            frame(
-                &painter,
-                Rect::from_min_size(Pos2::new(rect.right(), rect.top()), Vec2::new(2.0, 21.0)),
-                separator_upper,
-                separator_lower,
+            painter.vline(
+                rect.right() + 0.5,
+                rect.y_range(),
+                ui.visuals().widgets.noninteractive.bg_stroke,
             );
         }
     }
-    // Toolbar::draw draws its frame after its children, including when the
-    // fixed fields extend beyond a narrow window's right edge.
-    frame(&painter, bounds, upper, lower);
 }
 
 #[cfg(test)]

@@ -320,8 +320,10 @@ tooltip instead of replacing those fields; this tooltip is an NG extension.
 Field widths use the source sample strings and padding with installed font metrics
 in desktop startup (12 points on Windows, 13 on Linux/macOS). Headless snapshot
 fixtures explicitly retain bundled fonts. The portable
-Greybird/Dark status frames match their source color/edge formulas; other native
-themes, native glyph rasterization and enter/leave timing remain unverified.
+status strip now uses the toolbar's 26-point height, borderless panel fill and
+one-line egui separators per the November 10–11 review. This deliberately
+replaces the original 23-point FLTK framed strip. Native glyph rasterization and
+enter/leave timing remain unverified.
 
 Ruler geometry and hover pairing follow the pinned source. During egui's smooth
 scrolling, ruler cells use the actual fractional content displacement instead of
@@ -384,9 +386,9 @@ Full native theme rendering remains incomplete. Help opens the original referenc
 About now has its source command and modal, with attribution moved into it.
 The image/check columns, measured rows, trailing dividers and separate shortcut
 columns now follow source calculations. Greybird/Dark indicator geometry and
-inactive colors now follow compiled source comparisons. Popup panel borders and
-full-width divider colors/geometry now follow the original drawing functions,
-including FLTK's background-derived gray ramp. Native curve coverage, submenu
+inactive colors follow compiled source comparisons. Popup backgrounds and borders
+use the active egui theme after the November 10–11 review; the previously approved
+eight-point divider gaps and inset two-line bevels are retained. Native curve coverage, submenu
 arrow shape, shadows and native fonts remain incomplete; egui still
 owns popup positioning and keyboard focus. Mnemonic input is implemented; native acceptance is listed in
 `docs/menus.md`.

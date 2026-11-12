@@ -274,9 +274,15 @@ fn popup_scope<R>(
             ui.next_widget_position() - Vec2::splat(1.0),
             Vec2::new(m.width, m.height()),
         );
-        // The enclosing egui frame reserves its one-point inset. Paint the
-        // original panel before its rows: dividers can overwrite the side edges.
-        marks::paint_panel(ui.painter(), bounds, ui.visuals().dark_mode);
+        // Keep source-derived menu geometry, using the application's popup
+        // surface instead of the unrelated FLTK theme's gray background.
+        ui.painter().rect(
+            bounds,
+            0.0,
+            ui.visuals().window_fill,
+            ui.visuals().widgets.noninteractive.bg_stroke,
+            egui::StrokeKind::Inside,
+        );
         contents(ui)
     })
 }
@@ -289,11 +295,6 @@ pub(super) fn config() -> egui::containers::menu::MenuConfig {
             style.spacing.menu_margin = egui::Margin::ZERO;
             style.visuals.menu_corner_radius = egui::CornerRadius::ZERO;
             style.visuals.window_stroke = egui::Stroke::new(1.0, Color32::TRANSPARENT);
-            style.visuals.window_fill = if style.visuals.dark_mode {
-                Color32::from_gray(83)
-            } else {
-                Color32::from_gray(206)
-            };
         })
 }
 

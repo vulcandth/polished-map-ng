@@ -81,9 +81,11 @@ fn open_and_new_position_each_map_from_its_size_zoom_rulers_and_current_viewport
                 (2, 1, false, false, [800.0, 600.0], [0.0, 0.0]),
                 (2, 20, false, false, [800.0, 600.0], [0.0, 96.0]),
                 (20, 1, false, false, [800.0, 600.0], [96.0, 0.0]),
-                (15, 12, false, false, [800.0, 600.0], [16.0, 31.0]),
-                (15, 12, false, true, [800.0, 600.0], [24.0, 39.0]),
-                (17, 13, false, false, [800.0, 600.0], [48.0, 47.0]),
+                (15, 12, false, false, [800.0, 600.0], [16.0, 32.0]),
+                (15, 12, false, true, [800.0, 600.0], [24.0, 40.0]),
+                // The taller status strip pushes vertical surplus past the
+                // source's strict three-block threshold (97 > 96).
+                (17, 13, false, false, [800.0, 600.0], [48.0, 96.0]),
                 (18, 14, false, false, [800.0, 600.0], [96.0, 96.0]),
                 (20, 20, true, true, [800.0, 600.0], [192.0, 192.0]),
                 // The source allowance is unconditional, even for an exact fit.
@@ -160,7 +162,7 @@ fn oversized_warning_does_not_reposition_until_acknowledgment() {
     h.get_by_label("OK").click();
     h.run();
     assert!(h.state().pending_map_warning.is_none());
-    assert_eq!(h.state().canvas_scroll, Vec2::new(16.0, 31.0));
+    assert_eq!(h.state().canvas_scroll, Vec2::new(16.0, 32.0));
     assert_eq!(
         h.state().loaded.as_ref().unwrap().document.map().width(),
         15
@@ -197,14 +199,14 @@ fn opening_repositions_once_and_failed_or_canceled_options_preserve_the_old_view
     h.run();
     options(&mut h, dir.path(), 15, 12, false);
     accept(&mut h, false);
-    assert_eq!(h.state().canvas_scroll, Vec2::new(16.0, 31.0));
+    assert_eq!(h.state().canvas_scroll, Vec2::new(16.0, 32.0));
     wheel(&mut h, Vec2::splat(5.0));
-    assert_eq!(h.state().canvas_scroll, Vec2::new(11.0, 26.0));
+    assert_eq!(h.state().canvas_scroll, Vec2::new(11.0, 27.0));
     h.set_size(Vec2::new(900.0, 700.0));
     h.run();
     assert_eq!(
         h.state().canvas_scroll,
-        Vec2::new(11.0, 26.0),
+        Vec2::new(11.0, 27.0),
         "resize must not repeat the opening position"
     );
     h.state_mut().close_map();

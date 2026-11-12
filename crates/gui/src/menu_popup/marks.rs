@@ -224,6 +224,7 @@ pub(super) fn paint(
     paint_drawing(painter, origin, drawing(dark, radio, selected, row as i32));
 }
 
+#[cfg(test)]
 fn panel(dark: bool, width: i32, height: i32) -> Drawing {
     // themes.cpp::{greybird,dark}_panel_thin_up_box/frame. Preserve inclusive
     // line endpoints and draw order, including the top-right/bottom-left corners.
@@ -252,14 +253,6 @@ fn divider(dark: bool, width: i32, row: i32, index: i32) -> Drawing {
     d.h(Color32::from_gray(upper), 0, y, width);
     d.h(Color32::from_gray(lower), 0, y + 1, width);
     d
-}
-
-pub(super) fn paint_panel(painter: &egui::Painter, bounds: Rect, dark: bool) {
-    paint_drawing(
-        painter,
-        bounds.min,
-        panel(dark, bounds.width() as i32, bounds.height() as i32),
-    );
 }
 
 fn paint_drawing(painter: &egui::Painter, origin: Pos2, drawing: Drawing) {

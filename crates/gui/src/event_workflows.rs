@@ -745,20 +745,26 @@ impl Editor {
             }
             offset += 10.0;
             let field_width = 290.0 - offset;
-            // themes.cpp: Fl::box_dh(OS_INPUT_THIN_DOWN_BOX) is six for
-            // Greybird and four for Dark, independently of the OS font size.
-            let input_border_height = if ui.visuals().dark_mode { 4.0 } else { 6.0 };
             let height = |s: &Option<String>| {
                 s.as_ref().map_or(0.0, |s| {
-                    let line_height = ui
-                        .painter()
-                        .layout_no_wrap("M".into(), font.clone(), ui.visuals().text_color())
-                        .size()
-                        .y
-                        .ceil();
-                    (measured_field_lines(s, field_width, measure) as f32 * line_height
-                        + input_border_height)
-                        .max(22.0)
+                    if measured_field_lines(s, field_width, measure) <= 1 {
+                        22.0
+                    } else {
+                        // Preserve the source's opening mode, but size wrapped
+                        // text using the actual renderer and its inner width.
+                        (ui.painter()
+                            .layout(
+                                s.clone(),
+                                font.clone(),
+                                ui.visuals().text_color(),
+                                field_width - EVENT_FIELD_MARGIN.sum().x,
+                            )
+                            .size()
+                            .y
+                            .ceil()
+                            + EVENT_FIELD_MARGIN.sum().y)
+                            .max(22.0)
+                    }
                 })
             };
             // Option_Dialog::show refreshes once. Editing text must not resize
@@ -961,24 +967,44 @@ pub(super) fn measured_field_lines(text: &str, width: f32, measure: impl Fn(&str
 }
 
 /// A source input keeps its opening bounds and scrolls internally as text grows.
+const EVENT_FIELD_MARGIN: egui::Margin = egui::Margin::symmetric(4, 3);
+
 fn event_field(ui: &mut egui::Ui, rect: Rect, text: &mut String, name: &str) -> egui::Response {
     if rect.height() <= 22.0 {
         return ui.put(rect, egui::TextEdit::singleline(text).cursor_at_end(false));
     }
-    let mut child = ui.new_child(egui::UiBuilder::new().max_rect(rect));
-    child.set_clip_rect(rect.intersect(ui.clip_rect()));
+    // The frame stays outside the scroll area, so its bottom edge remains
+    // visible even after editing grows the contents beyond their opening size.
+    let background = ui.painter().add(egui::Shape::Noop);
+    let inner = rect - EVENT_FIELD_MARGIN;
+    let mut child = ui.new_child(egui::UiBuilder::new().max_rect(inner));
+    child.set_clip_rect(inner.intersect(ui.clip_rect()));
     let mut response = egui::ScrollArea::vertical()
         .id_salt(("event-field", name))
         .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
         .auto_shrink([false, false])
-        .max_height(rect.height())
+        .max_height(inner.height())
         .show(&mut child, |ui| {
             ui.add_sized(
-                rect.size(),
-                egui::TextEdit::multiline(text).cursor_at_end(false),
+                inner.size(),
+                egui::TextEdit::multiline(text)
+                    .frame(egui::Frame::NONE)
+                    .desired_rows(1)
+                    .cursor_at_end(false),
             )
         })
         .inner;
+    let visuals = ui.style().interact(&response);
+    ui.painter().set(
+        background,
+        egui::Shape::Rect(egui::epaint::RectShape::new(
+            rect,
+            visuals.corner_radius,
+            ui.visuals().text_edit_bg_color(),
+            visuals.bg_stroke,
+            egui::StrokeKind::Inside,
+        )),
+    );
     response.rect = rect;
     response.interact_rect = rect.intersect(ui.clip_rect());
     response

@@ -2,7 +2,8 @@
 
 pub const MENU_HEIGHT: f32 = 21.0;
 pub const TOOLBAR_HEIGHT: f32 = 26.0;
-pub const STATUS_HEIGHT: f32 = 23.0;
+// Review correction: the status strip shares the toolbar's height and inset.
+pub const STATUS_HEIGHT: f32 = TOOLBAR_HEIGHT;
 pub const MAP_MARGIN: f32 = 3.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -250,7 +251,7 @@ mod tests {
                 x: 0.0,
                 y: 47.0,
                 width: 144.0,
-                height: 530.0
+                height: 527.0
             }
         );
         assert_eq!(
@@ -259,7 +260,7 @@ mod tests {
                 x: 144.0,
                 y: 47.0,
                 width: 656.0,
-                height: 530.0
+                height: 527.0
             }
         );
         let l = Layout::new(800.0, 600.0, true, true, 16.0);
@@ -276,7 +277,7 @@ mod tests {
                     x: 272.0,
                     y: 63.0,
                     width: 16.0,
-                    height: 514.0
+                    height: 511.0
                 },
                 corner: Rect {
                     x: 272.0,
@@ -292,7 +293,7 @@ mod tests {
                 x: 288.0,
                 y: 63.0,
                 width: 512.0,
-                height: 514.0
+                height: 511.0
             }
         );
     }

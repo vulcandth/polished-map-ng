@@ -5,7 +5,10 @@ use egui_kittest::{Harness, kittest::Queryable};
 fn source_fixed_field_widths_insets_and_separators_do_not_reflow() {
     for width in [200.0, 800.0, 1200.0] {
         let fields = field_rects(
-            Rect::from_min_size(Pos2::new(7.0, 577.0), Vec2::new(width, 23.0)),
+            Rect::from_min_size(
+                Pos2::new(7.0, 577.0),
+                Vec2::new(width, geometry::STATUS_HEIGHT),
+            ),
             [80.0, 100.0, 50.0, 100.0, 160.0],
         );
         for (index, (x, width)) in [
@@ -20,12 +23,12 @@ fn source_fixed_field_widths_insets_and_separators_do_not_reflow() {
         {
             assert_eq!(
                 fields[index],
-                Rect::from_min_size(Pos2::new(x, 578.0), Vec2::new(width, 21.0))
+                Rect::from_min_size(Pos2::new(x, 578.0), Vec2::new(width, 24.0))
             );
         }
     }
     let fields = field_rects(
-        Rect::from_min_size(Pos2::ZERO, Vec2::new(800.0, 23.0)),
+        Rect::from_min_size(Pos2::ZERO, Vec2::new(800.0, geometry::STATUS_HEIGHT)),
         [0.25, 10.5, 10.0, 100.75, 0.0],
     );
     assert_eq!(
@@ -217,7 +220,7 @@ fn field_widgets_use_platform_font_metrics_and_keep_their_bounds_at_both_dpi() {
                         ui,
                         Rect::from_min_size(
                             Pos2::new(8.0, 8.0),
-                            Vec2::new(ui.max_rect().width(), 23.0),
+                            Vec2::new(ui.max_rect().width(), geometry::STATUS_HEIGHT),
                         ),
                         &labels,
                         "Diagnostic",
@@ -243,7 +246,7 @@ fn field_widgets_use_platform_font_metrics_and_keep_their_bounds_at_both_dpi() {
                 let rect = h.get_by_label(label).rect();
                 assert_eq!(
                     rect,
-                    Rect::from_min_size(Pos2::new(x, 9.0), Vec2::new(width, 21.0))
+                    Rect::from_min_size(Pos2::new(x, 9.0), Vec2::new(width, 24.0))
                 );
                 x += width + 2.0;
             }
@@ -257,7 +260,7 @@ fn field_widgets_use_platform_font_metrics_and_keep_their_bounds_at_both_dpi() {
 
 #[cfg(feature = "visual-tests")]
 #[test]
-fn theme_frame_separator_pixels_and_narrow_clipping_match_source() {
+fn status_surface_matches_toolbar_and_clips_at_both_scales() {
     let mut snapshots = egui_kittest::SnapshotResults::new();
     for (os, name) in [
         (egui::os::OperatingSystem::Windows, "windows"),
@@ -292,7 +295,7 @@ fn theme_frame_separator_pixels_and_narrow_clipping_match_source() {
                             ui,
                             Rect::from_min_size(
                                 Pos2::new(8.0, 8.0),
-                                Vec2::new(ui.max_rect().width() - 16.0, 23.0),
+                                Vec2::new(ui.max_rect().width() - 16.0, geometry::STATUS_HEIGHT),
                             ),
                             &labels,
                             "Diagnostic",
@@ -300,39 +303,32 @@ fn theme_frame_separator_pixels_and_narrow_clipping_match_source() {
                     });
                 h.run();
                 let image = h.render().unwrap();
-                let (background, upper, lower, sep_upper, sep_lower) = if dark {
-                    (
-                        h.ctx.style_of(egui::Theme::Dark).visuals.panel_fill.r(),
-                        106,
-                        40,
-                        56,
-                        116,
-                    )
+                let style = h.ctx.style_of(if dark {
+                    egui::Theme::Dark
                 } else {
-                    (
-                        h.ctx.style_of(egui::Theme::Light).visuals.panel_fill.r(),
-                        218,
-                        193,
-                        186,
-                        218,
-                    )
-                };
+                    egui::Theme::Light
+                });
+                let background = style.visuals.panel_fill.to_array();
+                let separator = style
+                    .visuals
+                    .widgets
+                    .noninteractive
+                    .bg_stroke
+                    .color
+                    .to_array();
                 let x = h.get_by_label("Blocks: 256").rect().right() as u32;
                 for (x, y, expected) in [
-                    (8, 8, upper),
-                    (8, 29, upper),
-                    (615, 8, lower),
-                    (8, 30, lower),
+                    (8, 8, background),
+                    (8, 33, background),
+                    (615, 8, background),
                     (9, 9, background),
-                    (x, 9, sep_upper),
-                    (x, 28, sep_upper),
-                    (x, 29, sep_lower),
-                    (x + 1, 9, sep_lower),
+                    (x, 9, separator),
+                    (x, 31, separator),
+                    (x, 8, background),
+                    (x, 33, background),
+                    (x + 1, 9, background),
                 ] {
-                    assert_eq!(
-                        image.get_pixel(x * dpi, y * dpi).0,
-                        [expected, expected, expected, 255]
-                    );
+                    assert_eq!(image.get_pixel(x * dpi, y * dpi).0, expected);
                 }
                 if dpi == 1 {
                     snapshots.add(h.try_snapshot(format!(
@@ -343,13 +339,8 @@ fn theme_frame_separator_pixels_and_narrow_clipping_match_source() {
                 h.set_size(Vec2::new(200.0, 64.0));
                 h.run();
                 let image = h.render().unwrap();
-                // Truncated fields cannot overwrite the enclosing frame or
-                // escape into the background beyond the 176-point right edge.
-                for y in 8..31 {
-                    assert_eq!(
-                        image.get_pixel(175 * dpi, y * dpi).0,
-                        [lower, lower, lower, 255]
-                    );
+                // Even clipped field text cannot escape the strip's right edge.
+                for y in 8..34 {
                     assert_eq!(image.get_pixel(176 * dpi, y * dpi).0, [127, 20, 160, 255]);
                 }
             }

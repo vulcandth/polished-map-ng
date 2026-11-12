@@ -292,7 +292,7 @@ fn hotkey_selection_reveals_last_and_first_rows_at_both_zoom_sizes() {
         h.run();
         assert_eq!(h.state().selected, 255);
         let size = if zoom { 64.0 } else { 32.0 };
-        assert_eq!(h.state().sidebar_scroll, 64.0 * size - 256.0);
+        assert_eq!(h.state().sidebar_scroll, 64.0 * size - 253.0);
         h.key_press(egui::Key::Num0);
         h.run();
         assert_eq!(h.state().selected, 0);
@@ -384,7 +384,7 @@ fn canvas_right_pick_reveals_the_selected_block_without_editing() {
         h.state().event_ui.mode,
         h.state().error
     );
-    assert_eq!(h.state().sidebar_scroll, 1792.0);
+    assert_eq!(h.state().sidebar_scroll, 1795.0);
     // The only undoable edit is the fixture's initial paint.
     h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::Z);
     h.run();

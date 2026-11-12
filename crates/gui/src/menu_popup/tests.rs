@@ -293,13 +293,15 @@ fn popup_panels_and_reviewed_divider_gaps_are_pixel_aligned_at_both_scales() {
                             }
                         }
                     };
-                    let (upper, lower) = if dark { (106, 40) } else { (218, 193) };
-                    pixel(bounds.left(), bounds.top(), upper);
-                    pixel(bounds.right() - 2.0, bounds.top(), upper);
-                    pixel(bounds.right() - 1.0, bounds.top(), lower);
-                    pixel(bounds.left(), bounds.bottom() - 2.0, upper);
-                    pixel(bounds.left(), bounds.bottom() - 1.0, lower);
-                    pixel(bounds.right() - 1.0, bounds.bottom() - 1.0, lower);
+                    let style = h.ctx.style_of(if dark {
+                        egui::Theme::Dark
+                    } else {
+                        egui::Theme::Light
+                    });
+                    let border = style.visuals.widgets.noninteractive.bg_stroke.color.r();
+                    pixel(bounds.left(), bounds.top() + 2.0, border);
+                    pixel(bounds.right() - 1.0, bounds.top() + 2.0, border);
+                    pixel(bounds.left() + 2.0, bounds.bottom() - 1.0, border);
                     for item in items.iter().filter(|item| item.divider) {
                         let role = match item.mark {
                             Mark::Check => egui::Role::CheckBox,
@@ -319,7 +321,7 @@ fn popup_panels_and_reviewed_divider_gaps_are_pixel_aligned_at_both_scales() {
                         pixel(
                             row.left() + 2.0,
                             row.bottom() + 3.0,
-                            if dark { 83 } else { 206 },
+                            style.visuals.window_fill.r(),
                         );
                     }
                 };
