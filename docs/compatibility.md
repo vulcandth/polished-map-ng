@@ -12,12 +12,16 @@ current status and remaining acceptance gates.
 The review on `main` preserves the five crate responsibilities and the existing
 GUI behavior. [Architecture](architecture.md#crate-and-module-layout-review)
 records the boundary decision and extracted editor modules. No snapshot baseline
-or aesthetic change accompanies that extraction. Windows format/Clippy,
-workspace tests and rustdoc passed for the extraction; final cross-platform
-verification of the complete review remains in progress under
-[R1–R4](roadmap.md#initial-release-review--in-progress).
+or aesthetic change accompanies that extraction. The completed
+[R1–R4 review](roadmap.md#initial-release-review--complete) was verified at
+`1bf228cbb222337a42e347816b4be82944d47447`: Windows formatting, warnings-denied
+Clippy, 558 workspace tests (54 environment-dependent tests ignored) and rustdoc
+passed, as did all 16 Python tooling tests. All eight
+[CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43347427575)
+passed, including Windows/Linux/macOS, MSRV, compiled upstream comparisons,
+five pinned projects, unchanged visual baselines and dependency/license checks.
 
-Input/persistence inspection found and reproduced two concrete panics:
+Input/persistence inspection reproduced two panics and one incorrect palette write:
 
 - `tile_palettes::tests::commas_inside_comments_do_not_create_palette_rows`
   failed with an out-of-range slice when a comma inside a `tilepal` comment was
@@ -36,7 +40,13 @@ published unified binary targets and their matching source. Updated packaging
 has regressions for selected launcher/version, retained attribution/licenses,
 shared notice hashes, target dependency selection, offline documentation links,
 source-only links pinned to the exact commit, dirty-checkout rejection and ZIP
-executable modes. Fresh four-target package verification is still pending.
+executable modes. All five
+[packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43347427189)
+passed, building the four targets offline from matching source. Independent
+archive inspection verified hashes, architecture, executable modes, source
+identity, exact license/notice bytes and local documentation links. The packaged
+Windows CLI also inspected a synthetic two-block map successfully; no desktop
+GUI testing was performed for this review.
 
 The code review follows data across all five crates rather than treating green
 tests as a substitute for inspection:

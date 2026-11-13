@@ -150,7 +150,9 @@ sources when preparing release dependency bundles; this review does not replace
 the full release notice inventory.
 
 The locked eframe 0.37 stack includes three Linux D-Bus maintenance advisories:
-RUSTSEC-2026-0370 (zvariant), 0371 (zbus_names), and 0372 (zvariant_derive).
+[RUSTSEC-2026-0370](https://rustsec.org/advisories/RUSTSEC-2026-0370.html) (zvariant),
+[0371](https://rustsec.org/advisories/RUSTSEC-2026-0371.html) (zbus_names), and
+[0372](https://rustsec.org/advisories/RUSTSEC-2026-0372.html) (zvariant_derive).
 The upstream crates merged into zbus 6; accesskit/atspi and file-dialog dependencies
 still use zbus 5. Forcing a major update would break those APIs. Targeted ignores
 record this constraint, preserve all other advisory checks, and require review
@@ -271,8 +273,12 @@ Enabling all features exposed `colored` 2.2.0, used only by visual-test image
 comparison through dify. A crate-specific MPL-2.0 exception permits that test
 dependency; its source and notices remain in the full dependency source bundle.
 It is absent from the shipped runtime graph. The existing advisory exceptions
-are unchanged; no vulnerability exception was added. Local collection verified
-388 selected crates, all clarified texts and the 57 supplements.
+are unchanged; no vulnerability exception was added. The successful
+[CI report at 1bf228c](https://github.com/vulcandth/polished-map-ng/actions/runs/43347427575)
+was downloaded and independently checked: 388 selected crates, all clarified
+texts and 57 hash-verified supplements are covered. The narrower production
+inventories in all four binary archives also passed the
+[archive audit](releases.md#initial-release-archive-audit).
 
 To reproduce the dependency job after installing its pinned tools:
 

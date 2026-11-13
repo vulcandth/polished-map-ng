@@ -82,9 +82,40 @@ The audit also found that binaries lacked `vendor/NOTICE.md` and its explicit
 `vendor/licenses/SCTK-MIT.txt` location. The same complete Victor Berger MIT text
 was already present in dependency notices; the defect was the missing adaptation
 notice/link, not an absent copy of the MIT terms. The binary content policy now
-includes both vendor records explicitly. Revised package creation and checks
-remain in progress under [R3](roadmap.md#initial-release-review--in-progress);
-the published November 11 downloads have not been replaced by this review.
+includes both vendor records explicitly.
+
+The completed [R3 review](roadmap.md#initial-release-review--complete) verified
+`1bf228cbb222337a42e347816b4be82944d47447`. All eight
+[CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43347427575)
+and all five [source/platform packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43347427189)
+passed. The four binaries were built offline from the same source archive.
+These are verification artifacts; this review has not replaced the published
+November 11 downloads or declared an initial release.
+
+| Verified target | Files | Dependency notice records | Compressed bytes | Support bytes excluding GUI/CLI executables |
+|---|---:|---:|---:|---:|
+| Windows x86-64 | 452 | 232 | 10,222,292 | 2,653,949 |
+| Linux x86-64 | 581 | 308 | 11,470,440 | 3,225,325 |
+| macOS Apple Silicon | 441 | 229 | 8,668,289 | 2,515,640 |
+| macOS Intel | 441 | 229 | 9,531,514 | 2,515,640 |
+
+Independent inspection checked each archive's SHA-256, BUILD-INFO, selected
+launcher, native executable architecture/modes, explicit content allowlist,
+offline help links, exact curated/dependency license bytes and supplemental
+notice hashes. Test-only notice entries and internal documentation are absent.
+Windows support contents fell from 5,638,950 to 2,653,949 bytes. This reduces
+distribution overhead; it is not a claim of reduced application memory use.
+The packaged Windows CLI ran against a synthetic map. Both macOS packaging
+jobs verified their ad-hoc signatures; Developer ID signing and native user
+acceptance remain separate gates.
+
+The corresponding source contains 23,223 files (498,563,139 bytes unpacked).
+Its 936 tracked files match the commit exactly; all 460 registry source packages
+were checked against their lockfile archive checksums and individual file hashes.
+Generated offline Cargo configuration, BUILD-INFO and the exact copied REBUILD
+instructions account for the additional non-registry files. Complete source,
+lockfile, licenses and relink instructions remain available together; registry
+sources are deliberately retained for offline rebuilding.
 
 The packaging workflow can build all three launchers from the same shared-source
 revision. Select `master`, `plusplus` or `unified` explicitly; the profile in BUILD-INFO.json,
