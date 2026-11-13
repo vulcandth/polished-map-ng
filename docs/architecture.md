@@ -1,66 +1,17 @@
 # Architecture decisions
 
-## Paletteswap preview after the initial release
-
-Sylvie's November 11 request is to interpret project `paletteswap` rectangles
-and show the corresponding colors in map previews. This is **not started** and
-is explicitly deferred until after the initial release (I3), not a parity fix.
-A future proposal must define supported declarations, rectangle coordinates and
-overlap order, palette/time-of-day interactions, and behavior for unsupported
-script expressions. Rendering and Print should agree without rewriting map or
-script data. Use project fixtures and original-game/reference outputs to verify
-the selected semantics when that work is authorized.
-
-## November 8–9 deferred suggestions and popup investigation
-
-These are recorded for I3 and are **not started**: a native macOS menu bar,
-searchable collision choices, and assessing native-theme/native-theme-egui-widgets
-for a future theme implementation. They do not reopen general M4 aesthetics.
-The [macOS menu example](https://github.com/emilk/egui/issues/3411#issuecomment-3398463201)
-is an application-side Objective-C integration example, not a switch in eframe.
-
-The reviewed [winit popup PR 4543](https://github.com/rust-windowing/winit/pull/4543)
-merged on July 27, 2026 at `9674d8ceef6976326fe9583a81f2e684daac05d6`. It adds a
-new popup window type and parent relationship in the reorganized winit-core,
-winit-appkit, winit-wayland and winit-win32 API. Its X11 `WindowType::Popup`
-branch explicitly returns `RequestError::NotSupported`. Our pinned winit 0.30.13 has the older platform_impl API, and
-[egui's separate context-menu window request](https://github.com/emilk/egui/issues/5144)
-remains open. Using the new primitive would require a winit/egui integration
-migration or substantial platform backports, plus focus/grab/dismissal handling;
-it is not a small dependency toggle. Keep bounded scrolling dropdowns now.
-Evaluate external popup integration as a separate proposal with Windows, macOS,
-X11 and Wayland acceptance, preserving parent ownership and keyboard behavior.
-
-
-## November 7 future suggestions
-
-These suggestions from Sylvie/Rangi42's November 7 review are **not started**.
-They belong to I1/I3 after parity and the unified-editor work, not M9:
-
-- Display NPC graphics for a whitelist of known pokecrystal movement constants,
-  with common Polished Crystal extensions. Retain “O” markers for custom or
-  unsupported movement data; consider a user extension mechanism. Resolve sprite
-  IDs through the project's constants, sprite table and graphics labels. General
-  ASM control-flow interpretation and niche background-object movements are not
-  prerequisites for a first proposal.
-- Consider revised application artwork or a new design. M9 retains the original
-  upstream multi-size ICO and its provenance limitations; it does not adopt the
-  alternative images shared in chat.
-- Measure executable size and memory before further optimization. The reviewed
-  published packages are optimized release builds, despite the chat's tentative
-  suggestion that they might be debug builds. Raw RAM figures are observations,
-  not evidence of a leak or a requirement to redesign the renderer.
-
-Roof/tileset selection previews were initially classified as future work. The
-user explicitly requested them in this review follow-up to make the enlarged
-native dropdown clients useful; they are now part of M9. The November 9 correction expands the tileset client to fit the selected sheet
-within screen limits. Oversized previews and growing dropdown lists still scroll
-independently. Roof previews keep the existing compact client.
-See [review evidence](compatibility.md#november-7-upstream-review).
+Start with the [unified application boundary](#unified-application-boundary) and
+[crate responsibilities](#adr-1-separate-domain-logic-from-platform-adapters-immediately).
+[Geometry](#adr-2-geometry-derived-from-fltk),
+[CPU rendering](#adr-3-deterministic-cpu-pixel-source) and
+[failure handling](#adr-4-fail-safely-without-pretending-to-have-upstream-parity)
+explain the compatibility constraints. Deferred feature proposals are at the end;
+current execution status belongs to the [roadmap](roadmap.md).
 
 ## Unified application boundary
 
-The unified application is being developed separately from both parity launchers.
+The unified application is the default on `main`; both parity launchers remain
+separate entry points into the same shared implementation.
 Application identity, settings storage and legacy migration must remain stable
 when the active document changes. Document storage and map input encoding are
 separate backend facts: per-tile palettes versus per-occurrence attributes, and
@@ -174,7 +125,7 @@ block commands cannot mutate plusplus graphics. These adapters are internal GUI
 implementation, not the stable automation interface or automatic profile detection.
 See [integration evidence](compatibility.md#plusplus-shared-gui-integration).
 
-The editor now has an internal fixed profile. Open options, map/renderer adoption
+The separate parity editors have an internal fixed profile. Open options, map/renderer adoption
 and palette commits reject profile mismatches. Plusplus asset sessions own their
 attribute block document, raw tiles, optional roof, eight-palette document and
 bank order; master retains its existing asset documents. Plusplus sessions never
@@ -578,3 +529,61 @@ The promotion commit is `4f595496f1ce7001e9dff528e413ff79c7782f4e`.
 Historical tips remain `f8f0d96ded4f7c9e626ec1d8d52ef49b227bac9a`
 (`codex/master-review`) and `9100684f07e6287b8cba9afc9c35fb14c38037b1`
 (`codex/plusplus-port`).
+
+## Paletteswap preview after the initial release
+
+Sylvie's November 11 request is to interpret project `paletteswap` rectangles
+and show the corresponding colors in map previews. This is **not started** and
+is explicitly deferred until after the initial release (I3), not a parity fix.
+A future proposal must define supported declarations, rectangle coordinates and
+overlap order, palette/time-of-day interactions, and behavior for unsupported
+script expressions. Rendering and Print should agree without rewriting map or
+script data. Use project fixtures and original-game/reference outputs to verify
+the selected semantics when that work is authorized.
+
+## November 8–9 deferred suggestions and popup investigation
+
+These are recorded for I3 and are **not started**: a native macOS menu bar,
+searchable collision choices, and assessing native-theme/native-theme-egui-widgets
+for a future theme implementation. They do not reopen general M4 aesthetics.
+The [macOS menu example](https://github.com/emilk/egui/issues/3411#issuecomment-3398463201)
+is an application-side Objective-C integration example, not a switch in eframe.
+
+The reviewed [winit popup PR 4543](https://github.com/rust-windowing/winit/pull/4543)
+merged on July 27, 2026 at `9674d8ceef6976326fe9583a81f2e684daac05d6`. It adds a
+new popup window type and parent relationship in the reorganized winit-core,
+winit-appkit, winit-wayland and winit-win32 API. Its X11 `WindowType::Popup`
+branch explicitly returns `RequestError::NotSupported`. Our pinned winit 0.30.13 has the older platform_impl API, and
+[egui's separate context-menu window request](https://github.com/emilk/egui/issues/5144)
+remains open. Using the new primitive would require a winit/egui integration
+migration or substantial platform backports, plus focus/grab/dismissal handling;
+it is not a small dependency toggle. Keep bounded scrolling dropdowns now.
+Evaluate external popup integration as a separate proposal with Windows, macOS,
+X11 and Wayland acceptance, preserving parent ownership and keyboard behavior.
+
+
+## November 7 future suggestions
+
+These suggestions from Sylvie/Rangi42's November 7 review are **not started**.
+They belong to I1/I3 after parity and the unified-editor work, not M9:
+
+- Display NPC graphics for a whitelist of known pokecrystal movement constants,
+  with common Polished Crystal extensions. Retain “O” markers for custom or
+  unsupported movement data; consider a user extension mechanism. Resolve sprite
+  IDs through the project's constants, sprite table and graphics labels. General
+  ASM control-flow interpretation and niche background-object movements are not
+  prerequisites for a first proposal.
+- Consider revised application artwork or a new design. M9 retains the original
+  upstream multi-size ICO and its provenance limitations; it does not adopt the
+  alternative images shared in chat.
+- Measure executable size and memory before further optimization. The reviewed
+  published packages are optimized release builds, despite the chat's tentative
+  suggestion that they might be debug builds. Raw RAM figures are observations,
+  not evidence of a leak or a requirement to redesign the renderer.
+
+Roof/tileset selection previews were initially classified as future work. The
+user explicitly requested them in this review follow-up to make the enlarged
+native dropdown clients useful; they are now part of M9. The November 9 correction expands the tileset client to fit the selected sheet
+within screen limits. Oversized previews and growing dropdown lists still scroll
+independently. Roof previews keep the existing compact client.
+See [review evidence](compatibility.md#november-7-upstream-review).

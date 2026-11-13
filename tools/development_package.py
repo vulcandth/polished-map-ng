@@ -112,6 +112,20 @@ def source_commit():
     return run("git", "rev-parse", "HEAD").strip()
 
 
+def package_revision(kind, source_info):
+    if source_info:
+        # An extracted archive nested inside a Git checkout must not accidentally
+        # archive that parent repository under the inherited source identity.
+        if kind == "source":
+            raise ValueError("Source packaging requires a Git checkout, not an extracted archive")
+        commit = source_info.get("commit")
+    else:
+        commit = source_commit()
+    if not isinstance(commit, str) or not re.fullmatch(r"[0-9a-f]{40}", commit):
+        raise ValueError("BUILD-INFO needs a full source commit")
+    return commit
+
+
 def supplemental_notices(root=Path(".")):
     records = json.loads((root / "docs/dependency-notices.json").read_text(encoding="utf-8"))
     for record in records:
@@ -203,7 +217,7 @@ def main():
     source_info = (json.loads(Path("BUILD-INFO.json").read_text(encoding="utf-8"))
                    if Path("BUILD-INFO.json").is_file() else {})
     profile = package_profile(args.profile, source_info)
-    commit = source_info["commit"] if source_info else source_commit()
+    commit = package_revision(args.kind, source_info)
     version = tomllib.loads(Path("Cargo.toml").read_text(encoding="utf-8"))["workspace"]["package"]["version"]
     stem = package_stem(commit, profile)
     args.output.mkdir(parents=True, exist_ok=True)

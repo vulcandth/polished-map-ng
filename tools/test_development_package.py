@@ -11,7 +11,7 @@ from urllib.parse import unquote, urlsplit
 import zipfile
 
 from development_package import (PROFILES, archive_tree, common, copy_gui, notices,
-                                 package_profile, package_stem, select_packages,
+                                 package_profile, package_revision, package_stem, select_packages,
                                  source_commit, supplemental_notices)
 from package_docs import LINK, USER_DOCS, rewrite_links
 
@@ -184,6 +184,16 @@ class DevelopmentArchiveTests(unittest.TestCase):
                 source_commit()
         with patch("development_package.run", side_effect=["", COMMIT + "\n"]):
             self.assertEqual(source_commit(), COMMIT)
+
+    def test_archive_identity_cannot_select_an_unrelated_parent_git_checkout(self):
+        with patch("development_package.source_commit") as git:
+            self.assertEqual(package_revision("binary", {"commit": COMMIT}), COMMIT)
+            with self.assertRaisesRegex(ValueError, "not an extracted archive"):
+                package_revision("source", {"commit": COMMIT})
+            for commit in [None, "old", "../../outside", 123]:
+                with self.assertRaisesRegex(ValueError, "full source commit"):
+                    package_revision("binary", {"commit": commit})
+            git.assert_not_called()
 
     def test_pinned_upstream_notices_match_the_provenance_manifest(self):
         supplemental_notices(Path(__file__).resolve().parents[1])

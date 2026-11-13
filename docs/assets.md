@@ -1,7 +1,8 @@
 # Asset provenance
 
-Project game graphics and example maps are not distributed. Reference checkouts
-and extracted oracle inputs stay ignored. The UI now uses all 41 nonblank toolbar/
+Project fixtures and reusable game graphics are not distributed; the attributed
+[README screenshot](#readme-screenshot) is the narrow documentation exception.
+Reference checkouts and extracted oracle inputs stay ignored. The UI uses all 41 nonblank toolbar/
 editor XPMs, the three original message symbols, About image and native app icon.
 The blank menu image is represented by its measured empty column.
 

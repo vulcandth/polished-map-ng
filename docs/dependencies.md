@@ -1,5 +1,18 @@
 # Dependency review
 
+Start with the [vendor necessity audit](#vendor-necessity-audit--november-11-2026),
+[native patch records](#pinned-native-adapter-patches) and
+[continuous license checks](#continuous-license-checks). The full workspace
+license report includes test features; [binary packages](releases.md#binary-content-policy)
+carry the selected production/build graph's notices. Matching source retains the
+entire locked dependency set for offline rebuilds. Asset rights and their known
+limits are recorded separately in [asset provenance](assets.md).
+
+## Dependency additions and adapter rationale
+
+The following records explain the additions at their implementation dates.
+Cargo.lock and the manifests are authoritative for the current graph.
+
 The November 7 review adds `dark-light` 3.0.0 (MIT OR Apache-2.0) for a
 first-launch desktop-portal theme fallback; detection runs on a worker and does
 not override saved settings. It adds `futures-channel` 0.3.34 to the resolved

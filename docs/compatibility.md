@@ -1,5 +1,12 @@
 # Compatibility evidence
 
+Start with the [coverage matrix](#current-coverage-matrix),
+[master inventory](#master-source-inventory), [plusplus audit](#plusplus-source-audit)
+and [unified format/detection evidence](#unified-format-detection-and-upstream-drift).
+The [release review](#initial-release-review) covers current preparation.
+Dated observations record their tested revision; the [roadmap](roadmap.md) owns
+current status and remaining acceptance gates.
+
 ## Initial-release review
 
 The review on `main` preserves the five crate responsibilities and the existing
@@ -19,6 +26,10 @@ Input/persistence inspection found and reproduced two concrete panics:
 - `bounded_reads_handle_zero_exact_and_maximum_limits` failed with integer
   overflow for `read_bounded(path, usize::MAX)`. The extra-byte read bound now
   saturates; the test also checks zero, insufficient and exact limits.
+- `palette_row_indentation_matches_the_decoder` reproduced a wrong-row write:
+  the decoder accepted whitespace that the serializer's row matcher skipped.
+  Matching their whitespace rules preserves indentation and updates both real
+  rows in order instead of leaving one stale and assigning its color to the next.
 
 The [archive audit](releases.md#initial-release-archive-audit) covers all four
 published unified binary targets and their matching source. Updated packaging
@@ -26,6 +37,20 @@ has regressions for selected launcher/version, retained attribution/licenses,
 shared notice hashes, target dependency selection, offline documentation links,
 source-only links pinned to the exact commit, dirty-checkout rejection and ZIP
 executable modes. Fresh four-target package verification is still pending.
+
+The code review follows data across all five crates rather than treating green
+tests as a substitute for inspection:
+
+| Boundary | Inspected concerns and disposition |
+|---|---|
+| Core | `map`, `tileset`, `plusplus`, `raster` and `printing`: private validated edit models, batch clone/commit behavior, bounded map/tile sizes, palette/bank indexing and Print mask bounds. Keep the pure model/render crate. `RgbImage` is an output/transfer record; the public PNG writer validates its dimensions and byte count. |
+| Project | `document`, `transaction`, `events`, `codecs`, `tile_palettes`, `png_import`, `graphics` and `print_fonts`: read/decode/allocation limits, unrelated ASM retention, observed hashes, staged replacement, permissions and multi-file recovery. Corrected the reproduced reader and palette serializer defects above. Staged multi-file saves remain recoverable, not a claimed filesystem transaction. |
+| GUI | Editor state/frame orchestration, Open/Save workers, document adapters, dialog dispatch and external drops: shared backend commands, pending-work/error handling, modal input guards and viewport-scoped transfer handling. Extracted cohesive modules; preserved command order and layout. |
+| CLI | Command dispatch and `printing`: preview/apply and overwrite hash guards, bounded JSON/font inputs, typed errors and lazy font selection for plain export. Keep the explicit command frontend and shared backend; stable autonomous API work remains its own roadmap objective. |
+| Platform | Windows color/font/home queries, script opener, macOS home lookup and native opacity: borrowed handles, bounded native buffers, main-thread/COM ownership, argument passing without shell interpolation, explicit unsupported/error results. Retain the narrow unsafe boundary and protocol regressions. |
+
+Source inspection and automated checks do not prove freedom from every possible
+bug, interoperability with every project variant or native acceptance.
 
 This review is release preparation, not native parity acceptance. U3 and the
 original master/plusplus gates remain assigned to human testers; future features

@@ -14,6 +14,9 @@ rows, consistently with the decoder. A line such as `tilepal ; unused, RED`
 previously contributed a spurious row during a same-length palette edit and
 could panic. It is now preserved unchanged while real rows are edited. This
 does not broaden supported assembly or alter valid palette serialization.
+Row detection also uses the decoder's whitespace rules after the required
+space/tab prefix; previously additional Unicode indentation could leave a row
+unchanged and apply its replacement color to the following row instead.
 
 The public bounded-file reader also handles `usize::MAX` without overflowing
 its extra-byte limit check (a panic in debug builds and a zero-byte read in

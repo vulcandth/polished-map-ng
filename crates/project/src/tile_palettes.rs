@@ -6,7 +6,7 @@ fn row(line: &str) -> Option<(&str, &str, &str)> {
     if !line.starts_with([' ', '\t']) {
         return None;
     }
-    let trimmed = line.trim_start_matches([' ', '\t']);
+    let trimmed = line.trim_start();
     let rest = trimmed
         .strip_prefix("tilepal")?
         .strip_prefix(char::is_whitespace)?;
@@ -139,6 +139,17 @@ mod tests {
         assert_eq!(
             encode(Path::new("palette_map.asm"), original, canonical).unwrap(),
             b"\ttilepal ; unused bank, RED\r\n\ttilepal 0, WATER ; keep\r\n"
+        );
+    }
+
+    #[test]
+    fn palette_row_indentation_matches_the_decoder() {
+        let original = "\t\u{2003}tilepal 0, GRAY\n\ttilepal 0, RED\n";
+        let canonical = "\ttilepal 0, WATER, GREEN\n";
+        let saved = encode(Path::new("palette_map.asm"), original, canonical).unwrap();
+        assert_eq!(
+            saved,
+            "\t\u{2003}tilepal 0, WATER\n\ttilepal 0, GREEN\n".as_bytes()
         );
     }
 }

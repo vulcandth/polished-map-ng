@@ -58,7 +58,9 @@ That is not authorization to bundle game-project fixtures.
 
 Packaging from Git rejects a dirty working tree; fresh packages default to the
 unified profile. Binary packages built from the source archive inherit its
-commit/profile. Mac bundle versions come from the workspace manifest. The
+commit/profile. Source repackaging from an extracted archive is rejected so a
+containing Git checkout cannot silently supply unrelated source. Mac bundle
+versions come from the workspace manifest. The
 [package regressions](../tools/test_development_package.py) check the explicit
 content policy, offline links, immutable source links, notice hashes, dependency
 selection, profile identity and executable modes. The production notice graph
