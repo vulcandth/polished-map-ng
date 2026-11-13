@@ -613,7 +613,7 @@ pub(crate) fn persist_bytes(
 pub fn read_bounded(path: &Path, limit: usize) -> Result<Vec<u8>, ProjectError> {
     let file = fs::File::open(path).map_err(|e| ProjectError::io(path, e))?;
     let mut bytes = Vec::new();
-    file.take(limit as u64 + 1)
+    file.take((limit as u64).saturating_add(1))
         .read_to_end(&mut bytes)
         .map_err(|e| ProjectError::io(path, e))?;
     if bytes.len() > limit {

@@ -8,7 +8,9 @@ Match its commit to `BUILD-INFO.json` in the binary package and verify the adjac
 SHA-256 files before extracting. This is complete corresponding source, including
 Cargo.lock, the Rust toolchain pin, modified native dependencies, all registry
 dependency sources, original/converted UI assets, licenses and packaging scripts.
-No game project assets or system SDKs are included.
+No game project fixtures or system SDKs are included. The README's attributed
+Cherrygrove City screenshot is the documented exception; it is not a reusable
+game asset bundle.
 
 Install Rust/rustup and the platform prerequisites in INSTALL.md. Extract the
 source archive, enter its root, and run:
@@ -36,10 +38,12 @@ and sign `Polished Map NG++.app` instead. For unified, replace
 `Polished Map NG Unified.app`. All three launchers are built from the same
 workspace; choose the one matching the package's `profile` field.
 
-To reproduce release packaging from Git, check out the exact BUILD-INFO commit,
+To reproduce release packaging from Git, use a clean checkout of the exact BUILD-INFO commit,
 build with `--target TARGET`, and run
 `python tools/development_package.py binary --target TARGET --profile PROFILE`,
 where PROFILE is `master`, `plusplus` or `unified`.
+New Git packages default to `unified` if `--profile` is omitted. Commit local
+changes before packaging so the archive identifies their actual source revision.
 Run `python tools/development_package.py source --profile PROFILE` to regenerate
 the source bundle. Source packaging requires Git metadata. Binary packaging from
 an extracted source archive inherits its profile and commit from BUILD-INFO.json

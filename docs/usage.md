@@ -1,8 +1,8 @@
 # Editing guide
 
-This guide primarily describes the master development build. The separate
-[plusplus editor](#separate-plusplus-editor) shares these workflows with the
-format-specific differences below. Both parity milestones are in progress. Use project copies
+This guide describes the unified development editor and shared editing workflows.
+The separate master and [plusplus editor](#separate-plusplus-editor) retain their
+format-specific behavior, described below. Native acceptance is in progress. Use project copies
 while acceptance testing is incomplete. See the [roadmap](roadmap.md) for the
 remaining work and [compatibility evidence](compatibility.md) for verification.
 

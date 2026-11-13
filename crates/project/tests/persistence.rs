@@ -3,6 +3,31 @@ use polished_map_project::{MapDocument, OpenOptions, ProjectError, prepare_save_
 use std::fs;
 
 #[test]
+fn bounded_reads_handle_zero_exact_and_maximum_limits() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("bytes.bin");
+    fs::write(&path, [1, 2, 3]).unwrap();
+    for limit in [0, 2] {
+        assert!(matches!(
+            polished_map_project::read_bounded(&path, limit),
+            Err(ProjectError::Format { .. })
+        ));
+    }
+    for limit in [3, usize::MAX] {
+        assert_eq!(
+            polished_map_project::read_bounded(&path, limit).unwrap(),
+            [1, 2, 3]
+        );
+    }
+    fs::write(&path, []).unwrap();
+    assert!(
+        polished_map_project::read_bounded(&path, 0)
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
 fn edit_save_reopen_and_external_changes_are_detected() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("日本語.2x1.test.blk");

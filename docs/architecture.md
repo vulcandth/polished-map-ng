@@ -107,6 +107,26 @@ and companion files remain untouched by context changes. See
 
 ## ADR 1: Separate domain logic from platform adapters immediately
 
+### Crate and module layout review
+
+The initial-release review retains the five-crate boundary. Consolidating core
+with project would couple validated editing/rendering to filesystem and codec
+concerns; merging platform into GUI would obscure the unsafe interop boundary.
+The CLI is independently usable without a GUI/display server. None of these
+boundaries warrants another crate merely to reduce file size. Project's font
+discovery/rasterization supports both headless Print and GUI output; it belongs
+outside the pure core without requiring a separate public font crate.
+
+Within GUI, `lib.rs` owns editor state, startup and frame orchestration.
+`toolbar`, `sidebar` and `canvas` own their corresponding views; `map_open` and
+`map_save` own file workflow orchestration; `editor_dialogs` selects and dispatches
+modals while `dialog_host` owns native viewport behavior. This extracts existing
+code without changing public APIs, geometry, input ordering or persistence.
+Methods shared by these modules remain private to the crate's editor boundary.
+The [contributor guide](../CONTRIBUTING.md) maps code and tests to their owners.
+
+### Domain and adapter responsibilities
+
 `polished-map-core` owns validated models, commands, history and deterministic
 RGB rendering. It has no filesystem, egui or GPU dependency. `project` owns
 discovery, codecs and persistence. `gui` and `cli` depend on these libraries.

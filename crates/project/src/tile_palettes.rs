@@ -10,7 +10,8 @@ fn row(line: &str) -> Option<(&str, &str, &str)> {
     let rest = trimmed
         .strip_prefix("tilepal")?
         .strip_prefix(char::is_whitespace)?;
-    let comma = rest.find(',')?;
+    // Match the decoder: commas after ';' are comments, never table fields.
+    let comma = rest.split(';').next()?.find(',')?;
     let values = &rest[comma + 1..];
     let start = line.len() - values.len();
     let code = values.split(';').next()?.trim_end();
@@ -125,4 +126,19 @@ pub(crate) fn encode(
     }
     out.push_str(&lines[end..].concat());
     Ok(out.into_bytes())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn commas_inside_comments_do_not_create_palette_rows() {
+        let original = "\ttilepal ; unused bank, RED\r\n\ttilepal 0, GRAY ; keep\r\n";
+        let canonical = "\ttilepal 0, WATER\n";
+        assert_eq!(
+            encode(Path::new("palette_map.asm"), original, canonical).unwrap(),
+            b"\ttilepal ; unused bank, RED\r\n\ttilepal 0, WATER ; keep\r\n"
+        );
+    }
 }

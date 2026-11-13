@@ -11,11 +11,14 @@ import os
 from pathlib import Path
 import platform
 import plistlib
+import re
 import shutil
 import subprocess
 import tarfile
 import tempfile
+import tomllib
 import zipfile
+from package_docs import copy_documentation
 from windows_icon_resources import verify as verify_windows_icons
 
 
@@ -27,7 +30,8 @@ PROFILES = {
 
 
 def package_profile(requested, source_info):
-    inherited = source_info.get("profile", "master")
+    # Archives predating profiles were master builds; new packages default to main.
+    inherited = source_info.get("profile", "master" if source_info else "unified")
     if inherited not in PROFILES:
         raise ValueError(f"Unknown source profile: {inherited}")
     if requested is not None and requested not in PROFILES:
@@ -46,7 +50,7 @@ def package_stem(commit, profile):
     return "polished-map-ng" + profile_suffix(profile) + "-dev-" + commit[:12]
 
 
-def copy_gui(destination, binaries, target, profile):
+def copy_gui(destination, binaries, target, profile, version):
     """Copy the selected launcher without falling back to a different profile."""
     executable, display_name, identifier = PROFILES[profile]
     suffix = ".exe" if "windows" in target else ""
@@ -60,8 +64,8 @@ def copy_gui(destination, binaries, target, profile):
         with (contents / "Info.plist").open("wb") as file:
             plistlib.dump({"CFBundleName": display_name, "CFBundleDisplayName": display_name,
                           "CFBundleIdentifier": identifier, "CFBundleExecutable": executable,
-                          "CFBundlePackageType": "APPL", "CFBundleVersion": "0.1.0",
-                          "CFBundleShortVersionString": "0.1.0", "LSMinimumSystemVersion": "11.0",
+                          "CFBundlePackageType": "APPL", "CFBundleVersion": version,
+                          "CFBundleShortVersionString": version, "LSMinimumSystemVersion": "11.0",
                           "NSHighResolutionCapable": True}, file)
     shutil.copy2(binaries / (executable + suffix), gui)
     return bundle
@@ -71,8 +75,41 @@ def run(*args, cwd=None):
     return subprocess.check_output(args, cwd=cwd, text=True, encoding="utf-8")
 
 
-def metadata():
-    return json.loads(run("cargo", "metadata", "--locked", "--all-features", "--format-version", "1"))
+def select_packages(packages, graph):
+    """Fail closed if Cargo's selected graph cannot be mapped to package sources."""
+    selected = set(re.findall(r"^(\S+) v(\S+)", graph, re.MULTILINE))
+    if not selected:
+        raise ValueError("Empty production dependency graph")
+    found = {}
+    for package in packages:
+        key = package["name"], package["version"]
+        if key in selected:
+            if key in found:
+                raise ValueError(f"Ambiguous dependency source: {key}")
+            found[key] = package
+    if missing := selected - found.keys():
+        raise ValueError(f"Missing production dependency sources: {sorted(missing)}")
+    return [found[key] for key in sorted(found)]
+
+
+def production_packages(target):
+    # Include build generators/proc macros conservatively: generated code may be
+    # embedded. Exclude dev-only crates, optional test features and other targets.
+    graph = run("cargo", "tree", "--locked", "--offline", "--target", target,
+                "-p", "polished-map-gui", "-p", "polished-map-cli",
+                "--edges", "normal,build", "--prefix", "none", "--format", "{p}")
+    # Metadata's platform filter can omit host build dependencies during cross
+    # compilation. Let the tree select the host/target graph from full metadata.
+    data = json.loads(run("cargo", "metadata", "--locked", "--offline",
+                          "--format-version", "1"))
+    return select_packages(data["packages"], graph)
+
+
+def source_commit():
+    """A Git package must describe committed source, not a mixed working tree."""
+    if run("git", "status", "--porcelain", "--untracked-files=normal").strip():
+        raise ValueError("Commit or remove working-tree changes before packaging")
+    return run("git", "rev-parse", "HEAD").strip()
 
 
 def supplemental_notices(root=Path(".")):
@@ -100,7 +137,7 @@ def archive_tree(output, root, name, fmt):
 
 
 def notices(destination, packages):
-    """Keep dependency license files and full lockfile-wide license metadata."""
+    """Keep selected dependencies' original notice bytes and pinned supplements."""
     inventory = []
     supplements = supplemental_notices()
     for package in packages:
@@ -122,13 +159,17 @@ def notices(destination, packages):
             copied.append(relative.as_posix())
         supplement = supplements.get((package["name"], package["version"]))
         if supplement:
-            for file in supplement["files"]:
-                relative = Path("upstream") / file["upstream_path"]
-                target = destination / "dependencies" / name / relative
+            supplement = dict(supplement, files=[])
+            original = supplements[(package["name"], package["version"])]
+            for file in original["files"]:
+                # Many crates share one upstream notice. Keep it once, with an
+                # inventory path relative to LICENSES (not a missing source path).
+                relative = Path(file["path"]).relative_to("LICENSES")
+                target = destination / relative
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(file["path"], target)
-                copied.append(relative.as_posix())
-        if package["source"] and not copied:
+                supplement["files"].append(dict(file, path=relative.as_posix()))
+        if package["source"] and not copied and not supplement:
             raise ValueError(f"No dependency notices collected for {name}")
         inventory.append({"name": package["name"], "version": package["version"],
                           "license": package["license"], "source": package["source"],
@@ -139,17 +180,7 @@ def notices(destination, packages):
 
 
 def common(destination, info):
-    for name in ["LICENSE.md", "NOTICE.md", "INSTALL.md", "Cargo.lock", "rust-toolchain.toml", "upstream.lock.toml"]:
-        shutil.copy2(name, destination / name)
-    shutil.copytree("LICENSES", destination / "LICENSES", dirs_exist_ok=True)
-    shutil.copytree("docs", destination / "docs", dirs_exist_ok=True)
-    # Fonts, icons and Help are embedded. Keep their notices with binaries;
-    # original art and converted pixels belong in the matching source archive.
-    for notice in sorted(Path("crates/gui/assets").rglob("NOTICE.md")):
-        target = destination / notice
-        target.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(notice, target)
-    shutil.copy2("docs/rebuild.md", destination / "REBUILD.md")
+    copy_documentation(destination, info["commit"])
     guide = "testing" + profile_suffix(package_profile(None, info)) + ".md"
     # Keep the guide in docs/ so its relative links work offline. The package
     # root provides a short entry point instead of relocating the document.
@@ -172,11 +203,12 @@ def main():
     source_info = (json.loads(Path("BUILD-INFO.json").read_text(encoding="utf-8"))
                    if Path("BUILD-INFO.json").is_file() else {})
     profile = package_profile(args.profile, source_info)
-    commit = source_info["commit"] if source_info else run("git", "rev-parse", "HEAD").strip()
+    commit = source_info["commit"] if source_info else source_commit()
+    version = tomllib.loads(Path("Cargo.toml").read_text(encoding="utf-8"))["workspace"]["package"]["version"]
     stem = package_stem(commit, profile)
     args.output.mkdir(parents=True, exist_ok=True)
     output = args.output.resolve()
-    info = {"commit": commit, "development": True, "profile": profile, "target": args.target,
+    info = {"commit": commit, "version": version, "development": True, "profile": profile, "target": args.target,
             "rustc": run("rustc", "-Vv").strip(), "build_host": platform.platform(),
             "source_archive": stem + "-source.tar.gz",
             "signing": "ad-hoc only" if args.target and "apple" in args.target else "unsigned"}
@@ -198,15 +230,15 @@ def main():
                 file.write("\n" + config)
             subprocess.run(["cargo", "metadata", "--offline", "--locked", "--format-version", "1"],
                            cwd=stage, check=True, stdout=subprocess.DEVNULL)
-            shutil.copy2("docs/rebuild.md", stage / "REBUILD.md")
+            shutil.copy2(stage / "docs/rebuild.md", stage / "REBUILD.md")
             (stage / "BUILD-INFO.json").write_text(json.dumps(info, indent=2) + "\n", encoding="utf-8")
         else:
             common(stage, info)
-            notices(stage / "LICENSES", metadata()["packages"])
+            notices(stage / "LICENSES", production_packages(args.target))
             suffix = ".exe" if "windows" in args.target else ""
             binaries = Path(os.environ.get("CARGO_TARGET_DIR", "target")) / args.target / "release"
             shutil.copy2(binaries / ("polished-map" + suffix), stage / ("polished-map" + suffix))
-            bundle = copy_gui(stage, binaries, args.target, profile)
+            bundle = copy_gui(stage, binaries, args.target, profile, version)
             if "windows" in args.target:
                 verify_windows_icons(stage / (PROFILES[profile][0] + ".exe"))
             if bundle is not None:

@@ -25,7 +25,8 @@ its acceptance gate passes, including approved exceptions.
 Native feasibility was originally listed under Foundation: it is **not complete**
 and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
 
-**Next:** Collect human tester results for **U3** using the
+**Next:** Complete **R1–R4**, the initial-release review below. Human testers
+continue **U3** using the
 [published unified build](releases.md#unified-development-packaging) and
 [five-project tester guide](testing-unified.md), then resolve reported functional
 issues. On November 8 the user handed remaining native testing to humans;
@@ -55,6 +56,37 @@ and [approved sequencing](deviations.md#plusplus-development-before-master-nativ
 - [x] Windows/Linux/macOS CI, MSRV, format/Clippy/test/rustdoc, dependency/license,
   source-reference, visual and real-project jobs established.
   Evidence: [workflow](../.github/workflows/ci.yml).
+
+## Initial-release review — in progress
+
+Authorized November 12 on `main`; preserve functionality and deferred aesthetics.
+This preparation does not waive native parity or final release acceptance.
+
+- [ ] **R1 — In progress:** Review contributor navigation, repository layout and
+  crate/module boundaries; fix confusing ownership and justified refactoring.
+  Acceptance: a human contributor can locate setup, architecture, code and tests;
+  behavior-preserving changes pass the workspace and relevant regression suites.
+  Implemented contributor/docs/tool navigation and focused GUI modules; final CI
+  remains. Evidence: [layout decision](architecture.md#crate-and-module-layout-review).
+- [ ] **R2 — In progress:** Audit code/asset licensing, attribution, dependency
+  notices and source/relink delivery. Correct missing or inconsistent records;
+  explicitly retain any external rights or acceptance limits.
+  Acceptance: source and binary inventories match their declared obligations,
+  all license checks pass and unresolved release constraints are visible.
+  Evidence in progress: [archive audit](releases.md#initial-release-archive-audit).
+- [ ] **R3 — In progress:** Inspect all published unified platform archives and
+  matching source; trim binary packages to useful runtime/help/license contents
+  while retaining complete corresponding source separately.
+  Acceptance: rebuilt archives have verified contents, intact notices, working
+  documentation links and matching source, without internal/test-only clutter.
+  Content policy and regressions are implemented; fresh four-target archives
+  remain. Evidence: [package policy](releases.md#binary-content-policy).
+- [ ] **R4 — In progress:** Review error handling, input bounds and persistence across the
+  workspace; resolve concrete defects and verify the complete preparation on CI.
+  Acceptance: review evidence covers all five crates and all distribution targets;
+  fixes have appropriate tests, CI and packaging pass, and release gates stay honest.
+  Two reproduced input-boundary panics are fixed; workspace review and final CI
+  remain. Evidence: [review coverage](compatibility.md#initial-release-review).
 
 ## 1. Master parity — in progress
 

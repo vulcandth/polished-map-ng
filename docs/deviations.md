@@ -7,6 +7,20 @@ may differ. All other safe observable behavior remains a parity requirement.
 
 Implementation-specific exceptions will be recorded here with tests and rationale.
 
+## Initial-release input robustness corrections
+
+Palette-map saves ignore commas inside comments when identifying `tilepal`
+rows, consistently with the decoder. A line such as `tilepal ; unused, RED`
+previously contributed a spurious row during a same-length palette edit and
+could panic. It is now preserved unchanged while real rows are edited. This
+does not broaden supported assembly or alter valid palette serialization.
+
+The public bounded-file reader also handles `usize::MAX` without overflowing
+its extra-byte limit check (a panic in debug builds and a zero-byte read in
+release builds on 64-bit targets). Normal bounded reads are unchanged. Both
+failures were reproduced before their fixes; see
+[release review evidence](compatibility.md#initial-release-review).
+
 Numeric GUI fields bound draft text to 64 characters and saturate oversized
 integer parsing before applying the field's limits, avoiding C integer overflow
 and platform-dependent `long` sizes. Signed hex accepts the existing 32-bit

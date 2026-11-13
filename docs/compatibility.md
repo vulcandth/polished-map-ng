@@ -1,5 +1,36 @@
 # Compatibility evidence
 
+## Initial-release review
+
+The review on `main` preserves the five crate responsibilities and the existing
+GUI behavior. [Architecture](architecture.md#crate-and-module-layout-review)
+records the boundary decision and extracted editor modules. No snapshot baseline
+or aesthetic change accompanies that extraction. Windows format/Clippy,
+workspace tests and rustdoc passed for the extraction; final cross-platform
+verification of the complete review remains in progress under
+[R1–R4](roadmap.md#initial-release-review--in-progress).
+
+Input/persistence inspection found and reproduced two concrete panics:
+
+- `tile_palettes::tests::commas_inside_comments_do_not_create_palette_rows`
+  failed with an out-of-range slice when a comma inside a `tilepal` comment was
+  mistaken for another row. Row detection now agrees with the decoder and
+  preserves the comment and CRLF bytes while editing the actual palette row.
+- `bounded_reads_handle_zero_exact_and_maximum_limits` failed with integer
+  overflow for `read_bounded(path, usize::MAX)`. The extra-byte read bound now
+  saturates; the test also checks zero, insufficient and exact limits.
+
+The [archive audit](releases.md#initial-release-archive-audit) covers all four
+published unified binary targets and their matching source. Updated packaging
+has regressions for selected launcher/version, retained attribution/licenses,
+shared notice hashes, target dependency selection, offline documentation links,
+source-only links pinned to the exact commit, dirty-checkout rejection and ZIP
+executable modes. Fresh four-target package verification is still pending.
+
+This review is release preparation, not native parity acceptance. U3 and the
+original master/plusplus gates remain assigned to human testers; future features
+and general aesthetic matching are unchanged.
+
 ## November 10–11 unified review
 
 The Discord PM was read from November 10 at 12:10 PM through November 11's

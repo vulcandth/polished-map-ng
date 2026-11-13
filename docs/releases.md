@@ -22,7 +22,9 @@ Mac bundles have local ad-hoc signatures, not Developer ID signing/notarization.
 
 Fonts, icons and Help are embedded in the executable; no neighboring asset files
 are required to run it. Binary packages retain asset notices, license texts and a
-dependency license inventory for the resolved workspace with all features enabled.
+dependency license inventory for the selected GUI/CLI production graph and target.
+Build generators and procedural macros are retained conservatively; test-only
+dependencies, test features and unrelated platform dependencies are excluded.
 Published-crate omissions are covered by [pinned license supplements](../LICENSES/dependency-supplements/README.md),
 including original authorship metadata and independently verified hashes.
 The matching source archive includes
@@ -32,6 +34,55 @@ patches and [rebuild/relink instructions](rebuild.md). No external project/game
 fixtures or ignored working files are included. Source and binaries must be
 published together as a **prerelease**, with successful CI for the packaged commit.
 Do not mark a development release as the latest stable release.
+
+### Binary content policy
+
+Binaries ship one selected GUI launcher (a bundle on macOS), the headless CLI,
+BUILD-INFO, TESTING, INSTALL and REBUILD, the editing/menu/preferences/CLI and
+tester guides, project/asset/vendor attribution, complete applicable license
+texts and a dependency notice inventory. Fonts, Help and UI images are embedded;
+no loose runtime asset tree is needed. Shared supplemental license texts are
+stored once under `LICENSES/dependency-supplements`; each inventory record points
+to those paths relative to `LICENSES`. The record's `notices` paths are relative
+to `LICENSES/dependencies/NAME-VERSION`.
+
+Internal roadmap, design/compatibility evidence, test fixtures, screenshots,
+source code, tools and build caches do not belong in binary archives. User help
+links to shipped documents work offline; links to source-only documents are
+rebased to the exact commit on GitHub. Project notice text is preserved with
+only those link destinations adjusted; dependency and license text bytes remain
+unchanged. The complete source archive retains the originals, the full locked
+dependency sources, patch records, development tools and rebuild instructions.
+It also retains the specifically authorized README screenshot with attribution.
+That is not authorization to bundle game-project fixtures.
+
+Packaging from Git rejects a dirty working tree; fresh packages default to the
+unified profile. Binary packages built from the source archive inherit its
+commit/profile. Mac bundle versions come from the workspace manifest. The
+[package regressions](../tools/test_development_package.py) check the explicit
+content policy, offline links, immutable source links, notice hashes, dependency
+selection, profile identity and executable modes. The production notice graph
+uses Cargo's [normal and build edges](https://doc.rust-lang.org/cargo/commands/cargo-tree.html#feature-unification),
+without all-feature/test expansion. This is a conservative attribution inventory,
+not a claim that every selected crate contributes machine code to the executable.
+
+### Initial-release archive audit
+
+The published November 11 unified archives at `6d8a2ea173db` were downloaded and
+their SHA-256 files and BUILD-INFO revision checked. The four binary archives
+contained 942–944 files, all 470 lockfile-wide package notice records and the
+entire internal docs tree. Their Markdown had 214 unresolved local links per
+archive. The source archive contained 23,209 files (about 498 MB unpacked), of
+which about 483 MB was the complete offline registry source. That source is
+retained for rebuild/relink delivery, not copied into binaries.
+
+The audit also found that binaries lacked `vendor/NOTICE.md` and its explicit
+`vendor/licenses/SCTK-MIT.txt` location. The same complete Victor Berger MIT text
+was already present in dependency notices; the defect was the missing adaptation
+notice/link, not an absent copy of the MIT terms. The binary content policy now
+includes both vendor records explicitly. Revised package creation and checks
+remain in progress under [R3](roadmap.md#initial-release-review--in-progress);
+the published November 11 downloads have not been replaced by this review.
 
 The packaging workflow can build all three launchers from the same shared-source
 revision. Select `master`, `plusplus` or `unified` explicitly; the profile in BUILD-INFO.json,

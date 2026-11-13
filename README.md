@@ -35,8 +35,7 @@ Right-click a block in the sidebar to edit its tile definition. See the
 [editing guide](docs/usage.md) for saving, specialist editors, palette colors and
 event workflows, or the [CLI guide](docs/cli.md) for experimental headless editing.
 
-Contributors should read [AGENTS.md](AGENTS.md) for project instructions and
-development documentation.
+See the [contributor guide](CONTRIBUTING.md) for setup, source layout and checks.
 
 ## License and credits
 
