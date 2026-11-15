@@ -122,11 +122,11 @@ impl Editor {
                 .as_ref()
                 .and_then(|l| l.tileset_location())
                 .ok_or("No tileset is loaded")?;
-            let profile = polished_map_project::detect_tileset_format(root, name)
+            let storage = polished_map_project::detect_tileset_format(root, name)
                 .map_err(|e| e.to_string())?
                 .into();
-            if profile != self.storage() {
-                self.change_storage_tileset(ctx, name, profile)?;
+            if storage != self.storage() {
+                self.change_storage_tileset(ctx, name, storage)?;
                 self.finish_tileset_change(name);
                 self.status
                     .push_str(" — Save As required for the new map context");

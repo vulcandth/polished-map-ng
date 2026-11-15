@@ -39,6 +39,8 @@
 //! Derived from upstream master config.cpp, tiled-image.cpp, parse-asm.cpp,
 //! palette-map.cpp and tileset.cpp; see upstream.lock.toml. LGPL-3.0-only.
 
+#![deny(missing_docs)]
+
 mod asset_names;
 mod asset_paths;
 pub mod attributed;
@@ -46,11 +48,13 @@ mod blockset;
 pub mod codecs;
 mod collisions;
 mod discovery;
-mod document;
+mod error;
 mod events;
+mod file_io;
 mod format;
 mod graphics;
 mod legacy_preferences;
+mod map_document;
 mod map_palette_plan;
 mod map_sizes;
 mod native_fonts;
@@ -76,11 +80,9 @@ pub use discovery::{
     find_project_root, list_tilesets, map_constant, map_path_with_context, tileset_choices,
     tileset_options,
 };
-pub use document::{
-    MapDocument, MapOpenReport, OpenOptions, ProjectError, SaveTarget, prepare_save_as,
-    read_bounded,
-};
+pub use error::ProjectError;
 pub use events::{EventDocument, EventScript, EventScriptError, event_script_path};
+pub use file_io::{SaveTarget, read_bounded};
 pub use format::{
     AttributeStorage, DetectedFormat, FormatDetectionError, FormatEvidence, FormatEvidenceKind,
     MapEncoding, ProjectFormat, detect_map_format, detect_tileset_format,
@@ -94,6 +96,7 @@ pub use legacy_preferences::{
     LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_plusplus_preferences,
     find_legacy_preferences,
 };
+pub use map_document::{MapDocument, MapOpenReport, MapSummary, OpenOptions, prepare_save_as};
 pub use map_palette_plan::MapPalettePlan;
 pub use map_sizes::{MapSizeOptions, inspect_map_sizes};
 pub use native_fonts::{FontPlatform, NativeFontFace, NativeFonts};

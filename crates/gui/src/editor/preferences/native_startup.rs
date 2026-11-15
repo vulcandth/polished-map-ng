@@ -37,12 +37,12 @@ pub struct NativeStartup {
 impl NativeStartup {
     /// Prepare the fixed classic launcher, including read-only legacy migration.
     pub fn discover() -> Self {
-        Self::discover_profile(documents::Storage::Classic)
+        Self::discover_storage(documents::Storage::Classic)
     }
 
     /// Discover only plusplus settings and construct a separately identified app.
     pub fn discover_plusplus() -> Self {
-        Self::discover_profile(documents::Storage::Attributed)
+        Self::discover_storage(documents::Storage::Attributed)
     }
 
     /// The unified application has independent NG settings. Neither legacy
@@ -54,7 +54,7 @@ impl NativeStartup {
         }
     }
 
-    fn discover_profile(profile: documents::Storage) -> Self {
+    fn discover_storage(storage: documents::Storage) -> Self {
         let user = if cfg!(windows) {
             LegacyUserLocation::Windows {
                 roaming_appdata: polished_map_platform::legacy_roaming_appdata(),
@@ -73,29 +73,29 @@ impl NativeStartup {
             .map_err(LegacyPreferenceError::from)
             .and_then(|exe| {
                 Self::load(
-                    profile,
+                    storage,
                     exe.parent().unwrap_or(Path::new(".")),
                     &user,
-                    eframe::storage_dir(Application::Parity(profile).app_id())
+                    eframe::storage_dir(Application::Parity(storage).app_id())
                         .map(|p| p.join("app.ron"))
                         .as_deref(),
                 )
             });
-        Self::from_result(profile, result)
+        Self::from_result(storage, result)
     }
 
     fn from_result(
-        profile: documents::Storage,
+        storage: documents::Storage,
         result: Result<Option<Imported>, LegacyPreferenceError>,
     ) -> Self {
         match result {
             Ok(imported) => Self {
-                application: Application::Parity(profile),
+                application: Application::Parity(storage),
                 imported,
                 error: None,
             },
             Err(error) => Self {
-                application: Application::Parity(profile),
+                application: Application::Parity(storage),
                 imported: None,
                 error: Some(error.to_string()),
             },
@@ -103,7 +103,7 @@ impl NativeStartup {
     }
 
     fn load(
-        profile: documents::Storage,
+        storage: documents::Storage,
         executable_dir: &Path,
         user: &LegacyUserLocation,
         ng_file: Option<&Path>,
@@ -113,7 +113,7 @@ impl NativeStartup {
         {
             return Ok(None);
         }
-        let source = match profile {
+        let source = match storage {
             documents::Storage::Classic => find_legacy_preferences(executable_dir, user),
             documents::Storage::Attributed => {
                 find_legacy_plusplus_preferences(executable_dir, user)
@@ -122,7 +122,7 @@ impl NativeStartup {
         let Some(source) = source else {
             return Ok(None);
         };
-        Imported::read(profile, source).map(Some)
+        Imported::read(storage, source).map(Some)
     }
 
     /// Initial normal geometry precedes fullscreen/maximization. This lets
@@ -227,19 +227,19 @@ impl NativeStartup {
 }
 
 impl Imported {
-    fn read(profile: documents::Storage, source: PathBuf) -> Result<Self, LegacyPreferenceError> {
+    fn read(storage: documents::Storage, source: PathBuf) -> Result<Self, LegacyPreferenceError> {
         let legacy = LegacyPreferences::read(&source)?;
-        Self::from_legacy(profile, &legacy, source)
+        Self::from_legacy(storage, &legacy, source)
     }
 
     fn from_legacy(
-        profile: documents::Storage,
+        storage: documents::Storage,
         legacy: &LegacyPreferences,
         source: PathBuf,
     ) -> Result<Self, LegacyPreferenceError> {
         use LegacyPreferenceError::Invalid;
         let boolean = |key, default| legacy.integer(key, i32::from(default)).map(|v| v != 0);
-        let master = profile == documents::Storage::Classic;
+        let classic = storage == documents::Storage::Classic;
         let theme = legacy.integer("theme", 4)?;
         let mode = legacy.integer("mode", 0)?;
         let palette = legacy.integer("palettes", 1)?;
@@ -292,14 +292,14 @@ impl Imported {
             auto_events: boolean("events", true)?,
             auto_special_palettes: boolean("special", true)?,
             auto_roof_colors: boolean("roofs", true)?,
-            allow_priority: master && boolean("prioritize", false)?,
-            monochrome: master && boolean("monochrome", false)?,
-            allow_256: master && boolean("all256", false)?,
-            allow_512: (!master).then(|| boolean("all512", false)).transpose()?,
-            bank0_first: (!master).then(|| boolean("swap01", false)).transpose()?,
+            allow_priority: classic && boolean("prioritize", false)?,
+            monochrome: classic && boolean("monochrome", false)?,
+            allow_256: classic && boolean("all256", false)?,
+            allow_512: (!classic).then(|| boolean("all512", false)).transpose()?,
+            bank0_first: (!classic).then(|| boolean("swap01", false)).transpose()?,
             drag_and_drop: boolean("drag", true)?,
             overworld_map_size: capacity as u16,
-            meta128: master && boolean("meta128", false)?,
+            meta128: classic && boolean("meta128", false)?,
             show_priority: boolean("priority", true)?,
             resize_anchor: ResizeAnchor::ALL[anchor as usize],
             recent_maps,

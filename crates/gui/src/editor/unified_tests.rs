@@ -114,11 +114,11 @@ fn submit(h: &mut Harness<'_, Editor>) {
     wait(h);
 }
 
-fn open(h: &mut Harness<'_, Editor>, path: &Path, profile: Storage) {
+fn open(h: &mut Harness<'_, Editor>, path: &Path, storage: Storage) {
     h.state_mut().prepare_open(path.into());
     let form = h.state().open_form.as_ref().expect("Open options");
     assert!(form.ready(), "{:?}", form.detection_error);
-    assert!(form.profile == profile);
+    assert!(form.storage == storage);
     submit(h);
     // Edited cached palettes still require the existing import decision.
     for _ in 0..4 {
@@ -130,7 +130,7 @@ fn open(h: &mut Harness<'_, Editor>, path: &Path, profile: Storage) {
     }
     assert!(h.state().error.is_none(), "{:?}", h.state().error);
     assert!(
-        h.state().storage() == profile,
+        h.state().storage() == storage,
         "{}: status={}, pending={}, warning={:?}, form={}",
         path.display(),
         h.state().status,
@@ -182,11 +182,11 @@ fn choose_tileset(h: &mut Harness<'_, Editor>, from: &str, to: &str) {
 fn native_print_copy_works_after_automatic_storage_changes() {
     let dir = fixture();
     let mut h = editor();
-    for (filename, profile) in [
+    for (filename, storage) in [
         ("Classic.2x1.classic.blk", Storage::Classic),
         ("Modern.2x1.modern.ablk", Storage::Attributed),
     ] {
-        open(&mut h, &dir.path().join(filename), profile);
+        open(&mut h, &dir.path().join(filename), storage);
         h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::P);
         h.run();
         assert!(h.state().print_form.is_some());
@@ -560,11 +560,11 @@ fn unified_alternating_documents_preserves_palette_sessions_and_uses_union_event
     );
     color(&mut h, [68, 85, 102]);
     let plus_colors = h.state().palette_document().color_snapshot();
-    for (path, profile, colors) in [
+    for (path, storage, colors) in [
         (&classic, Storage::Classic, &master_colors),
         (&modern, Storage::Attributed, &plus_colors),
     ] {
-        open(&mut h, path, profile);
+        open(&mut h, path, storage);
         assert_eq!(&h.state().palette_document().color_snapshot(), colors);
         let loaded = h.state().loaded.as_ref().unwrap();
         assert_eq!(
@@ -583,7 +583,7 @@ fn unified_alternating_documents_preserves_palette_sessions_and_uses_union_event
             points: vec![Point { x: 0, y: 0 }],
             block: 1,
         });
-        let target = dir.path().join(format!("saved.{}", profile.extension()));
+        let target = dir.path().join(format!("saved.{}", storage.extension()));
         let loaded = h.state_mut().loaded.as_mut().unwrap();
         loaded.document.save_as(&target).unwrap();
         assert_eq!(fs::read(target).unwrap(), [1, 1]);
@@ -671,22 +671,22 @@ fn unified_monochrome_fallback_does_not_override_next_project_but_user_choice_do
 fn unified_new_map_uses_selected_assets_and_shared_map_requires_actual_context() {
     let dir = fixture();
     let mut h = editor();
-    for (tileset, profile) in [
+    for (tileset, storage) in [
         ("modern", Storage::Attributed),
         ("classic", Storage::Classic),
     ] {
         h.state_mut().prepare_new_in(dir.path().into());
         let form = h.state_mut().open_form.as_mut().unwrap();
         form.tileset = tileset.into();
-        form.resolve_profile();
+        form.resolve_storage();
         assert!(form.ready());
-        assert!(form.profile == profile);
+        assert!(form.storage == storage);
         submit(&mut h);
         assert!(h.state().error.is_none(), "{:?}", h.state().error);
         let doc = &h.state().loaded.as_ref().unwrap().document;
         assert!(!doc.has_backing_file());
-        assert!(doc.storage() == profile);
-        assert_eq!(doc.path().extension().unwrap(), profile.extension());
+        assert!(doc.storage() == storage);
+        assert_eq!(doc.path().extension().unwrap(), storage.extension());
         let suggested = doc.save_path_suggestion(true);
         h.state_mut()
             .loaded
@@ -695,7 +695,7 @@ fn unified_new_map_uses_selected_assets_and_shared_map_requires_actual_context()
             .document
             .save_as(&suggested)
             .unwrap();
-        open(&mut h, &suggested, profile);
+        open(&mut h, &suggested, storage);
         assert_eq!(
             h.state()
                 .loaded
@@ -724,7 +724,7 @@ fn unified_new_map_uses_selected_assets_and_shared_map_requires_actual_context()
     assert!(h.state_mut().error.take().is_some());
     let form = h.state_mut().open_form.as_mut().unwrap();
     form.tileset = "modern".into();
-    form.resolve_profile();
+    form.resolve_storage();
     assert!(form.ready());
     submit(&mut h);
     let document = &h.state().loaded.as_ref().unwrap().document;
@@ -743,7 +743,7 @@ fn unified_asm_map_uses_occurrence_assets_and_saves_only_to_explicit_binary_targ
     h.state_mut().prepare_open(path.clone());
     let form = h.state_mut().open_form.as_mut().unwrap();
     form.tileset = "modern".into();
-    form.resolve_profile();
+    form.resolve_storage();
     assert!(form.ready());
     submit(&mut h);
     assert!(h.state().storage() == Storage::Attributed);
@@ -770,11 +770,11 @@ fn unified_asm_map_uses_occurrence_assets_and_saves_only_to_explicit_binary_targ
 fn unified_pinned_projects_alternate_open_edit_save_and_reopen() {
     let mut h = editor();
     let output = tempfile::tempdir().unwrap();
-    for (variable, name, extension, profile) in PINNED_PROJECTS.into_iter().cycle().take(10) {
+    for (variable, name, extension, storage) in PINNED_PROJECTS.into_iter().cycle().take(10) {
         let root = PathBuf::from(std::env::var_os(variable).expect("set pinned project fixture"));
         let path = root.join(format!("maps/{name}.{extension}"));
         let original = fs::read(&path).unwrap();
-        open(&mut h, &path, profile);
+        open(&mut h, &path, storage);
         assert_eq!(
             h.state().palette_monochrome(),
             matches!(variable, "POLISHED_MAP_POKERED" | "POLISHED_MAP_POKEYELLOW"),
@@ -849,14 +849,14 @@ fn unified_pinned_projects_short_gen1_map_requires_explicit_size_choice() {
 fn unified_options_keep_both_format_groups_and_disable_inapplicable_actions() {
     let dir = fixture();
     let mut h = editor();
-    for profile in [None, Some(Storage::Classic), Some(Storage::Attributed)] {
-        if let Some(profile) = profile {
-            let path = if profile == Storage::Classic {
+    for storage in [None, Some(Storage::Classic), Some(Storage::Attributed)] {
+        if let Some(storage) = storage {
+            let path = if storage == Storage::Classic {
                 "Classic.2x1.classic.blk"
             } else {
                 "Modern.2x1.modern.ablk"
             };
-            open(&mut h, &dir.path().join(path), profile);
+            open(&mut h, &dir.path().join(path), storage);
             let loaded = h.state().loaded.as_ref().unwrap();
             assert_eq!(
                 h.state().last_window_title.as_deref(),
@@ -881,7 +881,7 @@ fn unified_options_keep_both_format_groups_and_disable_inapplicable_actions() {
         ] {
             assert_eq!(
                 h.get_by_label(label).accesskit_node().is_disabled(),
-                profile != Some(family),
+                storage != Some(family),
                 "{label}"
             );
         }

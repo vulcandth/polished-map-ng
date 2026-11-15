@@ -47,6 +47,12 @@ code and tile clipboard/dialog code have dedicated files. Native startup lives
 with preferences, including the fixed launchers' optional legacy migration.
 The CLI separates argument grammar, command execution and JSON records.
 
+Project `map_document` owns the map lifecycle; `file_io` owns bounded reads,
+observed destinations and single-file publication; `transaction` owns paired
+staging/rollback; `error` owns shared failures and CLI error codes. Attributed
+block persistence lives in `attributed/blockset`, alongside its tile, roof and
+palette adapters, rather than in the module facade.
+
 Implementation names describe storage, not upstream branches. Core/project
 `attributed` owns per-occurrence attributes; shared events, map commands, codecs
 and persistence remain shared. Event macro catalogs describe source syntax and
@@ -60,6 +66,13 @@ Avoid a trait layer solely to hide two storage models: enum dispatch in GUI
 boundary for a fully prepared candidate; failed open/preview/save operations
 must not partially replace the current document. Feature `impl Editor` blocks
 can access private parent state without exposing it to library callers.
+
+Events need no GUI storage enum: the shared project document retains the catalog
+selected at parse time, source spans, dirty state and conflict hash. Map and
+palette adapters still enforce different extension/discovery and palette-slot
+constraints, so their typed boundaries remain. Tile drafts name their actual
+storage (`Classic`, `AttributedTiles`, `AttributedRoof`), not source branches.
+The editor registry lists production modules separately from regression tests.
 
 ### Domain and adapter responsibilities
 

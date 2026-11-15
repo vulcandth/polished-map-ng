@@ -3,7 +3,7 @@
 //! plusplus exposes hue/definition snapshots, never master palette attributes.
 use crate::{
     PngPlatform, ProjectError, SaveTarget, TilesetOutput,
-    document::{optional_hash, prepare_target},
+    file_io::{optional_hash, prepare_target},
     graphics::validate_tileset,
 };
 use polished_map_core::{
@@ -26,6 +26,9 @@ pub fn list_roofs(root: &Path) -> Result<Vec<String>, ProjectError> {
 }
 
 #[derive(Clone, Debug)]
+/// Nine editable roof tiles with a separately observed source and PNG destination.
+///
+/// Saving roof pixels is independent of base tiles, maps, and palette exports.
 pub struct RoofDocument {
     inner: crate::RoofDocument,
 }
@@ -42,6 +45,11 @@ impl RoofDocument {
             inner: crate::RoofDocument::open_unified_in_project(root, name, [0; 9], platform)?,
         })
     }
+    /// Discover and load exactly nine roof tiles with fixed storage rules.
+    ///
+    /// # Errors
+    /// Rejects invalid names, read/decode failures, incorrect tile counts, and
+    /// files that change during observation.
     pub fn open_in_project(
         root: &Path,
         name: &str,
@@ -71,24 +79,31 @@ impl RoofDocument {
             )?,
         })
     }
+    /// Selected roof asset name without its graphics extension.
     pub fn name(&self) -> &str {
         self.inner.name()
     }
+    /// Observed input path and hash; after saving this becomes the PNG output.
     pub fn source(&self) -> &SaveTarget {
         self.inner.source()
     }
+    /// Observed PNG destination used by [`Self::save`].
     pub fn output(&self) -> &SaveTarget {
         self.inner.output()
     }
+    /// Fingerprint observed input/output and PNG policy, excluding unsaved pixels.
     pub fn content_hash(&self) -> String {
         self.inner.content_hash()
     }
+    /// Whether roof pixels have unsaved edits.
     pub fn is_modified(&self) -> bool {
         self.inner.roof().tileset().is_modified()
     }
+    /// Copy all nine tiles in file order.
     pub fn tiles(&self) -> [Tile; 9] {
         std::array::from_fn(|i| self.inner.roof().tileset().tiles()[i].clone())
     }
+    /// Copy a defined roof tile at index 0..=8; other indices return an error.
     pub fn snapshot(&self, tile: u16) -> Result<RawTileSnapshot, ProjectError> {
         let i = index(tile)?;
         Ok(RawTileSnapshot {
@@ -96,6 +111,7 @@ impl RoofDocument {
             defined: true,
         })
     }
+    /// Render an 8×8 grayscale tile at index 0..=8; other indices return an error.
     pub fn render_tile(&self, tile: u16) -> Result<polished_map_core::RgbImage, ProjectError> {
         Ok(self
             .inner
@@ -103,9 +119,15 @@ impl RoofDocument {
             .tileset()
             .render_tile(index(tile)?, &[[[255; 3], [85; 3], [170; 3], [0; 3]]; 9])?)
     }
+    /// Render a 24×24 grayscale sheet, three tiles per row in file order.
     pub fn export(&self) -> polished_map_core::RgbImage {
         self.inner.roof().export()
     }
+    /// Apply raw pixel commands atomically to the nine roof tiles.
+    ///
+    /// # Errors
+    /// Rejects deletion, undefined snapshots, indices outside 0..=8, and invalid
+    /// pixel/image data. Image pastes clip to the selected tile.
     pub fn apply_batch(&mut self, commands: &[RawTileCommand]) -> Result<(), ProjectError> {
         let commands = commands
             .iter()
@@ -114,9 +136,18 @@ impl RoofDocument {
         self.inner.roof_mut().apply_batch(&commands)?;
         Ok(())
     }
+    /// Describe a pending PNG write without changing files or dirty state.
+    ///
+    /// Returns `None` when clean. Changed source/destination hashes, read
+    /// failures, or PNG encoding errors reject the preview.
     pub fn preview_save(&self) -> Result<Option<TilesetOutput>, ProjectError> {
         self.inner.preview_save()
     }
+    /// Guard and publish changed roof pixels to PNG, then clear dirty state.
+    ///
+    /// # Errors
+    /// Source/destination conflicts, encoding errors, and I/O failures retain
+    /// the in-memory edits. Clean saves still check observations.
     pub fn save(&mut self) -> Result<(), ProjectError> {
         self.inner.save()
     }

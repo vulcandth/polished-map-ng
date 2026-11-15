@@ -2,11 +2,11 @@
 use super::{Mark::*, Spec};
 use crate::editor::egui;
 
-pub(super) fn group_for_profile(
+pub(super) fn group_for_storage(
     name: &str,
-    profile: crate::editor::documents::Storage,
+    storage: crate::editor::documents::Storage,
 ) -> &'static [Spec<'static>] {
-    if name == "Options" && profile == crate::editor::documents::Storage::Attributed {
+    if name == "Options" && storage == crate::editor::documents::Storage::Attributed {
         const {
             &[
                 Spec::new("512 Tiles", Check, "", false).mnemonic(egui::Key::T),

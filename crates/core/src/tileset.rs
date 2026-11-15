@@ -4,7 +4,9 @@ use crate::{Blockset, Palette, Point, RgbImage, Tile};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
+/// Palette attribute 9 marks an unassigned tile.
 pub const UNDEFINED_PALETTE: u8 = 9;
+/// Diagnostic RGB colors used to display unassigned tiles.
 pub const UNDEFINED_COLORS: Palette = [
     [0xab, 0xcd, 0xef],
     [0x45, 0x67, 0x89],
@@ -13,24 +15,34 @@ pub const UNDEFINED_COLORS: Palette = [
 ];
 
 #[derive(Debug, Error, PartialEq, Eq)]
+/// Invalid tile data, edit coordinates, or export layout.
 pub enum TilesetError {
     #[error("roof editing does not support palette assignment or deletion")]
+    /// The command changes palette ownership or deletes a roof tile.
     RoofCommand,
     #[error("expected 1..=256 tiles and one palette attribute per tile")]
+    /// Tile and attribute counts must match and be in 1..=256.
     Length,
     #[error("tile {0} is outside the tileset")]
+    /// The requested tile slot is absent.
     Tile(u8),
     #[error("pixel ({0}, {1}) is outside the 8×8 tile")]
+    /// A pixel lies outside its 8×8 tile.
     Coordinate(u16, u16),
     #[error("hue {0} is outside 0..=3")]
+    /// A pixel hue is outside 0..=3.
     Hue(u8),
     #[error("invalid palette attribute {0}; expected 0..=9 or 128..=135")]
+    /// An attribute is neither 0..=9 nor a priority palette in 128..=135.
     Palette(u8),
     #[error("tile replacement needs exactly 64 pixels")]
+    /// A replacement does not contain exactly 64 valid hues.
     Pixels,
     #[error("image paste needs 1..=2048 pixels per axis and exactly width × height × 3 RGB bytes")]
+    /// RGB dimensions or packed byte count are invalid.
     Image,
     #[error("tileset export is empty or its source layout would write outside the image")]
+    /// An export is empty or cannot fit the requested slot layout.
     ExportLayout,
 }
 
@@ -39,63 +51,109 @@ pub enum TilesetError {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TileSnapshot {
+    /// Exactly 64 hue indices in row-major order; validated when applied.
     pub pixels: Vec<u8>,
+    /// Palette/priority attribute with the same encoding as [`Tileset`].
     pub palette: u8,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
+/// Validated edits for a classic tileset or nine-tile roof.
+///
+/// Commands are applied through [`Tileset::apply`] or [`Roof::apply_batch`](crate::Roof::apply_batch).
 pub enum TileCommand {
+    /// Replace all pixels and the attribute.
     Set {
+        /// Destination tile slot.
         tile: u8,
+        /// Validated on application; must contain 64 hues.
         value: TileSnapshot,
     },
+    /// Paint individual pixels with one hue.
     Paint {
+        /// Destination tile slot.
         tile: u8,
+        /// Pixel positions inside the 8×8 tile.
         points: Vec<Point>,
+        /// Hue index in 0..=3.
         hue: u8,
     },
+    /// Flood-fill orthogonally connected pixels matching the starting hue.
     Fill {
+        /// Destination tile slot.
         tile: u8,
+        /// Starting pixel inside the 8×8 tile.
         at: Point,
+        /// Replacement hue in 0..=3.
         hue: u8,
     },
+    /// Replace every matching hue in one tile.
     Replace {
+        /// Destination tile slot.
         tile: u8,
+        /// Hue to replace, in 0..=3.
         from: u8,
+        /// Replacement hue, in 0..=3.
         to: u8,
     },
+    /// Exchange two hue indices throughout one tile.
     SwapHues {
+        /// Destination tile slot.
         tile: u8,
+        /// First hue, in 0..=3.
         a: u8,
+        /// Second hue, in 0..=3.
         b: u8,
     },
+    /// Assign the palette and priority attribute.
     Palette {
+        /// Destination tile slot.
         tile: u8,
+        /// Attribute encoded as described by [`Tileset`].
         palette: u8,
     },
+    /// Copy pixels and attribute from a live source slot.
     Copy {
+        /// Source tile slot.
         from: u8,
+        /// Destination tile slot.
         to: u8,
     },
+    /// Exchange pixels and attributes between two slots.
     Swap {
+        /// First tile slot.
         a: u8,
+        /// Second tile slot.
         b: u8,
     },
+    /// Blank the pixels and mark the palette unassigned.
     Delete {
+        /// Destination tile slot.
         tile: u8,
     },
+    /// Paste quantized RGB into the tileset grid starting at a tile.
     ImportRgb {
+        /// Top-left destination tile slot in a 16-column grid.
         tile: u8,
+        /// Image width in pixels, 1..=2048.
         width: u16,
+        /// Image height in pixels, 1..=2048.
         height: u16,
+        /// Row-major RGB8; exactly width × height × 3 bytes.
         pixels: Vec<u8>,
         #[serde(default)]
+        /// Use all tile slots; false skips the reserved classic bank gaps.
         allow_256: bool,
     },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+/// One to 256 tiles with per-tile palette/priority attributes and a dirty flag.
+///
+/// Pixel hues are white, dark, light, black. Attributes 0..=7 select game
+/// palettes, 8 selects monochrome, 9 is unassigned, and bit 7 adds priority
+/// to game palettes. This model has no undo stack.
 pub struct Tileset {
     tiles: Vec<Tile>,
     attributes: Vec<u8>,
@@ -111,6 +169,11 @@ fn palette(value: u8) -> Result<(), TilesetError> {
 }
 
 impl Tileset {
+    /// Construct a clean tileset.
+    ///
+    /// # Errors
+    /// Rejects empty or oversized tile lists, mismatched attribute counts,
+    /// and attributes outside the supported palette/priority encoding.
     pub fn new(tiles: Vec<Tile>, attributes: Vec<u8>) -> Result<Self, TilesetError> {
         if tiles.is_empty() || tiles.len() > 256 || tiles.len() != attributes.len() {
             return Err(TilesetError::Length);
@@ -124,18 +187,26 @@ impl Tileset {
             modified: false,
         })
     }
+    /// Tiles in slot order, each containing 64 validated hue indices.
     pub fn tiles(&self) -> &[Tile] {
         &self.tiles
     }
+    /// One palette/priority byte per tile, in the same order as [`Self::tiles`].
     pub fn attributes(&self) -> &[u8] {
         &self.attributes
     }
+    /// Whether an edit has succeeded since construction or [`Self::mark_saved`].
     pub fn is_modified(&self) -> bool {
         self.modified
     }
+    /// Clear the dirty flag after the caller has persisted the tile data.
     pub fn mark_saved(&mut self) {
         self.modified = false;
     }
+    /// Copy a tile and its palette/priority byte.
+    ///
+    /// # Errors
+    /// Returns [`TilesetError::Tile`] when the slot is absent.
     pub fn snapshot(&self, tile: u8) -> Result<TileSnapshot, TilesetError> {
         let index = self.index(tile)?;
         Ok(TileSnapshot {
@@ -151,7 +222,10 @@ impl Tileset {
             Err(TilesetError::Tile(tile))
         }
     }
-    /// No undo stack in master. Whole batches validate on a draft before commit.
+    /// Apply a whole batch atomically, with no undo history.
+    ///
+    /// # Errors
+    /// Any invalid command leaves the complete tileset unchanged.
     pub fn apply_batch(&mut self, commands: &[TileCommand]) -> Result<(), TilesetError> {
         let mut draft = self.clone();
         for command in commands {
@@ -160,6 +234,11 @@ impl Tileset {
         *self = draft;
         Ok(())
     }
+    /// Validate and apply one edit, marking the tileset dirty even for a no-op.
+    ///
+    /// # Errors
+    /// Invalid slots, coordinates, hues, attributes, or RGB layouts leave the
+    /// tileset unchanged. Image import quantizes RGB and clips at the bank edges.
     pub fn apply(&mut self, command: &TileCommand) -> Result<(), TilesetError> {
         match command {
             TileCommand::Set { tile, value } => {
@@ -304,6 +383,12 @@ impl Tileset {
         }
     }
 
+    /// Render one 8×8 tile with the supplied nine palettes.
+    ///
+    /// Unassigned tiles use [`UNDEFINED_COLORS`]; priority does not alter RGB.
+    ///
+    /// # Errors
+    /// Returns [`TilesetError::Tile`] when the slot is absent.
     pub fn render_tile(&self, tile: u8, colors: &[Palette; 9]) -> Result<RgbImage, TilesetError> {
         let index = self.index(tile)?;
         let attribute = self.attributes[index];

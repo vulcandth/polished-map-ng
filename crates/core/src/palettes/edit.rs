@@ -4,7 +4,9 @@ use serde::{Deserialize, Serialize};
 use std::fmt::Write;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// Address of one hue in a palette set; validated when read or edited.
 pub struct ColorSlot {
+    /// Time-of-day or environment palette set.
     pub set: PaletteSet,
     /// 0..7 game palettes, 8 monochrome.
     pub palette: u8,
@@ -14,41 +16,66 @@ pub struct ColorSlot {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case")]
+/// Color edits applied atomically through [`PaletteBank::edit`].
 pub enum PaletteCommand {
+    /// Set an exact RGB8 color without quantization.
     SetRgb {
+        /// Destination color address.
         slot: ColorSlot,
+        /// Red, green and blue channels in 0..=255.
         rgb: [u8; 3],
     },
+    /// Set one RGB5 channel, expanded with `value * 33 / 4`.
     Channel {
+        /// Destination color address.
         slot: ColorSlot,
+        /// Channel index: red 0, green 1, blue 2.
         channel: u8,
+        /// Five-bit channel value in 0..=31.
         value: u8,
     },
+    /// Interpret zero to six ASCII hex digits as RGB8; empty means black.
     Hex {
+        /// Destination color address.
         slot: ColorSlot,
+        /// Hexadecimal digits without a leading `#`.
         value: String,
     },
+    /// Copy through the original RGB5 clipboard quantization.
     Copy {
+        /// Source color address.
         from: ColorSlot,
+        /// Destination color address.
         to: ColorSlot,
     },
+    /// Exchange exact live RGB8 values.
     Swap {
+        /// First color address.
         a: ColorSlot,
+        /// Second color address.
         b: ColorSlot,
     },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+/// Invalid palette address, RGB5 channel, or hexadecimal input.
 pub enum PaletteError {
     #[error("palette must be 0..8 and hue must be 0..3")]
+    /// The palette or hue index is outside its range.
     Slot,
     #[error("RGB channel must be 0..2 and its five-bit value must be 0..31")]
+    /// The channel is outside 0..=2 or its RGB5 value exceeds 31.
     Channel,
     #[error("hex color must contain zero to six ASCII hexadecimal digits")]
+    /// The input exceeds six digits or contains a non-hexadecimal character.
     Hex,
 }
 
 impl PaletteBank {
+    /// Read an RGB8 color.
+    ///
+    /// # Errors
+    /// Returns [`PaletteError::Slot`] for an invalid palette or hue index.
     pub fn color(&self, slot: ColorSlot) -> Result<[u8; 3], PaletteError> {
         self.colors[slot.set as usize]
             .get(usize::from(slot.palette))

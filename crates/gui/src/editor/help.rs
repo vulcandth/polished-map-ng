@@ -54,12 +54,12 @@ struct Block {
     spans: Vec<Span>,
 }
 
-fn document(windows: bool, profile: documents::Storage) -> &'static [Block] {
+fn document(windows: bool, storage: documents::Storage) -> &'static [Block] {
     static WINDOWS: OnceLock<Vec<Block>> = OnceLock::new();
     static UNIX: OnceLock<Vec<Block>> = OnceLock::new();
     static PLUS_WINDOWS: OnceLock<Vec<Block>> = OnceLock::new();
     static PLUS_UNIX: OnceLock<Vec<Block>> = OnceLock::new();
-    let (document, source) = if profile == documents::Storage::Attributed {
+    let (document, source) = if storage == documents::Storage::Attributed {
         if windows {
             (
                 &PLUS_WINDOWS,
@@ -88,7 +88,7 @@ fn viewport_id() -> egui::ViewportId {
 
 pub(super) struct HelpWindow {
     pub(super) application: Application,
-    pub(super) profile: documents::Storage,
+    pub(super) storage: documents::Storage,
     pub(super) open: bool,
     reposition: bool,
     reset_scroll: bool,
@@ -104,7 +104,7 @@ impl Default for HelpWindow {
     fn default() -> Self {
         Self {
             application: Application::default(),
-            profile: documents::Storage::Classic,
+            storage: documents::Storage::Classic,
             open: false,
             reposition: false,
             reset_scroll: false,
@@ -122,7 +122,7 @@ impl HelpWindow {
     fn title(&self) -> &'static str {
         if self.application.is_unified() {
             "Polished Map NG Unified Help"
-        } else if self.profile == documents::Storage::Attributed {
+        } else if self.storage == documents::Storage::Attributed {
             "Polished Map NG++ Help"
         } else {
             TITLE
@@ -231,14 +231,14 @@ impl HelpWindow {
                             ui.label("Controls adapt to the loaded map's assets. The reference below follows its current attribute storage; unified development is in progress.");
                             ui.add_space(8.0);
                         }
-                        let note = if self.profile == documents::Storage::Attributed {
+                        let note = if self.storage == documents::Storage::Attributed {
                             "Polished Map++ 2.7.1 reference — NG parity is in progress."
                         } else {
                             REFERENCE_NOTE
                         };
                         ui.label(egui::RichText::new(note).size(13.0));
                         ui.add_space(8.0);
-                        for block in document(self.windows_paths, self.profile) {
+                        for block in document(self.windows_paths, self.storage) {
                             render_block(ui, block);
                         }
                     });

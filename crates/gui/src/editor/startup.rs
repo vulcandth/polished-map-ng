@@ -118,13 +118,13 @@ impl Editor {
     /// Bundled, deterministic fonts for embedding and reproducible headless tests.
     /// Desktop launchers use `NativeStartup` to add native fonts and migration.
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        Self::new_for_profile(cc, documents::Storage::Classic)
+        Self::new_for_storage(cc, documents::Storage::Classic)
     }
 
     /// Separate plusplus editor with its own settings and eight-palette session.
     /// The profile is fixed before reading preferences or opening a project.
     pub fn new_plusplus(cc: &eframe::CreationContext<'_>) -> Self {
-        Self::new_for_profile(cc, documents::Storage::Attributed)
+        Self::new_for_storage(cc, documents::Storage::Attributed)
     }
 
     /// Construct an automatically detected editor using independent unified settings.
@@ -133,26 +133,26 @@ impl Editor {
         Self::new_for_application(cc, Application::Unified)
     }
 
-    pub(super) fn new_for_profile(
+    pub(super) fn new_for_storage(
         cc: &eframe::CreationContext<'_>,
-        profile: documents::Storage,
+        storage: documents::Storage,
     ) -> Self {
-        Self::new_for_application(cc, Application::Parity(profile))
+        Self::new_for_application(cc, Application::Parity(storage))
     }
 
     pub(super) fn new_for_application(
         cc: &eframe::CreationContext<'_>,
         application: Application,
     ) -> Self {
-        let profile = application.initial_profile();
+        let storage = application.initial_storage();
         fonts::install_bundled(&cc.egui_ctx);
         let mut editor = Self {
             application,
             ..Self::default()
         };
         editor.help_window.application = application;
-        editor.help_window.profile = profile;
-        if profile == documents::Storage::Attributed {
+        editor.help_window.storage = storage;
+        if storage == documents::Storage::Attributed {
             editor.unloaded_palettes =
                 polished_map_project::attributed::PaletteDocument::default().into();
             editor.status =

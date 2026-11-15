@@ -36,8 +36,10 @@ remain in launcher identities, serialized values and upstream reference tests.
 | Change | Start here |
 |---|---|
 | Map painting, resize, undo | [Core map commands](crates/core/src/map.rs), [GUI canvas](crates/gui/src/editor/canvas.rs) |
-| Attribute bytes, banks or flips | [Attribute models](crates/core/src/attributed.rs), [persistence](crates/project/src/attributed.rs) |
+| Attribute bytes, banks or flips | [Attribute models](crates/core/src/attributed.rs), [paired persistence](crates/project/src/attributed/blockset.rs) |
 | Detect/Open/Save a project | [Detection](crates/project/src/format.rs), [Open](crates/gui/src/editor/map_open.rs), [loading](crates/gui/src/editor/map_loading.rs), [Save](crates/gui/src/editor/map_save.rs) |
+| File limits, conflicts or save errors | [Bounded reads and single-file writes](crates/project/src/file_io.rs), [paired transactions](crates/project/src/transaction.rs), [errors](crates/project/src/error.rs) |
+| Map file lifecycle or metadata | [Map document](crates/project/src/map_document.rs), [discovery](crates/project/src/discovery.rs) |
 | Event fields or markers | [Event dialog](crates/gui/src/editor/event_workflows/dialog.rs), [canvas](crates/gui/src/editor/event_workflows/canvas.rs); [source-preserving edits](crates/project/src/events.rs) |
 | Tile/roof pixel editing | [Draft and save lifecycle](crates/gui/src/editor/tileset_editor.rs), [dialog](crates/gui/src/editor/tileset_editor/dialog.rs), [clipboard](crates/gui/src/editor/tileset_editor/clipboard.rs) |
 | Palette controls or numeric inputs | [Palette form](crates/gui/src/editor/palette_editor.rs), [reusable widgets](crates/gui/src/editor/widgets.rs) |
@@ -58,10 +60,10 @@ CI treats rustdoc warnings as errors for both public and private documentation.
 
 Document new public items with purpose, units/invariants, meaningful examples and
 `# Errors`/`# Panics`/`# Safety` where applicable. Prefer checked intra-doc links.
-The GUI/platform public APIs, detection module and attributed core model enforce
-`missing_docs`; older core/project APIs still need fuller item documentation
-during API stabilization. A passing rustdoc build is not a claim of complete
-API documentation or a stable interface. Follow the
+All four library crates deny `missing_docs` for public APIs. This includes fields
+and enum variants; integration-test shims are not library API. Examples cover
+map edits/saves, source-preserving event edits, palettes and bank addressing.
+Documentation coverage does not make the experimental API stable. Follow the
 [Rust API documentation guidelines](https://rust-lang.github.io/api-guidelines/documentation.html).
 
 ## Making a change

@@ -7,15 +7,15 @@ use serde::{Deserialize, Serialize};
 
 const KEY: &str = "polished-map-ng.preferences";
 const PLUSPLUS_KEY: &str = "polished-map-ng-plusplus.preferences";
-fn key(profile: documents::Storage) -> &'static str {
-    match profile {
+fn key(storage: documents::Storage) -> &'static str {
+    match storage {
         documents::Storage::Classic => KEY,
         documents::Storage::Attributed => PLUSPLUS_KEY,
     }
 }
 fn application_key(application: Application) -> &'static str {
     match application {
-        Application::Parity(profile) => key(profile),
+        Application::Parity(storage) => key(storage),
         Application::Unified => "polished-map-ng-unified.preferences",
     }
 }

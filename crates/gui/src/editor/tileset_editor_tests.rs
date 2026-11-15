@@ -85,7 +85,7 @@ fn tile<'a>(h: &'a Harness<'_, Editor>, id: usize) -> &'a [u8; 64] {
         .as_ref()
         .unwrap()
         .draft
-        .master()
+        .classic()
         .unwrap()
         .tileset()
         .tiles()[id]
@@ -111,7 +111,7 @@ fn tileset_draft_cancel_accept_preview_save_and_conflict_preserve_map_history() 
                 .as_ref()
                 .unwrap()
                 .draft
-                .master()
+                .classic()
                 .unwrap()
                 .tileset()
                 .attributes()[0],
@@ -194,7 +194,7 @@ fn pixel_gestures_palette_priority_and_delete_match_shared_commands() {
         .as_ref()
         .unwrap()
         .draft
-        .master()
+        .classic()
         .unwrap()
         .tileset()
         .clone();
@@ -231,7 +231,7 @@ fn pixel_gestures_palette_priority_and_delete_match_shared_commands() {
             .as_mut()
             .unwrap()
             .draft
-            .master_mut()
+            .classic_mut()
             .unwrap()
             .apply_batch(&[TileCommand::Set {
                 tile: 0,
@@ -259,7 +259,7 @@ fn pixel_gestures_palette_priority_and_delete_match_shared_commands() {
             .as_ref()
             .unwrap()
             .draft
-            .master()
+            .classic()
             .unwrap()
             .tileset()
             .attributes()[0],
@@ -274,7 +274,7 @@ fn pixel_gestures_palette_priority_and_delete_match_shared_commands() {
             .as_ref()
             .unwrap()
             .draft
-            .master()
+            .classic()
             .unwrap()
             .tileset()
             .attributes()[0],

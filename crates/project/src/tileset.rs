@@ -4,7 +4,7 @@
 use crate::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, PaletteDocument, ProjectError,
     RoofDocument, SaveTarget, codecs,
-    document::{optional_hash, prepare_target},
+    file_io::{optional_hash, prepare_target},
     graphics::{
         encode_grayscale_png, graphics_path, palette_map_path, read_tiles, tile_slot,
         validate_tileset,
@@ -27,10 +27,17 @@ struct Prepared {
 }
 
 #[derive(Debug, serde::Serialize)]
+/// Read-only write preview used by tiles, roofs, and event scripts.
+///
+/// The historical name does not imply that every described output is graphics.
 pub struct TilesetOutput {
+    /// Destination file.
     pub path: PathBuf,
+    /// Observed SHA-256, or `None` if the destination was absent.
     pub previous_hash: Option<String>,
+    /// SHA-256 of the proposed encoded bytes.
     pub content_hash: String,
+    /// Encoded output length in bytes.
     pub bytes: usize,
 }
 
@@ -47,6 +54,11 @@ struct Part {
 }
 
 #[derive(Clone, Debug)]
+/// Classic tile/palette document with separate roof overlay and guarded output.
+///
+/// Unified editing uses this model for per-tile attributes. The historical
+/// public name is retained for callers; base pixels are never saved with a
+/// roof baked in, and palette color exports remain separate.
 pub struct MasterTilesetDocument {
     png_platform: crate::PngPlatform,
     root: PathBuf,
@@ -68,7 +80,9 @@ pub struct MasterTilesetDocument {
 /// Interpretation used when reloading master's graphics and palette map.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub struct MasterTileMode {
+    /// Use the monochrome palette when reloading graphics.
     pub monochrome: bool,
+    /// Use all tile slots rather than reserved bank gaps.
     pub allow_256: bool,
 }
 
@@ -114,6 +128,14 @@ impl MasterTilesetDocument {
         let tileset = Self::open_colors(root, name, &options, session.clone(), unified)?;
         Ok((tileset, plan))
     }
+    /// Load contextual palettes and graphics without interactive import decisions.
+    ///
+    /// Absent optional roof colors are skipped; malformed existing files fail.
+    /// Use [`Self::begin_for_map`] when the caller must review individual imports.
+    ///
+    /// # Errors
+    /// Missing roots, invalid names, read/decode failures, malformed palettes,
+    /// or inconsistent graphics layouts return an error.
     pub fn open_for_map(
         doc: &MapDocument,
         name: &str,
@@ -149,6 +171,10 @@ impl MasterTilesetDocument {
         Self::open_colors(root, name, options, PaletteDocument::default(), false)
     }
 
+    /// Load classic graphics with combined source layouts and default Day colors.
+    ///
+    /// # Errors
+    /// Invalid names, ambiguous assets, reads, codecs and palette layouts can fail.
     pub fn open_unified_in_project(
         root: &Path,
         name: &str,
@@ -312,12 +338,15 @@ impl MasterTilesetDocument {
         })
     }
 
+    /// Exact selected asset name, including compound suffixes.
     pub fn name(&self) -> &str {
         &self.name
     }
+    /// PNG alpha/desaturation policy used to decode source pixels.
     pub fn png_platform(&self) -> crate::PngPlatform {
         self.png_platform
     }
+    /// Canonical project directory used for asset discovery.
     pub fn root(&self) -> &Path {
         &self.root
     }
@@ -402,30 +431,39 @@ impl MasterTilesetDocument {
         self.roof = roof;
         Ok(())
     }
+    /// Read base pixels and per-tile attributes, excluding the roof overlay.
     pub fn tileset(&self) -> &Tileset {
         &self.model
     }
+    /// Read the selected roof overlay, if present.
     pub fn roof(&self) -> Option<&RoofDocument> {
         self.roof.as_ref()
     }
+    /// Edit the independent roof document, if present.
     pub fn roof_mut(&mut self) -> Option<&mut RoofDocument> {
         self.roof.as_mut()
     }
+    /// Nine palettes for the current display set, including monochrome.
     pub fn colors(&self) -> &[Palette; 9] {
         self.palettes.bank().colors(self.palettes.selected())
     }
+    /// Read session colors, selection, and palette dirty state.
     pub fn palettes(&self) -> &PaletteDocument {
         &self.palettes
     }
+    /// Edit palette colors or resolve a pending palette import plan.
     pub fn palettes_mut(&mut self) -> &mut PaletteDocument {
         &mut self.palettes
     }
+    /// Whether all tile slots are available instead of reserved bank gaps.
     pub fn allow_256(&self) -> bool {
         self.allow_256
     }
+    /// Whether graphics use the monochrome palette.
     pub fn monochrome(&self) -> bool {
         self.monochrome
     }
+    /// Whether the session enables priority editing and priority palette output.
     pub fn allow_priority(&self) -> bool {
         self.allow_priority
     }
@@ -434,6 +472,7 @@ impl MasterTilesetDocument {
     pub fn set_allow_priority(&mut self, enabled: bool) {
         self.allow_priority = enabled;
     }
+    /// Observed component PNG and palette-map destinations.
     pub fn outputs(&self) -> Vec<&SaveTarget> {
         self.parts
             .iter()
@@ -441,6 +480,7 @@ impl MasterTilesetDocument {
             .chain(self.palette_source.iter().map(|(target, _)| target))
             .collect()
     }
+    /// Observed files that supplied this tileset’s source data.
     pub fn source_files(&self) -> &[SaveTarget] {
         &self.sources
     }
@@ -472,6 +512,10 @@ impl MasterTilesetDocument {
         }
         hex(&hash.finalize())
     }
+    /// Prepare trimmed outputs and their hashes without writing or adopting the draft.
+    ///
+    /// # Errors
+    /// Source/output conflicts, unsafe export layouts, encoding, and reads can fail.
     pub fn preview_save(&self, blocks: &Blockset) -> Result<Vec<TilesetOutput>, ProjectError> {
         let prepared = self.prepare_save(blocks)?;
         Ok(prepared
@@ -485,6 +529,11 @@ impl MasterTilesetDocument {
             })
             .collect())
     }
+    /// Apply tile commands atomically and synchronize roof palette attributes.
+    ///
+    /// # Errors
+    /// Invalid tile commands leave the model unchanged. Roof pixel dirty state
+    /// is preserved while its palette attributes follow the validated base model.
     pub fn apply_batch(&mut self, commands: &[TileCommand]) -> Result<(), ProjectError> {
         self.model.apply_batch(commands)?;
         if !commands.is_empty()
@@ -498,6 +547,10 @@ impl MasterTilesetDocument {
         Ok(())
     }
 
+    /// Compose CPU graphics from base tiles, display palettes and the optional roof.
+    ///
+    /// # Errors
+    /// Invalid block references or inconsistent graphics lengths are rejected.
     pub fn graphics(&self, blocks: &Blockset) -> Result<Graphics, ProjectError> {
         let mut tiles = self.model.tiles().to_vec();
         let mut priorities: Vec<_> = self
@@ -614,6 +667,11 @@ impl MasterTilesetDocument {
         })
     }
 
+    /// Trim and stage changed graphics/palette-map files, then adopt the saved draft.
+    ///
+    /// # Errors
+    /// Conflicts, export/encoding failures, or I/O retain unsaved state. Multi-file
+    /// failures attempt rollback and report recovery locations if rollback fails.
     pub fn save(&mut self, blocks: &Blockset) -> Result<(), ProjectError> {
         let Prepared {
             mut draft,

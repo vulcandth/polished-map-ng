@@ -62,7 +62,7 @@ impl Editor {
             unified: self.application.is_unified(),
             roof_layout: Some(self.roof_palette_layout),
             new_map: true,
-            profile: self.storage(),
+            storage: self.storage(),
             allow_512: self.allow_512,
             path: root.join(format!("NewMap.{}", self.storage().extension())),
             root: root.to_string_lossy().into_owned(),
@@ -90,7 +90,7 @@ impl Editor {
         let mut form = OpenForm {
             unified: self.application.is_unified(),
             roof_layout: Some(self.roof_palette_layout),
-            profile: self.storage(),
+            storage: self.storage(),
             allow_512: self.allow_512,
             root: metadata
                 .root
@@ -111,14 +111,14 @@ impl Editor {
 
     pub(super) fn start_load(&mut self, mut form: OpenForm, ctx: &egui::Context) {
         if form.unified {
-            form.resolve_profile();
+            form.resolve_storage();
             if let Some(error) = &form.detection_error {
                 self.error = Some(error.clone());
                 self.open_form = Some(form);
                 return;
             }
         }
-        if !self.application.accepts(form.profile) {
+        if !self.application.accepts(form.storage) {
             self.error = Some("Open options belong to the other editor profile".into());
             return;
         }
@@ -126,7 +126,7 @@ impl Editor {
         self.pending_palette_warnings.clear();
         let (sender, receiver) = mpsc::channel();
         let ctx = ctx.clone();
-        let palettes = self.palettes_for_open(form.profile);
+        let palettes = self.palettes_for_open(form.storage);
         let settings = map_loading::LoadSettings {
             graphics: MasterGraphicsOptions {
                 dark_theme: self.dark,

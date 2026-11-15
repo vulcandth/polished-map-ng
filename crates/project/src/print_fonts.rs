@@ -108,18 +108,22 @@ impl PrintFontFace {
         })
     }
 
+    /// Full face name read from the font, or the explicit unnamed fallback.
     pub fn name(&self) -> &str {
         &self.name
     }
 
+    /// Validated OpenType variation tags and design-space coordinates.
     pub fn variations(&self) -> &[([u8; 4], f32)] {
         &self.variations
     }
 
+    /// Zero-based face index within the retained font collection.
     pub fn collection_index(&self) -> u32 {
         self.index
     }
 
+    /// Reference family replaced by this face, if discovery reported a substitution.
     pub fn substituted_for(&self) -> Option<&str> {
         self.substituted_for.as_deref()
     }
@@ -279,6 +283,7 @@ pub struct PrintFonts {
 }
 
 impl PrintFonts {
+    /// Use caller-selected bold monospace and sans-serif faces without system discovery.
     pub fn from_faces(courier: PrintFontFace, helvetica: PrintFontFace) -> Self {
         Self { courier, helvetica }
     }
@@ -307,10 +312,12 @@ impl PrintFonts {
         ))
     }
 
+    /// Name of the actual face serving a source Print font request.
     pub fn face_name(&self, requested: PrintFont) -> &str {
         self.face(requested).name()
     }
 
+    /// Selected face, including variation settings and substitution diagnostics.
     pub fn face(&self, requested: PrintFont) -> &PrintFontFace {
         match requested {
             PrintFont::CourierBold14 => &self.courier,

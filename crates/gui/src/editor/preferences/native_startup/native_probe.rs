@@ -100,13 +100,13 @@ impl App for Probe {
 /// Run one child of the `native_preferences` example. Requires the opt-in
 /// feature and environment flag; `directory` must be a disposable fixture root.
 /// The explicit persistence path intentionally avoids the user's actual store.
-pub fn run(directory: &Path, profile: &str, phase: &str) -> eframe::Result {
+pub fn run(directory: &Path, document_storage: &str, phase: &str) -> eframe::Result {
     assert_eq!(
         std::env::var("POLISHED_MAP_NATIVE_PREFERENCES_PROBE").as_deref(),
         Ok("1")
     );
     assert!(directory.join("probe-marker").is_file());
-    let profile = match profile {
+    let document_storage = match document_storage {
         "master" => documents::Storage::Classic,
         "plusplus" => documents::Storage::Attributed,
         _ => panic!("unknown probe profile"),
@@ -115,13 +115,13 @@ pub fn run(directory: &Path, profile: &str, phase: &str) -> eframe::Result {
         phase,
         "import" | "restore" | "future" | "preserve"
     ));
-    let folder = directory.join(Application::Parity(profile).app_id());
+    let folder = directory.join(Application::Parity(document_storage).app_id());
     let file = folder.join("app.ron");
     std::fs::create_dir_all(&folder).unwrap();
     let startup = NativeStartup::from_result(
-        profile,
+        document_storage,
         NativeStartup::load(
-            profile,
+            document_storage,
             directory,
             &LegacyUserLocation::Windows {
                 roaming_appdata: None,
@@ -132,13 +132,13 @@ pub fn run(directory: &Path, profile: &str, phase: &str) -> eframe::Result {
     let viewport = startup.viewport();
     assert_eq!(
         viewport.app_id.as_deref(),
-        Some(Application::Parity(profile).app_id())
+        Some(Application::Parity(document_storage).app_id())
     );
     let saved = Arc::new(AtomicBool::new(false));
     let saved_in_app = saved.clone();
     let phase = phase.to_owned();
     eframe::run_native(
-        Application::Parity(profile).title(),
+        Application::Parity(document_storage).title(),
         eframe::NativeOptions {
             viewport,
             persistence_path: Some(file.clone()),
@@ -155,18 +155,24 @@ pub fn run(directory: &Path, profile: &str, phase: &str) -> eframe::Result {
                 );
             }
             let mut editor = startup.create_editor(cc);
-            assert!(editor.storage() == profile);
+            assert!(editor.storage() == document_storage);
             if phase == "preserve" {
                 assert!(!editor.preferences_writable);
                 assert!(editor.grid && !editor.rulers && !editor.allow_512);
-                assert_eq!(storage.get_string(key(profile)).as_deref(), Some(FUTURE));
+                assert_eq!(
+                    storage.get_string(key(document_storage)).as_deref(),
+                    Some(FUTURE)
+                );
             } else {
                 assert!(editor.preferences_writable);
                 assert!(!editor.grid && editor.rulers);
-                assert_eq!(editor.allow_512, profile == documents::Storage::Attributed);
+                assert_eq!(
+                    editor.allow_512,
+                    document_storage == documents::Storage::Attributed
+                );
                 assert_eq!(
                     editor.bank_order == polished_map_core::attributed::BankOrder::Bank0First,
-                    profile == documents::Storage::Attributed
+                    document_storage == documents::Storage::Attributed
                 );
                 if phase == "import" {
                     assert!(editor.status.starts_with("Imported settings"));

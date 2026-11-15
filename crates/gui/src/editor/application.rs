@@ -20,26 +20,26 @@ impl Default for Application {
 impl Application {
     pub fn list_roofs(
         self,
-        profile: Storage,
+        storage: Storage,
         root: &std::path::Path,
     ) -> Result<Vec<String>, polished_map_project::ProjectError> {
         if self.is_unified() {
             polished_map_project::list_roofs(root)
         } else {
-            profile.list_roofs(root)
+            storage.list_roofs(root)
         }
     }
     pub fn is_unified(self) -> bool {
         self == Self::Unified
     }
-    pub fn initial_profile(self) -> Storage {
+    pub fn initial_storage(self) -> Storage {
         match self {
-            Self::Parity(profile) => profile,
+            Self::Parity(storage) => storage,
             Self::Unified => Storage::Classic,
         }
     }
-    pub fn accepts(self, profile: Storage) -> bool {
-        self.is_unified() || self.initial_profile() == profile
+    pub fn accepts(self, storage: Storage) -> bool {
+        self.is_unified() || self.initial_storage() == storage
     }
     pub fn app_id(self) -> &'static str {
         match self {
@@ -76,7 +76,7 @@ impl Editor {
     /// Derive capabilities from the document, never from a pending open request.
     pub(super) fn storage(&self) -> Storage {
         match self.application {
-            Application::Parity(profile) => profile,
+            Application::Parity(storage) => storage,
             Application::Unified => self.loaded.as_ref().map_or_else(
                 || self.unloaded_palettes.storage(),
                 |loaded| loaded.document.storage(),
@@ -84,14 +84,14 @@ impl Editor {
         }
     }
 
-    pub(super) fn palettes_for_open(&self, profile: Storage) -> PaletteDocument {
-        if self.storage() == profile {
+    pub(super) fn palettes_for_open(&self, storage: Storage) -> PaletteDocument {
+        if self.storage() == storage {
             self.palette_document().to_owned()
         } else if let Some(palettes) = &self.inactive_palettes {
-            debug_assert!(palettes.storage() == profile);
+            debug_assert!(palettes.storage() == storage);
             palettes.clone()
         } else {
-            let mut palettes = match profile {
+            let mut palettes = match storage {
                 Storage::Classic => PaletteDocument::default(),
                 Storage::Attributed => {
                     polished_map_project::attributed::PaletteDocument::default().into()

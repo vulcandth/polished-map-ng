@@ -5,18 +5,25 @@ use thiserror::Error;
 use crate::Point;
 
 #[derive(Debug, Error, PartialEq, Eq)]
+/// Invalid block geometry, IDs or collision rows.
 pub enum BlocksetError {
     #[error("expected 1..=256 complete 16-byte blocks")]
+    /// Offsets must contain 1–256 complete 16-byte blocks.
     Length,
     #[error("block {0} is outside the blockset")]
+    /// The requested block ID is not loaded.
     Block(u8),
     #[error("tile coordinate ({0}, {1}) is outside the 4×4 block")]
+    /// The tile-cell coordinate lies outside the block's 4×4 grid.
     Coordinate(u16, u16),
     #[error("collision rows must match the block count and use one format")]
+    /// Collision rows differ in format or do not correspond one-to-one with blocks.
     CollisionLayout,
     #[error("collision field contains a delimiter, NUL or line break")]
+    /// An assembly field contains a delimiter, line break or NUL.
     CollisionText,
     #[error("collision fields are limited to 4096 bytes each")]
+    /// An assembly collision field exceeds 4096 UTF-8 bytes.
     CollisionTextLength,
 }
 
@@ -29,11 +36,14 @@ pub enum BlocksetError {
     deny_unknown_fields
 )]
 pub enum CollisionRow {
+    /// Uninterpreted assembly collision expressions; delimiters are validated on attachment/edit.
     Asm([String; 4]),
+    /// Four binary collision codes in quadrant order.
     Binary([u8; 4]),
 }
 
 impl CollisionRow {
+    /// Whether the row uses binary codes rather than assembly expressions.
     pub fn is_binary(&self) -> bool {
         matches!(self, Self::Binary(_))
     }
@@ -71,38 +81,63 @@ pub struct Blockset {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
+/// Block edits; apply atomically with [`Blockset::apply_batch`] when grouping commands.
 pub enum BlockCommand {
+    /// Replace one existing collision row.
     SetCollisions {
+        /// Destination block ID.
         block: u8,
+        /// Replacement row in the already attached collision format.
         collision: CollisionRow,
     },
+    /// Paint the selected brush into one block.
     Paint {
+        /// Destination block ID.
         block: u8,
+        /// Starting tile-cell coordinate within the 4×4 block.
         at: Point,
+        /// Selected raw tile ID.
         tile: u8,
         #[serde(default)]
+        /// Modifier-controlled footprint and source stride.
         brush: BlockBrush,
         #[serde(default)]
+        /// Permit reserved tile slots instead of applying classic 192-tile skips.
         allow_256: bool,
     },
+    /// Replace all 16 raw tile IDs in one block.
     Set {
+        /// Destination block ID.
         block: u8,
+        /// Replacement row-major 4×4 tile IDs.
         tiles: [u8; 16],
     },
+    /// Copy a complete block and its optional collision row.
     Copy {
+        /// Source block ID.
         from: u8,
+        /// Destination block ID.
         to: u8,
     },
+    /// Exchange two blocks and their optional collision rows.
     Swap {
+        /// First block ID.
         a: u8,
+        /// Second block ID.
         b: u8,
     },
+    /// Grow with empty blocks/collisions or truncate to the requested count.
     Resize {
+        /// New block count in 1–256.
         count: u16,
     },
 }
 
 impl Blockset {
+    /// Load complete row-major 4×4 block definitions as clean state.
+    ///
+    /// # Errors
+    /// Rejects empty input, partial 16-byte rows, or more than 256 blocks.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, BlocksetError> {
         if bytes.is_empty() || bytes.len() > 4096 || !bytes.len().is_multiple_of(16) {
             return Err(BlocksetError::Length);
@@ -113,9 +148,14 @@ impl Blockset {
             collisions: None,
         })
     }
+    /// All 16-byte block definitions in block-ID order.
     pub fn blocks(&self) -> &[[u8; 16]] {
         &self.blocks
     }
+    /// Attach collision rows to the current definitions.
+    ///
+    /// # Errors
+    /// Requires one row per block, a single row format, and valid assembly fields.
     pub fn with_collisions(mut self, rows: Vec<CollisionRow>) -> Result<Self, BlocksetError> {
         if rows.len() != self.blocks.len()
             || rows.iter().any(|r| r.is_binary() != rows[0].is_binary())
@@ -128,10 +168,14 @@ impl Blockset {
         self.collisions = Some(rows);
         Ok(self)
     }
+    /// Attached collision rows, or `None` if no collision source was loaded.
     pub fn collisions(&self) -> Option<&[CollisionRow]> {
         self.collisions.as_deref()
     }
     /// Validate the complete draft before changing the active blockset.
+    ///
+    /// # Errors
+    /// Any invalid command leaves the original blocks, collisions and dirty state unchanged.
     pub fn apply_batch(&mut self, commands: &[BlockCommand]) -> Result<(), BlocksetError> {
         let mut draft = self.clone();
         for command in commands {
@@ -140,21 +184,31 @@ impl Blockset {
         *self = draft;
         Ok(())
     }
+    /// Serialize block offsets in row-major block order; collision bytes are separate.
     pub fn bytes(&self) -> Vec<u8> {
         self.blocks.iter().flatten().copied().collect()
     }
+    /// Whether a successful edit has marked the blockset dirty.
     pub fn is_modified(&self) -> bool {
         self.modified
     }
+    /// Clear the dirty flag only after offsets and attached collisions have been persisted.
     pub fn mark_saved(&mut self) {
         self.modified = false;
     }
+    /// Borrow one block's 16 tile IDs.
+    ///
+    /// # Errors
+    /// Returns [`BlocksetError::Block`] for an ID beyond the loaded blockset.
     pub fn block(&self, id: u8) -> Result<&[u8; 16], BlocksetError> {
         self.blocks
             .get(usize::from(id))
             .ok_or(BlocksetError::Block(id))
     }
     /// Validate before changing anything. Accepting even an unchanged draft marks dirty.
+    ///
+    /// # Errors
+    /// Rejects invalid block/cell indices, resize counts or collision fields before mutation.
     pub fn apply(&mut self, command: &BlockCommand) -> Result<(), BlocksetError> {
         match command {
             BlockCommand::SetCollisions { block, collision } => {
@@ -218,13 +272,19 @@ impl Blockset {
 
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
+/// The eight source brush patterns selected by Shift/Ctrl/Alt combinations.
+/// `Default` paints one cell; modifiers change footprint and source-tile strides.
 pub struct BlockBrush {
+    /// Double the footprint; Shift alone paints the alternating 2×2 pattern.
     pub shift: bool,
+    /// Use the sheet-row stride (or reversed stride when combined with Alt).
     pub ctrl: bool,
+    /// Select the alternate stride family.
     pub alt: bool,
 }
 
 impl BlockBrush {
+    /// Source UI hint for this modifier combination; the one-cell brush has an empty hint.
     pub fn label(self) -> &'static str {
         [
             "",
@@ -261,6 +321,10 @@ impl BlockBrush {
         })
     }
     /// Paint a draft with upstream's byte wrapping, clipping and 0x60 tile skip.
+    ///
+    /// # Errors
+    /// Returns [`BlocksetError::Coordinate`] when the starting cell is outside 4×4.
+    /// The brush itself clips at block edges; `allow_256` controls reserved-slot handling.
     pub fn paint(
         self,
         draft: &mut [u8; 16],

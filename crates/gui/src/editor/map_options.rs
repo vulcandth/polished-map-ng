@@ -232,7 +232,7 @@ impl Editor {
                 },
             );
             if form.unified && form.tileset != previous_tileset {
-                form.resolve_profile();
+                form.resolve_storage();
             }
             let current = if form.roof.is_empty() {
                 "(none)".to_owned()
@@ -321,7 +321,7 @@ impl Editor {
                             });
                             ui.end_row();
                             ui.label("Tile capacity:");
-                            if form.profile == documents::Storage::Attributed {
+                            if form.storage == documents::Storage::Attributed {
                                 ui.checkbox(&mut form.allow_512, "Allow all 512 tiles");
                             } else {
                                 ui.checkbox(&mut form.allow_256, "Allow all 256 tiles");

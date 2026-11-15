@@ -61,10 +61,11 @@ This preparation does not waive native parity or final release acceptance.
 - [x] **R4:** Five-crate input/persistence review completed; two panics and a
   wrong-row palette write fixed with regressions. CI and packaging passed.
   [Review evidence](compatibility.md#initial-release-review).
-- [x] **R5:** Implementation organized by storage semantics and feature ownership;
-  contributor navigation and checked rustdoc entry points established without
-  changing behavior. Workspace, all-feature GUI lint, rustdoc/examples and link
-  checks passed on Windows; existing native acceptance gates remain open.
+- [x] **R5:** Storage-based naming, feature ownership, shared file/error services
+  and event-document boundaries reviewed and clarified. Public item docs and
+  examples cover all library crates; missing docs and invalid rustdoc fail checks.
+  Contributor navigation and automated behavior checks pass. The direct PNG
+  writer's malformed-buffer hazard is fixed; native acceptance remains open.
   [Review evidence](compatibility.md#code-organization-and-rustdoc).
 
 ## 1. Master parity — in progress
@@ -251,21 +252,21 @@ launchers. No mode selector and no silent format conversion. See the
 ## 4. Autonomous interface — stabilization not started
 
 The shared backend and experimental CLI already exist. Stabilize them after U3
-so both profiles are represented in the public contract; GUI work must continue
+so both storage models are represented in the public contract; GUI work must continue
 using the same underlying operations in the meantime.
 
 - [x] GUI-independent Rust models/project adapters and experimental master JSON
   inspect/render/edit previews/apply exist; see [CLI guide](cli.md).
 - [ ] **A1:** Define versioned Rust/JSON contracts for inspect, validate, render,
   edit and batch, with stable error codes, schemas and deterministic responses.
-  Complete older core/project item documentation and extend `missing_docs`
-  enforcement, including error contracts and runnable examples for the stabilized API.
+  Public item documentation and `missing_docs` enforcement are covered by R5;
+  extend error contracts and runnable examples alongside the stabilized API.
 - [ ] **A2:** Make dry-run, explicit apply, input/output hash conflicts and
   recoverable multi-file commits consistent across document types. Finish
   interrupted-journal discovery/replay; current backup/rollback support is partial.
 - [ ] **A3:** Publish examples for autonomous callers and schema/compatibility
   tests, including malformed requests, conflicting writers and crash recovery.
-- [ ] **A4 — Acceptance:** Both profiles support complete scripted workflows
+- [ ] **A4 — Acceptance:** Both storage models support complete scripted workflows
   without a display/GPU or GUI process, preserve unrelated source and recover
   interrupted batches. MCP remains deferred.
 

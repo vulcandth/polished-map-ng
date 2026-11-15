@@ -72,8 +72,8 @@ impl Editor {
     }
 
     fn finish_open(&mut self, mut loaded: Loaded, ctx: &egui::Context) -> Result<(), String> {
-        let profile = loaded.document.storage();
-        if !self.application.accepts(profile) || loaded.graphics.storage() != profile {
+        let storage = loaded.document.storage();
+        if !self.application.accepts(storage) || loaded.graphics.storage() != storage {
             return Err("Map and graphics must belong to this editor profile".into());
         }
         if loaded.palette_plan.take().is_some() {
@@ -87,13 +87,13 @@ impl Editor {
             return Err("Plusplus assets require a separate plusplus document".into());
         }
         let textures = documents::block_textures(ctx, &loaded.graphics)?;
-        if self.storage() != profile {
+        if self.storage() != storage {
             self.inactive_palettes = Some(self.palette_document().to_owned());
         }
         if let Some(assets) = &loaded.attributed_assets {
             self.allow_512 = assets.allow_512;
         }
-        self.help_window.profile = profile;
+        self.help_window.storage = storage;
         self.status = if loaded.document.has_backing_file() {
             loaded.document.path().display().to_string()
         } else {
@@ -118,7 +118,7 @@ impl Editor {
         // availability once; never scan the filesystem while painting controls.
         self.roof_choices_available = loaded.tileset_location().is_some_and(|(root, _)| {
             self.application
-                .list_roofs(profile, root)
+                .list_roofs(storage, root)
                 .is_ok_and(|names| !names.is_empty())
         });
         self.event_ui.drag = None;

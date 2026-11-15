@@ -7,13 +7,13 @@ fn legacy(body: &str) -> LegacyPreferences {
 
 #[test]
 fn system_theme_only_initializes_profiles_without_saved_or_imported_preferences() {
-    for profile in [documents::Storage::Classic, documents::Storage::Attributed] {
+    for document_storage in [documents::Storage::Classic, documents::Storage::Attributed] {
         for source in ["fresh", "saved", "legacy", "malformed"] {
             let mut storage = super::super::tests::MemoryStorage::default();
             if source == "saved" || source == "malformed" {
                 eframe::Storage::set_string(
                     &mut storage,
-                    key(profile),
+                    key(document_storage),
                     if source == "saved" {
                         r#"{"version":1,"dark":false}"#
                     } else {
@@ -23,10 +23,14 @@ fn system_theme_only_initializes_profiles_without_saved_or_imported_preferences(
                 );
             }
             let imported = (source == "legacy").then(|| {
-                Imported::from_legacy(profile, &legacy("theme:4\n"), "original.prefs".into())
-                    .unwrap()
+                Imported::from_legacy(
+                    document_storage,
+                    &legacy("theme:4\n"),
+                    "original.prefs".into(),
+                )
+                .unwrap()
             });
-            let startup = NativeStartup::from_result(profile, Ok(imported));
+            let startup = NativeStartup::from_result(document_storage, Ok(imported));
             let h = Harness::builder().build_eframe(|cc| {
                 cc.storage = Some(&storage);
                 cc.egui_ctx.begin_pass(egui::RawInput {
@@ -104,15 +108,16 @@ fn every_master_setting_maps_to_the_ng_record_without_document_state() {
 
 #[test]
 fn plusplus_legacy_keys_defaults_and_identity_use_separate_startup() {
-    let profile = documents::Storage::Attributed;
-    let default = Imported::from_legacy(profile, &legacy(""), "defaults".into()).unwrap();
+    let document_storage = documents::Storage::Attributed;
+    let default = Imported::from_legacy(document_storage, &legacy(""), "defaults".into()).unwrap();
     let h = Harness::builder().build_eframe(|cc| Editor::new_plusplus(cc));
     assert_eq!(default.settings, Preferences::capture(h.state()));
     assert_eq!(default.size, [800.0, 600.0]);
     let input = legacy(
         "theme:9\nmode:1\ngrid:0\nrulers:1\nzoom:1\nids:1\nhex:1\npriority:0\ngameboy:1\nevent:0\nwarp-ids:0\ntransparent:1\npalettes:5\nall512:1\nswap01:1\nroof-palettes:4\nevents:0\nspecial:0\nroofs:0\ndrag:0\noverworld-map:4096\nprint-grid:1\nprint-ids:1\nprint-priority:1\nprint-events:1\nprint-warp-ids:1\nresize-anchor:8\nrecent0:one.ablk\nrecent1:two.ablk\nw:940\nh:690\nfullscreen:1\nmaximized:1\nmonochrome:2147483648\nall256:2147483648\nprioritize:2147483648\nmeta128:2147483648\n",
     );
-    let imported = Imported::from_legacy(profile, &input, "plusplus.prefs".into()).unwrap();
+    let imported =
+        Imported::from_legacy(document_storage, &input, "plusplus.prefs".into()).unwrap();
     assert_eq!(imported.settings.allow_512, Some(true));
     assert_eq!(imported.settings.bank0_first, Some(true));
     assert!(
@@ -122,14 +127,14 @@ fn plusplus_legacy_keys_defaults_and_identity_use_separate_startup() {
             && !imported.settings.meta128
     );
     let expected = imported.settings.clone();
-    let startup = NativeStartup::from_result(profile, Ok(Some(imported)));
+    let startup = NativeStartup::from_result(document_storage, Ok(Some(imported)));
     let viewport = startup.viewport();
     assert_eq!(viewport.app_id.as_deref(), Some("polished-map-ng-plusplus"));
     assert_eq!(viewport.inner_size, Some(Vec2::new(940.0, 690.0)));
     assert_eq!(viewport.min_inner_size, Some(Vec2::new(335.0, 262.0)));
     assert_ne!(viewport.app_id, NativeStartup::default().viewport().app_id);
     let h = Harness::builder().build_eframe(|cc| startup.create_editor(cc));
-    assert!(h.state().storage() == profile);
+    assert!(h.state().storage() == document_storage);
     assert_eq!(Preferences::capture(h.state()), expected);
     assert_eq!(
         h.state().palette_document().colors(PaletteSet::Day).len(),
@@ -141,14 +146,14 @@ fn plusplus_legacy_keys_defaults_and_identity_use_separate_startup() {
         "palettes:6",
         "overworld-map:0",
     ] {
-        assert!(Imported::from_legacy(profile, &legacy(bad), "bad".into()).is_err());
+        assert!(Imported::from_legacy(document_storage, &legacy(bad), "bad".into()).is_err());
     }
 }
 
 #[test]
 fn plusplus_migration_respects_own_ng_file_and_storage_race_without_reading_master() {
     let dir = tempfile::tempdir().unwrap();
-    let profile = documents::Storage::Attributed;
+    let document_storage = documents::Storage::Attributed;
     let original = dir.path().join("polishedmap-plusplus.prefs");
     let bytes = b"; FLTK preferences file format 1.0\n; vendor: Rangi\n; application: polishedmap-plusplus\n[.]\nall512:1\nswap01:1\n";
     std::fs::write(&original, bytes).unwrap();
@@ -164,8 +169,8 @@ fn plusplus_migration_respects_own_ng_file_and_storage_race_without_reading_mast
     let mut storage = super::super::tests::MemoryStorage::default();
     eframe::Storage::set_string(&mut storage, KEY, "invalid master record".into());
     let startup = NativeStartup::from_result(
-        profile,
-        NativeStartup::load(profile, dir.path(), &user, Some(&ng)),
+        document_storage,
+        NativeStartup::load(document_storage, dir.path(), &user, Some(&ng)),
     );
     let mut h = Harness::builder().build_eframe(|cc| {
         cc.storage = Some(&storage);
@@ -181,8 +186,8 @@ fn plusplus_migration_respects_own_ng_file_and_storage_race_without_reading_mast
         "invalid master record"
     );
     let startup = NativeStartup::from_result(
-        profile,
-        NativeStartup::load(profile, dir.path(), &user, Some(&ng)),
+        document_storage,
+        NativeStartup::load(document_storage, dir.path(), &user, Some(&ng)),
     );
     eframe::Storage::set_string(
         &mut storage,
@@ -202,7 +207,7 @@ fn plusplus_migration_respects_own_ng_file_and_storage_race_without_reading_mast
     for contents in [saved.as_bytes(), b"invalid own NG file".as_slice()] {
         std::fs::write(&ng, contents).unwrap();
         assert!(
-            NativeStartup::load(profile, dir.path(), &user, Some(&ng))
+            NativeStartup::load(document_storage, dir.path(), &user, Some(&ng))
                 .unwrap()
                 .is_none()
         );

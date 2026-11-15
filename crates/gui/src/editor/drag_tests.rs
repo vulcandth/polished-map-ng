@@ -118,7 +118,7 @@ fn pixels(h: &Harness<'_, Editor>, roof: bool, id: usize) -> [u8; 64] {
         .as_ref()
         .unwrap()
         .draft
-        .master()
+        .classic()
         .unwrap();
     *if roof {
         &draft.roof().unwrap().roof().tileset().tiles()[id]

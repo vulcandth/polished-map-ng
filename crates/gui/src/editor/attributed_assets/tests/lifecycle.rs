@@ -101,7 +101,7 @@ fn plusplus_new_map_create_save_close_and_reopen_reuses_shared_workflow() {
     h.key_press_modifiers(egui::Modifiers::COMMAND, egui::Key::N);
     h.run();
     let form = h.state().open_form.as_ref().unwrap();
-    assert!(form.new_map && form.profile == documents::Storage::Attributed);
+    assert!(form.new_map && form.storage == documents::Storage::Attributed);
     assert_eq!((form.width, form.height), (10, 9));
     assert!(form.path.ends_with("NewMap.ablk"));
     h.get_by_label("Width").set_value_accesskit(3.0);

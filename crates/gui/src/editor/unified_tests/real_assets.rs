@@ -182,17 +182,17 @@ fn edit_pixels(h: &mut Harness<'_, Editor>, roof: bool) {
 }
 
 fn edit_blocks(h: &mut Harness<'_, Editor>, before: &Assets) {
-    let profile = h.state().storage();
+    let storage = h.state().storage();
     crate::editor::block_workflow_tests::open_block(h, 0);
     let id = if before.blocks[0] == 0 { 1 } else { 0 };
-    let label = if profile == Storage::Attributed {
+    let label = if storage == Storage::Attributed {
         format!("Tile $0:{id:02X}")
     } else {
         format!("Tile ${id:02X}")
     };
     h.get_by_label(&label).click();
     h.run();
-    if profile == Storage::Attributed {
+    if storage == Storage::Attributed {
         h.key_press_modifiers(egui::Modifiers::ALT, egui::Key::Num8);
         h.run();
         h.key_press_modifiers(egui::Modifiers::ALT, egui::Key::X);
@@ -203,7 +203,7 @@ fn edit_blocks(h: &mut Harness<'_, Editor>, before: &Assets) {
     h.get_by_label("OK").click();
     h.run();
     assert_eq!(assets(h).blocks[0], id);
-    if profile == Storage::Attributed {
+    if storage == Storage::Attributed {
         assert_eq!(assets(h).attributes[0], 0x27);
     }
     if let Some(rows) = &before.collisions {
@@ -328,16 +328,16 @@ fn assert_assets(h: &Harness<'_, Editor>, expected: &Assets, label: &str) {
 #[ignore = "requires all five pinned project fixture environment variables"]
 fn unified_pinned_projects_asset_edits_save_and_reopen_without_touching_fixtures() {
     let mut h = editor();
-    for (variable, name, extension, profile) in PINNED_PROJECTS {
+    for (variable, name, extension, storage) in PINNED_PROJECTS {
         let root = PathBuf::from(std::env::var_os(variable).expect("set pinned project fixture"));
         let copy = tempfile::tempdir().unwrap();
         let originals = copy_inputs(&root, copy.path());
         let path = copy.path().join(format!("maps/{name}.{extension}"));
         let map_bytes = fs::read(&path).unwrap();
-        open(&mut h, &path, profile);
+        open(&mut h, &path, storage);
         select_roof(&mut h, name);
         let expected = edit_assets(&mut h, copy.path());
-        open(&mut h, &path, profile);
+        open(&mut h, &path, storage);
         select_roof(&mut h, name);
         assert_assets(&h, &expected, variable);
         assert_eq!(
@@ -391,7 +391,7 @@ fn unified_pinned_projects_cross_storage_asset_saves_follow_selected_context() {
         "data/tilesets/johto_metatiles.bin",
         "data/tilesets/johto_collision.asm",
     ];
-    for (from, to, profile, untouched) in [
+    for (from, to, storage, untouched) in [
         (
             "johto",
             "johto_traditional.johto_common",
@@ -412,7 +412,7 @@ fn unified_pinned_projects_cross_storage_asset_saves_follow_selected_context() {
         choose_tileset(&mut h, from, to);
         assert!(h.state().error.is_none(), "{:?}", h.state().error);
         assert!(
-            h.state().storage() == profile,
+            h.state().storage() == storage,
             "{from} -> {to}: status={}, dirty_guard={}, chooser={}, roof={}, warning={:?}",
             h.state().status,
             h.state().confirm_tileset_change,
@@ -445,12 +445,12 @@ fn unified_pinned_projects_cross_storage_asset_saves_follow_selected_context() {
         let filename = format!(
             "Mixed.2x1.{}.{}",
             to.split('.').next().unwrap(),
-            profile.extension()
+            storage.extension()
         );
         assert_eq!(suggested.file_name().unwrap(), filename.as_str());
         let path = root.join("maps").join(suggested.file_name().unwrap());
         document.save_as(&path).unwrap();
-        open(&mut h, &path, profile);
+        open(&mut h, &path, storage);
         select_roof(&mut h, "NewBarkTown");
         assert_assets(&h, &expected, to);
         assert_eq!(fs::read(&path).unwrap(), [1, 1]);

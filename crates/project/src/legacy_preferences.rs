@@ -10,26 +10,37 @@ const MAX_BYTES: usize = 4 * 1024 * 1024;
 const FILE_NAME: &str = "Polished Map.prefs";
 
 #[derive(Debug, thiserror::Error)]
+/// Failure to locate, read, or decode the original FLTK preference store.
 pub enum LegacyPreferenceError {
     #[error("could not read legacy preferences: {0}")]
+    /// A bounded source read failed.
     Read(#[from] crate::ProjectError),
     #[error("could not inspect legacy preference path: {0}")]
+    /// Inspecting candidate preference paths failed.
     Io(#[from] std::io::Error),
     #[error("invalid legacy preferences: {0}")]
+    /// The file or requested value violates the supported FLTK format.
     Invalid(&'static str),
 }
 
 /// Source platform paths, supplied explicitly so discovery is testable without
 /// changing process environment or reading the real user's settings.
 pub enum LegacyUserLocation {
+    /// Windows roaming application-data location.
     Windows {
+        /// Roaming AppData directory, if known.
         roaming_appdata: Option<PathBuf>,
     },
+    /// macOS user-home location.
     Mac {
+        /// User home directory, if known.
         home: Option<PathBuf>,
     },
+    /// Unix user-home and XDG configuration locations.
     Unix {
+        /// User home directory, if known.
         home: Option<PathBuf>,
+        /// Explicit XDG config directory; otherwise the home fallback applies.
         xdg_config_home: Option<PathBuf>,
     },
 }
@@ -155,10 +166,19 @@ fn expand_home(path: &Path, home: Option<&Path>) -> PathBuf {
 pub struct LegacyPreferences(BTreeMap<String, Vec<u8>>);
 
 impl LegacyPreferences {
+    /// Read and parse a preference file without modifying it.
+    ///
+    /// # Errors
+    /// I/O, a file above four MiB, or unsupported FLTK syntax returns an error.
     pub fn read(path: &Path) -> Result<Self, LegacyPreferenceError> {
         Self::parse(&crate::read_bounded(path, MAX_BYTES)?)
     }
 
+    /// Decode root-group preferences with FLTK continuation rules.
+    ///
+    /// # Errors
+    /// Rejects oversized/NUL-containing input, invalid headers, long physical
+    /// lines, malformed groups/keys and orphan continuations.
     pub fn parse(bytes: &[u8]) -> Result<Self, LegacyPreferenceError> {
         use LegacyPreferenceError::Invalid;
         if bytes.len() > MAX_BYTES || bytes.contains(&0) {
@@ -223,6 +243,10 @@ impl LegacyPreferences {
         Ok(result)
     }
 
+    /// Read an `atoi`-style decimal prefix, using `default` for absent keys.
+    ///
+    /// Nonnumeric values yield zero. A prefix outside the `i32` range returns
+    /// an error instead of overflowing.
     pub fn integer(&self, key: &str, default: i32) -> Result<i32, LegacyPreferenceError> {
         let Some(raw) = self.0.get(key) else {
             return Ok(default);
@@ -243,6 +267,11 @@ impl LegacyPreferences {
             .ok_or(LegacyPreferenceError::Invalid("integer overflow"))
     }
 
+    /// Decode an escaped recent-file path; missing/empty values return `None`.
+    ///
+    /// # Errors
+    /// Rejects malformed escapes, NULs, and non-UTF-8 Windows paths. Unix
+    /// paths preserve native bytes.
     pub fn path(&self, key: &str) -> Result<Option<PathBuf>, LegacyPreferenceError> {
         let Some(raw) = self.0.get(key) else {
             return Ok(None);

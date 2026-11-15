@@ -299,31 +299,31 @@ pub(super) fn config() -> egui::containers::menu::MenuConfig {
 }
 
 pub(super) fn menu<R>(ui: &mut egui::Ui, name: &str, contents: impl FnOnce(&mut egui::Ui) -> R) {
-    menu_for_profile(ui, name, documents::Storage::Classic, contents);
+    menu_for_storage(ui, name, documents::Storage::Classic, contents);
 }
 
-pub(super) fn menu_for_profile<R>(
+pub(super) fn menu_for_storage<R>(
     ui: &mut egui::Ui,
     name: &str,
-    profile: documents::Storage,
+    storage: documents::Storage,
     contents: impl FnOnce(&mut egui::Ui) -> R,
 ) {
-    menu_with_specs(ui, name, specs::group_for_profile(name, profile), contents);
+    menu_with_specs(ui, name, specs::group_for_storage(name, storage), contents);
 }
 
 pub(super) fn options_menu<R>(
     ui: &mut egui::Ui,
     unified: bool,
-    profile: documents::Storage,
+    storage: documents::Storage,
     contents: impl FnOnce(&mut egui::Ui) -> R,
 ) {
     if !unified {
-        return menu_for_profile(ui, "Options", profile, contents);
+        return menu_for_storage(ui, "Options", storage, contents);
     }
     let mut items = specs::group("Options")[..3].to_vec();
     items[2].divider = true;
     items.extend_from_slice(
-        &specs::group_for_profile("Options", documents::Storage::Attributed)[..2],
+        &specs::group_for_storage("Options", documents::Storage::Attributed)[..2],
     );
     items[4].divider = true;
     items.extend_from_slice(&specs::group("Options")[3..]);

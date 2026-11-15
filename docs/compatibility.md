@@ -112,17 +112,29 @@ test baselines are retained. The extended event catalog is independent of
 attribute storage. GUI state/startup/frame handling, event canvas/forms, tile
 clipboard/dialogs and CLI parsing/execution/JSON records have distinct owners.
 
+Shared file services/errors are separate from the map lifecycle. Attributed
+block persistence has its own feature module, and the GUI uses the shared event
+document directly after catalog selection. Typed map/palette adapters retain
+their actual format constraints. Private storage and tile-draft names no longer
+use the old branch terminology; compatibility names and provenance remain.
+
 Rustdoc checks links, markup and crate landing pages in public and private builds.
-Documented entry-point surfaces also deny missing item documentation; remaining
-older core/project coverage belongs to A1. Examples exercise map history and bank
-addressing, and compile a read-only discovery workflow. This review changes code
-organization and documentation, not format semantics or native acceptance status.
+Every public library item, field and variant now has documentation, enforced by
+`deny(missing_docs)` at all four library roots. Examples exercise map history,
+bank addressing, RGB edits and source-preserving event edits, and compile guarded
+Save As and read-only discovery workflows. A1 still owns API stabilization.
+The review preserves valid-input format semantics and native acceptance status;
+the direct PNG helper's malformed-buffer correction is recorded in
+[deviations](deviations.md#initial-release-input-robustness-corrections).
 
 Verification on Windows: workspace format/Clippy/tests/doctests, GUI Clippy with
 all features, strict public/private rustdoc, production native-adapter features,
 documentation links, packaging-tool tests and asset/vendor provenance checks
-passed. Function-body comparison accounted for moves/private renames and the
-consolidated application-identity helpers; rendering baselines were unchanged.
+passed, including 565 tests/doctests with 54 opt-in tests skipped. Function-body
+and diff review accounted for moves/private renames, the removed event forwarding
+enum, formatting, and shared RGB validation; rendering baselines were unchanged.
+The PNG regression verifies invalid data cannot truncate an existing destination
+or create a new one, while valid large-image output still decodes exactly.
 Fixture/native tests remain opt-in, and no desktop acceptance campaign was run.
 
 ## Master source inventory

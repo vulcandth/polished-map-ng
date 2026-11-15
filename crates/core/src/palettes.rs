@@ -9,17 +9,25 @@ pub use edit::{ColorSlot, PaletteCommand, PaletteError};
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[repr(usize)]
+/// Time-of-day or environment selection within a [`PaletteBank`].
 pub enum PaletteSet {
+    /// Morning colors.
     Morn,
     #[default]
+    /// Daytime colors, selected by default.
     Day,
+    /// Nighttime colors.
     Nite,
+    /// Unlit environment colors.
     Darkness,
+    /// Indoor colors.
     Indoor,
+    /// Custom colors from a single-set palette file.
     Custom,
 }
 
 impl PaletteSet {
+    /// All sets in palette export order.
     pub const ALL: [Self; 6] = [
         Self::Morn,
         Self::Day,
@@ -31,6 +39,21 @@ impl PaletteSet {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+/// Six sets of nine palettes: eight game palettes and one monochrome palette.
+///
+/// Colors use RGB8 and internal white/dark/light/black hue order. The default
+/// bank expands the pinned upstream RGB5 values with `channel * 33 / 4`.
+///
+/// ```
+/// use polished_map_core::{ColorSlot, PaletteBank, PaletteCommand, PaletteSet};
+/// let mut colors = PaletteBank::default();
+/// let slot = ColorSlot { set: PaletteSet::Day, palette: 0, hue: 2 };
+/// colors.edit(&[PaletteCommand::Hex { slot, value: "123456".into() }])?;
+/// assert_eq!(colors.color(slot)?, [0x12, 0x34, 0x56]);
+/// // RGB8 values stay exact in memory; game exports quantize them to RGB5.
+/// assert!(!colors.export_rgb(false).is_empty());
+/// # Ok::<(), polished_map_core::PaletteError>(())
+/// ```
 pub struct PaletteBank {
     colors: [[Palette; 9]; 6],
 }
@@ -46,6 +69,7 @@ impl Default for PaletteBank {
 }
 
 impl PaletteBank {
+    /// The eight game palettes followed by the monochrome palette for a set.
     pub fn colors(&self, set: PaletteSet) -> &[Palette; 9] {
         &self.colors[set as usize]
     }

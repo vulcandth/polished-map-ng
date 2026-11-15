@@ -15,8 +15,8 @@ fn restore(storage: &dyn Storage) -> Harness<'_, Editor> {
 #[test]
 fn plusplus_restart_restores_own_options_and_recent_files_without_master_state() {
     let mut storage = tests::MemoryStorage::default();
-    let master = r#"{"version":1,"dark":true,"monochrome":true,"allow_256":true,"recent_maps":[{"utf8":"master.blk"}]}"#;
-    storage.set_string(KEY, master.into());
+    let classic = r#"{"version":1,"dark":true,"monochrome":true,"allow_256":true,"recent_maps":[{"utf8":"master.blk"}]}"#;
+    storage.set_string(KEY, classic.into());
     let mut h = restore(&storage);
     assert!(h.state().storage() == documents::Storage::Attributed);
     assert!(!h.state().dark && !h.state().monochrome && !h.state().allow_256);
@@ -46,7 +46,7 @@ fn plusplus_restart_restores_own_options_and_recent_files_without_master_state()
     let mut editor = std::mem::take(h.state_mut());
     drop(h);
     eframe::App::save(&mut editor, &mut storage);
-    assert_eq!(storage.get_string(KEY).unwrap(), master);
+    assert_eq!(storage.get_string(KEY).unwrap(), classic);
     let serialized = storage.get_string(PLUSPLUS_KEY).unwrap();
     let value: serde_json::Value = serde_json::from_str(&serialized).unwrap();
     assert_eq!(value["allow_512"], true);

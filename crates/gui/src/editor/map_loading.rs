@@ -44,9 +44,9 @@ impl Loaded {
     ) -> LoadResult {
         let roof_layout = Some(settings.graphics.roof_layout);
         let selected_tileset = form.unified.then(|| form.tileset.clone());
-        let mut loaded = match (form.profile, palettes) {
+        let mut loaded = match (form.storage, palettes) {
             (documents::Storage::Classic, documents::PaletteDocument::Classic(palettes)) => {
-                Self::open_master(form, palettes, settings.graphics, settings.auto_events)
+                Self::open_classic(form, palettes, settings.graphics, settings.auto_events)
                     .map_err(|e| e.to_string())
             }
             (documents::Storage::Attributed, documents::PaletteDocument::Attributed(palettes)) => {
@@ -79,7 +79,7 @@ impl Loaded {
         Ok(loaded)
     }
 
-    fn open_master(
+    fn open_classic(
         form: OpenForm,
         palettes: polished_map_project::PaletteDocument,
         mut options: MasterGraphicsOptions,

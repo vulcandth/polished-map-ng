@@ -9,14 +9,20 @@ pub struct Roof {
 }
 
 impl Roof {
+    /// Construct nine roof tiles with validated palette attributes.
+    ///
+    /// # Errors
+    /// Returns a palette error for an unsupported attribute encoding.
     pub fn new(tiles: [Tile; 9], attributes: [u8; 9]) -> Result<Self, TilesetError> {
         Ok(Self {
             model: Tileset::new(tiles.into(), attributes.into())?,
         })
     }
+    /// Read the nine-tile model, including its dirty flag and palette attributes.
     pub fn tileset(&self) -> &Tileset {
         &self.model
     }
+    /// Clear the dirty flag after successful persistence.
     pub fn mark_saved(&mut self) {
         self.model.mark_saved();
     }
@@ -37,6 +43,11 @@ impl Roof {
         }
         Ok(())
     }
+    /// Apply roof edits atomically. RGB imports clip to the selected 8×8 tile.
+    ///
+    /// # Errors
+    /// Rejects palette assignment and deletion, invalid tile indices, pixel
+    /// coordinates, hues, or RGB layouts. No edits survive a failed batch.
     pub fn apply_batch(&mut self, commands: &[TileCommand]) -> Result<(), TilesetError> {
         let mut draft = self.clone();
         for command in commands {
@@ -81,6 +92,7 @@ impl Roof {
         *self = draft;
         Ok(())
     }
+    /// Render a 24×24 grayscale RGB image in file order (three tiles per row).
     pub fn export(&self) -> RgbImage {
         let mut pixels = vec![255; 24 * 24 * 3];
         for (i, tile) in self.model.tiles().iter().enumerate() {

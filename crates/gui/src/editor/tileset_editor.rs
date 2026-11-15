@@ -79,7 +79,7 @@ impl TilesetForm {
         if !self.refresh {
             return Ok(());
         }
-        let height = if self.draft.is_plus() && !self.roof {
+        let height = if self.draft.is_attributed() && !self.roof {
             256
         } else {
             128
@@ -213,7 +213,7 @@ impl TilesetForm {
                     .position(|&k| k == key)
                     {
                         if modifiers.alt
-                            && self.draft.master().is_some_and(|d| !d.monochrome())
+                            && self.draft.classic().is_some_and(|d| !d.monochrome())
                             && !self.roof
                         {
                             let priority = self.draft.attribute(self.selected).unwrap_or(0) & 0x80;
@@ -260,9 +260,9 @@ impl Editor {
         let draft = if let Some(assets) = &loaded.attributed_assets {
             if roof {
                 let Some(doc) = &assets.roof else { return };
-                Draft::PlusRoof(Box::new(doc.clone()))
+                Draft::AttributedRoof(Box::new(doc.clone()))
             } else {
-                Draft::PlusTiles {
+                Draft::AttributedTiles {
                     document: Box::new(assets.tiles.clone()),
                     allow_512: assets.allow_512,
                     order: assets.order,
@@ -272,14 +272,14 @@ impl Editor {
             if roof && doc.roof().is_none() {
                 return;
             }
-            Draft::Master {
+            Draft::Classic {
                 document: Box::new(doc.clone()),
                 roof,
             }
         } else {
             return;
         };
-        let show_priority = self.show_priority && !roof && !draft.is_plus();
+        let show_priority = self.show_priority && !roof && !draft.is_attributed();
         self.tileset_form = Some(TilesetForm {
             draft,
             selected: if roof { 6 } else { 0 },
@@ -318,19 +318,19 @@ impl Editor {
         // Upstream accepts the complete draft and marks dirty even without edits.
         let value = form.draft.snapshot(0)?;
         form.draft.set_snapshot(0, value)?;
-        let profile = if form.draft.is_plus() {
+        let storage = if form.draft.is_attributed() {
             documents::Storage::Attributed
         } else {
             documents::Storage::Classic
         };
-        if loaded.document.storage() != profile
-            || loaded.graphics.storage() != profile
-            || !self.application.accepts(profile)
+        if loaded.document.storage() != storage
+            || loaded.graphics.storage() != storage
+            || !self.application.accepts(storage)
         {
             return Err("Tile draft belongs to another editor profile".into());
         }
         let graphics: MapGraphics = match &form.draft {
-            Draft::Master { document, .. } => document
+            Draft::Classic { document, .. } => document
                 .graphics(
                     loaded
                         .blockset
@@ -340,7 +340,7 @@ impl Editor {
                 )
                 .map_err(|e| e.to_string())?
                 .into(),
-            Draft::PlusTiles { document, .. } => {
+            Draft::AttributedTiles { document, .. } => {
                 let assets = loaded
                     .attributed_assets
                     .as_ref()
@@ -355,7 +355,7 @@ impl Editor {
                     None => g.into(),
                 }
             }
-            Draft::PlusRoof(roof) => {
+            Draft::AttributedRoof(roof) => {
                 let assets = loaded
                     .attributed_assets
                     .as_ref()
@@ -373,15 +373,15 @@ impl Editor {
         };
         let textures = documents::block_textures(ctx, &graphics)?;
         match &form.draft {
-            Draft::Master { document, .. } => loaded.tileset = Some(document.as_ref().clone()),
-            Draft::PlusTiles { document, .. } => {
+            Draft::Classic { document, .. } => loaded.tileset = Some(document.as_ref().clone()),
+            Draft::AttributedTiles { document, .. } => {
                 loaded
                     .attributed_assets
                     .as_mut()
                     .ok_or("No plusplus assets")?
                     .tiles = document.as_ref().clone()
             }
-            Draft::PlusRoof(document) => {
+            Draft::AttributedRoof(document) => {
                 loaded
                     .attributed_assets
                     .as_mut()

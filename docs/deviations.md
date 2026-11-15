@@ -11,6 +11,14 @@ and verification/status in [compatibility](compatibility.md) and the [roadmap](r
 
 ## Initial-release input robustness corrections
 
+The public direct PNG writer validates RGB dimensions and byte count before
+opening the destination. Previously an invalid caller-constructed `RgbImage`
+could truncate an existing file and then panic inside the image encoder. It now
+returns a format error and leaves the destination untouched. Valid PNG bytes
+and large-image support are unchanged; this compatibility writer still replaces
+files directly. Use the guarded PNG export APIs for staged publication.
+Evidence: [PNG export regressions](../crates/project/tests/png_export.rs).
+
 Palette-map saves ignore commas inside comments when identifying `tilepal`
 rows, consistently with the decoder. A line such as `tilepal ; unused, RED`
 previously contributed a spurious row during a same-length palette edit and

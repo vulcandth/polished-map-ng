@@ -30,12 +30,15 @@ pub struct WarpDigit {
     x: u8,
 }
 impl WarpDigit {
+    /// Numeric digit value in 0..=15.
     pub fn value(self) -> u8 {
         self.value
     }
+    /// Horizontal offset in pixels from the event marker origin.
     pub fn x(self) -> u8 {
         self.x
     }
+    /// Vertical offset in pixels from the event marker origin.
     pub fn y(self) -> u8 {
         8
     }
@@ -46,6 +49,7 @@ impl WarpDigit {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+/// A nonzero warp ID rendered in decimal or hexadecimal.
 pub struct WarpIdLabel {
     id: std::num::NonZeroUsize,
     hex: bool,

@@ -48,19 +48,36 @@ impl Rules {
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
+/// Discovered source metadata and the currently selected tileset.
+///
+/// Missing source fields remain empty/`None`; discovery does not evaluate
+/// arbitrary assembly or establish that a game project builds successfully.
 pub struct MapMetadata {
+    /// Explicit or discovered project directory.
     pub root: Option<PathBuf>,
+    /// Map name derived from the filename before its first dot.
     pub name: String,
+    /// Assembly map constant derived from the name.
     pub constant: String,
+    /// Discovered width and height in blocks, if available.
     pub dimensions: Option<(u16, u16)>,
+    /// File that supplied the selected dimensions.
     pub dimensions_source: Option<PathBuf>,
+    /// Discovered map-group number; zero is the fallback.
     pub group: usize,
+    /// Unresolved tileset hint from filename or metadata.
     pub tileset_hint: Option<String>,
+    /// Resolved or explicitly selected asset name.
     pub tileset: Option<String>,
+    /// Names available under the selected discovery rules.
     pub available_tilesets: Vec<String>,
+    /// Map-header file supplying environment and palette context.
     pub header_source: Option<PathBuf>,
+    /// Assembly environment token, or an empty string when absent.
     pub environment: String,
+    /// Assembly landmark token, or an empty string when absent.
     pub landmark: String,
+    /// Assembly palette-selection token, or an empty string when absent.
     pub palette: String,
 }
 
@@ -443,7 +460,9 @@ fn tileset_stems(root: &Path, rules: Rules) -> Result<Vec<String>, ProjectError>
 /// A selector label may decorate a numbered file; always load/save using `name`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct TilesetChoice {
+    /// Exact asset name used for loading.
     pub name: String,
+    /// Human-readable menu label including any discovered annotation.
     pub label: String,
 }
 
@@ -467,9 +486,11 @@ impl TilesetOptions {
         self.matched.map(|i| self.choices[i].name.as_str())
     }
 
+    /// Available tilesets in discovery order, with UI labels.
     pub fn choices(&self) -> &[TilesetChoice] {
         &self.choices
     }
+    /// Zero-based selected choice index, or `None` when no hint resolved.
     pub fn selected(&self) -> Option<usize> {
         self.matched
             .or_else(|| (!self.choices.is_empty()).then_some(0))

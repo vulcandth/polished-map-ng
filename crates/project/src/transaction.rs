@@ -2,7 +2,7 @@
 //! transaction: each replacement is atomic, and external writers must still be checked.
 use crate::{
     ProjectError,
-    document::{optional_hash, persist_bytes},
+    file_io::{optional_hash, persist_bytes},
     read_bounded,
 };
 use serde::Serialize;

@@ -83,11 +83,11 @@ impl OpenForm {
             }
             Err(error) => self.roof_layout_note = format!("Could not infer roof palettes: {error}"),
         }
-        self.resolve_profile();
+        self.resolve_storage();
         Ok(())
     }
 
-    pub(super) fn resolve_profile(&mut self) {
+    pub(super) fn resolve_storage(&mut self) {
         let path = if self.new_map {
             self.path.with_extension("")
         } else {
@@ -99,8 +99,8 @@ impl OpenForm {
             (!self.tileset.is_empty()).then_some(self.tileset.as_str()),
         ) {
             Ok(detected) => {
-                self.profile = detected.format().into();
-                self.detected_context = match self.profile {
+                self.storage = detected.format().into();
+                self.detected_context = match self.storage {
                     documents::Storage::Attributed => {
                         "Per-block attributes · 512-tile capacity (Polished Crystal style)"
                     }

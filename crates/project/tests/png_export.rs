@@ -4,6 +4,46 @@ use polished_map_project::{prepare_png_export, write_png_export};
 use std::fs;
 
 #[test]
+fn direct_png_writer_validates_before_touching_the_destination() {
+    use polished_map_project::write_png;
+    let dir = tempfile::tempdir().unwrap();
+    let existing = dir.path().join("existing.png");
+    let absent = dir.path().join("absent.png");
+    fs::write(&existing, b"keep existing bytes").unwrap();
+    for (width, height, pixels) in [
+        (0, 1, vec![]),
+        (1, 0, vec![]),
+        (2, 1, vec![0; 3]),
+        (1, 1, vec![0; 4]),
+        (u32::MAX, u32::MAX, vec![]),
+    ] {
+        let raster = RgbImage {
+            width,
+            height,
+            pixels,
+        };
+        for path in [&existing, &absent] {
+            assert!(matches!(
+                write_png(path, &raster),
+                Err(ProjectError::Format { .. })
+            ));
+        }
+        assert_eq!(fs::read(&existing).unwrap(), b"keep existing bytes");
+        assert!(!absent.exists());
+    }
+    // The direct compatibility helper retains its existing large-image support.
+    let raster = RgbImage {
+        width: 8161,
+        height: 1,
+        pixels: vec![42; 8161 * 3],
+    };
+    write_png(&existing, &raster).unwrap();
+    let decoded = image::open(&existing).unwrap().to_rgb8();
+    assert_eq!(decoded.dimensions(), (8161, 1));
+    assert_eq!(decoded.as_raw(), &raster.pixels);
+}
+
+#[test]
 fn png_creation_is_complete_and_never_clobbers_an_existing_destination() {
     let dir = tempfile::tempdir().unwrap();
     let path = dir.path().join("print.png");

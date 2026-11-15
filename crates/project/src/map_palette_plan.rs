@@ -36,6 +36,10 @@ pub struct MapPalettePlan {
 }
 
 impl MapPalettePlan {
+    /// Prepare contextual imports using the map’s discovery rules.
+    ///
+    /// # Errors
+    /// Rejects invalid tileset names, missing project roots, or path-resolution errors.
     pub fn for_map(
         doc: &MapDocument,
         tileset: &str,
@@ -132,6 +136,7 @@ impl MapPalettePlan {
             rules: doc.rules(),
         })
     }
+    /// Whether all import and automatic-selection steps have been processed.
     pub fn is_finished(&self) -> bool {
         self.steps.is_empty()
     }

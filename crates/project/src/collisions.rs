@@ -1,6 +1,6 @@
 //! Master config.cpp collision precedence and metatileset.cpp row semantics.
 //! Preserve untouched ASM lines and suffix data instead of rewriting unrelated source.
-use crate::{ProjectError, SaveTarget, document::prepare_target, read_bounded};
+use crate::{ProjectError, SaveTarget, file_io::prepare_target, read_bounded};
 use polished_map_core::CollisionRow;
 use sha2::{Digest, Sha256};
 use std::{
@@ -25,6 +25,12 @@ pub(crate) struct CollisionDocument {
     binary: bool,
 }
 
+/// Observe a collision destination while retaining binary or assembly encoding.
+///
+/// Missing suffixes default to `.bin` or `.asm` according to `binary`.
+///
+/// # Errors
+/// Rejects incompatible extensions and failed path/content observation.
 pub fn prepare_collision_save_as(path: &Path, binary: bool) -> Result<SaveTarget, ProjectError> {
     let path = if path.extension().is_none() {
         path.with_extension(if binary { "bin" } else { "asm" })

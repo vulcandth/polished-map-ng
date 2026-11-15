@@ -9,12 +9,16 @@ use std::sync::Arc;
 /// Platform-specific native font discovery policy.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum FontPlatform {
+    /// Windows UI/message-box and monospace preference order.
     Windows,
+    /// macOS system UI and native monospace fallbacks.
     Mac,
+    /// Unix installed-font and FLTK fallback order.
     Unix,
 }
 
 impl FontPlatform {
+    /// Select the discovery policy for the compilation target.
     pub const fn current() -> Self {
         if cfg!(windows) {
             Self::Windows
@@ -37,18 +41,22 @@ pub struct NativeFontFace {
 }
 
 impl NativeFontFace {
+    /// Share the complete font bytes without copying them.
     pub fn data(&self) -> Arc<dyn AsRef<[u8]> + Send + Sync> {
         Arc::clone(&self.data)
     }
 
+    /// Zero-based face index within the shared font collection.
     pub fn index(&self) -> u32 {
         self.index
     }
 
+    /// Selected installed family name.
     pub fn family(&self) -> &str {
         &self.family
     }
 
+    /// OpenType axis tags and design-space coordinates for this face.
     pub fn variations(&self) -> &[([u8; 4], f32)] {
         &self.variations
     }
@@ -64,9 +72,13 @@ impl NativeFontFace {
 /// should report that native matching was unavailable. No display is required.
 pub struct NativeFonts {
     platform: FontPlatform,
+    /// Regular user-interface face, if available.
     pub ui: Option<NativeFontFace>,
+    /// Regular monospace face for editor numbers and source fields.
     pub mono: Option<NativeFontFace>,
+    /// Bold monospace face for IDs and Print.
     pub mono_bold: Option<NativeFontFace>,
+    /// Bold sans-serif face for event labels and Print.
     pub sans_bold: Option<NativeFontFace>,
 }
 
@@ -116,6 +128,7 @@ impl NativeFonts {
         }
     }
 
+    /// Whether Windows discovery selected Consolas for the regular monospace role.
     pub fn is_consolas(&self) -> bool {
         self.platform == FontPlatform::Windows
             && self

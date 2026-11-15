@@ -32,7 +32,7 @@ impl Editor {
                     "Edit Tileset"
                 },
             );
-            let plus = form.draft.is_plus();
+            let plus = form.draft.is_attributed();
             let size = if form.roof {
                 Vec2::new(226.0, 228.0)
             } else if plus {
@@ -292,14 +292,14 @@ impl Editor {
                     super::block_editor::selection_border(ui, cell);
                 }
             }
-            if !form.roof && !form.draft.is_plus() {
+            if !form.roof && !form.draft.is_attributed() {
                 let attribute = form.draft.attribute(form.selected).expect("master tile");
                 let mut palette = attribute & 15;
                 let mut priority = attribute & 0x80 != 0;
                 ui.scope_builder(
                     egui::UiBuilder::new().max_rect(rect(278.0, 192.0, 146.0, 22.0)),
                     |ui| {
-                        ui.add_enabled_ui(!form.draft.master().unwrap().monochrome(), |ui| {
+                        ui.add_enabled_ui(!form.draft.classic().unwrap().monochrome(), |ui| {
                             ui.horizontal(|ui| {
                                 let label = ui.label("Palette:");
                                 egui::ComboBox::from_id_salt("tile-palette")
@@ -320,8 +320,8 @@ impl Editor {
                     egui::UiBuilder::new().max_rect(rect(278.0, 218.0, 178.0, 22.0)),
                     |ui| {
                         ui.add_enabled_ui(
-                            !form.draft.master().unwrap().monochrome()
-                                && form.draft.master().unwrap().allow_priority()
+                            !form.draft.classic().unwrap().monochrome()
+                                && form.draft.classic().unwrap().allow_priority()
                                 && palette < 8,
                             |ui| {
                                 ui.checkbox(&mut priority, "Priority (above sprites)");

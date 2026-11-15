@@ -16,12 +16,15 @@ pub struct PngExportTarget {
 }
 
 impl PngExportTarget {
+    /// Resolved PNG destination after any extension addition.
     pub fn path(&self) -> &Path {
         self.observed.path()
     }
+    /// Whether the destination existed at observation time.
     pub fn exists(&self) -> bool {
         self.observed.exists()
     }
+    /// SHA-256 of the observed destination, or `None` when absent.
     pub fn content_hash(&self) -> Option<String> {
         self.observed.content_hash()
     }

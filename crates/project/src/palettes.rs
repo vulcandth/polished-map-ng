@@ -8,12 +8,18 @@ use crate::{MapDocument, ProjectError, read_bounded};
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
+/// Time/environment set ordering for each map group’s roof-color pairs.
 pub enum RoofPaletteLayout {
+    /// One custom pair.
     Custom,
     #[default]
+    /// Day and night pairs; morning reuses day.
     DayNite,
+    /// Separate morning, day and night pairs.
     MornDayNite,
+    /// Day, night and custom pairs; morning reuses day.
     DayNiteCustom,
+    /// Separate morning, day, night and custom pairs.
     MornDayNiteCustom,
 }
 
@@ -29,17 +35,28 @@ pub fn roof_palette_path(root: &Path) -> PathBuf {
 }
 
 #[derive(Clone, Debug)]
+/// Classic per-tile palette loading and rendering options.
+///
+/// The historical public type name is retained; unified editing also uses
+/// these options when the selected assets have per-tile palettes.
 pub struct MasterGraphicsOptions {
     /// PNG alpha handling; defaults to the host's original-platform behavior.
     pub png_platform: crate::PngPlatform,
+    /// Use all tile slots instead of reserved classic bank gaps.
     pub allow_256: bool,
     /// Session Tile Priority option; reading priority palette colors enables it too.
     pub allow_priority: bool,
+    /// Explicit display set, or automatic selection from metadata.
     pub palette: Option<PaletteSet>,
+    /// Use the dark-theme automatic palette fallback.
     pub dark_theme: bool,
+    /// Render through the monochrome palette instead of game palette attributes.
     pub monochrome: bool,
+    /// Import discovered map/landmark/tileset-specific palette files.
     pub special_palettes: bool,
+    /// Load map-group roof colors after base palette imports.
     pub roof_colors: bool,
+    /// Set ordering in the roof-color table.
     pub roof_layout: RoofPaletteLayout,
     /// Optional graphic replacement from gfx/tilesets/roofs (nine tiles).
     pub roof: Option<String>,
@@ -100,6 +117,11 @@ pub fn parse_rgb_colors(text: &str) -> Result<Vec<[u8; 3]>, String> {
     Ok(colors.to_vec())
 }
 
+/// Parse RGB5 assembly macros into RGB8 palettes in white/dark/light/black order.
+///
+/// # Errors
+/// Returns a diagnostic for invalid channels, partial triples, or incomplete
+/// four-color palettes. Unrecognized source lines are ignored.
 pub fn parse_rgb_palettes(text: &str) -> Result<Vec<Palette>, String> {
     let colors = parse_rgb_colors(text)?;
     let (palettes, trailing) = colors.as_chunks::<4>();

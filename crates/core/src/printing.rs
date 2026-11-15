@@ -12,10 +12,15 @@ use crate::{Events, Graphics, Map, PriorityPattern, RasterError, RgbImage, WarpI
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct PrintOptions {
+    /// Draw block boundaries.
     pub grid: bool,
+    /// Draw each block ID.
     pub ids: bool,
+    /// Overlay tile priority patterns.
     pub priority: bool,
+    /// Draw event markers and symbols.
     pub events: bool,
+    /// Draw warp IDs when event printing is enabled.
     pub warp_ids: bool,
 }
 
@@ -24,7 +29,9 @@ pub struct PrintOptions {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(default, deny_unknown_fields)]
 pub struct PrintStyle {
+    /// Use uppercase hexadecimal instead of decimal block IDs.
     pub hexadecimal_ids: bool,
+    /// RGB8 color for block boundaries.
     pub grid_rgb: [u8; 3],
 }
 impl Default for PrintStyle {
@@ -39,7 +46,9 @@ impl Default for PrintStyle {
 /// Native font requests in the original, both at logical size 14.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum PrintFont {
+    /// Monospaced bold block labels at logical size 14.
     CourierBold14,
+    /// Sans-serif bold event symbols at logical size 14.
     HelveticaBold14,
 }
 
@@ -89,32 +98,41 @@ impl PrintTextMask {
             offset,
         })
     }
+    /// Width of the ink bitmap in pixels.
     pub fn width(&self) -> u16 {
         self.width
     }
+    /// Height of the ink bitmap in pixels.
     pub fn height(&self) -> u16 {
         self.height
     }
+    /// Row-major alpha coverage; zero is transparent and 255 is opaque.
     pub fn coverage(&self) -> &[u8] {
         &self.coverage
     }
+    /// Line layout width and height in pixels, including ascent and descent.
     pub fn layout_size(&self) -> [u16; 2] {
         self.layout
     }
+    /// Signed ink offset from the layout rectangle’s top-left corner, in pixels.
     pub fn offset(&self) -> [i16; 2] {
         self.offset
     }
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
+/// Failure to render map pixels or obtain bounded text coverage.
 pub enum PrintError {
     #[error(transparent)]
+    /// The graphics renderer rejected the source data.
     Raster(#[from] RasterError),
     #[error(
         "invalid print text mask: ink/layout must be 1..=128 by 1..=64, offsets within +/-128 by +/-64, with one coverage byte per ink pixel"
     )]
+    /// Font coverage dimensions, byte count, or bearing exceed their bounds.
     TextMask,
     #[error("could not rasterize print text: {0}")]
+    /// The caller’s font rasterizer failed.
     Text(String),
 }
 

@@ -12,7 +12,7 @@ pub(super) const MENU_HEIGHT: f32 = 220.0;
 #[derive(Clone, PartialEq, Eq)]
 pub(super) struct Request {
     root: PathBuf,
-    profile: documents::Storage,
+    storage: documents::Storage,
     name: Option<String>,
     roof: bool,
     unified: bool,
@@ -22,7 +22,7 @@ impl Request {
     pub(super) fn new(editor: &Editor, name: Option<&str>, roof: bool) -> Option<Self> {
         Some(Self {
             root: editor.loaded.as_ref()?.tileset_location()?.0.to_owned(),
-            profile: editor.storage(),
+            storage: editor.storage(),
             name: name.map(str::to_owned),
             roof,
             unified: editor.application.is_unified(),
@@ -35,7 +35,7 @@ impl Request {
 
     fn read(&self) -> Result<egui::ColorImage, polished_map_project::ProjectError> {
         let name = self.name.as_deref().expect("named preview request");
-        let profile = if self.unified && !self.roof {
+        let storage = if self.unified && !self.roof {
             polished_map_project::detect_tileset_format(&self.root, name)
                 .map_err(|e| polished_map_project::ProjectError::Format {
                     path: self.root.join(name),
@@ -43,9 +43,9 @@ impl Request {
                 })?
                 .into()
         } else {
-            self.profile
+            self.storage
         };
-        let tiles = match (profile, self.roof) {
+        let tiles = match (storage, self.roof) {
             (documents::Storage::Classic, true) => {
                 let open = if self.unified {
                     polished_map_project::RoofDocument::open_unified_in_project
@@ -298,7 +298,7 @@ mod tests {
         let old = Request {
             unified: false,
             root: PathBuf::new(),
-            profile: documents::Storage::Classic,
+            storage: documents::Storage::Classic,
             name: Some("old".into()),
             roof: true,
         };

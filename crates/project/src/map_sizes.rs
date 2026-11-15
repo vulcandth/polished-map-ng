@@ -4,9 +4,10 @@ use std::path::Path;
 
 use polished_map_core::MapError;
 
-use crate::{ProjectError, document::decode_map_blocks, read_bounded};
+use crate::{ProjectError, map_document::decode_map_blocks, read_bounded};
 
 #[derive(Clone, Debug)]
+/// Candidate block-grid dimensions and a preferred choice for an open dialog.
 pub struct MapSizeOptions {
     block_count: usize,
     choices: Vec<(u16, u16)>,
@@ -59,14 +60,17 @@ impl MapSizeOptions {
         Ok(self)
     }
 
+    /// Number of decoded block IDs used to generate factor pairs.
     pub fn block_count(&self) -> usize {
         self.block_count
     }
 
+    /// Candidate `(width, height)` pairs in map blocks.
     pub fn choices(&self) -> &[(u16, u16)] {
         &self.choices
     }
 
+    /// Index of the preferred candidate, or `None` when no factor pair exists.
     pub fn selected(&self) -> Option<usize> {
         self.selected
     }

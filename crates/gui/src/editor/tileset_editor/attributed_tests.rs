@@ -673,16 +673,16 @@ fn roof_image_paste_clips_to_selected_tile_and_wrong_profile_accept_is_rejected(
             .is_err()
     );
     assert_eq!(form.draft.pixels(0), [0; 64]);
-    let (_master_dir, mut master) = crate::editor::tileset_editor_tests::fixture(false, false);
-    let ctx = master.ctx.clone();
+    let (_master_dir, mut classic) = crate::editor::tileset_editor_tests::fixture(false, false);
+    let ctx = classic.ctx.clone();
     assert!(
-        master
+        classic
             .state_mut()
             .accept_tileset(&ctx, &mut form)
             .unwrap_err()
             .contains("another editor profile")
     );
-    assert!(!master.state().is_modified());
+    assert!(!classic.state().is_modified());
 }
 
 #[cfg(feature = "visual-tests")]

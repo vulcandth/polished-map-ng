@@ -123,8 +123,9 @@ exist from day one; a partial slice is not a completed parity milestone.
   Rust module paths over path overrides or a second parallel source tree.
 - New public APIs need useful rustdoc, checked links and examples where they
   teach usage; explain error conditions and units/invariants. Do not add filler
-  comments solely to satisfy a lint. Keep strict documentation checks enabled;
-  expand `missing_docs` enforcement as older API documentation is completed.
+  comments solely to satisfy a lint. All library roots deny `missing_docs`;
+  preserve that enforcement and strict public/private rustdoc checks. Document
+  compatibility aliases as such instead of suggesting a second implementation.
 
 ## Verification
 

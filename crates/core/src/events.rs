@@ -7,40 +7,74 @@ use thiserror::Error;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+/// Recognized assembly event macros, including both legacy and extended catalogs.
+///
+/// Use [`crate::event_catalog`] for context-specific parsing; [`Self::ALL`] is
+/// the original classic catalog, not the union of all variants.
 pub enum EventKind {
+    /// The `warp` assembly macro.
     Warp,
+    /// The `sign` assembly macro.
     Sign,
+    /// The `object` assembly macro.
     Object,
+    /// The `warp_to` assembly macro.
     WarpTo,
+    /// The `warp_event` assembly macro.
     WarpEvent,
+    /// The `coord_event` assembly macro.
     CoordEvent,
+    /// The `bg_event` assembly macro.
     BgEvent,
+    /// The `object_event` assembly macro.
     ObjectEvent,
+    /// The `warp_def` assembly macro.
     WarpDef,
+    /// The `xy_trigger` assembly macro.
     XyTrigger,
+    /// The `signpost` assembly macro.
     Signpost,
+    /// The `person_event` assembly macro.
     PersonEvent,
+    /// The `dummy_warp` assembly macro.
     DummyWarp,
+    /// The `itemball_event` assembly macro.
     ItemballEvent,
+    /// The `keyitemball_event` assembly macro.
     KeyitemballEvent,
+    /// The `tmhmball_event` assembly macro.
     TmhmballEvent,
+    /// The `cuttree_event` assembly macro.
     CuttreeEvent,
+    /// The `fruittree_event` assembly macro.
     FruittreeEvent,
+    /// The `strengthboulder_event` assembly macro.
     StrengthboulderEvent,
+    /// The `smashrock_event` assembly macro.
     SmashrockEvent,
+    /// The `pc_nurse_event` assembly macro.
     PcNurseEvent,
+    /// The `mart_clerk_event` assembly macro.
     MartClerkEvent,
+    /// The `pokemon_event` assembly macro.
     PokemonEvent,
+    /// The `pc_chansey_event` assembly macro.
     PcChanseyEvent,
+    /// The `pc_blissey_event` assembly macro.
     PcBlisseyEvent,
+    /// The `cavebase_event` assembly macro.
     CavebaseEvent,
     #[serde(rename = "treebase_left_event_1")]
+    /// The `treebase_left_event_1` assembly macro.
     TreebaseLeftEvent1,
     #[serde(rename = "treebase_left_event_2")]
+    /// The `treebase_left_event_2` assembly macro.
     TreebaseLeftEvent2,
     #[serde(rename = "treebase_right_event_1")]
+    /// The `treebase_right_event_1` assembly macro.
     TreebaseRightEvent1,
     #[serde(rename = "treebase_right_event_2")]
+    /// The `treebase_right_event_2` assembly macro.
     TreebaseRightEvent2,
 }
 
@@ -86,6 +120,7 @@ impl EventKind {
         Self::PcNurseEvent,
         Self::MartClerkEvent,
     ];
+    /// Exact assembly macro spelling for this event kind.
     pub fn macro_name(self) -> &'static str {
         match self {
             Self::Warp => "warp",
@@ -120,27 +155,33 @@ impl EventKind {
             Self::TreebaseRightEvent2 => "treebase_right_event_2",
         }
     }
+    /// Look up a macro in the classic catalog; extended-only names return `None`.
     pub fn from_macro(name: &str) -> Option<Self> {
         Self::ALL.into_iter().find(|kind| kind.macro_name() == name)
     }
+    /// Whether the macro has an argument preceding its coordinates.
     pub fn has_prefix(self) -> bool {
         matches!(self, Self::Object | Self::XyTrigger | Self::PersonEvent)
     }
+    /// Whether assembly syntax stores the vertical coordinate before horizontal.
     pub fn y_first(self) -> bool {
         matches!(
             self,
             Self::WarpDef | Self::XyTrigger | Self::Signpost | Self::PersonEvent | Self::DummyWarp
         )
     }
+    /// Whether this kind receives a one-based warp ID and has a destination.
     pub fn is_warp(self) -> bool {
         matches!(
             self,
             Self::Warp | Self::WarpEvent | Self::WarpDef | Self::DummyWarp
         )
     }
+    /// Whether a warp stores destination ID before destination map name.
     pub fn id_before_map(self) -> bool {
         matches!(self, Self::Warp | Self::WarpDef)
     }
+    /// Single-character marker used by the canvas and print renderer.
     pub fn symbol(self) -> char {
         match self {
             Self::Warp | Self::WarpEvent | Self::WarpDef => 'W',
@@ -168,28 +209,37 @@ impl EventKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+/// Parsed event source fields. [`Events::new`] validates coordinates and syntax.
 pub struct EventDefinition {
+    /// Assembly macro kind.
     pub kind: EventKind,
+    /// Horizontal coordinate in 16-pixel event cells, -6..=249.
     pub x: i16,
+    /// Vertical coordinate in 16-pixel event cells, -6..=249.
     pub y: i16,
+    /// Serialize coordinates as hexadecimal instead of decimal.
     pub hex_coordinates: bool,
     /// Includes the trailing comma, when the macro has a leading argument.
     pub prefix: Option<String>,
     /// Includes its initial comma or semicolon.
     pub suffix: Option<String>,
+    /// One-based source line number.
     pub line: usize,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+/// A validated event, its assigned warp ID, and source-rewrite state.
 pub struct Event {
     definition: EventDefinition,
     warp_id: Option<usize>,
     rewritten: bool,
 }
 impl Event {
+    /// Validated coordinates, macro kind and preserved source fields.
     pub fn definition(&self) -> &EventDefinition {
         &self.definition
     }
+    /// One-based ordinal among warp events, or `None` for other event kinds.
     pub fn warp_id(&self) -> Option<usize> {
         self.warp_id
     }
@@ -197,6 +247,7 @@ impl Event {
     pub fn is_rewritten(&self) -> bool {
         self.rewritten
     }
+    /// Serialize the macro and arguments using the stored coordinate base and order.
     pub fn text(&self) -> String {
         let d = &self.definition;
         let (a, b) = if d.kind.y_first() {
@@ -223,6 +274,10 @@ impl Event {
             d.suffix.as_deref().unwrap_or_default()
         )
     }
+    /// Extract the normalized destination map name and signed warp ID.
+    ///
+    /// Returns `None` for non-warps or absent arguments. Symbolic/non-numeric
+    /// IDs resolve to zero, following the original numeric-prefix parser.
     pub fn warp_destination(&self) -> Option<(String, i32)> {
         if !self.definition.kind.is_warp() {
             return None;
@@ -276,33 +331,50 @@ impl Event {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
+/// Position and field edits for existing events; no add/remove operations.
 pub enum EventCommand {
+    /// Move one event without changing its source arguments.
     Move {
+        /// Zero-based index in [`Events::entries`].
         index: usize,
+        /// Horizontal coordinate in 16-pixel cells, -6..=249.
         x: i16,
+        /// Vertical coordinate in 16-pixel cells, -6..=249.
         y: i16,
     },
+    /// Move an event and optionally replace its existing prefix/suffix fields.
     Edit {
+        /// Zero-based index in [`Events::entries`].
         index: usize,
+        /// Horizontal coordinate in 16-pixel cells, -6..=249.
         x: i16,
+        /// Vertical coordinate in 16-pixel cells, -6..=249.
         y: i16,
+        /// Replacement leading argument; `None` preserves it.
         prefix: Option<String>,
+        /// Replacement trailing arguments; `None` preserves them.
         suffix: Option<String>,
     },
     /// Map-resize anchor displacement, in 32px blocks (events use 16px cells).
     Translate {
+        /// Horizontal displacement in 32-pixel map blocks.
         block_dx: i16,
+        /// Vertical displacement in 32-pixel map blocks.
         block_dy: i16,
     },
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
+/// Rejected event coordinates, index, or source syntax.
 pub enum EventError {
     #[error("event coordinate must be in -6..=249")]
+    /// A coordinate is outside -6..=249 event cells.
     Coordinate,
     #[error("event index {0} is out of range")]
+    /// The zero-based event index is absent.
     Index(usize),
     #[error("invalid event syntax: {0}")]
+    /// A source argument or line number violates an event syntax constraint.
     Syntax(&'static str),
 }
 
@@ -350,11 +422,17 @@ fn validate_definition(d: &EventDefinition) -> Result<(), EventError> {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+/// Validated event sequence with one-based warp IDs and sticky dirty state.
 pub struct Events {
     entries: Vec<Event>,
     modified: bool,
 }
 impl Events {
+    /// Validate source definitions and assign warp IDs in input order.
+    ///
+    /// # Errors
+    /// Rejects coordinates outside -6..=249, zero line numbers, mismatched
+    /// prefix fields, malformed suffixes, or invalid warp arguments.
     pub fn new(definitions: Vec<EventDefinition>) -> Result<Self, EventError> {
         let mut warp_id = 0;
         let mut entries = Vec::with_capacity(definitions.len());
@@ -377,15 +455,21 @@ impl Events {
             modified: false,
         })
     }
+    /// Events in source order; command indices refer to this slice.
     pub fn entries(&self) -> &[Event] {
         &self.entries
     }
+    /// Whether an edit has succeeded since construction or the last save.
     pub fn is_modified(&self) -> bool {
         self.modified
     }
+    /// Clear dirty state; retain rewrite flags for future source serialization.
     pub fn mark_saved(&mut self) {
         self.modified = false;
     }
+    /// Find a warp’s destination index within the named map.
+    ///
+    /// Returns `None` for missing events, other maps, symbolic IDs, or absent targets.
     pub fn local_warp_target(&self, index: usize, map_name: &str) -> Option<usize> {
         let (name, id) = self.entries.get(index)?.warp_destination()?;
         if name != map_name || id <= 0 {
@@ -399,6 +483,10 @@ impl Events {
     pub fn drag_max(block_dimension: u8) -> i16 {
         (i16::from(block_dimension) * 2 + 5).min(249)
     }
+    /// Apply a complete batch on a draft and commit only if every command succeeds.
+    ///
+    /// # Errors
+    /// Any invalid index, coordinate, or field syntax leaves all events unchanged.
     pub fn apply_batch(&mut self, commands: &[EventCommand]) -> Result<(), EventError> {
         let mut draft = self.clone();
         for command in commands {
@@ -407,6 +495,14 @@ impl Events {
         *self = draft;
         Ok(())
     }
+    /// Validate and apply one edit; translations clamp coordinates to -6..=249.
+    ///
+    /// Field edits flatten line feeds and normalize separators. `None` retains
+    /// the existing field; it does not remove it. Successful edits mark source
+    /// lines for rewriting. A zero translation leaves state unchanged.
+    ///
+    /// # Errors
+    /// Invalid indices, coordinates, or field syntax leave the sequence unchanged.
     pub fn apply(&mut self, command: &EventCommand) -> Result<(), EventError> {
         match command {
             EventCommand::Move { index, x, y } | EventCommand::Edit { index, x, y, .. } => {

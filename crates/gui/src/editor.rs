@@ -6,31 +6,23 @@
 //! validation and filesystem writes in core/project, outside this UI coordinator.
 mod about;
 mod application;
-use application::Application;
 mod artwork;
 mod asset_drag;
-pub use artwork::application_icon;
+mod attributed_assets;
 mod block_editor;
 mod block_hotkeys;
 mod block_workflows;
 mod canvas;
 mod choice_preview;
-use widgets::default_value;
 mod dialog_host;
 mod documents;
-#[cfg(test)]
-mod drag_tests;
 mod editor_dialogs;
-#[cfg(all(test, feature = "visual-tests"))]
-mod event_label_tests;
-#[cfg(test)]
-mod event_workflow_tests;
 mod event_workflows;
 mod external_drop;
 mod file_workflows;
 mod fonts;
+mod frame;
 mod fullscreen;
-use crate::geometry;
 mod graphics_setup;
 mod help;
 mod icons;
@@ -38,37 +30,20 @@ mod map_buttons;
 mod map_labels;
 mod map_loading;
 mod map_open;
-#[cfg(test)]
-mod map_open_tests;
 mod map_options;
 mod map_save;
 mod menu_popup;
 mod menus;
 mod message_dialog;
-use widgets::nice_slider;
-use widgets::numeric_input;
-mod attributed_assets;
-#[cfg(test)]
-mod open_scroll_tests;
 mod overworld;
 mod palette_editor;
-#[cfg(test)]
-mod palette_editor_tests;
 mod palette_session;
-#[cfg(test)]
-mod palette_session_tests;
 mod preferences;
-pub use preferences::native_startup::NativeStartup;
-#[cfg(feature = "native-tests")]
-pub use preferences::native_startup::native_probe::run as run_native_preferences_probe;
-mod frame;
 mod printing;
 mod priority;
 mod recent_maps;
 mod resize_dialog;
 mod roof_colors;
-#[cfg(test)]
-mod roof_workflow_tests;
 mod roof_workflows;
 mod rulers;
 mod save_feedback;
@@ -78,34 +53,61 @@ mod startup;
 mod startup_theme;
 mod status_bar;
 mod tileset_editor;
-#[cfg(test)]
-mod tileset_workflow_tests;
 mod tileset_workflows;
 mod toolbar;
-#[cfg(test)]
-mod toolbar_tests;
 mod transparency;
 mod unified_open;
-#[cfg(test)]
-mod unified_tests;
 mod unified_tileset;
 mod widgets;
 mod window_title;
 mod workspace_pan;
-#[cfg(test)]
-mod zoom_tests;
-use block_editor::BlockForm;
-#[cfg(test)]
-use canvas::append_line;
 
+// Feature-specific interaction and regression tests.
 #[cfg(test)]
 mod block_workflow_tests;
 #[cfg(test)]
+mod drag_tests;
+#[cfg(all(test, feature = "visual-tests"))]
+mod event_label_tests;
+#[cfg(test)]
+mod event_workflow_tests;
+#[cfg(test)]
+mod map_open_tests;
+#[cfg(test)]
+mod open_scroll_tests;
+#[cfg(test)]
+mod palette_editor_tests;
+#[cfg(test)]
+mod palette_session_tests;
+#[cfg(test)]
 mod roof_editor_tests;
+#[cfg(test)]
+mod roof_workflow_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod tileset_editor_tests;
+#[cfg(test)]
+mod tileset_workflow_tests;
+#[cfg(test)]
+mod toolbar_tests;
+#[cfg(test)]
+mod unified_tests;
+#[cfg(test)]
+mod zoom_tests;
+
+use crate::geometry;
+use application::Application;
+pub use artwork::application_icon;
+use block_editor::BlockForm;
+#[cfg(test)]
+use canvas::append_line;
+pub use preferences::native_startup::NativeStartup;
+#[cfg(feature = "native-tests")]
+pub use preferences::native_startup::native_probe::run as run_native_preferences_probe;
+use widgets::default_value;
+use widgets::nice_slider;
+use widgets::numeric_input;
 
 use std::{path::PathBuf, sync::mpsc};
 
@@ -149,7 +151,7 @@ struct OpenForm {
     roof_layout_note: String,
     unified: bool,
     detection_error: Option<String>,
-    profile: documents::Storage,
+    storage: documents::Storage,
     allow_512: bool,
     new_map: bool,
     path: PathBuf,
@@ -178,16 +180,16 @@ impl OpenForm {
         let metadata = if self.new_map {
             None
         } else {
-            Some(self.profile.discover_map(&self.path, Some(root))?)
+            Some(self.storage.discover_map(&self.path, Some(root))?)
         };
-        let choices = self.profile.tileset_options(
+        let choices = self.storage.tileset_options(
             root,
             metadata.as_ref().and_then(|m| m.tileset_hint.as_deref()),
         )?;
-        let roofs = self.profile.list_roofs(root)?;
+        let roofs = self.storage.list_roofs(root)?;
         let sizes = if let Some(metadata) = metadata {
             Some(
-                self.profile
+                self.storage
                     .inspect_map_sizes(&self.path, metadata.dimensions)?,
             )
         } else {

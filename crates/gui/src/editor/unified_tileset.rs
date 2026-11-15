@@ -7,7 +7,7 @@ impl Editor {
         &mut self,
         ctx: &egui::Context,
         name: &str,
-        profile: documents::Storage,
+        storage: documents::Storage,
     ) -> Result<(), String> {
         let loaded = self.loaded.as_ref().ok_or("No map is loaded")?;
         let (root, _) = loaded.tileset_location().ok_or("No tileset is loaded")?;
@@ -15,9 +15,9 @@ impl Editor {
         let roof = loaded.roof_name().map(str::to_owned);
         let document = loaded
             .document
-            .with_storage(profile, name)
+            .with_storage(storage, name)
             .map_err(|e| e.to_string())?;
-        let palettes = self.palettes_for_open(profile);
+        let palettes = self.palettes_for_open(storage);
         // First use of this model imports project colors. Returning to a cached
         // model retains its full session, including edits, as Change Tileset does.
         let initialize_palettes = self.inactive_palettes.is_none();
@@ -119,7 +119,7 @@ impl Editor {
         loaded.attributed_assets = attributed_assets;
         loaded.palette_plan = None;
         self.textures = textures;
-        self.help_window.profile = profile;
+        self.help_window.storage = storage;
         self.block_clipboard = None;
         self.block_form = None;
         self.tileset_form = None;

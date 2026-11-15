@@ -4,7 +4,7 @@
 use crate::{
     ProjectError, SaveTarget, TilesetOutput,
     discovery::Rules,
-    document::{optional_hash, persist_bytes, prepare_target},
+    file_io::{optional_hash, persist_bytes, prepare_target},
     read_bounded,
 };
 use polished_map_core::{EventCommand, EventDefinition, EventError, EventKind, Events};
@@ -17,14 +17,24 @@ use std::{
 const LIMIT: usize = 4 * 1024 * 1024;
 
 #[derive(Debug, thiserror::Error)]
+/// Event source exceeds bounds or contains invalid recognized macro data.
 pub enum EventScriptError {
     #[error("event script exceeds four MiB")]
+    /// Source text exceeds four MiB.
     Limit,
     #[error("event script contains NUL")]
+    /// Source text contains a NUL byte.
     Nul,
     #[error("line {line}: {message}")]
-    Line { line: usize, message: String },
+    /// A recognized event macro could not be parsed.
+    Line {
+        /// One-based source line.
+        line: usize,
+        /// Parser explanation for the invalid macro.
+        message: String,
+    },
     #[error(transparent)]
+    /// Parsed event fields violate model invariants.
     Model(#[from] EventError),
 }
 
@@ -54,12 +64,30 @@ pub(crate) fn validate_map_name(root: &Path, map_name: &str) -> Result<(), Proje
 }
 
 #[derive(Clone, Debug)]
+/// Parsed events and original source spans for byte-preserving assembly edits.
+///
+/// ```
+/// use polished_map_core::EventCommand;
+/// use polished_map_project::EventScript;
+/// let source = "MapEvents:\r\n\twarp_event 1, 2, NEXT_MAP, 1 ; keep\r\n\tdb 99\r\n";
+/// let mut script = EventScript::parse_unified(source)?;
+/// script.apply(&[EventCommand::Move { index: 0, x: 3, y: 4 }])?;
+/// let edited = script.render();
+/// assert!(edited.starts_with("MapEvents:\r\n\twarp_event "));
+/// assert!(edited.ends_with(" ; keep\r\n\tdb 99\r\n"));
+/// assert_eq!(script.events().entries()[0].definition().x, 3);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 pub struct EventScript {
     source: String,
     spans: Vec<Range<usize>>,
     events: Events,
 }
 impl EventScript {
+    /// Parse the classic event catalog, preserving all other source text.
+    ///
+    /// # Errors
+    /// Rejects oversized/NUL-containing text and malformed recognized events.
     pub fn parse(source: &str) -> Result<Self, EventScriptError> {
         Self::parse_with_rules(source, Rules::Master)
     }
@@ -159,9 +187,14 @@ impl EventScript {
             events: Events::new(definitions)?,
         })
     }
+    /// Validated events in source order.
     pub fn events(&self) -> &Events {
         &self.events
     }
+    /// Validate a complete event batch and the resulting four-MiB source bound.
+    ///
+    /// # Errors
+    /// Invalid commands or oversized output leave all current events unchanged.
     pub fn apply(&mut self, commands: &[EventCommand]) -> Result<(), ProjectError> {
         let mut draft = self.events.clone();
         draft.apply_batch(commands)?;
@@ -177,6 +210,7 @@ impl EventScript {
         self.events = draft;
         Ok(())
     }
+    /// Serialize rewritten event spans while preserving every untouched source byte.
     pub fn render(&self) -> String {
         let mut output = String::with_capacity(self.source.len());
         let mut offset = 0;
@@ -221,11 +255,20 @@ fn coordinate(token: &str) -> Result<i16, String> {
 }
 
 #[derive(Clone, Debug)]
+/// Event script plus an observed source hash for conflict-checked saving.
+///
+/// The parser catalog is selected at open time. Editing and persistence are
+/// shared regardless of the map’s tile-attribute storage.
 pub struct EventDocument {
     source: SaveTarget,
     script: EventScript,
 }
 impl EventDocument {
+    /// Open UTF-8 source with the classic event catalog.
+    ///
+    /// # Errors
+    /// Rejects read failures, invalid UTF-8/event syntax, and files changing
+    /// during observation. Source input is bounded to four MiB.
     pub fn open(path: &Path) -> Result<Self, ProjectError> {
         Self::open_with_rules(path, Rules::Master)
     }
@@ -256,15 +299,25 @@ impl EventDocument {
         }
         Ok(Self { source, script })
     }
+    /// Observed path and content hash used for conflict detection.
     pub fn source(&self) -> &SaveTarget {
         &self.source
     }
+    /// Read parsed events and the source-preserving serialization state.
     pub fn script(&self) -> &EventScript {
         &self.script
     }
+    /// Validate a complete event batch and the resulting four-MiB source bound.
+    ///
+    /// # Errors
+    /// Invalid commands or oversized output leave all current events unchanged.
     pub fn apply(&mut self, commands: &[EventCommand]) -> Result<(), ProjectError> {
         self.script.apply(commands)
     }
+    /// Describe a pending rewrite without writing; clean scripts return `None`.
+    ///
+    /// # Errors
+    /// A changed source hash or failed read rejects the preview.
     pub fn preview_save(&self) -> Result<Option<TilesetOutput>, ProjectError> {
         if optional_hash(self.source.path())? != self.source.hash {
             return Err(ProjectError::Conflict(self.source.path.clone()));
@@ -283,6 +336,10 @@ impl EventDocument {
             bytes: bytes.len(),
         }))
     }
+    /// Write changed event spans and clear dirty state after guarded persistence.
+    ///
+    /// # Errors
+    /// Changed source content or I/O failure leaves the in-memory edits unsaved.
     pub fn save(&mut self) -> Result<(), ProjectError> {
         if self.preview_save()?.is_none() {
             return Ok(());

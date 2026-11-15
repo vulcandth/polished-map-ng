@@ -29,6 +29,8 @@
 //! colors.h/colors.cpp, and metatile.h at the revision in upstream.lock.toml.
 //! Copyright 2026 Polished Map NG contributors; LGPL-3.0-only.
 
+#![deny(missing_docs)]
+
 pub mod attributed;
 mod blockset;
 pub mod event_catalog;

@@ -2,7 +2,7 @@
 //! LGPL-3.0-only. Shared codecs, PNG encoding and guarded staging supply I/O.
 use crate::{
     PngPlatform, ProjectError, SaveTarget, TilesetOutput,
-    document::{optional_hash, prepare_target},
+    file_io::{optional_hash, prepare_target},
     graphics::{encode_grayscale_png, validate_tileset},
     transaction::{Change, persist_pair},
 };
@@ -22,6 +22,10 @@ struct Part {
 }
 
 #[derive(Clone, Debug)]
+/// Raw graphics, definition flags and observed component files for attributed blocks.
+///
+/// The model has 512 slots; palette/flip/priority ownership remains in the
+/// blockset. Compound graphics retain separate output files.
 pub struct TilesetDocument {
     root: PathBuf,
     name: String,
@@ -33,6 +37,11 @@ pub struct TilesetDocument {
 }
 
 impl TilesetDocument {
+    /// Load raw PNG/2bpp/LZ components with fixed attributed discovery rules.
+    ///
+    /// # Errors
+    /// Rejects invalid names, read/decode failures, compound layouts exceeding
+    /// 512 slots, and source files changing during observation.
     pub fn open_in_project(
         root: &Path,
         name: &str,
@@ -159,21 +168,27 @@ impl TilesetDocument {
             unified,
         })
     }
+    /// Canonical project directory used for component discovery.
     pub fn root(&self) -> &Path {
         &self.root
     }
+    /// Exact selected asset name, including compound component suffixes.
     pub fn name(&self) -> &str {
         &self.name
     }
+    /// PNG alpha/desaturation policy selected when opening.
     pub fn png_platform(&self) -> PngPlatform {
         self.platform
     }
+    /// Loaded extent including compound row padding, before 512-slot model padding.
     pub fn loaded_tile_count(&self) -> usize {
         self.loaded_tiles
     }
+    /// Whether the loaded extent uses more than the first 256 slots.
     pub fn enables_512_tiles(&self) -> bool {
         self.loaded_tiles > 256
     }
+    /// Read raw tile pixels, definition flags and dirty state.
     pub fn model(&self) -> &RawTileset {
         &self.model
     }
@@ -182,19 +197,23 @@ impl TilesetDocument {
     pub fn trim_unused(&mut self, blocks: &AttributeBlockset, order: BankOrder) {
         self.model.trim_unused(blocks, order);
     }
+    /// Apply validated raw-tile commands atomically; invalid commands preserve all tiles.
     pub fn apply_batch(&mut self, commands: &[RawTileCommand]) -> Result<(), ProjectError> {
         self.model.apply_batch(commands)?;
         Ok(())
     }
+    /// Observed PNG destinations in compound component order.
     pub fn outputs(&self) -> Vec<&SaveTarget> {
         self.parts.iter().map(|p| &p.output).collect()
     }
+    /// Observed files that supplied pixels, omitting absent optional components.
     pub fn sources(&self) -> Vec<&SaveTarget> {
         self.parts
             .iter()
             .filter_map(|p| p.source.as_ref())
             .collect()
     }
+    /// Build CPU graphics from cloned tiles/blocks, eight palettes and bank order.
     pub fn graphics(
         &self,
         blocks: &AttributeBlockset,
@@ -203,6 +222,7 @@ impl TilesetDocument {
     ) -> Graphics {
         Graphics::new(self.model.clone(), blocks.clone(), palettes, order)
     }
+    /// Check all observed input/output hashes; read failures or changes return errors.
     pub fn verify_unchanged(&self) -> Result<(), ProjectError> {
         for target in self
             .parts
@@ -215,6 +235,7 @@ impl TilesetDocument {
         }
         Ok(())
     }
+    /// Fingerprint local source/output observations and PNG policy, excluding edits.
     pub fn content_hash(&self) -> String {
         let mut hash = Sha256::new();
         hash.update([self.platform as u8]);
@@ -271,6 +292,10 @@ impl TilesetDocument {
         }
         Ok((draft, changes))
     }
+    /// Describe trimmed PNG outputs without writing or adopting the draft.
+    ///
+    /// # Errors
+    /// Changed source/output hashes, export layouts, encoding, or reads can fail.
     pub fn preview_save(
         &self,
         blocks: &AttributeBlockset,

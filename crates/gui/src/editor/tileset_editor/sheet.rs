@@ -33,7 +33,7 @@ impl TilesetForm {
             )
         });
         if let Some(sheet) = &self.sheet {
-            let rows = if self.draft.is_plus() && !self.roof {
+            let rows = if self.draft.is_attributed() && !self.roof {
                 32.0
             } else {
                 16.0
@@ -110,7 +110,7 @@ impl TilesetForm {
         priority: &priority::Textures,
     ) -> Result<(), String> {
         let mut commands = Vec::new();
-        if self.draft.is_plus() && !self.roof {
+        if self.draft.is_attributed() && !self.roof {
             ui.scope_builder(
                 egui::UiBuilder::new()
                     .max_rect(Rect::from_min_size(origin, Vec2::new(271.0, 256.0))),

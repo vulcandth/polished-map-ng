@@ -220,7 +220,6 @@ fn all_plusplus_events_use_shared_options_and_save_reload_without_changing_catal
     h.state_mut().request_event_change(EventChange::Load(path));
     h.state_mut().request_event_change(EventChange::Reload);
     let events = h.state().loaded.as_ref().unwrap().events.as_ref().unwrap();
-    assert!(matches!(events, EventDocument::Attributed(_)));
     assert_eq!(events.script().events().entries().len(), 26);
     for (event, kind) in events.script().events().entries().iter().zip(EVENT_KINDS) {
         let d = event.definition();
@@ -365,13 +364,13 @@ fn plusplus_automatic_events_and_warp_paths_follow_the_owning_document() {
             .0
             .is_none()
     );
-    let master: MapDocument = polished_map_project::MapDocument::open(
+    let classic: MapDocument = polished_map_project::MapDocument::open(
         &dir.path().join("Map.2x1.blk"),
         &OpenOptions::default(),
     )
     .unwrap()
     .into();
-    let events = master.auto_load_events().unwrap().unwrap();
+    let events = classic.auto_load_events().unwrap().unwrap();
     assert!(
         events.script().events().entries().is_empty(),
         "master must not adopt plusplus macros"

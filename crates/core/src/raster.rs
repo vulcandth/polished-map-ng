@@ -1,3 +1,4 @@
+//! Validated classic graphics and shared CPU map composition. LGPL-3.0-only.
 use thiserror::Error;
 
 use crate::Map;
@@ -7,42 +8,60 @@ use crate::Map;
 pub struct Tile([u8; 64]);
 
 impl Tile {
+    /// Validate one tile's 64 row-major hue indices.
+    ///
+    /// # Errors
+    /// Returns [`RasterError::Hue`] if any hue is outside 0–3.
     pub fn new(hues: [u8; 64]) -> Result<Self, RasterError> {
         if let Some(&hue) = hues.iter().find(|&&h| h > 3) {
             return Err(RasterError::Hue(hue));
         }
         Ok(Self(hues))
     }
+    /// 64 row-major hue indices in the internal WHITE, DARK, LIGHT, BLACK order.
     pub fn hues(&self) -> &[u8; 64] {
         &self.0
     }
 }
 
+/// Four RGB8 colors in internal hue order: white, dark, light, black.
 pub type Palette = [[u8; 3]; 4];
 
 /// RGB data in row-major order, independent of an image library or GPU.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RgbImage {
+    /// Image width in pixels.
     pub width: u32,
+    /// Image height in pixels.
     pub height: u32,
+    /// Packed RGB8 bytes with no row padding; constructors/renderers produce width × height × 3 bytes.
+    /// External consumers must validate publicly constructed records before indexing.
     pub pixels: Vec<u8>,
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
+/// Invalid pixel/graphics data supplied to the CPU renderer.
 pub enum RasterError {
     #[error("invalid hue {0}; expected 0..=3")]
+    /// A hue index is outside 0–3.
     Hue(u8),
     #[error("expected 1..=256 tiles and one palette per tile")]
+    /// Tile count is outside 1–256 or has no matching per-tile palette.
     TileCount,
     #[error("expected 1..=256 metatiles")]
+    /// Block count is outside 1–256.
     MetatileCount,
     #[error("metatile references missing tile {0}")]
+    /// A block or rendering request references a tile that was not loaded.
     MissingTile(u8),
     #[error("expected one priority flag per tile")]
+    /// Priority flags do not correspond one-to-one with tiles.
     PriorityCount,
 }
 
 #[derive(Clone, Debug)]
+/// Classic CPU renderer with a palette and optional priority flag per raw tile.
+/// Uses validated block references; attributed rendering lives in [`crate::attributed::Graphics`].
 pub struct Graphics {
     tiles: Vec<Tile>,
     palettes: Vec<Palette>,
@@ -51,6 +70,10 @@ pub struct Graphics {
 }
 
 impl Graphics {
+    /// Validate raw tiles, per-tile palettes and 4×4 block definitions.
+    ///
+    /// # Errors
+    /// Rejects invalid tile/block counts, mismatched palette counts, and missing tile references.
     pub fn new(
         tiles: Vec<Tile>,
         palettes: Vec<Palette>,
@@ -75,10 +98,15 @@ impl Graphics {
         })
     }
 
+    /// Number of available block definitions.
     pub fn block_count(&self) -> usize {
         self.metatiles.len()
     }
 
+    /// Attach rendering overlay flags without changing tile colors.
+    ///
+    /// # Errors
+    /// Requires one flag per loaded tile.
     pub fn with_tile_priorities(mut self, priorities: Vec<bool>) -> Result<Self, RasterError> {
         if priorities.len() != self.tiles.len() {
             return Err(RasterError::PriorityCount);
@@ -87,6 +115,7 @@ impl Graphics {
         Ok(self)
     }
 
+    /// Priority for a loaded tile; absent tile IDs report `false`.
     pub fn tile_priority(&self, id: u8) -> bool {
         self.priorities
             .get(usize::from(id))
@@ -101,6 +130,10 @@ impl Graphics {
             .map(|tiles| tiles.map(|tile| self.tile_priority(tile)))
     }
 
+    /// Replace block definitions only after every tile reference validates.
+    ///
+    /// # Errors
+    /// A missing tile reference leaves the current renderer unchanged.
     pub fn replace_blocks(&mut self, blocks: &crate::Blockset) -> Result<(), RasterError> {
         for &id in blocks.blocks().iter().flatten() {
             if usize::from(id) >= self.tiles.len() {
@@ -111,6 +144,10 @@ impl Graphics {
         Ok(())
     }
 
+    /// Render one 8×8 tile with its assigned RGB palette.
+    ///
+    /// # Errors
+    /// Returns [`RasterError::MissingTile`] for an unloaded ID.
     pub fn render_tile(&self, id: u8) -> Result<RgbImage, RasterError> {
         let tile = self
             .tiles
@@ -129,6 +166,9 @@ impl Graphics {
     }
 
     /// Render a single metatile, used by both canvas and sidebar texture caches.
+    /// Absent block IDs render the source-compatible empty block.
+    /// This adapter currently has no error-producing branch; the result type matches
+    /// the shared rendering interface.
     pub fn render_block(&self, block: u8) -> Result<RgbImage, RasterError> {
         let Some(metatile) = self.metatiles.get(usize::from(block)) else {
             // draw_metatile uses EMPTY_RGB for IDs beyond the loaded blockset.
@@ -153,6 +193,10 @@ impl Graphics {
     }
 
     /// Render at native resolution; allocation is bounded by the validated map dimensions.
+    /// The result uses 32×32 pixels per map block, without editor borders/overlays.
+    ///
+    /// # Errors
+    /// Propagates block-raster errors from the shared compositor.
     pub fn render_map(&self, map: &Map) -> Result<RgbImage, RasterError> {
         render_map(self, map)
     }
@@ -201,6 +245,7 @@ pub(crate) fn render_map(source: &impl BlockRaster, map: &Map) -> Result<RgbImag
 }
 
 /// Upstream DAY colors, including its exact five-bit expansion (channel * 33 / 4).
+/// Default Day game palettes plus the source white-only special palette.
 pub fn day_palettes() -> [Palette; 9] {
     *crate::PaletteBank::default().colors(crate::PaletteSet::Day)
 }

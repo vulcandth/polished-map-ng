@@ -1,7 +1,7 @@
 //! master Config::roof_png_path and Main_Window::save_roof; separate dirty state.
 use crate::{
     ProjectError, SaveTarget, TilesetOutput,
-    document::{optional_hash, persist_bytes, prepare_target},
+    file_io::{optional_hash, persist_bytes, prepare_target},
     graphics::{encode_grayscale_png, graphics_path, read_tiles, validate_tileset},
 };
 use polished_map_core::Roof;
@@ -20,6 +20,9 @@ pub fn list_roofs(root: &Path) -> Result<Vec<String>, ProjectError> {
 }
 
 #[derive(Clone, Debug)]
+/// Nine editable roof tiles with a separately observed source and PNG destination.
+///
+/// Saving roof pixels is independent of base tiles, maps, and palette exports.
 pub struct RoofDocument {
     png_platform: crate::PngPlatform,
     name: String,
@@ -28,6 +31,11 @@ pub struct RoofDocument {
     output: SaveTarget,
 }
 impl RoofDocument {
+    /// Discover and load exactly nine roof tiles with fixed storage rules.
+    ///
+    /// # Errors
+    /// Rejects invalid names, read/decode failures, incorrect tile counts, and
+    /// files that change during observation.
     pub fn open_in_project(
         root: &Path,
         name: &str,
@@ -40,6 +48,10 @@ impl RoofDocument {
             crate::PngPlatform::default(),
         )
     }
+    /// Load a roof using explicit PNG-alpha semantics and nine palette attributes.
+    ///
+    /// # Errors
+    /// Returns name, read, decode, attribute, tile-count, or observation errors.
     pub fn open_in_project_with_png_platform(
         root: &Path,
         name: &str,
@@ -106,21 +118,27 @@ impl RoofDocument {
             output,
         })
     }
+    /// Selected roof asset name without its graphics extension.
     pub fn name(&self) -> &str {
         &self.name
     }
+    /// PNG alpha/desaturation policy selected when opening.
     pub fn png_platform(&self) -> crate::PngPlatform {
         self.png_platform
     }
+    /// Read the nine-tile model and dirty state.
     pub fn roof(&self) -> &Roof {
         &self.model
     }
+    /// Edit through the roof model’s validated batch API.
     pub fn roof_mut(&mut self) -> &mut Roof {
         &mut self.model
     }
+    /// Observed input path and hash; after saving this becomes the PNG output.
     pub fn source(&self) -> &SaveTarget {
         &self.source
     }
+    /// Observed PNG destination used by [`Self::save`].
     pub fn output(&self) -> &SaveTarget {
         &self.output
     }
@@ -150,6 +168,10 @@ impl RoofDocument {
         }
         encode_grayscale_png(&self.output.path, &self.model.export()).map(Some)
     }
+    /// Describe a pending PNG write without changing files or dirty state.
+    ///
+    /// Returns `None` when clean. Changed source/destination hashes, read
+    /// failures, or PNG encoding errors reject the preview.
     pub fn preview_save(&self) -> Result<Option<TilesetOutput>, ProjectError> {
         Ok(self.prepared_bytes()?.map(|bytes| TilesetOutput {
             path: self.output.path.clone(),
@@ -161,6 +183,11 @@ impl RoofDocument {
             bytes: bytes.len(),
         }))
     }
+    /// Guard and publish changed roof pixels to PNG, then clear dirty state.
+    ///
+    /// # Errors
+    /// Source/destination conflicts, encoding errors, and I/O failures retain
+    /// the in-memory edits. Clean saves still check observations.
     pub fn save(&mut self) -> Result<(), ProjectError> {
         let Some(bytes) = self.prepared_bytes()? else {
             return Ok(());

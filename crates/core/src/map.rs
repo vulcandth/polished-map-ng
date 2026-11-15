@@ -1,3 +1,4 @@
+//! Shared byte-ID map edits and bounded history; adapted from pinned map.cpp. LGPL-3.0-only.
 use std::collections::VecDeque;
 
 use serde::{Deserialize, Serialize};
@@ -10,7 +11,9 @@ const HISTORY_LIMIT: usize = 100;
 /// commands use pixels within an 8×8 tile.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Point {
+    /// Horizontal coordinate, increasing to the right.
     pub x: u16,
+    /// Vertical coordinate, increasing downwards.
     pub y: u16,
 }
 
@@ -18,19 +21,29 @@ pub struct Point {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ResizeAnchor {
+    /// Keep the old top-left corner fixed.
     TopLeft,
+    /// Keep the top edge fixed and center horizontally.
     TopCenter,
+    /// Keep the old top-right corner fixed.
     TopRight,
+    /// Keep the left edge fixed and center vertically.
     MiddleLeft,
     #[default]
+    /// Center the old contents on both axes; odd deltas truncate toward zero.
     Center,
+    /// Keep the right edge fixed and center vertically.
     MiddleRight,
+    /// Keep the old bottom-left corner fixed.
     BottomLeft,
+    /// Keep the bottom edge fixed and center horizontally.
     BottomCenter,
+    /// Keep the old bottom-right corner fixed.
     BottomRight,
 }
 
 impl ResizeAnchor {
+    /// Anchors in top-to-bottom, left-to-right UI order.
     pub const ALL: [Self; 9] = [
         Self::TopLeft,
         Self::TopCenter,
@@ -66,38 +79,67 @@ impl ResizeAnchor {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Command {
+    /// Paint a complete drag as one history entry, including a no-op drag.
     Paint {
+        /// Map-block coordinates to paint; all are validated before changing any cell.
         points: Vec<Point>,
+        /// Replacement block ID; graphics availability is a renderer concern.
         block: u8,
     },
+    /// Flood-fill connected cells sharing the seed cell's block ID.
     Fill {
+        /// Flood-fill seed in map-block coordinates.
         at: Point,
+        /// Replacement block ID; graphics availability is a renderer concern.
         block: u8,
     },
+    /// Replace one block ID everywhere in the map.
     Replace {
+        /// Block ID to replace.
         from: u8,
+        /// Replacement block ID.
         to: u8,
     },
+    /// Exchange two block IDs everywhere in the map.
     Swap {
+        /// First block ID.
         a: u8,
+        /// Second block ID.
         b: u8,
     },
     /// Resize clears both history stacks, matching master Main_Window::resize_map.
     Resize {
+        /// New width in 1–255 map blocks.
         width: u16,
+        /// New height in 1–255 map blocks.
         height: u16,
         #[serde(default)]
+        /// Placement of old contents within the resized map.
         anchor: ResizeAnchor,
     },
 }
 
 #[derive(Debug, Error, PartialEq, Eq)]
+/// Rejected dimensions, byte counts or block coordinates; edits validate before mutation.
 pub enum MapError {
     #[error("map dimensions must be between 1 and 255; got {width}×{height}")]
-    Dimensions { width: u16, height: u16 },
+    /// At least one axis is outside the supported 1–255 block range.
+    Dimensions {
+        /// Requested width in blocks.
+        width: u16,
+        /// Requested height in blocks.
+        height: u16,
+    },
     #[error("expected {expected} map bytes, found {actual}")]
-    Length { expected: usize, actual: usize },
+    /// The supplied byte count does not equal width × height.
+    Length {
+        /// Width × height bytes required by the dimensions.
+        expected: usize,
+        /// Supplied block-byte count.
+        actual: usize,
+    },
     #[error("block coordinate ({0}, {1}) is outside the map")]
+    /// The requested (column, row) lies outside the map.
     Coordinate(u16, u16),
 }
 
@@ -115,6 +157,9 @@ pub struct Map {
 
 impl Map {
     /// New, unsaved map of block zero, without an initial undo entry.
+    ///
+    /// # Errors
+    /// Returns [`MapError::Dimensions`] unless both axes are in 1–255 blocks.
     pub fn blank(width: u16, height: u16) -> Result<Self, MapError> {
         if !(1..=255).contains(&width) || !(1..=255).contains(&height) {
             return Err(MapError::Dimensions { width, height });
@@ -128,6 +173,10 @@ impl Map {
         Ok(map)
     }
 
+    /// Load row-major block IDs as a clean map with empty history.
+    ///
+    /// # Errors
+    /// Rejects axes outside 1–255 and any byte count other than width × height.
     pub fn from_bytes(width: u16, height: u16, blocks: Vec<u8>) -> Result<Self, MapError> {
         if !(1..=255).contains(&width) || !(1..=255).contains(&height) {
             return Err(MapError::Dimensions { width, height });
@@ -150,9 +199,11 @@ impl Map {
         })
     }
 
+    /// Width in map blocks.
     pub fn width(&self) -> u8 {
         self.width
     }
+    /// Height in map blocks.
     pub fn height(&self) -> u8 {
         self.height
     }
@@ -161,9 +212,11 @@ impl Map {
     pub fn overworld_buffer_bytes(&self) -> u32 {
         (u32::from(self.width) + 6) * (u32::from(self.height) + 6)
     }
+    /// Row-major block IDs; immutable access keeps history and dirty state consistent.
     pub fn blocks(&self) -> &[u8] {
         &self.blocks
     }
+    /// Whether editing has marked the map dirty; a no-op command also marks dirty.
     pub fn is_modified(&self) -> bool {
         self.modified
     }
@@ -172,9 +225,11 @@ impl Map {
         self.saved.clone_from(&self.blocks);
         self.modified = false;
     }
+    /// Whether an earlier pixel snapshot is available in the bounded history.
     pub fn can_undo(&self) -> bool {
         !self.past.is_empty()
     }
+    /// Whether an undone snapshot can be reapplied.
     pub fn can_redo(&self) -> bool {
         !self.future.is_empty()
     }
@@ -186,11 +241,20 @@ impl Map {
         Ok(usize::from(point.y) * usize::from(self.width) + usize::from(point.x))
     }
 
+    /// Read a block ID at a map-block coordinate.
+    ///
+    /// # Errors
+    /// Returns [`MapError::Coordinate`] if either coordinate is outside the map.
     pub fn block(&self, point: Point) -> Result<u8, MapError> {
         Ok(self.blocks[self.index(point)?])
     }
 
     /// Validate the complete command before changing state. Returns whether it changed pixels.
+    ///
+    /// # Errors
+    /// Invalid coordinates or resize dimensions leave pixels and history unchanged.
+    /// Other commands retain at most 100 undo entries; use [`Self::resize`] for
+    /// the distinct resize/history boundary.
     pub fn apply(&mut self, command: &Command) -> Result<bool, MapError> {
         if let Command::Resize {
             width,
@@ -259,6 +323,9 @@ impl Map {
     }
 
     /// Resize with zero-filled borders and clear history. An unchanged size does nothing.
+    ///
+    /// # Errors
+    /// Returns [`MapError::Dimensions`] without mutation for axes outside 1–255.
     pub fn resize(
         &mut self,
         width: u16,
@@ -301,6 +368,8 @@ impl Map {
         changed
     }
 
+    /// Restore the previous pixel snapshot; return `false` when history is empty.
+    /// Dirty state remains sticky, including when undo returns to saved contents.
     pub fn undo(&mut self) -> bool {
         let Some(previous) = self.past.pop_back() else {
             return false;
@@ -313,6 +382,8 @@ impl Map {
         true
     }
 
+    /// Restore the next undone snapshot; return `false` when none exists.
+    /// Like undo, this does not clear the sticky dirty flag.
     pub fn redo(&mut self) -> bool {
         let Some(next) = self.future.pop_back() else {
             return false;

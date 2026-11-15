@@ -184,7 +184,16 @@ pub(crate) fn read_tiles_for_storage(
     }
 }
 
+/// Write RGB8 pixels directly to a PNG, replacing any existing destination.
+///
+/// Prefer [`write_new_png`] or [`write_png_export`] for guarded publication.
+/// This compatibility helper validates the raster before opening the destination,
+/// but an encoding/I/O failure can still leave partial output.
+///
+/// # Errors
+/// Rejects zero dimensions, a mismatched RGB byte count, and encoding/I/O errors.
 pub fn write_png(path: &Path, raster: &RgbImage) -> Result<(), ProjectError> {
+    validate_rgb(path, raster)?;
     image::save_buffer_with_format(
         path,
         &raster.pixels,
@@ -222,20 +231,8 @@ fn write_observed_png(
     raster: &RgbImage,
 ) -> Result<(), ProjectError> {
     use image::ImageEncoder;
-    let expected = usize::try_from(raster.width)
-        .ok()
-        .and_then(|w| {
-            usize::try_from(raster.height)
-                .ok()
-                .and_then(|h| w.checked_mul(h))
-        })
-        .and_then(|pixels| pixels.checked_mul(3));
-    if raster.width == 0
-        || raster.height == 0
-        || raster.width > 8160
-        || raster.height > 8160
-        || expected != Some(raster.pixels.len())
-    {
+    validate_rgb(path, raster)?;
+    if raster.width > 8160 || raster.height > 8160 {
         return Err(ProjectError::Format {
             path: path.into(),
             message: "invalid RGB image dimensions or byte count".into(),
@@ -286,6 +283,24 @@ fn write_observed_png(
             ProjectError::io(path, e.error)
         }
     })?;
+    Ok(())
+}
+
+fn validate_rgb(path: &Path, raster: &RgbImage) -> Result<(), ProjectError> {
+    let expected = usize::try_from(raster.width)
+        .ok()
+        .and_then(|w| {
+            usize::try_from(raster.height)
+                .ok()
+                .and_then(|h| w.checked_mul(h))
+        })
+        .and_then(|pixels| pixels.checked_mul(3));
+    if raster.width == 0 || raster.height == 0 || expected != Some(raster.pixels.len()) {
+        return Err(ProjectError::Format {
+            path: path.into(),
+            message: "invalid RGB image dimensions or byte count".into(),
+        });
+    }
     Ok(())
 }
 

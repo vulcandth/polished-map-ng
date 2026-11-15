@@ -7,6 +7,10 @@ use polished_map_core::{ColorSlot, Palette, PaletteCommand, PaletteSet};
 use std::path::Path;
 
 #[derive(Clone, Debug, Default)]
+/// Palette session restricted to eight game palettes per set.
+///
+/// Delegates import/export and dirty-state handling to [`crate::PaletteDocument`];
+/// monochrome slots and monochrome-only imports are excluded.
 pub struct PaletteDocument {
     inner: crate::PaletteDocument,
 }
@@ -19,38 +23,58 @@ fn validate_slot(slot: ColorSlot) -> Result<(), ProjectError> {
 }
 
 impl PaletteDocument {
+    /// Copy the eight game palettes for the chosen time/environment set.
     pub fn colors(&self, set: PaletteSet) -> [Palette; 8] {
         std::array::from_fn(|i| self.inner.bank().colors(set)[i])
     }
+    /// Read an RGB8 hue. Invalid palette (not 0..=7) or hue indices return an error.
     pub fn color(&self, slot: ColorSlot) -> Result<[u8; 3], ProjectError> {
         validate_slot(slot)?;
         Ok(self.inner.bank().color(slot)?)
     }
+    /// Read a color through RGB5 clipboard quantization; invalid slots return an error.
     pub fn copy_color(&self, slot: ColorSlot) -> Result<[u8; 3], ProjectError> {
         validate_slot(slot)?;
         Ok(self.inner.bank().copy_color(slot)?)
     }
+    /// Current display palette set.
     pub fn selected(&self) -> PaletteSet {
         self.inner.selected()
     }
+    /// Change the display set without dirtying colors.
     pub fn select(&mut self, set: PaletteSet) {
         self.inner.select(set);
     }
+    /// Whether edits or dialog acceptance have marked this session dirty.
     pub fn is_modified(&self) -> bool {
         self.inner.is_modified()
     }
+    /// Mark accepted palette edits dirty even if color values did not change.
     pub fn mark_modified(&mut self) {
         self.inner.mark_modified();
     }
+    /// Fingerprint RGB8 colors, selection and import source; see [`crate::PaletteDocument::content_hash`].
     pub fn content_hash(&self) -> String {
         self.inner.content_hash()
     }
+    /// Check imported source content; returns read errors or a conflict if changed.
     pub fn verify_source(&self) -> Result<(), ProjectError> {
         self.inner.verify_source()
     }
+    /// Import recognized game-palette layouts, preserving unaffected sets.
+    ///
+    /// Monochrome-only layouts leave colors/selection intact. Successful imports
+    /// clear dirty state. Callers resolve pending edits before loading.
+    ///
+    /// # Errors
+    /// Read, UTF-8, RGB parsing, and observation conflicts leave the session intact.
     pub fn load(&mut self, path: &Path) -> Result<(), ProjectError> {
         self.inner.load_with_rules(path, Rules::PlusPlus)
     }
+    /// Overlay a map group’s roof hues without changing dirty state or selection.
+    ///
+    /// # Errors
+    /// Invalid RGB data, missing groups, or reads fail without changing colors.
     pub fn load_roof_colors(
         &mut self,
         path: &Path,
@@ -81,11 +105,17 @@ impl PaletteDocument {
 }
 
 #[derive(Clone, Debug)]
+/// Palette selection and import options for attributed map opening.
 pub struct PaletteOptions {
+    /// Explicit set, or automatic selection from map metadata.
     pub palette: Option<PaletteSet>,
+    /// Use the dark-theme automatic fallback where metadata does not select a set.
     pub dark_theme: bool,
+    /// Import discovered map/landmark/tileset-specific palette files.
     pub special_palettes: bool,
+    /// Include the map-group roof-color overlay step.
     pub roof_colors: bool,
+    /// Set ordering in the roof-color table.
     pub roof_layout: RoofPaletteLayout,
 }
 
@@ -109,6 +139,10 @@ pub struct MapPalettePlan {
 }
 
 impl MapPalettePlan {
+    /// Build an import plan using attributed discovery precedence.
+    ///
+    /// # Errors
+    /// Rejects invalid tileset names, missing roots, or failed path resolution.
     pub fn for_map(
         doc: &MapDocument,
         tileset: &str,
@@ -116,6 +150,10 @@ impl MapPalettePlan {
     ) -> Result<Self, ProjectError> {
         Self::with_sources(doc, tileset, options, false)
     }
+    /// Build an import plan using combined supported source layouts.
+    ///
+    /// # Errors
+    /// Rejects invalid names, missing roots, or ambiguous/failed asset resolution.
     pub fn for_unified_map(
         doc: &MapDocument,
         tileset: &str,
@@ -141,15 +179,22 @@ impl MapPalettePlan {
             inner: crate::MapPalettePlan::with_sources(&doc.inner, tileset, &shared, unified)?,
         })
     }
+    /// Whether no import or selection step remains.
     pub fn is_finished(&self) -> bool {
         self.inner.is_finished()
     }
+    /// Whether the next step is an optional roof-color overlay.
     pub fn next_is_roof_colors(&self) -> bool {
         self.inner.next_is_roof_colors()
     }
+    /// Next import path; `None` means automatic selection or a finished plan.
     pub fn next_import_path(&self) -> Option<&Path> {
         self.inner.next_import_path()
     }
+    /// Execute one step, or skip a file/roof import when `load` is false.
+    ///
+    /// Automatic selection still runs. Read/parse errors preserve both plan and
+    /// session, allowing the caller to report the failure or explicitly skip.
     pub fn advance(
         &mut self,
         palettes: &mut PaletteDocument,

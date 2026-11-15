@@ -1,95 +1,50 @@
+//! Map discovery, decoding, edit-state ownership and save lifecycle.
+//! Adapted from pinned map.cpp/config.cpp; LGPL-3.0-only.
+//! Shared filesystem services live in `file_io`; source dialect rules in `discovery`.
+use crate::{
+    MapMetadata, ProjectError, SaveTarget,
+    codecs::parse_asm,
+    discovery::{Rules, discover_with_rules},
+    file_io::{hex_hash, persist_bytes, prepare_target},
+    read_bounded,
+};
+use polished_map_core::Map;
+use serde::Serialize;
+use sha2::{Digest, Sha256};
 use std::{
     fs,
-    io::{Read, Write},
     path::{Path, PathBuf},
 };
 
-use polished_map_core::{BlocksetError, Map, MapError, RasterError};
-use serde::Serialize;
-use sha2::{Digest, Sha256};
-use thiserror::Error;
-
-use crate::codecs::{CodecError, parse_asm};
-use crate::{
-    MapMetadata,
-    discovery::{Rules, discover_with_rules},
-};
-
-#[derive(Debug, Error)]
-pub enum ProjectError {
-    #[error("{path}: {source}")]
-    Io {
-        path: PathBuf,
-        #[source]
-        source: std::io::Error,
-    },
-    #[error("{path}: {message}")]
-    Format { path: PathBuf, message: String },
-    #[error("{0} changed on disk since it was read; reload or preview again before saving")]
-    Conflict(PathBuf),
-    #[error(
-        "paired save failed and could not fully roll back; recovery files are in {path}: {message}"
-    )]
-    RecoveryRequired { path: PathBuf, message: String },
-    #[error("map dimensions are unknown; supply width/height or use Name.WxH.tileset.blk")]
-    DimensionsRequired,
-    #[error("this map has no backing file; use Save As")]
-    DestinationRequired,
-    #[error(transparent)]
-    Map(#[from] MapError),
-    #[error(transparent)]
-    Raster(#[from] RasterError),
-    #[error(transparent)]
-    Blockset(#[from] BlocksetError),
-    #[error(transparent)]
-    PlusPlus(#[from] polished_map_core::attributed::Error),
-    #[error(transparent)]
-    Tileset(#[from] polished_map_core::TilesetError),
-    #[error(transparent)]
-    Palette(#[from] polished_map_core::PaletteError),
-    #[error(transparent)]
-    Event(#[from] polished_map_core::EventError),
-}
-
-impl ProjectError {
-    pub(crate) fn io(path: &Path, source: std::io::Error) -> Self {
-        Self::Io {
-            path: path.into(),
-            source,
-        }
-    }
-    pub(crate) fn codec(path: &Path, error: CodecError) -> Self {
-        Self::Format {
-            path: path.into(),
-            message: error.to_string(),
-        }
-    }
-    pub fn code(&self) -> &'static str {
-        match self {
-            Self::Io { .. } => "io",
-            Self::Format { .. } => "format",
-            Self::Conflict(_) => "conflict",
-            Self::RecoveryRequired { .. } => "recovery_required",
-            Self::DimensionsRequired => "dimensions_required",
-            Self::DestinationRequired => "destination_required",
-            Self::Map(_) => "invalid_map",
-            Self::Raster(_) => "invalid_graphics",
-            Self::Blockset(_) => "invalid_blockset",
-            Self::PlusPlus(_) => "invalid_plusplus_data",
-            Self::Tileset(_) => "invalid_tileset",
-            Self::Palette(_) => "invalid_palette",
-            Self::Event(_) => "invalid_event",
-        }
-    }
-}
-
 #[derive(Clone, Debug, Default)]
+/// Optional dimensions in map blocks; missing axes are resolved from metadata.
 pub struct OpenOptions {
+    /// Explicit width, validated in 1..=255 blocks.
     pub width: Option<u16>,
+    /// Explicit height, validated in 1..=255 blocks.
     pub height: Option<u16>,
 }
 
 #[derive(Clone, Debug)]
+/// A byte map with discovery context and guarded persistence.
+///
+/// The model owns edits/history; this document owns its path and observed
+/// source hash. Opening never writes. Use the report-based open methods only
+/// when the caller can surface ignored trailing data before adopting the map.
+///
+/// ```no_run
+/// use std::path::Path;
+/// use polished_map_core::{Command, Point};
+/// use polished_map_project::{MapDocument, OpenOptions, prepare_save_as};
+/// let mut doc = MapDocument::open(Path::new("maps/Route1.10x9.blk"), &OpenOptions::default())?;
+/// doc.map_mut().apply(&Command::Paint { points: vec![Point { x: 0, y: 0 }], block: 2 })?;
+/// let target = prepare_save_as(Path::new("maps/Route1-copy.10x9.blk"))?;
+/// // Existing destinations require the caller's overwrite decision.
+/// if !target.exists() {
+///     doc.save_as(&target)?;
+/// }
+/// # Ok::<(), polished_map_project::ProjectError>(())
+/// ```
 pub struct MapDocument {
     path: PathBuf,
     hash: Option<[u8; 32]>,
@@ -106,28 +61,10 @@ pub struct MapDocument {
 #[must_use]
 #[derive(Debug)]
 pub struct MapOpenReport {
+    /// Loaded dimension-sized prefix; do not adopt until the report is surfaced.
     pub document: MapDocument,
+    /// Decoded block IDs beyond the selected width × height.
     pub trailing_blocks: usize,
-}
-
-/// A destination observed before an overwrite decision. Saving rechecks its content.
-/// Construct with `prepare_save_as`; fields are private so callers cannot skip observation.
-#[derive(Clone, Debug)]
-pub struct SaveTarget {
-    pub(crate) path: PathBuf,
-    pub(crate) hash: Option<[u8; 32]>,
-}
-
-impl SaveTarget {
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
-    pub fn exists(&self) -> bool {
-        self.hash.is_some()
-    }
-    pub fn content_hash(&self) -> Option<String> {
-        self.hash.map(hex_hash)
-    }
 }
 
 /// Prepare a binary-map destination; no filesystem writes occur here.
@@ -149,33 +86,6 @@ pub fn prepare_save_as(path: &Path) -> Result<SaveTarget, ProjectError> {
     prepare_target(&path)
 }
 
-pub(crate) fn prepare_target(path: &Path) -> Result<SaveTarget, ProjectError> {
-    let filename = path.file_name().ok_or_else(|| ProjectError::Format {
-        path: path.into(),
-        message: "destination needs a file name".into(),
-    })?;
-    let parent = path
-        .parent()
-        .filter(|p| !p.as_os_str().is_empty())
-        .unwrap_or_else(|| Path::new("."));
-    let parent = fs::canonicalize(parent).map_err(|e| ProjectError::io(parent, e))?;
-    let path = parent.join(filename);
-    let hash = optional_hash(&path)?;
-    Ok(SaveTarget { path, hash })
-}
-
-pub(crate) fn optional_hash(path: &Path) -> Result<Option<[u8; 32]>, ProjectError> {
-    // Graphics imports allow eight MiB; format parsers retain their own tighter
-    // bounds. Observation must accept every file the corresponding parser does.
-    match read_bounded(path, 8 * 1024 * 1024) {
-        Ok(bytes) => Ok(Some(Sha256::digest(&bytes).into())),
-        Err(ProjectError::Io { source, .. }) if source.kind() == std::io::ErrorKind::NotFound => {
-            Ok(None)
-        }
-        Err(error) => Err(error),
-    }
-}
-
 pub(crate) fn decode_map_blocks(path: &Path, bytes: &[u8]) -> Result<Vec<u8>, ProjectError> {
     if path
         .extension()
@@ -191,19 +101,24 @@ pub(crate) fn decode_map_blocks(path: &Path, bytes: &[u8]) -> Result<Vec<u8>, Pr
     }
 }
 
-fn hex_hash(hash: [u8; 32]) -> String {
-    hash.iter().map(|b| format!("{b:02x}")).collect()
-}
-
 #[derive(Debug, Serialize)]
+/// Read-only map status for headless inspection and JSON output.
 pub struct MapSummary<'a> {
+    /// Backing file path, or `None` before a first save.
     pub path: Option<&'a Path>,
+    /// Width in 32-pixel map blocks.
     pub width: u8,
+    /// Height in 32-pixel map blocks.
     pub height: u8,
+    /// Number of block IDs, equal to width × height.
     pub block_count: usize,
+    /// Game map buffer size including its six-block padding on both axes.
     pub overworld_buffer_bytes: u32,
+    /// Whether the model has unsaved changes.
     pub modified: bool,
+    /// Last observed file SHA-256; this is not a hash of current in-memory edits.
     pub content_hash: Option<String>,
+    /// Borrowed discovery and selected asset context.
     pub metadata: &'a MapMetadata,
 }
 
@@ -219,6 +134,10 @@ impl MapDocument {
         Self::new_with_rules(root, width, height, Rules::Master)
     }
 
+    /// Create an unsaved zero-filled map using unified project discovery.
+    ///
+    /// # Errors
+    /// Invalid roots or dimensions outside 1..=255 blocks are rejected.
     pub fn new_unified_map(root: &Path, width: u16, height: u16) -> Result<Self, ProjectError> {
         Self::new_unified_with_rules(root, width, height, Rules::Master)
     }
@@ -262,6 +181,7 @@ impl MapDocument {
         Ok(())
     }
 
+    /// Whether an unsaved map, imported ASM, or storage change needs a destination.
     pub fn needs_save_as(&self) -> bool {
         self.require_new_destination
             || !self.has_backing_file()
@@ -299,10 +219,22 @@ impl MapDocument {
         })
     }
 
+    /// Open an exact-length map with automatically discovered project context.
+    ///
+    /// # Errors
+    /// I/O, decoding, unknown/invalid dimensions, and a decoded block count
+    /// that differs from width × height cause failure.
     pub fn open(path: &Path, options: &OpenOptions) -> Result<Self, ProjectError> {
         Self::open_in_project(path, options, None)
     }
 
+    /// Open an exact-length map with an optional explicit project root.
+    ///
+    /// Explicit dimensions override metadata. This preserves the fixed storage
+    /// discovery rules; use the unified report method for combined source layouts.
+    ///
+    /// # Errors
+    /// Invalid paths, reads, decoded bytes, dimensions, or length are rejected.
     pub fn open_in_project(
         path: &Path,
         options: &OpenOptions,
@@ -462,18 +394,23 @@ impl MapDocument {
     pub(crate) fn rules(&self) -> Rules {
         self.rules
     }
+    /// Whether a source hash was observed; this does not recheck file existence.
     pub fn has_backing_file(&self) -> bool {
         self.hash.is_some()
     }
+    /// Read the validated block grid and edit/history state.
     pub fn map(&self) -> &Map {
         &self.map
     }
+    /// Discovered and selected context; it is not a live filesystem query.
     pub fn metadata(&self) -> &MapMetadata {
         &self.metadata
     }
+    /// Edit the in-memory map through its validated command and resize APIs.
     pub fn map_mut(&mut self) -> &mut Map {
         &mut self.map
     }
+    /// Borrow document metadata and collect the serializable map status.
     pub fn summary(&self) -> MapSummary<'_> {
         MapSummary {
             path: self.has_backing_file().then_some(&self.path),
@@ -486,6 +423,7 @@ impl MapDocument {
             metadata: &self.metadata,
         }
     }
+    /// SHA-256 of the last observed backing file, or `None` for an unsaved map.
     pub fn content_hash(&self) -> Option<String> {
         self.hash.map(hex_hash)
     }
@@ -557,70 +495,4 @@ impl MapDocument {
         self.map.mark_saved();
         Ok(())
     }
-}
-
-pub(crate) fn persist_bytes(
-    path: &Path,
-    expected: Option<[u8; 32]>,
-    blocks: &[u8],
-) -> Result<(), ProjectError> {
-    if optional_hash(path)? != expected {
-        return Err(ProjectError::Conflict(path.into()));
-    }
-    let parent = path.parent().ok_or_else(|| ProjectError::Format {
-        path: path.into(),
-        message: "no parent directory".into(),
-    })?;
-    let mut staged =
-        tempfile::NamedTempFile::new_in(parent).map_err(|e| ProjectError::io(parent, e))?;
-    if expected.is_some() {
-        staged
-            .as_file()
-            .set_permissions(
-                fs::metadata(path)
-                    .map_err(|e| ProjectError::io(path, e))?
-                    .permissions(),
-            )
-            .map_err(|e| ProjectError::io(path, e))?;
-    }
-    staged
-        .write_all(blocks)
-        .map_err(|e| ProjectError::io(path, e))?;
-    staged
-        .as_file()
-        .sync_all()
-        .map_err(|e| ProjectError::io(path, e))?;
-    // Recheck immediately before replacement; external writers do not participate in a lock protocol.
-    if optional_hash(path)? != expected {
-        return Err(ProjectError::Conflict(path.into()));
-    }
-    if expected.is_some() {
-        staged
-            .persist(path)
-            .map_err(|e| ProjectError::io(path, e.error))?;
-    } else {
-        staged.persist_noclobber(path).map_err(|e| {
-            if e.error.kind() == std::io::ErrorKind::AlreadyExists {
-                ProjectError::Conflict(path.into())
-            } else {
-                ProjectError::io(path, e.error)
-            }
-        })?;
-    }
-    Ok(())
-}
-
-pub fn read_bounded(path: &Path, limit: usize) -> Result<Vec<u8>, ProjectError> {
-    let file = fs::File::open(path).map_err(|e| ProjectError::io(path, e))?;
-    let mut bytes = Vec::new();
-    file.take((limit as u64).saturating_add(1))
-        .read_to_end(&mut bytes)
-        .map_err(|e| ProjectError::io(path, e))?;
-    if bytes.len() > limit {
-        return Err(ProjectError::Format {
-            path: path.into(),
-            message: format!("file exceeds {limit} bytes"),
-        });
-    }
-    Ok(bytes)
 }

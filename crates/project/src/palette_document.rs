@@ -2,7 +2,7 @@
 //! Export is explicit and independent of map/tileset saves.
 use crate::{
     ProjectError, SaveTarget,
-    document::{optional_hash, persist_bytes, prepare_target},
+    file_io::{optional_hash, persist_bytes, prepare_target},
     parse_rgb_palettes, read_bounded,
 };
 use polished_map_core::{PaletteBank, PaletteCommand, PaletteSet};
@@ -10,6 +10,10 @@ use sha2::{Digest, Sha256};
 use std::path::Path;
 
 #[derive(Clone, Debug)]
+/// Session colors, selected set, dirty state and optional imported source.
+///
+/// Exports are explicit and separate from map/tileset saves. The default
+/// uses the upstream palette bank with Day selected.
 pub struct PaletteDocument {
     bank: PaletteBank,
     selected: PaletteSet,
@@ -23,6 +27,7 @@ impl Default for PaletteDocument {
     }
 }
 impl PaletteDocument {
+    /// Create a clean palette session without an imported source.
     pub fn new(bank: PaletteBank, selected: PaletteSet) -> Self {
         Self {
             bank,
@@ -31,15 +36,19 @@ impl PaletteDocument {
             source: None,
         }
     }
+    /// Read all six color sets.
     pub fn bank(&self) -> &PaletteBank {
         &self.bank
     }
+    /// Current display palette set.
     pub fn selected(&self) -> PaletteSet {
         self.selected
     }
+    /// Change the display set without marking colors dirty.
     pub fn select(&mut self, selected: PaletteSet) {
         self.selected = selected;
     }
+    /// Whether palette edits or dialog acceptance have marked the session dirty.
     pub fn is_modified(&self) -> bool {
         self.modified
     }
@@ -63,6 +72,10 @@ impl PaletteDocument {
     ) -> Result<(), ProjectError> {
         crate::palettes::apply_roofs(&mut self.bank, path, group, layout)
     }
+    /// Atomically validate/apply colors and mark nonempty batches dirty.
+    ///
+    /// # Errors
+    /// Invalid slots or color values leave the bank and dirty state unchanged.
     pub fn apply_batch(&mut self, commands: &[PaletteCommand]) -> Result<(), ProjectError> {
         self.bank.edit(commands)?;
         self.modified |= !commands.is_empty();
@@ -137,6 +150,10 @@ impl PaletteDocument {
         self.modified = false;
         Ok(())
     }
+    /// Check the last imported palette source, if any.
+    ///
+    /// # Errors
+    /// Returns read errors or a conflict if observed content changed.
     pub fn verify_source(&self) -> Result<(), ProjectError> {
         if let Some(source) = &self.source
             && optional_hash(&source.path)? != source.hash
@@ -147,6 +164,10 @@ impl PaletteDocument {
     }
 }
 
+/// Observe a palette export destination, adding `.pal` when no suffix exists.
+///
+/// # Errors
+/// Returns invalid-path or bounded observation errors; no files are written.
 pub fn prepare_palette_export(path: &Path) -> Result<SaveTarget, ProjectError> {
     let path = if path.extension().is_none() {
         path.with_extension("pal")

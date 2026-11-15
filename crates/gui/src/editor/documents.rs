@@ -2,8 +2,9 @@
 //! LGPL-3.0-only; adapted from the pinned Main_Window/map-events implementations.
 //! The owning document fixes its parsing and persistence rules. Application
 //! identity belongs to `application`; an uncommitted picker cannot change storage.
-use polished_map_core::{EventCommand, Map};
-use polished_map_project::{EventScript, MapMetadata, ProjectError, SaveTarget, attributed};
+use polished_map_core::Map;
+pub(super) use polished_map_project::EventDocument;
+use polished_map_project::{MapMetadata, ProjectError, attributed};
 use std::path::{Path, PathBuf};
 
 mod graphics;
@@ -163,8 +164,8 @@ impl MapDocument {
             Self::Attributed(d) => d.select_tileset(name),
         }
     }
-    pub fn with_storage(&self, profile: Storage, name: &str) -> Result<Self, ProjectError> {
-        match (self, profile) {
+    pub fn with_storage(&self, storage: Storage, name: &str) -> Result<Self, ProjectError> {
+        match (self, storage) {
             (Self::Classic(d), Storage::Attributed) => {
                 d.with_plusplus_tileset(name).map(Self::Attributed)
             }
@@ -243,12 +244,12 @@ impl MapDocument {
     }
     pub fn open_events(&self, path: &Path) -> Result<EventDocument, ProjectError> {
         match self {
-            Self::Classic(_) => polished_map_project::EventDocument::open(path).map(Into::into),
+            Self::Classic(_) => EventDocument::open(path),
             Self::Attributed(_) => attributed::EventDocument::open(path).map(Into::into),
         }
     }
     pub fn open_unified_events(&self, path: &Path) -> Result<EventDocument, ProjectError> {
-        polished_map_project::EventDocument::open_unified(path).map(EventDocument::Unified)
+        EventDocument::open_unified(path)
     }
     pub fn auto_load_events(&self) -> Result<Option<EventDocument>, ProjectError> {
         self.auto_load_event_catalog(false)
@@ -312,50 +313,6 @@ impl MapDocument {
                 Ok(d.path()
                     .with_file_name(format!("{destination}.{extension}")))
             }
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub(super) enum EventDocument {
-    Unified(polished_map_project::EventDocument),
-    Classic(polished_map_project::EventDocument),
-    Attributed(attributed::EventDocument),
-}
-
-impl From<polished_map_project::EventDocument> for EventDocument {
-    fn from(document: polished_map_project::EventDocument) -> Self {
-        Self::Classic(document)
-    }
-}
-impl From<attributed::EventDocument> for EventDocument {
-    fn from(document: attributed::EventDocument) -> Self {
-        Self::Attributed(document)
-    }
-}
-impl EventDocument {
-    pub fn source(&self) -> &SaveTarget {
-        match self {
-            Self::Classic(d) | Self::Unified(d) => d.source(),
-            Self::Attributed(d) => d.source(),
-        }
-    }
-    pub fn script(&self) -> &EventScript {
-        match self {
-            Self::Classic(d) | Self::Unified(d) => d.script(),
-            Self::Attributed(d) => d.script(),
-        }
-    }
-    pub fn apply(&mut self, commands: &[EventCommand]) -> Result<(), ProjectError> {
-        match self {
-            Self::Classic(d) | Self::Unified(d) => d.apply(commands),
-            Self::Attributed(d) => d.apply(commands),
-        }
-    }
-    pub fn save(&mut self) -> Result<(), ProjectError> {
-        match self {
-            Self::Classic(d) | Self::Unified(d) => d.save(),
-            Self::Attributed(d) => d.save(),
         }
     }
 }

@@ -5,14 +5,19 @@
 /// The three source sizes are different patterns, not scaled copies.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum PriorityPattern {
+    /// 8×8 overlay for native-size tiles.
     Small,
+    /// 16×16 overlay for enlarged tiles.
     Large,
+    /// 24×24 overlay for tile chips.
     Chip,
 }
 
 impl PriorityPattern {
+    /// Patterns in increasing pixel size.
     pub const ALL: [Self; 3] = [Self::Small, Self::Large, Self::Chip];
 
+    /// Width and height of this square pattern, in pixels.
     pub fn size(self) -> usize {
         match self {
             Self::Small => 8,

@@ -60,7 +60,7 @@ fn dirty_all(h: &mut Harness<'_, Editor>, root: &std::path::Path) {
             y: 0,
         }])
         .unwrap();
-    loaded.events = Some(events.into());
+    loaded.events = Some(events);
 }
 
 #[test]
@@ -182,8 +182,7 @@ fn clean_saves_acknowledge_without_touching_external_files_and_export_names_dest
     let (dir, mut h) = crate::editor::roof_editor_tests::fixture();
     let path = dir.path().join("Map.asm");
     fs::write(&path, "\twarp_event 0, 0, MAP, 1\n").unwrap();
-    h.state_mut().loaded.as_mut().unwrap().events =
-        Some(EventDocument::open(&path).unwrap().into());
+    h.state_mut().loaded.as_mut().unwrap().events = Some(EventDocument::open(&path).unwrap());
     fs::write(&path, "external edit").unwrap();
     for (action, expected) in [
         (SaveStep::Tileset, "Saved demo!"),
