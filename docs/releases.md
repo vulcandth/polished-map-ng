@@ -8,7 +8,7 @@ identify published builds; later source/CI artifacts are not automatically relea
 
 | Application | Current published build | Source revision | Tester guide |
 |---|---|---|---|
-| Unified | [November 14](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-14-bce0ec2) | `bce0ec2d55c000e63df344cbc1dd7138436c8058` | [Unified](testing-unified.md) |
+| Unified | [November 15](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-15-d099e6e) | `d099e6e4107e49ef5fadae8377e42040f85a7c33` | [Unified](testing-unified.md) |
 | Fixed master | [November 7](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-618aefd) | `618aefd47f29bd6b0025ff3db6d0faf5a1e5c454` | [Master](testing.md) |
 | Fixed plusplus | [November 7](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-618aefd) | `618aefd47f29bd6b0025ff3db6d0faf5a1e5c454` | [Plusplus](testing-plusplus.md) |
 
@@ -19,14 +19,15 @@ remain in Git history and [GitHub release notes](https://github.com/vulcandth/po
 
 ## Unified development packaging
 
-The published unified build comes from reviewed `main` at `bce0ec2`. It includes
-Project options padding, malformed-input/palette-save/PNG safety fixes, the source
-organization and Rust API documentation review, and streamlined package contents.
-Its [full CI](https://github.com/vulcandth/polished-map-ng/actions/runs/43667464128)
-and all five [source/platform packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43670234890)
+The published unified build comes from reviewed `main` at `d099e6e`. It includes
+the November 14 menu/Help/naming corrections, cherry-tree desktop icon packaging,
+and macOS clipboard maintenance. Its
+[full CI](https://github.com/vulcandth/polished-map-ng/actions/runs/43734836925)
+and all five [source/platform packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43734836877)
 passed. All four binaries were built offline from the accompanying source archive.
 Source/archive contents, uploaded asset digests, executable architectures, Windows
-icons and macOS bundle signatures were verified; see the [archive audit](#initial-release-archive-audit).
+icons, macOS bundle metadata/signatures and Linux launcher assets were verified;
+see the [archive audit](#initial-release-archive-audit).
 Human native acceptance remains open, and general aesthetic matching is deferred.
 
 ## Plusplus development packages
@@ -100,16 +101,16 @@ present elsewhere, but their adaptation notice/link was missing. The current
 package policy fixes these issues without removing corresponding source.
 
 The completed [R3 review](roadmap.md#initial-release-review) established the package
-policy. It was reverified for the published November 14 development build at
-`bce0ec2d55c000e63df344cbc1dd7138436c8058`, with the successful CI and packaging
+policy. It was reverified for the published November 15 development build at
+`d099e6e4107e49ef5fadae8377e42040f85a7c33`, with the successful CI and packaging
 runs linked above. This is a tester release, not initial-release acceptance.
 
 | Verified target | Files | Dependency notice records | Compressed bytes | Support bytes excluding GUI/CLI executables |
 |---|---:|---:|---:|---:|
-| Windows x86-64 | 452 | 232 | 10,213,873 | 2,631,417 |
-| Linux x86-64 | 581 | 308 | 11,464,578 | 3,202,793 |
-| macOS Apple Silicon | 441 | 229 | 8,659,253 | 2,493,108 |
-| macOS Intel | 441 | 229 | 9,522,564 | 2,493,108 |
+| Windows x86-64 | 454 | 232 | 10,200,425 | 2,635,982 |
+| Linux x86-64 | 585 | 308 | 11,451,551 | 3,210,821 |
+| macOS Apple Silicon | 444 | 229 | 8,662,406 | 2,530,696 |
+| macOS Intel | 444 | 229 | 9,525,788 | 2,530,696 |
 
 Independent inspection checked each archive's SHA-256, BUILD-INFO, selected
 launcher, native executable architecture/modes, explicit content allowlist,
@@ -122,8 +123,8 @@ build host; both macOS jobs verified their ad-hoc signatures. Developer ID
 signing and native user acceptance remain separate gates. These archive sizes
 measure distribution overhead, not application memory use.
 
-The corresponding source contains 23,237 files (498,239,549 bytes unpacked).
-Its 950 tracked files match the commit exactly; all 460 registry source packages
+The corresponding source contains 23,250 files (496,376,487 bytes unpacked).
+Its 963 tracked files match the commit exactly; all 460 registry source packages
 were checked against their lockfile archive checksums and individual file hashes.
 Generated offline Cargo configuration, BUILD-INFO and the exact copied REBUILD
 instructions account for the additional non-registry files. Complete source,

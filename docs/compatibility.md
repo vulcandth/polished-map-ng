@@ -48,7 +48,8 @@ Help; shared snapshots use explicit platform metrics rather than host defaults.
 Container/pixel verification does not complete #26's human shell-icon criterion.
 Human DPI and macOS retesting remain in #27–28 and U3/P1; post-release proposals
 and general aesthetic matching remain deferred. These fixes do not complete
-native acceptance or publish a new development release.
+native acceptance. Fresh packages from `d099e6e` passed full CI and the
+[publication audit](releases.md#unified-development-packaging).
 
 ## Reproducing automated evidence
 

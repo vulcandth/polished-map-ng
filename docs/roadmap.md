@@ -54,7 +54,8 @@ This preparation does not waive native parity or final release acceptance.
 
 - [x] **R6:** Implement the November 14 checkbox/dropdown/menubar, Help
   content/spacing and application naming/icon corrections (#20–26), with focused
-  automated checks and asset provenance. [Review evidence](compatibility.md#november-14-review-corrections).
+  automated checks and asset provenance; published in the November 15
+  [development packages](releases.md#unified-development-packaging). [Review evidence](compatibility.md#november-14-review-corrections).
   Human shell-icon acceptance in [#26](https://github.com/vulcandth/polished-map-ng/issues/26)
   and existing testing #27–28 remain open under U3/P1. Post-release proposals
   and milestone acceptance gates are unchanged.
