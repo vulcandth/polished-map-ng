@@ -21,7 +21,7 @@ jobs:
         os: [windows-latest, ubuntu-24.04, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Linux build dependencies
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libxkbcommon-x11-0 libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev pkg-config fonts-liberation xvfb xauth
@@ -33,6 +33,12 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Enforce Clippy without warnings
         run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - name: Check maintained macOS clipboard bindings on both architectures
+        if: runner.os == 'macOS'
+        run: |
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+          cargo clippy -p arboard --lib --locked --target aarch64-apple-darwin -- -D deprecated -D unused_unsafe
+          cargo clippy -p arboard --lib --locked --target x86_64-apple-darwin -- -D deprecated -D unused_unsafe
       - name: Smoke-test file input, edit and output on every OS
         run: cargo test -p polished-map-cli --locked --test commands preview_then_apply_and_failed_batch_never_partially_writes -- --exact
       - name: Verify complete workspace
@@ -100,7 +106,7 @@ jobs:
   msrv:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev pkg-config
       - run: rustup toolchain install 1.95 --profile minimal
       - run: cargo +1.95 check --workspace --all-targets --locked
@@ -108,8 +114,8 @@ jobs:
   dependencies:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
       - name: Verify packaging and license tooling
@@ -131,17 +137,27 @@ jobs:
           cargo fetch --locked
           cargo about generate --workspace --all-features --locked --offline --fail --format json -o .scratch/licenses.json
           python3 tools/license_report.py .scratch/licenses.json --output .scratch/licenses.html
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: dependency-license-report
           path: |
             .scratch/licenses.json
             .scratch/licenses.html
           if-no-files-found: error
+      - name: Verify artifact upload/download compatibility
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dependency-license-report
+          path: .scratch/license-artifact-check
+          digest-mismatch: error
+      - name: Compare downloaded license reports
+        run: |
+          cmp .scratch/licenses.json .scratch/license-artifact-check/licenses.json
+          cmp .scratch/licenses.html .scratch/license-artifact-check/licenses.html
   reference:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Fetch immutable upstream source
         run: |
           git init .reference/master
@@ -208,7 +224,7 @@ jobs:
   visuals:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev libvulkan1 mesa-vulkan-drivers pkg-config
       - name: Verify original menu drawing and palette slider behavior
         run: |
@@ -220,7 +236,7 @@ jobs:
           python3 tools/slider_oracle.py --output .scratch/reference-slider --fltk-cache .scratch/menu-fltk
           cargo test -p polished-map-gui --locked --features visual-tests --lib reference_slider_drag -- --ignored
       - run: cargo test -p polished-map-gui --locked --features visual-tests -- --test-threads=1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: visual-differences
@@ -236,7 +252,7 @@ jobs:
       POLISHED_MAP_POKECRYSTAL: ${{ github.workspace }}/.reference/pokecrystal
       POLISHED_CRYSTAL_FIXTURE: ${{ github.workspace }}/.reference/polishedcrystal
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Headless GUI build dependencies
         run: sudo apt-get update && sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev libxcursor-dev libxi-dev libxrandr-dev libgl1-mesa-dev pkg-config
       - name: Fetch five immutable project fixtures

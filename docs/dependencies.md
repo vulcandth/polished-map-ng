@@ -84,11 +84,18 @@ registries/Git sources are denied. Non-Cargo asset terms remain separate.
 ## Continuous license checks
 
 [CI](../.github/workflows/ci.yml) enforces formatting and warning-free Clippy on
-Windows, Linux and macOS. Its dependency job pins cargo-deny 0.18.9 and cargo-about
+Windows, Linux and macOS for workspace crates. The maintained arboard adapter is
+also checked explicitly for deprecated bindings and unnecessary unsafe blocks on
+both macOS architectures; vendored dependencies are outside the workspace lint
+selection. Its dependency job pins cargo-deny 0.18.9 and cargo-about
 0.9.3, checks all workspace features, and uploads a JSON/HTML license report.
 `tools/license_report.py` checks coverage against Cargo's dependency graph for
 all four distribution targets and rejects missing packages, empty terms or
 missing clarified license texts.
+
+Workflow actions are pinned to reviewed Node.js 24 releases by full commit hash.
+CI downloads its uploaded license report and compares both files byte-for-byte;
+artifact digest mismatches fail both CI and development source downloads.
 
 [about.toml](../about.toml) includes checksummed clarifications for workspace
 LGPL terms and non-Cargo components: Fugue CC BY 3.0 icons, the OFL fallback font,

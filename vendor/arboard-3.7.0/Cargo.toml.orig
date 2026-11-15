@@ -48,7 +48,7 @@ image = { version = "0.25", optional = true, default-features = false, features 
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.0"
-objc2-foundation = { version = "0.3.0", default-features = false, features = [
+objc2-foundation = { version = "0.3.2", default-features = false, features = [
     "std",
     "NSArray",
     "NSString",
@@ -56,7 +56,7 @@ objc2-foundation = { version = "0.3.0", default-features = false, features = [
     "NSGeometry",
     "NSValue",
 ] }
-objc2-app-kit = { version = "0.3.0", default-features = false, features = [
+objc2-app-kit = { version = "0.3.2", default-features = false, features = [
     "std",
     "objc2-core-graphics",
     "NSPasteboard",
@@ -67,7 +67,7 @@ objc2-core-foundation = { version = "0.3.0", default-features = false, optional 
     "std",
     "CFCGTypes",
 ] }
-objc2-core-graphics = { version = "0.3.0", default-features = false, optional = true, features = [
+objc2-core-graphics = { version = "0.3.2", default-features = false, optional = true, features = [
     "std",
     "CGImage",
     "CGColorSpace",

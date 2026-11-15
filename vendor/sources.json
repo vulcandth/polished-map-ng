@@ -1165,7 +1165,7 @@
       "archive_sha256": "aeb9553e62312c8756a5979254fc6d7da8bbeb5986a1e17037fab932f7037917",
       "archive_url": "https://static.crates.io/crates/arboard/arboard-3.7.0.crate",
       "patch": "patches/arboard-3.7.0.patch",
-      "patch_sha256": "4519b0c2b6a90a9d246a6735c4c3f1f181334a7c9d4fb31d652aacd5d60c1a61",
+      "patch_sha256": "60f5aa1c8360d3afeb5712af49d2a95e69134ea1ed30bbf2a50ae818fb05a745",
       "files": {
         ".cargo_vcs_info.json": {
           "sha256": "559849605b4f3fd137de05d9e99c64e62ba44abdfd5a4d03d86db2af13307b2a",
@@ -1188,11 +1188,11 @@
           "original_sha256": "c47bd143d6f936482209ec0dfd5ecea4f37815a2e82f0b423215c025e474e9be"
         },
         "Cargo.toml": {
-          "sha256": "1175d1cefbe0a54e461482514cf98d1d36880762fc786764cd12a8ed68b48163",
+          "sha256": "5fd236d966f31a4e68ee0c2418e7cd50d19a84533525209a33c46ee93d4f0c8e",
           "original_sha256": "b582ac4fbd0fa318993a683ba0f95e684fa4a2d613cace1bb22445caf5258a91"
         },
         "Cargo.toml.orig": {
-          "sha256": "b2e1786c45389e1b5a3dd453377a262e1e83a27923b84dc089e21466df9c77d8",
+          "sha256": "7dba3fae6eefaafd35a39e3eb7dd6f7c259bab00a34c785559bb9dc8a943df84",
           "original_sha256": "32455cbed02db3d6637be0bc455f7faca79f5f23deeff5fd8247265642b4037a"
         },
         "LICENSE-APACHE.txt": {
@@ -1260,7 +1260,7 @@
           "original_sha256": "cbc77d20c42d56d4468288b0720b118571eef8952a94848e5a87cfc47c37c4c4"
         },
         "src/platform/osx.rs": {
-          "sha256": "29c960fcd0ed4e2de12785085f3c7739b80e74190880f9f71494112c07dd8d3b",
+          "sha256": "ed4c754925981583e0ddaffd6ef4c2d6b7990a2c102dbf2895c991367774b913",
           "original_sha256": "da9c443c9b752dcbe1b769cb92344e14182256f27863bfb6e79869bf5d4db87b"
         },
         "src/platform/windows.rs": {

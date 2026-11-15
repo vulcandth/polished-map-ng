@@ -35,6 +35,13 @@ Modified for Polished Map NG on 2026-11-06, under MIT OR Apache-2.0:
   another payload. Enable the existing image crate's BMP decoder on Linux.
 - Use the current `image::ImageReader` spelling in image readers.
 
+Updated on 2026-11-14, under the same MIT OR Apache-2.0 terms:
+
+- Use the objc2 0.3.2 Core Graphics constructors and byte-order spelling, and
+  remove redundant `unsafe` blocks around safe AppKit/Foundation calls. Require
+  those binding versions in both manifests. Preserve RGBA byte order, provider
+  release ownership and pasteboard behavior; retain necessary unsafe operations.
+
 The [isolated X11 test](../crates/gui/tests/clipboard_images.rs) exercises the
 production reader with an independent clipboard owner, exact RGB vectors,
 PNG precedence, corrupt data and excessive BMP dimensions. Integrated Wayland

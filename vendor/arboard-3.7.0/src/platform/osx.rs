@@ -39,8 +39,8 @@ fn image_from_pixels(
 	use objc2_app_kit::NSImage;
 	use objc2_core_foundation::CGFloat;
 	use objc2_core_graphics::{
-		CGBitmapInfo, CGColorRenderingIntent, CGColorSpaceCreateDeviceRGB,
-		CGDataProviderCreateWithData, CGImageAlphaInfo, CGImageCreate,
+		CGBitmapInfo, CGColorRenderingIntent, CGColorSpace, CGDataProvider, CGImage,
+		CGImageAlphaInfo, CGImageByteOrderInfo,
 	};
 	use objc2_foundation::NSSize;
 	use std::{
@@ -64,11 +64,11 @@ fn image_from_pixels(
 
 		// SAFETY: The data pointer and length are valid.
 		// The info pointer can safely be NULL, we don't use it in the `release` callback.
-		unsafe { CGDataProviderCreateWithData(ptr::null_mut(), data_ptr, len, Some(release)) }
+		unsafe { CGDataProvider::with_data(ptr::null_mut(), data_ptr, len, Some(release)) }
 	}
 	.unwrap();
 
-	let colorspace = unsafe { CGColorSpaceCreateDeviceRGB() }.unwrap();
+	let colorspace = CGColorSpace::new_device_rgb().unwrap();
 
 	// XXX: If this returns an error, try running your application from the command line or
 	// use `Console.app`. For the later, make sure that before you start streaming log messages
@@ -78,14 +78,14 @@ fn image_from_pixels(
 	// - https://redsweater.com/blog/129/coregraphics-log-jam
 	// - https://github.com/1Password/arboard/issues/204
 	let cg_image = unsafe {
-		CGImageCreate(
+		CGImage::new(
 			width,
 			height,
 			8,
 			32,
 			4 * width,
 			Some(&colorspace),
-			CGBitmapInfo::ByteOrderDefault | CGBitmapInfo(CGImageAlphaInfo::Last.0),
+			CGBitmapInfo(CGImageByteOrderInfo::OrderDefault.0 | CGImageAlphaInfo::Last.0),
 			Some(&provider),
 			ptr::null_mut(),
 			false,
@@ -95,7 +95,7 @@ fn image_from_pixels(
 	.ok_or(Error::ConversionFailure)?;
 
 	let size = NSSize { width: width as CGFloat, height: height as CGFloat };
-	Ok(unsafe { NSImage::initWithCGImage_size(NSImage::alloc(), &cg_image, size) })
+	Ok(NSImage::initWithCGImage_size(NSImage::alloc(), &cg_image, size))
 }
 
 pub(crate) struct Clipboard {
@@ -129,7 +129,7 @@ impl Clipboard {
 	}
 
 	fn clear(&mut self) {
-		unsafe { self.pasteboard.clearContents() };
+		self.pasteboard.clearContents();
 	}
 
 	fn string_from_type(&self, type_: &'static NSString) -> Result<String, Error> {
@@ -139,11 +139,13 @@ impl Clipboard {
 			// XXX: We explicitly use `pasteboardItems` and not `stringForType` since the latter will concat
 			// multiple strings, if present, into one and return it instead of reading just the first which is `arboard`'s
 			// historical behavior.
-			let contents = unsafe { self.pasteboard.pasteboardItems() }
+			let contents = self
+				.pasteboard
+				.pasteboardItems()
 				.ok_or_else(|| Error::unknown("NSPasteboard#pasteboardItems errored"))?;
 
 			for item in contents {
-				if let Some(string) = unsafe { item.stringForType(type_) } {
+				if let Some(string) = item.stringForType(type_) {
 					return Ok(string.to_string());
 				}
 			}
@@ -266,9 +268,9 @@ impl<'clipboard> Get<'clipboard> {
 					array
 						.iter()
 						.filter_map(|obj| {
-							obj.downcast::<NSURL>().ok().and_then(|url| {
-								unsafe { url.path() }.map(|p| PathBuf::from(p.to_string()))
-							})
+							obj.downcast::<NSURL>()
+								.ok()
+								.and_then(|url| url.path().map(|p| PathBuf::from(p.to_string())))
 						})
 						.collect::<Vec<_>>()
 				})
@@ -294,7 +296,7 @@ impl<'clipboard> Set<'clipboard> {
 		let string_array = NSArray::from_retained_slice(&[ProtocolObject::from_retained(
 			NSString::from_str(&data),
 		)]);
-		let success = unsafe { self.clipboard.pasteboard.writeObjects(&string_array) };
+		let success = self.clipboard.pasteboard.writeObjects(&string_array);
 
 		add_clipboard_exclusions(self.clipboard, self.exclude_from_history);
 
@@ -347,7 +349,7 @@ impl<'clipboard> Set<'clipboard> {
 		self.clipboard.clear();
 
 		let image_array = NSArray::from_retained_slice(&[ProtocolObject::from_retained(image)]);
-		let success = unsafe { self.clipboard.pasteboard.writeObjects(&image_array) };
+		let success = self.clipboard.pasteboard.writeObjects(&image_array);
 
 		add_clipboard_exclusions(self.clipboard, self.exclude_from_history);
 
@@ -368,7 +370,7 @@ impl<'clipboard> Set<'clipboard> {
 			.filter_map(|path| {
 				path.as_ref().canonicalize().ok().and_then(|abs_path| {
 					abs_path.to_str().map(|str| {
-						let url = unsafe { NSURL::fileURLWithPath(&NSString::from_str(str)) };
+						let url = NSURL::fileURLWithPath(&NSString::from_str(str));
 						ProtocolObject::from_retained(url)
 					})
 				})
@@ -380,7 +382,7 @@ impl<'clipboard> Set<'clipboard> {
 		}
 
 		let objects = NSArray::from_retained_slice(&uri_list);
-		let success = unsafe { self.clipboard.pasteboard.writeObjects(&objects) };
+		let success = self.clipboard.pasteboard.writeObjects(&objects);
 
 		add_clipboard_exclusions(self.clipboard, self.exclude_from_history);
 
@@ -413,11 +415,9 @@ fn add_clipboard_exclusions(clipboard: &mut Clipboard, exclude_from_history: boo
 	//
 	// See http://nspasteboard.org/ for details about the community standard.
 	if exclude_from_history {
-		unsafe {
-			clipboard
-				.pasteboard
-				.setString_forType(ns_string!(""), ns_string!("org.nspasteboard.ConcealedType"));
-		}
+		clipboard
+			.pasteboard
+			.setString_forType(ns_string!(""), ns_string!("org.nspasteboard.ConcealedType"));
 	}
 }
 

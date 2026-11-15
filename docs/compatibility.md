@@ -72,12 +72,12 @@ Input/persistence inspection reproduced two panics and one incorrect palette wri
   Matching their whitespace rules preserves indentation and updates both real
   rows in order instead of leaving one stale and assigning its color to the next.
 
-The [archive audit](releases.md#initial-release-archive-audit) covers all four
+The [current archive audit](releases.md#initial-release-archive-audit) covers all four
 published unified binary targets and their matching source. Updated packaging
 has regressions for selected launcher/version, retained attribution/licenses,
 shared notice hashes, target dependency selection, offline documentation links,
 source-only links pinned to the exact commit, dirty-checkout rejection and ZIP
-executable modes. All five
+executable modes. For the initial R1–R4 review, all five
 [packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43347427189)
 passed, building the four targets offline from matching source. Independent
 archive inspection verified hashes, architecture, executable modes, source
@@ -136,6 +136,10 @@ enum, formatting, and shared RGB validation; rendering baselines were unchanged.
 The PNG regression verifies invalid data cannot truncate an existing destination
 or create a new one, while valid large-image output still decodes exactly.
 Fixture/native tests remain opt-in, and no desktop acceptance campaign was run.
+The reviewed code at `bce0ec2` also passed all eight
+[CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43667464128).
+Fresh unified tester packages for all four targets passed the
+[publication checks](releases.md#unified-development-packaging); U3 remains open.
 
 ## Master source inventory
 
@@ -254,11 +258,18 @@ remain under the aesthetic deferral, not completed Print pixel parity.
 | File drops | Real OLE callback/media, isolated X11 selections/INCR, independent Wayland socket peer; viewport bounds/order/scale/guards | Real file-manager cancellation/capture and mixed-DPI delivery on every desktop |
 | Modals | Hidden Windows/macOS ownership/lifetime tests, Xvfb transient ownership, Wayland parent/xdg-dialog protocol; renderer sizing/lease tests | Integrated focus, native chooser, placement and DPI workflows |
 | Opacity | Hidden Win32 calls, Xvfb property roundtrip, Wayland surface/frame/resource probe | GPU/compositor pixel output, unsupported compositor title bars, actual F10/restart behavior everywhere |
-| Clipboard | Independent X11 PNG/BMP owner and Wayland fragmented transfer/lifetime/timeout/codec probes | Arbitrary app/compositor interoperability or all native acceptance |
+| Clipboard | Independent X11 PNG/BMP owner and Wayland fragmented transfer/lifetime/timeout/codec probes; targeted macOS binding lints for Intel and Apple Silicon | Arbitrary app/compositor interoperability or all native acceptance |
 | Browser/script/color adapters | Injected routing/errors, platform compile and bounded native helpers | Actual associations, every external editor's line navigation or user dialog interaction |
 
 [Vendor maintenance](../vendor/README.md), [architecture](architecture.md#native-external-file-drop-integration-gate)
 and [CI](../.github/workflows/ci.yml) own patch rationale, limits and exact commands.
+
+The maintained macOS clipboard adapter uses the objc2 0.3.2 associated constructors
+and current byte-order constant. The underlying Core Graphics calls, RGBA flags,
+data-provider release callback and pasteboard operation order are unchanged.
+Only unsafe blocks around calls declared safe by those bindings were removed;
+raw-pointer/native ownership operations retain their safety boundaries. The
+[vendor record](../vendor/NOTICE.md#arboard-370) documents this compatibility cleanup.
 
 ## Native profile preference lifecycle
 

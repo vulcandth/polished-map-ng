@@ -305,7 +305,8 @@ and release acceptance follow the preceding objectives.
   results; distinguish compilation, automated native checks and interactive checks.
 - [ ] **P2 (in progress):** Produce Windows x86-64 MSVC ZIP, Linux x86-64 tarball and macOS
   Intel/Apple Silicon app bundles, including the CLI and clean-machine launch checks.
-  Development packages are built, verified and published for all four targets.
+  Development packages are built, verified and published for all four targets;
+  unified downloads now include the reviewed `main` code and packaging cleanup.
   [Packaging and tester handoff](releases.md#development-packages) track evidence;
   clean-machine GUI launch and macOS bundle icon metadata remain open;
   Windows multi-resolution resources are implemented in M9.

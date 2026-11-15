@@ -18,8 +18,8 @@ jobs:
   source:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
       - run: rustup show
@@ -27,7 +27,7 @@ jobs:
       - run: python3 tools/development_package.py source --profile "$PACKAGE_PROFILE"
         env:
           PACKAGE_PROFILE: ${{ inputs.profile || 'unified' }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: development-source
           path: .scratch/dist/*
@@ -51,14 +51,15 @@ jobs:
     env:
       MACOSX_DEPLOYMENT_TARGET: '11.0'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: '3.12'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: development-source
           path: .scratch/source
+          digest-mismatch: error
       - name: Verify and extract the matching complete source
         shell: python
         run: |
@@ -83,7 +84,7 @@ jobs:
         working-directory: ${{ env.PACKAGE_ROOT }}
       - run: python tools/development_package.py binary --target ${{ matrix.target }} --output "${{ github.workspace }}/.scratch/dist"
         working-directory: ${{ env.PACKAGE_ROOT }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: development-${{ matrix.target }}
           path: .scratch/dist/*
