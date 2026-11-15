@@ -5,7 +5,9 @@ or out-of-bounds access; report corruption/conflicts rather than silently discar
 data. Initial theme coverage is default light and dark. OS chrome/font rasterization
 may differ. All other safe observable behavior remains a parity requirement.
 
-Implementation-specific exceptions will be recorded here with tests and rationale.
+This document records observable differences and approved scope exceptions.
+Current workflows belong in [usage](usage.md), design in [architecture](architecture.md),
+and verification/status in [compatibility](compatibility.md) and the [roadmap](roadmap.md).
 
 ## Initial-release input robustness corrections
 
@@ -45,8 +47,8 @@ extension: it makes Unix/macOS or Windows results reproducible on any host.
 It is retained through reloads and included in preflight hashes. This changes
 existing experimental hash values; callers must obtain a fresh preview. Decoder
 allocation/file-size bounds and errors for truncated PNGs remain safety measures;
-malformed-PNG diagnostic text need not match libpng. See the PNG differential in
-`compatibility.md` for the valid-input fidelity evidence.
+malformed-PNG diagnostic text need not match libpng. See
+[codec evidence](compatibility.md#discovery-and-codecs) for valid-input fidelity.
 
 ## Safety corrections already implemented
 
@@ -90,8 +92,8 @@ malformed-PNG diagnostic text need not match libpng. See the PNG differential in
   previous map survives until successful publication. Clean binary Save Map
   skips writing, matching upstream; edited saves can replace the source with its
   acknowledged dimension-sized prefix, guarded by a whole-source conflict hash.
-  ASM `.map` imports use Save As to produce binary `.blk` output;
-  the original source is preserved. Save As currently requires a `.blk` extension
+  Classic ASM `.map` imports use Save As to produce binary `.blk` output;
+  the original source is preserved. Classic Save As requires a `.blk` extension
   (or adds it when omitted), rather than accepting arbitrary binary-file suffixes.
 - Single-file saves compare content rather than just modification timestamps,
   and stage output before replacement. Concurrent writers still have a narrow
@@ -162,14 +164,9 @@ the priority bit into UNDEFINED and then indexes beyond its palette-color table
 palette re-enables the checkbox when the project supports priority. The existing
 core validation rejects that invalid combination; a GUI test verifies the guard.
 
-The explicit Tile Priority option now stays off through Save even when existing
-attributes contain priority bits, matching upstream. Backend callers can set the
-mode with `set_allow_priority`; palette reads still enable it automatically.
-The CLI, which has no interactive session option, retains its prior inference
-from command-result attributes. Priority mode is included in preflight hashes
-because it affects palette-map gap/padding output; old preview tokens must be
-regenerated. Palette writes no longer skip owned gap updates merely because
-attribute values themselves are unchanged.
+Tile Priority remains an explicit session/save option even when loaded attributes
+contain priority bits; it is included in preview hashes. CLI inference remains
+separate from that interactive setting. Recompute previews after changing modes.
 
 Master's roof thumbnails reuse `Deep_Tile_Button::draw`, which casts their
 `Roof_Window*` callback data to `Tileset_Window*` and reads `_show_priority` at a
@@ -198,10 +195,9 @@ reloads. Removing a roof clears its dirty domain instead of retaining an invisib
 edited flag with no roof to save. Other document domains stay untouched.
 
 The selector refreshes discovered roofs when opened rather than copying the last
-Open Map dialog's cached list. Its fixed 280px client width is retained; unusually
-long names are truncated in the closed control and available in full in its
-dropdown/tooltip, instead of overflowing the client area. Desktop selectors now
-use native modal windows; integrated window-manager acceptance remains open.
+Open Map dialog's cached list. Closed labels are bounded, with full names in the
+dropdown/tooltip. Current preview sizing and scrolling are described in
+[usage](usage.md#tileset-and-roof-editing).
 
 ## Loaded-tileset replacement safety
 
@@ -296,186 +292,38 @@ and standalone event-translation commands remain separate operations.
 
 ## Event GUI safety and remaining visual differences
 
-Failed manual event loads/reloads retain the previous document instead of
-unloading it before parsing. A malformed auto-loaded script warns after the map
-opens, with no partially parsed events. Resize validates both in-memory drafts
-before replacing either; an event serialization-limit error cannot leave only
-the map resized. Event save conflicts stop rather than offering a blind overwrite.
-Main Save now follows the original domain ordering, but stops after a failure or
-canceled destination instead of continuing to save later domains.
+Failed manual event loads/reloads retain the old document. Malformed automatic
+scripts warn after opening the map without partially parsed events. Resize
+validates map and event drafts together; conflicts stop saves. External script
+opening uses the correct macOS `open` adapter, validates regular files, preserves
+OS path encoding and reports errors. Windows known-editor matching uses exact
+basenames, not suffixes; workers own COM and pass quoted arguments as data.
+Opening an external editor does not save or reload the event draft.
 
-Event mode controls use the source Mode menu; event script actions use Data.
-Source rectangles/colors/alpha, cell sizing, coordinate bounds and
-options geometry are implemented; desktop event letters and zoomed ID text now
-request installed Helvetica Bold/monospace roles. Unavailable faces retain
-bundled fallbacks; native glyph rendering and synthetic bold remain open. Normal
-warp ID pixels now match the original digit sheet. Event
-Options now uses a native modal viewport; auto-load/show preferences are stored
-in the versioned NG settings record, with read-only legacy FLTK import.
-Event Print overlays are implemented; native event GUI checks remain open.
+The following appearance/workflow differences remain intentional or deferred:
 
-External script opening now follows the original Windows association/known-editor
-line rules and Linux `xdg-open` behavior. macOS uses `/usr/bin/open`, fixing the
-original unconditional Unix `/usr/bin/xdg-open` path. Requests validate a regular
-file, preserve OS path encoding, and report launcher errors instead of silently
-exiting successfully. Known Windows editors are matched by exact case-insensitive
-basename rather than arbitrary suffix (so `evilcode.exe` is not treated as Code).
-Windows uses a worker-owned COM apartment and a null owner window; shell dialogs
-are not parented to the GUI. File opening runs off the GUI thread; the Unix worker
-reaps the opener, which may remain running until its editor exits. No automatic
-save or reload is added. Native association, editor-line navigation, and shell
-dialog behavior still require platform verification.
+| Area | NG behavior / scope |
+|---|---|
+| Status | Five source fields plus an NG operation/dirty-state tooltip. The reviewed strip is 26 points and matches the toolbar, replacing the original 23-point FLTK frame. |
+| Rulers | Use fractional egui scroll displacement to stay aligned; integer-offset formulas match source. Single-line negative hex omits an invisible terminal newline. |
+| Fonts | Installed-role selection with explicit fallbacks. Windows Helvetica Bold may substitute Arial Bold; synthetic bold and exact native rasterization are deferred. System fonts are not redistributed. |
+| Themes | Supported light/dark only, selected by Dark Theme rather than the original many-theme submenu. Grids/disabled icons use the chosen portable colors; widgets retain reviewed egui styling. |
+| Menus | Source groups, commands and measured columns with egui popup focus/positioning. Reviewed gaps, bevels, square highlights and theme colors differ from FLTK. Mnemonics work; exact underlines/arrows/chrome remain deferred. |
+| Help/About | Original Help is clearly labeled as upstream reference. The egui viewer can wrap/render differently. About identifies NG separately and preserves original attribution. |
+| Dialogs | Native viewport hosting with an embedded fallback for tests. Exact chrome/fonts/placement are not established by headless geometry. |
+| Internal drags | In-process ordered events instead of native FLTK DND, preserving copy/swap semantics. |
 
-The event cursor and Game Boy guide recompute hover from current egui geometry
-and are suppressed under dialogs and popup menus. Their coordinates, zoom sizes,
-fill and border formulas follow source; exact native enter/leave/callback timing
-has not been compared. Hover coordinates use the global decimal/hexadecimal
-display setting. The status bar now retains the source's five fixed sections,
-including decimal block counts/map dimensions and separately formatted hover
-fields. NG's saved/modified and operation feedback is available in a status-bar
-tooltip instead of replacing those fields; this tooltip is an NG extension.
-Field widths use the source sample strings and padding with installed font metrics
-in desktop startup (12 points on Windows, 13 on Linux/macOS). Headless snapshot
-fixtures explicitly retain bundled fonts. The portable
-status strip now uses the toolbar's 26-point height, borderless panel fill and
-one-line egui separators per the November 10–11 review. This deliberately
-replaces the original 23-point FLTK framed strip. Native glyph rasterization and
-enter/leave timing remain unverified.
+Dirty warnings use source OK/Cancel semantics. Palette-only edits do not trigger
+map Save/Exit warnings; users must export colors explicitly. Settings now include
+read-only legacy import for fixed parity launchers, with separate unified storage
+and no unified legacy import; see [preferences](preferences.md).
 
-Ruler geometry and hover pairing follow the pinned source. During egui's smooth
-scrolling, ruler cells use the actual fractional content displacement instead of
-truncating it to FLTK's integer offset, keeping ticks aligned with the map. At
-integer offsets the formulas agree. Rulers use the current egui foreground,
-panel and inactive-widget colors. Desktop startup selects the source's native
-monospace role at 9 points, or 10 for Windows Consolas; deterministic snapshots
-retain bundled Hack at 9. Native FL_DARK2/theme colors and exact font rasterization
-remain unfinished. Visibility and number-base settings are persisted. The
-negative hexadecimal formatter omits the source's
-terminal newline to match FLTK's single-line result in egui; this preserves
-visible behavior rather than the intermediate formatting bytes.
+Opacity preserves the 75% whole-window request. X11 uses a native-long property
+buffer rather than the original LP64 over-read; Windows checks errors and rolls
+back a newly added layered style on failure; macOS uses NSWindow alpha. Wayland
+reports unsupported compositor/frame capabilities instead of fading widget pixels.
+Saved intent survives failed requests. Integrated visual acceptance remains open.
 
-Block IDs use the original 14-point logical font size, zoom-dependent offsets,
-four diagonal black outline passes and white/yellow foreground colors. The
-desktop uses the dedicated installed bold monospace role for IDs and hotkey
-badges, retaining bundled fallback when unavailable. Native baseline/hinting
-equivalence remain open. Print shares the desktop selection policy and preserves
-its collection indices/variable coordinates; GUI export jobs retain startup faces.
-Windows' Helvetica Bold role temporarily substitutes Arial Bold when Microsoft
-Sans Serif Bold needs GDI synthesis. That substitution is shared by GUI/Print and
-reported in startup logs and CLI font-instance metadata; it remains a tracked
-incomplete port, not an approved permanent visual change.
-Display-base changes do not alter
-event formats or saved data; the status area now shows live block coordinates
-in both modes, with event coordinates appended only in Events Mode.
-
-Map/sidebar grids now use bottom/right one-point edges and three/four inset
-selection rings from `map-buttons.cpp`. Explicit mesh quads preserve opaque
-pixels instead of relying on egui's antialiased stroke corners. Shared editor
-and event cursors use the same ring geometry. Grid colors are the upstream
-Greybird light (85,85,85) and Dark (38,38,38) inactive colors on every OS; this
-does not reproduce Windows' default Blue theme or the remaining native themes.
-Sidebar drag feedback follows source/target/selected state, while the existing
-egui drag gesture remains in-process rather than the source's native FLTK DND.
-
-The icon port includes all 41 nonblank original toolbar/editor image files.
-Source pixels, 24-point toolbar/22-point clipboard bounds and disabled-color
-arithmetic are retained. Button selection/hover/focus frames still use egui
-styling; full native toolbar themes remain pending. Disabled colors use upstream
-Greybird/Dark backgrounds on all platforms, consistently with the portable grid
-palette. All toolbar buttons retain source order, grouping and size. Original
-artwork replaces every text placeholder at the user's direction, with upstream
-attribution and the known separate asset notices. No redesigned artwork is used.
-See [asset records](assets.md) for provenance limitations and native verification.
-
-The toolbar palette label and dropdown use upstream text-width/padding formulas
-and 24/22-point heights. Their text is measured with the bundled 13-point
-proportional font; exact native font metrics, dropdown frame/arrow styling and
-native popup navigation still need parity work. The selector and View menu use
-one palette operation and preserve the original separate palette-edit dirty
-state and map history.
-
-The main menus now use upstream's eight top-level groups and the source locations
-for implemented commands. The temporary Edit Block entry has been removed;
-sidebar right-release opens the editor using the original pressed-block and
-release-target rules. The original Theme submenu now exposes the two accepted
-initial choices, Greybird and Dark; the other ten source themes are deferred.
-Full native theme rendering remains incomplete. Help opens the original reference text;
-About now has its source command and modal, with attribution moved into it.
-The image/check columns, measured rows, trailing dividers and separate shortcut
-columns now follow source calculations. Greybird/Dark indicator geometry and
-inactive colors follow compiled source comparisons. Popup backgrounds and borders
-use the active egui theme after the November 10–11 review; the previously approved
-eight-point divider gaps and inset two-line bevels are retained. Native curve coverage, submenu
-arrow shape, shadows and native fonts remain incomplete; egui still
-owns popup positioning and keyboard focus. Mnemonic input is implemented; native acceptance is listed in
-`docs/menus.md`.
-
-Mac modifier captions use the unchanged OFL-1.1 Noto Sans Symbols 2 font in a
-separate family because the existing bundled fonts lack some required symbols.
-Ordinary text remains unchanged. This supplies the original Unicode symbols
-without claiming native macOS glyph metrics or redistributing system fonts.
-Recent filenames are drawn literally, including ampersands, as in the previous
-NG menu. Input now interprets the first unescaped ampersand as FLTK does,
-including Unicode; hiding the marker and drawing its underline remain deferred.
-
-Help retains the original product names and upstream documentation, including
-instructions for features still under development in NG. It adds a reference
-notice instead of silently rewriting that text or claiming completed parity.
-Its HTML paragraphs/lists/styles/links render through egui, so font metrics,
-line breaks and HTML-view frame details can differ from FLTK. Hack, already
-bundled with egui, is appended as a proportional-font fallback for the original
-right-arrow glyph that Ubuntu Light lacks. Help itself adds no new font;
-the separately audited menu-symbol face is described above.
-Desktop Help uses an immediate child viewport; the embedded fallback preserves
-nonmodal interaction but is not evidence of native window behavior.
-
-About identifies the Rust port's own name/version/source alongside the original
-Polished Map/Rangi copyright and Fugue attribution. Its APP_ICON geometry now paints the original
-48×48 image centered in the 50×50 slot. Upstream attribution and the unresolved
-underlying-origin record are retained in the asset notices. Desktop About now uses
-a centered native window; only the embedded fallback adds an egui heading. Its text follows source
-12/16-point Windows and 13/17-point Unix sizes. Desktop startup supplies the
-installed UI font; deterministic test fixtures retain bundled faces. Native
-font rasterization and frame matching remain unverified.
-
-The shared dirty-document warning now restores upstream OK/Cancel semantics,
-including the first modified filename and action-specific question. It replaces
-the earlier development-only Save/Discard/Cancel prompt. The original 50×50 shield
-slot, measured client geometry and native warning title are now implemented.
-Original artwork follows the user's recorded choice and provenance notices;
-integrated native placement, focus and DPI acceptance remain open.
-Close retains palette-only edits exactly as the original session does; Exit
-does not warn for palette-only changes, matching the commented-out upstream
-palette warning. Remaining preference/native checks are listed in `preferences.md`.
-
-Manual roof-color loading now uses the source table lookup, layout choices,
-consent and success wording. It stages parsing and preview creation so failure
-cannot partially replace the live palette bank. Errors expose the actual path
-and parse/I/O reason instead of upstream's generic "Could not read" message.
-Original warning/success artwork and measured native clients are implemented;
-integrated native modal and restart verification remain pending. The five layout choices are included in the settings record below.
-
-Implemented settings now use eframe's platform data store under the separate
-`polished-map-ng` app ID. This does not import or modify upstream FLTK or portable
-`.prefs` files. The versioned record stores the source's implemented view/mode/
-palette/resize choices, including the roof layout across restarts; remaining
-options and native restart/placement verification are tracked in `preferences.md`.
-Malformed or unsupported records fall back to defaults while preserving the
-original app-settings key. Native geometry uses eframe's monitor-aware storage;
-exact FLTK window placement is not yet established. The two portable appearance
-choices remain a subset of the original native themes.
-
-Transparent retains upstream's 75% window-opacity effect and integer truncation.
-The X11 bridge supplies a native `unsigned long` to format-32 XChangeProperty,
-avoiding the original pointer-to-u32 over-read on LP64. Win32 checks failed calls
-and attempts to undo a newly added layered style if setting alpha fails. The
-menu changes only after an accepted request; startup intent survives an error.
-macOS uses NSWindow alphaValue as the native equivalent of upstream's X11 path.
-Wayland applies alpha-modifier to the root and its client frame when supported.
-A missing protocol or visible compositor-owned frame reports a capability error;
-the client cannot change another process's title-bar surface. Native visual
-acceptance remains incomplete, not an approved permanent omission. Pixel alpha
-or a faded egui panel is not substituted for whole-window opacity.
 ## Remaining M4 aesthetics deferred
 
 On 2026-10-30 the user first deferred original-font matching to later manual work,
@@ -489,8 +337,7 @@ painting, purely visual menu arrows/chrome, and exact native placement/raster
 matching wait for later manual review. The existing implementations remain.
 Do not hide functional problems behind this exception: input, focus, accessible
 placement, dismissal, draft preservation, clipboard and resize/scroll workflows
-still require M6 acceptance and fixes as needed. M5 preferences and lifecycle is
-next. See [font evidence](compatibility.md#shared-editorprint-font-policy-and-variable-instances)
+still require M6 acceptance and fixes as needed. The roadmap owns sequencing. See [font evidence](compatibility.md#print-and-fonts)
 and the [roadmap](roadmap.md).
 
 ## External transfer bounds and OLE correctness
@@ -536,8 +383,9 @@ open in [M3](roadmap.md).
 
 ## Legacy preference import safety
 
-Legacy FLTK files are imported only when NG has no settings file, and are never
-modified. NG retains its separate versioned application record and window store.
+Fixed parity launchers import legacy FLTK files only when their NG store is absent,
+and never modify them. Unified does not import legacy settings. NG retains its
+separate versioned application record and window store.
 Unlike FLTK's permissive reader/`atoi`, migration rejects unsupported headers,
 malformed escapes, integer overflow, files above 4 MiB, invalid physical lines
 and out-of-range enum/size values. It reports failure and disables application
@@ -559,15 +407,15 @@ sliders to the source-styled rectangular controls. The rounded rail and circular
 handle are restored while retaining source drag/clamping, keyboard, accessibility
 and interrupted-capture fixes. This is an approved visual difference, not an
 unfinished requirement to restore the FLTK appearance. Other M4 aesthetics remain
-deferred. See [slider coverage](compatibility.md#source-palette-sliders).
+deferred. See [slider coverage](compatibility.md#controls-and-geometry).
 
 ## Plusplus development before master native acceptance
 
 On 2026-10-31 the user authorized starting the separate plusplus port while master
 is available for testing. This supersedes the original instruction to wait for M7;
-it does not close M3–M7 or assert master parity. Plusplus should reuse the existing
-work and prepare for later combination, while keeping its entry point and formats
-separate for now. Functionality and measured layout/sizing take priority; recreating
+it does not close M3–M7 or assert master parity. The unified application now shares
+both implementations; the fixed parity
+entry points and their format rules remain separate. Functionality and measured layout/sizing take priority; recreating
 FLTK painting is not part of this porting pass. Original fonts and other master M4
 aesthetics remain deferred. PP4 and native delivery gates remain explicit.
 
@@ -584,15 +432,16 @@ before any write. Missing components can trigger source's inferred-length output
 and produce an unopenable aggregate; NG reports that case instead of creating it.
 Valid missing-component output semantics are otherwise preserved. These guards
 extend the existing no-partial-write persistence policy to plusplus.
-The [real-project native pass](compatibility.md#pinned-polished-crystal-application-interoperability)
+The [real-project native pass](compatibility.md#plusplus-original-application-interoperability)
 reproduces this defect in the unmodified original: a 128×80 unique sheet became
 128×208 with nonwhite overread data, producing 544 aggregate tiles. NG rejects
 that file without changing it or replacing the current editor session.
 
 ## Upstream tester usability review
 
-The November 7 follow-up adds fixed-size, read-only roof/tileset previews to the
-enlarged Change dialogs, with scrollable previews and capped dropdowns. It also
+The reviewed Change dialogs have read-only previews and capped, scrollable
+dropdowns. Tileset preview size adapts to the sheet within screen limits; larger
+images scroll separately, while the roof client remains compact. It also
 uses the OS theme as the first-launch default when no saved NG/legacy choices
 exist, formats WRAM symbols in monospace, and corrects swatch alignment/corners
 and the empty-map caption. These are specifically requested review fixes; broad
@@ -618,7 +467,7 @@ NG's initial native adapter preserves fullscreen priority instead of following
 it with a maximize/unmaximize request. The previous sequence could disconnect
 the Wayland client when restoring fullscreen on Weston 9. This corrects an NG
 startup crash without changing saved preferences, normal geometry or subsequent
-explicit window commands. See the [native restart evidence](compatibility.md#native-wayland-window-restart).
+explicit window commands. See the [native restart evidence](compatibility.md#wayland-checks-and-unresolved-limits).
 
 ## Unified work before native parity acceptance
 
@@ -665,7 +514,7 @@ folder no longer hides a selected gfx/tilesets asset. Each model's preferred
 directory wins when both contain the selected asset; its compound components,
 special palettes and PNG outputs remain together. CHR originals are never
 rewritten. Fixed parity entry points preserve their original rules. Evidence is
-in [legacy-source compatibility](compatibility.md#unified-legacy-graphics-and-collision-sources).
+in [legacy-source compatibility](compatibility.md#unified-format-detection-and-upstream-drift).
 
 ## Unified tileset context changes
 
@@ -687,7 +536,7 @@ uniquely to the selected asset, including compound bases, numeric aliases and
 both graphics directories. Names without a safe hint still need explicit context on
 reopen. Fixed parity launchers retain their original suggestions. No existing project filename,
 header or companion asset is changed by generating a suggestion. See
-[native and regression evidence](compatibility.md#unified-native-save-context).
+[native and regression evidence](compatibility.md#unified-opennew-and-session-transitions).
 
 
 ## November 8–9 review adjustments
@@ -710,5 +559,5 @@ original-font matching remains deferred. The older Intel Metal startup workaroun
 disables only indirect-call validation on macOS; the application uses direct
 indexed drawing. Other validation, limits, all backends and explicit environment
 overrides remain. The memory allocator hint is a small policy adjustment, not a
-claim of measured savings. See [review evidence](compatibility.md#november-8-9-unified-review)
+claim of measured savings. See [review evidence](compatibility.md#reviewed-corrections)
 and the [footprint investigation](releases.md#november-9-unified-footprint-investigation).

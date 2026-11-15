@@ -12,7 +12,7 @@ and design decisions in [architecture](architecture.md).
 | Foundation | Bootstrap complete | Repository, shared backend, working editor slice and CI exist. Native feasibility checks are still open below. |
 | 1. Master parity | **In progress — awaiting native acceptance** | Editor feature families and the two audited functional gaps are implemented; native/application acceptance remains. |
 | 2. Plusplus parity | **In progress — awaiting native acceptance** | PP2 backend complete; PP3 functionality and menu/default review implemented with automated workflow evidence. Native workflow acceptance and PP4 original-application interoperability remain. |
-| 3. Unified editor | **In progress — awaiting native acceptance** | U1, U2, U4, U5 and U6 are complete. The unified editor is now main; maintenance and license CI pass. November 10–11 layout/theme corrections pass automated checks with inspected snapshots. Five-project and cross-storage persistence checks pass; U3 integrated/native acceptance remains with human testers. The parity launchers remain available. |
+| 3. Unified editor | **In progress — awaiting native acceptance** | Unified is the default on main. Functionality and automated five-project/cross-storage checks pass; U3 remains with human testers. |
 | 4. Autonomous interface | Experimental foundation implemented; stabilization not started | Rust libraries and JSON CLI exist; stable contracts, batch recovery and acceptance remain. |
 | 5. Measured improvements | Not started | Deliberate behavior changes follow compatibility acceptance. Structural refactoring is ongoing during unified work. |
 | 6. Platform delivery | In progress — development builds available | Unified and separate master/plusplus Windows/Linux/macOS tester packages and matching source are published. Clean-machine and final release acceptance remain. |
@@ -22,26 +22,17 @@ entire milestone has passed. `[ ]` means work or acceptance remains. Unchecked
 tasks are not started unless explicitly marked **in progress**; a next task is
 scheduled, not completed or necessarily started. A milestone closes only when
 its acceptance gate passes, including approved exceptions.
-Native feasibility was originally listed under Foundation: it is **not complete**
-and is carried explicitly by M3–M6 and P1. Bootstrap completion does not waive it.
-
-**Next:** Continue **U3** with human testers using the
+**Next:** Collect **U3** reports from human testers using the
 [published unified build](releases.md#unified-development-packaging) and
-[five-project tester guide](testing-unified.md), then resolve reported functional
-issues. On November 8 the user handed remaining native testing to humans;
-autonomous GUI/platform test campaigns are stopped. Integrated Linux
-window-manager/portal and Wayland workflows, Windows desktop transfers/focus/DPI,
-both macOS targets, and remaining clipboard, persistence and original-application
-comparisons remain acceptance requirements. Focused Windows checks and
-[Linux X11 original-app exchange/file drops](compatibility.md#unified-linux-x11-original-app-exchange-and-file-drops)
-are verified; their scope and outstanding gates are recorded under U3 below.
+[five-project checklist](testing-unified.md); fix reported functional issues.
+Native testing was handed to humans on November 8. Do not resume autonomous
+GUI/platform campaigns without a new request. Existing evidence does not waive
+master M3–M7, plusplus PP3/PP4 or platform P1/P4 acceptance.
 
-Retain the separate parity launchers and continue structural refactoring alongside
-implementation. Master M5–M7 and plusplus PP3/PP4 native acceptance remain open;
-unified work does not waive them. Remaining M4 aesthetics and original-font
-matching are **deferred by user direction**; resume visual matching only for a
-functional issue. Preserve the [scope exception](deviations.md#remaining-m4-aesthetics-deferred)
-and [approved sequencing](deviations.md#plusplus-development-before-master-native-acceptance).
+Remaining M4 aesthetics and original-font matching are **deferred** under the
+[approved exception](deviations.md#remaining-m4-aesthetics-deferred). Keep the
+separate parity launchers and refactor shared code as needed without changing
+format semantics.
 
 ## Foundation — bootstrap complete
 
@@ -61,34 +52,15 @@ and [approved sequencing](deviations.md#plusplus-development-before-master-nativ
 Authorized November 12 on `main`; preserve functionality and deferred aesthetics.
 This preparation does not waive native parity or final release acceptance.
 
-- [x] **R1 — Complete:** Review contributor navigation, repository layout and
-  crate/module boundaries; fix confusing ownership and justified refactoring.
-  Acceptance: a human contributor can locate setup, architecture, code and tests;
-  behavior-preserving changes pass the workspace and relevant regression suites.
-  Contributor/docs/tool navigation and focused GUI modules pass CI without
-  snapshot changes. Evidence: [layout decision](architecture.md#crate-and-module-layout-review).
-- [x] **R2 — Complete:** Audit code/asset licensing, attribution, dependency
-  notices and source/relink delivery. Correct missing or inconsistent records;
-  explicitly retain any external rights or acceptance limits.
-  Acceptance: source and binary inventories match their declared obligations,
-  all license checks pass and unresolved release constraints are visible.
-  All-feature license coverage and all four binary inventories are verified;
-  original-artwork provenance limits remain explicit.
-  Evidence: [archive audit](releases.md#initial-release-archive-audit).
-- [x] **R3 — Complete:** Inspect all published unified platform archives and
-  matching source; trim binary packages to useful runtime/help/license contents
-  while retaining complete corresponding source separately.
-  Acceptance: rebuilt archives have verified contents, intact notices, working
-  documentation links and matching source, without internal/test-only clutter.
-  Four rebuilt platform archives and complete matching source pass independent
-  content/hash checks. Evidence: [archive audit](releases.md#initial-release-archive-audit).
-- [x] **R4 — Complete:** Review error handling, input bounds and persistence across the
-  workspace; resolve concrete defects and verify the complete preparation on CI.
-  Acceptance: review evidence covers all five crates and all distribution targets;
-  fixes have appropriate tests, CI and packaging pass, and release gates stay honest.
-  Two input-boundary panics and a palette wrong-row write are fixed with
-  regressions; all eight CI and five packaging jobs pass.
-  Evidence: [review coverage](compatibility.md#initial-release-review).
+- [x] **R1:** Contributor navigation and GUI module boundaries reviewed and
+  improved without behavior/snapshot changes. [Layout decision](architecture.md#crate-and-module-layout-review).
+- [x] **R2:** License coverage, notices and source/relink delivery verified;
+  artwork provenance limits retained. [License checks](dependencies.md#continuous-license-checks).
+- [x] **R3:** Four rebuilt binary archives and matching source verified against
+  the reduced content policy. [Archive audit](releases.md#initial-release-archive-audit).
+- [x] **R4:** Five-crate input/persistence review completed; two panics and a
+  wrong-row palette write fixed with regressions. CI and packaging passed.
+  [Review evidence](compatibility.md#initial-release-review).
 
 ## 1. Master parity — in progress
 
@@ -98,22 +70,11 @@ adding improvements. Each completed group below still participates in M7.
 
 ### Review follow-up
 
-- [x] **M9 — November 7 tester review:** Priority alignment, swatch geometry,
-  empty-map guidance, WRAM typography, first-launch theme selection and Windows
-  multi-size icons are fixed for both launchers. User-approved roof/tileset
-  previews retain bounded, scrollable dropdowns. Focused input/geometry tests,
-  reviewed snapshots, native Windows inspection and all eight cross-platform CI
-  jobs pass. Future suggestions remain separately planned; broader native
-  acceptance stays open. Fresh master/plusplus development packages, matching
-  source and licenses are [published for all four targets](releases.md).
-  Evidence: [review disposition](compatibility.md#november-7-upstream-review).
-
-- [x] **M8 — Upstream tester review:** reviewed input/dialog/usability fixes,
-  portable assets and measured release size are verified. Refreshed four-target
-  development packages and matching source/licenses are published. Shared fixes
-  are backported to `codex/plusplus-port`; Windows workspace and Linux visual
-  regressions pass. Native master milestone acceptance remains M5–M7.
-  Evidence: [review disposition](compatibility.md#november-1-upstream-review).
+- [x] **M8:** November 1 input/dialog/usability fixes implemented, verified,
+  backported and delivered in master/plusplus tester builds.
+  [Review disposition](compatibility.md#reviewed-corrections).
+- [x] **M9:** November 7 controls, theme, Windows icons and bounded asset previews
+  implemented, verified and delivered. [Review disposition](compatibility.md#reviewed-corrections).
 
 ### Implemented work
 
@@ -121,20 +82,20 @@ adding improvements. Each completed group below still participates in M7.
   dimension selection, oversized-map acknowledgment, dirty guards and conflicts.
 - [x] **M1a — Open map-size choices:** source-ordered factor pairs, preferred
   dimensions and decoded ASM byte counts now drive the selector; unknown sizes
-  retain free spinners. Evidence: [map-size selection](compatibility.md#open-map-size-selection).
+  retain free spinners. Evidence: [map-size selection](compatibility.md#discovery-and-codecs).
 - [x] **M1b — Open/New asset selectors:** tileset/roof dropdowns, numbered
   labels, full-filename numeric ordering, compound/duplicate selection and
-  project-folder refresh are implemented. Evidence: [asset selectors](compatibility.md#opennew-asset-selectors).
+  project-folder refresh are implemented. Evidence: [asset selectors](compatibility.md#discovery-and-codecs).
 - [x] **M1c — Open/New client geometry and dismissal:** measured source rows,
   control bounds, font sizes, platform button order and guarded Enter/Escape
-  handling are implemented. Evidence: [dialog layout](compatibility.md#opennew-client-layout-and-keyboard-actions).
+  handling are implemented. Evidence: [dialog layout](compatibility.md#controls-and-geometry).
 - [x] **M1d — Binary-map metadata rules:** supported dimension/header macros,
   path precedence, filename overrides, group-byte behavior and shared-file
-  non-inference are compared with original source. Evidence: [metadata discovery](compatibility.md#binary-map-metadata-discovery).
+  non-inference are compared with original source. Evidence: [metadata discovery](compatibility.md#discovery-and-codecs).
 - [x] **M1e — Legacy asset-path discovery:** graphics/compound sources and PNG
   destinations, block/collision/palette fallbacks, roofs, events, constants and
   saved/unsaved-map palette selection match source fixtures. Evidence:
-  [asset paths](compatibility.md#legacy-asset-path-selection).
+  [asset paths](compatibility.md#discovery-and-codecs).
 - [x] **M1f — Master feature inventory reconciliation:** source feature families,
   implementation/tests and remaining owners are mapped in the
   [source inventory](compatibility.md#master-source-inventory). Newly identified
@@ -143,16 +104,16 @@ adding improvements. Each completed group below still participates in M7.
 - [x] **M1g1 — Middle-click defaults:** Resize Map/Blockset, Overworld Map Size,
   event coordinates, binary collisions and palette spinners/sliders restore
   source defaults on middle release, including palette selection/transfer
-  capture boundaries. Evidence: [control defaults](compatibility.md#middle-click-control-defaults).
+  capture boundaries. Evidence: [control defaults](compatibility.md#controls-and-geometry).
 - [x] **M1g — Shared-control input behavior:** numeric stepping/repeat/wrap,
   typed-value clamping, signed hex, focus/cancellation and Event Options field
   modes/Enter handling are implemented and tested across affected forms.
-  Evidence: [shared controls](compatibility.md#shared-numeric-and-event-options-controls).
+  Evidence: [shared controls](compatibility.md#controls-and-geometry).
   Source widget painting and native verification remain M4/M6.
 - [x] **M1h — Save feedback and the 128-block warning:** source success messages,
   ordered Save continuations, cancellation/conflict guards and persisted warning
   acknowledgment are implemented across all save/export domains. Evidence:
-  [save feedback](compatibility.md#save-feedback-and-block-limit-acknowledgment).
+  [save feedback](compatibility.md#editing-and-persistence).
 - [x] **M1 — Master coverage inventory and project-discovery gaps:** M1a–M1h
   are complete and the [source inventory](compatibility.md#master-source-inventory)
   is reconciled. Native window/widget fidelity, lifecycle and full project
@@ -162,7 +123,7 @@ adding improvements. Each completed group below still participates in M7.
   artwork with attribution, known third-party notices and recorded provenance
   limitations, as explicitly selected by the user. Source hashes, decoded pixels,
   disabled/theme variants and 1×/2× bounds pass; reviewed snapshots preserve
-  existing layout. Evidence: [artwork port](compatibility.md#original-toolbar-message-and-application-artwork),
+  existing layout. Evidence: [artwork port](compatibility.md#controls-and-geometry),
   [asset records](assets.md). Broader native icon delivery remains M4/P1; Windows
   executable resources are covered by M9 and macOS bundle metadata remains P2.
 - [x] Map editing: paint/fill/replace/swap, drag history, undo/redo, all resize
@@ -188,149 +149,61 @@ Evidence and limitations: [coverage matrix](compatibility.md#current-coverage-ma
 
 ### Remaining work, in execution order
 
-- [ ] **M3 — Complete external file drops and whole-window transparency (in progress).**
-  Positioned, ordered native drops and guarded workspace Open are implemented
-  through pinned adapters, including Wayland receiving. Wayland opacity now
-  covers the root and client frame, with explicit capability errors and guarded
-  request/reply handling. Wayland receives retain independent offer lifetimes
-  and cancel on seat/window teardown; native protocol probes cover opacity and
-  transfer behavior, including X11 selection/INCR exchanges. Complete integrated
-  native file-manager/clipboard/DPI acceptance alongside M6;
-  verify opacity on Windows, macOS, X11 and Wayland. Evidence:
-  [external drops](compatibility.md#native-external-file-drops),
-  [transparency](compatibility.md#whole-window-transparency).
-  Done when the gates in [architecture](architecture.md) pass;
-  stale pointer coordinates or widget alpha are not substitutes.
-- [ ] **M4 — Source-derived GUI and native-window fidelity (aesthetics deferred;
-  input implemented; native acceptance remains).** Resize/asset/Event dialog client metrics,
-  original-artwork confirmations, native editor/modal hosting, ownership and
-  draft/close guards are implemented. Isolated Windows, macOS, X11 and Wayland
-  lifetime checks pass. Evidence: [dialog metrics](compatibility.md#remaining-option-dialog-client-metrics),
-  [messages](compatibility.md#error-warning-and-success-message-dialogs),
-  [native hosting](compatibility.md#native-dialog-hosting-and-ownership).
-  Palette sliders retain source input behavior with the earlier rounded egui
-  appearance selected by the user; see [slider evidence](compatibility.md#source-palette-sliders).
-  The user deferred remaining font, widget painting and purely visual menu/window
-  matching on 2026-10-30. Preserve these as later manual work under the
-  [approved exception](deviations.md#remaining-m4-aesthetics-deferred), not as
-  completed fidelity. Source Alt+letter menu opening and item mnemonics are
-  implemented with disabled/modal guards; see [functional fixes](compatibility.md#master-functional-gap-fixes).
-  Visual underline matching stays deferred. Window focus, usable placement,
-  keyboard/dismissal, clipboard, scrolling and resize acceptance remain M6.
-  Do not resume aesthetic matching before M5–M7.
-- [ ] **M5 — Finish preference and window lifecycle compatibility (in progress).**
-  Read-only legacy FLTK user/executable-adjacent import is implemented for all
-  master settings, with NG precedence and malformed-input protection. Root normal
-  geometry now tracks moves/resizes independently of autosave. Mac HOME discovery
-  now follows the original existing-HOME → Foundation → passwd fallback; see
-  [functional fixes](compatibility.md#master-functional-gap-fixes). Verify native
-  storage/restart/shutdown, placement, fullscreen/maximize restoration,
-  transparency startup and canceled exits without losing edits across platforms.
-  The [shared native process probe](compatibility.md#native-profile-preference-lifecycle)
-  verifies isolated settings shutdown/restart and normal-size persistence;
-  complete desktop lifecycle acceptance remains open.
-  Done when [preferences](preferences.md) has evidence for each applicable source
-  setting and supported platform. Headless import/tracker tests do not close this gate.
-- [ ] **M6 — Verify complete user workflows on native platforms.**
-  Exercise map/block/tileset/roof/palette/event edits, Print overlays/Copy/Export,
-  dialogs and clipboard with the integrated application. Cover Windows, macOS,
-  Linux X11 and Wayland; record exact environment and outstanding differences.
-  Reuse mathematical/headless evidence and reserve manual GUI work for behavior
-  it cannot establish. This supplies the master portion of P1.
-- [ ] **M7 — Pass master acceptance.**
-  Run the complete inventory against the pinned reference, including compatible
-  real projects. Save/reopen every editing domain in the original application,
-  compare bytes or decoded pixels as appropriate, and exercise failure/conflict
-  paths. M1–M6 must be closed or covered by explicitly approved exceptions in
-  [deviations](deviations.md); record final evidence in [compatibility](compatibility.md).
-  Passing codec or synthetic GUI tests alone is insufficient.
+- [ ] **M3 — In progress:** Positioned external file drops and whole-window
+  transparency are implemented. Complete real file-manager/cancellation,
+  clipboard coexistence, opacity and DPI acceptance on Windows, macOS, X11 and
+  Wayland. Stale pointer coordinates or widget alpha are not substitutes.
+  [Drop evidence](compatibility.md#native-adapter-evidence),
+  [opacity evidence](compatibility.md#native-adapter-evidence).
+- [ ] **M4 — Aesthetics deferred; functional acceptance open:** Native dialog
+  hosting, input, measured client geometry and original artwork are implemented.
+  Retain the preferred rounded palette sliders and the approved visual exception.
+  Complete focus, usable placement, keyboard/dismissal, draft preservation,
+  clipboard and resize/scroll acceptance with M6.
+  [Hosting evidence](compatibility.md#native-adapter-evidence),
+  [scope exception](deviations.md#remaining-m4-aesthetics-deferred).
+- [ ] **M5 — In progress:** Preference storage, read-only legacy import and normal
+  geometry tracking are implemented. Complete native restart/shutdown, placement,
+  fullscreen/maximization/transparency restoration and canceled-exit checks for
+  applicable settings/platforms. Isolated probes do not close this gate.
+  [Lifecycle evidence](compatibility.md#native-profile-preference-lifecycle).
+- [ ] **M6 — Native acceptance:** Exercise integrated map/block/tileset/roof/
+  palette/event workflows, Print/Copy/Export, dialogs and clipboard on Windows,
+  macOS, X11 and Wayland. Record exact environments and unresolved differences;
+  reuse automated evidence for behavior it can establish.
+  [Tester guide](testing.md), [coverage](compatibility.md#current-coverage-matrix).
+- [ ] **M7 — Master acceptance:** Reconcile the complete source inventory, reopen
+  every editing domain in the pinned original with real projects, compare bytes
+  or decoded pixels, and exercise failure/conflict paths. Close M1–M6 or retain
+  explicitly approved exceptions before claiming parity.
+  [Source inventory](compatibility.md#master-source-inventory).
 
 ## 2. Plusplus parity — in progress
 
-Master acceptance fixtures remain mandatory. Keep separate entry points and
-format-specific documents; reuse common algorithms, codecs and platform adapters.
-Do not expose automatic profile switching until the unified-editor milestone.
+Master regressions remain mandatory. Fixed parity launchers keep their own
+formats; automatic adaptation belongs to the unified application.
 
-- [x] **PP1:** Inventoried the pinned source differences and pinned a contemporary
-  Polished Crystal fixture. Scope, reuse boundaries and remaining owners are in
-  the [audit](compatibility.md#plusplus-source-audit); the independent
-  [fixture policy](assets.md#polished-crystal-fixture-policy) excludes game assets.
-- [x] **PP2:** Implement expanded tile counts/banks, per-block
-  attributes, flips, priority, palette/discovery/event rules and serialization.
-  Attribute block commands, bank mapping and guarded offset/attribute/collision
-  saves are implemented with source differentials and real-project tests.
-  Raw 512-tile edits, CPU map/Print rendering, expanded codecs, compound graphics
-  and roof loading/editing/saving are implemented. Map/root/asset metadata discovery,
-  binary-map persistence and palette sessions now have source-reference and
-  real-project evidence. The 26-macro event catalog, script discovery, warp rules,
-  editing/persistence and Print symbols are implemented with source comparisons
-  and real-project save/reopen coverage. Map IDs remain byte-sized. GUI integration
-  and original-application acceptance remain PP3/PP4.
-  Evidence: [blocks](compatibility.md#plusplus-block-backend),
-  [graphics](compatibility.md#plusplus-graphics-backend),
-  [project graphics](compatibility.md#plusplus-project-graphics-and-roofs),
-  [maps and palettes](compatibility.md#plusplus-map-discovery-and-palette-sessions),
-  [events](compatibility.md#plusplus-events-and-script-persistence).
-- [ ] **PP3 (in progress):** Port branch-specific controls, dialogs, defaults and rendering
-  through a separate plusplus entry point with isolated preferences. Reuse common
-  GUI/platform code and preserve source layout/sizing; FLTK visual painting is
-  excluded by user direction. Shared map/event editing and canvas/Print dispatch
-  now accept explicit plusplus documents. Asset loading, palette controls/imports/
-  exports, block editing/transfers/resize, tile/roof editing and ordered asset saves
-  are integrated, including asset switching and 512-tile/bank-order options.
-  Expanded lists reuse [middle-button panning](compatibility.md#plusplus-sheet-panning).
-  The separate launcher, isolated settings/import and branch-specific Help/About
-  are implemented; see [startup evidence](compatibility.md#plusplus-launch-settings-and-help).
-  A shared [native process probe](compatibility.md#native-profile-preference-lifecycle)
-  checks settings and normal-window restoration for both profiles.
-  The [menu/default review](compatibility.md#plusplus-gui-source-reconciliation)
-  and automated workflow/geometry checks are implemented. Initial
-  [Windows native map/tile save/reopen and clipboard checks](compatibility.md#plusplus-windows-native-workflow-checks)
-  pass; the shared quick-Alt menu failure they exposed is fixed. The
-  [expanded native pass](compatibility.md#plusplus-expanded-native-acceptance)
-  covers block/roof/palette/event/conflict and original-app reopen workflows.
-  The Linux BMP clipboard fix passes independent X11 and bidirectional
-  original-app clipboard checks and cross-platform CI. The real-project pass
-  exposed a batched native event-drag defect; the fix passes automated and
-  Windows native checks. Complete native
-  workflows, integrated window/dialog/clipboard behavior and desktop acceptance
-  remain. The [Wayland-only probe](compatibility.md#plusplus-wayland-image-clipboard-gap)
-  exposed missing image transfer without data-control/X11 and false Print copy
-  success. Native acknowledgment, focused asynchronous publication and retained
-  clipboard offers now pass protocol and native exchange checks. Standard
-  Wayland PNG/BMP transport and bounded failures are implemented; broader
-  desktop/placement/focus/DPI and macOS acceptance remain open. Native capture
-  checks also exposed batched pixel-input loss and unregistered dialog hit layers;
-  shared fixes and their verification are tracked in
-  [native input evidence](compatibility.md#native-pixel-gestures-and-dialog-hit-layers).
-  Batched tile/palette/sidebar transfers are also fixed and natively verified;
-  see [internal transfer evidence](compatibility.md#ordered-internal-asset-transfers).
-  [Native 2× geometry and palette checks](compatibility.md#native-scale-two-geometry-and-remaining-placement-checks)
-  add measured evidence and a verified fix for temporary-size dialog mapping;
-  desktop pointer alignment, mixed-DPI and macOS checks remain open.
-  [Native fullscreen/maximized restart](compatibility.md#native-wayland-window-restart)
-  exposed a startup request-order crash, now fixed with a failing-before/passing-after
-  protocol regression and native restart evidence; broader placement remains open.
-  [Frame focus and placement checks](compatibility.md#native-wayland-frame-focus-and-placement)
-  exposed lost keyboard input after titlebar interaction. Parent-surface routing
-  passes the independent regression and native F11/Alt+F checks; compositor
-  placement/focus limitations remain explicit.
-  Separate [plusplus tester packages](releases.md#plusplus-development-packages)
-  and matching source/licenses are published after CI, archive and packaged CLI
-  verification for all four targets; use them for the remaining native checks.
-  Evidence: [GUI integration](compatibility.md#plusplus-shared-gui-integration).
-- [ ] **PP4 (in progress) — Acceptance:** Differential and real-project edit/save/reopen tests
-  pass against original plusplus, with master regressions still green and every
-  remaining difference resolved or explicitly approved. Backend roundtrips alone
-  do not establish application parity. [Pinned-project application checks](compatibility.md#pinned-polished-crystal-application-interoperability)
-  now cover bidirectional map/event/block/collision/roof/palette operations,
-  compound graphics NG → original, valid common-sheet and standalone graphics
-  roundtrips, and native Print export/clipboard comparisons. Plain and grid
-  images match exactly; priority blending is mathematically accounted for and
-  native text appearance remains under the approved aesthetic deferral. The
-  original compound-export overread is reproduced and NG's existing rejection
-  verified. Retain PP3's integrated desktop/gesture acceptance and master
-  regressions before closing the full application acceptance gate.
+- [x] **PP1:** Source differences and the contemporary Polished Crystal fixture
+  are pinned and audited. [Source audit](compatibility.md#plusplus-source-audit),
+  [fixture policy](assets.md#polished-crystal-fixture-policy).
+- [x] **PP2:** Expanded banks, occurrence attributes, graphics/roof codecs,
+  map/palette discovery, 26-macro events and guarded persistence are implemented
+  with differential and real-project evidence. Map IDs remain byte-sized.
+  [Backend evidence](compatibility.md#plusplus-backend-and-gui-evidence).
+- [ ] **PP3 — In progress:** Shared GUI integration, separate startup/settings,
+  all asset drafts/transfers, 512-tile/bank controls and source menu/default
+  reconciliation are implemented. Protocol and focused Windows/Linux checks
+  pass. Finish integrated native workflows, dialog/focus/input/clipboard,
+  directly hosted pointer/DPI/multi-monitor behavior and macOS acceptance.
+  [GUI evidence](compatibility.md#plusplus-backend-and-gui-evidence),
+  [native scope](compatibility.md#plusplus-original-application-interoperability).
+- [ ] **PP4 — In progress, acceptance:** Complete differential and real-project
+  edit/save/reopen coverage against the original application, with master
+  regressions green and every remaining difference resolved or approved.
+  Existing checks cover bidirectional map/event/block/collision/roof/palette,
+  supported graphics and Print exchange; original unsafe compound export is
+  reproduced and NG rejects it. Backend roundtrips alone do not close PP3/PP4.
+  [Original-application evidence](compatibility.md#plusplus-original-application-interoperability).
 
 ## 3. Unified editor — in progress
 
@@ -338,85 +211,37 @@ Authorized on November 7 before native parity acceptance; retain both parity
 launchers. No mode selector and no silent format conversion. See the
 [sequencing decision](deviations.md#unified-work-before-native-parity-acceptance).
 
-- [x] **U6 — Complete:** Fixed Project options right padding; promoted unified to
-  `main` while preserving both historical parity branches; added the requested
-  Cherrygrove City screenshot; enforced fmt, Clippy, deny and cargo-about with
-  supplemental notices. Audited and retained all five necessary vendored patches.
-  Geometry/input checks, inspected snapshots, workspace verification and all eight
-  [promoted-main CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43147110142)
-  pass. Native parity remains U3.
-  Evidence: [padding and verification](compatibility.md#project-options-right-padding),
-  [vendor audit and licenses](dependencies.md#vendor-necessity-audit--november-11-2026),
-  [screenshot](assets.md#readme-screenshot) and
+- [x] **U1:** Storage/capability detection, combined events/metadata/asset paths
+  and upstream drift reconciliation are implemented, with explicit missing/
+  conflicting-context errors. [Detection evidence](compatibility.md#unified-format-detection-and-upstream-drift).
+- [x] **U2:** One adapting application with stable identity/settings, separate
+  palette sessions, guarded loading and cross-storage Change Tileset/Save As;
+  both parity launchers retained. Four-target tester packages are published.
+  [Workflow evidence](compatibility.md#unified-opennew-and-session-transitions),
+  [save context](compatibility.md#unified-opennew-and-session-transitions).
+- [x] **U4:** November 8–9 macOS startup/Print, format options, context and
+  bounded dialog/input fixes implemented and delivered after CI/package checks.
+  [Review disposition](compatibility.md#reviewed-corrections).
+- [x] **U5:** November 10–11 Project options, event fields, menus and status-bar
+  corrections implemented and delivered. `paletteswap` remains I3 work.
+  [Review evidence](compatibility.md#reviewed-corrections).
+- [x] **U6:** Project options padding fixed; unified promoted to main with
+  historical branches retained; authorized screenshot added; fmt/Clippy/deny/about
+  enforced; all five vendor patches audited. [Padding evidence](compatibility.md#reviewed-corrections),
+  [vendor audit](dependencies.md#vendor-necessity-audit--november-11-2026),
   [branch policy](architecture.md#unified-main-branch).
-
-- [x] **U5 — Complete, implementation and development delivery:** Corrected
-  Project options alignment, multiline event field clipping, menu colors and
-  status-bar consistency from the November 10–11 review. Focused geometry/input
-  checks, inspected light/dark snapshots and required workspace checks pass.
-  `paletteswap` is deferred until after the initial release; native acceptance
-  remains U3. Audited Windows/Linux/macOS development packages and matching
-  source are published; all five packaging jobs pass. See [delivery](releases.md#unified-development-packaging).
-  Evidence: [review and verification](compatibility.md#november-1011-unified-review).
-
-- [x] **U4 — Complete, implementation and development delivery:** Implemented the November 8–9
-  macOS startup and
-  Print fixes, stable unified options/project context, reviewed dialog/input
-  adjustments and cross-platform input/output smoke coverage. Popup integration
-  and future suggestions have separate dispositions; graphics compatibility is
-  retained. Windows workspace/five-project and Linux offscreen checks pass;
-  all eight CI jobs pass. Refreshed Windows/Linux/macOS development packages and
-  matching source are published and audited; native retesting remains under U3.
-  Evidence: [review disposition](compatibility.md#november-8-9-unified-review)
-  and [package delivery](releases.md#unified-development-packaging).
-
-- [x] **U1 — Complete:** Detect storage and capabilities from map/project and
-  selected-tileset evidence, with actionable missing/conflicting-context errors.
-  Storage detection, union events, legacy graphics/collision adapters and metadata
-  integration and final source drift reconciliation are implemented, including master
-  improvements absent in plusplus. Deterministic tests cover both pinned projects, legacy
-  layouts, compound assets and mixed/conflicting evidence; each drift family has a
-  disposition in [compatibility evidence](compatibility.md#unified-format-detection-and-upstream-drift).
-- [x] **U2 — Complete:** Deliver one automatically adapting binary with safe loading,
-  editing, saving and project changes. Keep application identity/preferences
-  separate from document storage; retain both parity launchers. Consolidate
-  duplicated code as encountered without erasing format semantics. The third
-  launcher, Open/New, union events, separate palette sessions and stable settings
-  identity, legacy metadata and cross-storage tileset changes are implemented.
-  Representative five-project asset editing/saves and corrected Save As context
-  are verified. Windows/Linux/macOS development packages, matching complete source
-  and checksums are [published](releases.md#unified-development-packaging). Evidence:
-  [unified workflows](compatibility.md#unified-opennew-and-session-transitions) and
-  [native save context](compatibility.md#unified-native-save-context).
-- [ ] **U3 — In progress, awaiting human acceptance:** Pinned pokered, pokeyellow, pokegold,
-  pokecrystal and Polished Crystal suites pass through the unified
-  workflow, including alternating projects and cancelled/failed loads. Missing
-  or conflicting evidence requires corrected context, never a mode selector;
-  wrong-format writes fail without modifying files. Automated five-project and
-  cross-storage edit/save/reopen suites pass. The reported palette Hex text
-  alignment fix is implemented, automatically verified and published in the
-  refreshed unified build (see
-  [review evidence](compatibility.md#november-8-9-unified-review)).
-  Focused Windows project, asset,
-  event, palette/collision and external clipboard workflows pass. Linux X11
-  original-app Print/tile exchange and bidirectional file-manager drops also pass.
-  Completion still requires remaining integrated desktop, native chooser,
-  focus/DPI, clipboard/persistence and original-application checks across Windows,
-  Linux X11/Wayland and both macOS targets. Native acceptance is distinct from
-  the green CI and [published four-target packages](releases.md#unified-development-packaging).
-  Evidence:
-  [five-project matrix](compatibility.md#five-project-compatibility-matrix) and
-  [cross-storage assets](compatibility.md#unified-cross-storage-asset-persistence),
-  [Windows project cycle](compatibility.md#unified-windows-five-project-native-checks) and
-  [mixed-storage native checks](compatibility.md#unified-windows-mixed-storage-native-checks),
-  [events and clipboard](compatibility.md#unified-windows-event-and-image-clipboard-checks),
-  [roof and tileset persistence](compatibility.md#unified-windows-roof-and-tileset-persistence),
-  [palettes and collisions](compatibility.md#unified-windows-palette-and-collision-persistence),
-  [Gen 1 and binary checks](compatibility.md#unified-windows-monochrome-binary-collision-and-gen-1-events),
-  [combined event catalog](compatibility.md#unified-windows-combined-event-catalog),
-  [external image clipboard](compatibility.md#unified-windows-external-image-clipboard),
-  [native Print exchange](compatibility.md#unified-windows-native-print-exchange),
-  [Linux X11 original-app exchange/file drops](compatibility.md#unified-linux-x11-original-app-exchange-and-file-drops).
+- [ ] **U3 — In progress, awaiting human acceptance:** Automated pokered,
+  pokeyellow, pokegold, pokecrystal and Polished Crystal workflows and cross-storage
+  save/reopen checks pass. Focused Windows and isolated Linux X11 checks exist.
+  Complete integrated chooser, focus/DPI, clipboard, persistence and original-app
+  checks on Windows, Linux X11/Wayland and both Macs, including alternating
+  projects, canceled/failed loads and wrong-format write rejection. Do not infer
+  acceptance from CI or package availability.
+  [Five-project matrix](compatibility.md#five-project-compatibility-matrix),
+  [cross-storage evidence](compatibility.md#unified-cross-storage-asset-persistence),
+  [Windows cycle](compatibility.md#unified-windows-five-project-native-checks),
+  [Linux exchange/drops](compatibility.md#unified-linux-x11-original-app-exchange-and-file-drops),
+  [human checklist](testing-unified.md).
 
 ## 4. Autonomous interface — stabilization not started
 
@@ -424,7 +249,7 @@ The shared backend and experimental CLI already exist. Stabilize them after U3
 so both profiles are represented in the public contract; GUI work must continue
 using the same underlying operations in the meantime.
 
-- [x] GUI-independent Rust models/project adapters and experimental JSON
+- [x] GUI-independent Rust models/project adapters and experimental master JSON
   inspect/render/edit previews/apply exist; see [CLI guide](cli.md).
 - [ ] **A1:** Define versioned Rust/JSON contracts for inspect, validate, render,
   edit and batch, with stable error codes, schemas and deterministic responses.
@@ -448,18 +273,15 @@ duplicate paths as encountered while keeping both compatibility suites running.
 - [ ] **I2:** Add a shared egui RGB/HSV graphical picker on Linux, macOS and
   Windows, retaining exact RGB8 edits and RGB5 controls/export. Parity currently
   targets upstream's Windows native chooser and RGB/hex controls on all OSes.
-- [ ] **I3:** Evaluate remaining themes, all-domain undo, adding/removing events,
-  field-specific event controls, additional map zoom levels, a movable blocks
-  sidebar, map-connection navigation, update checks and newer project conventions
-  as separately scoped proposals. The November 6 direction defers this wishlist
-  until after parity; it is not part of M8 tester builds.
-  The [November 7 suggestions](architecture.md#november-7-future-suggestions)
-  add NPC sprite previews with a custom-movement fallback and optional extensions,
-  plus replacement application artwork. The [November 8–9 suggestions](architecture.md#november-89-deferred-suggestions-and-popup-investigation) add native macOS menus,
-  searchable collision choices, theme-library assessment and external popup
-  integration. These remain unstarted.
-  The November 11 `paletteswap` rectangle-rendering suggestion is also deferred
-  until after the initial release; see [proposal](architecture.md#paletteswap-preview-after-the-initial-release).
+- [ ] **I3:** Evaluate separately scoped future proposals after parity:
+  remaining themes, all-domain undo, adding/removing events, field-specific event
+  controls, more map zoom levels, movable blocks sidebar, map-connection navigation,
+  update checks, newer project conventions, NPC sprite previews with custom-data
+  fallback, replacement artwork, native macOS menus, searchable collision choices,
+  theme-library assessment and external popup integration. `paletteswap` rectangle
+  previews are explicitly deferred until after the initial release.
+  [Unresolved design questions](architecture.md#deferred-proposals),
+  [paletteswap scope](architecture.md#paletteswap-preview-after-the-initial-release).
 - [ ] **I4 — Acceptance:** Each chosen change has a stated benefit, appropriate
   regression/benchmark evidence and documented intentional differences. Unselected
   proposals are explicitly deferred rather than silently expanding scope.

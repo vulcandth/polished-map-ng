@@ -12,7 +12,7 @@ contributors. Code is distributed under LGPL-3.0-only. See `LICENSE.md` and
 This port changes implementation language, ownership, validation, architecture,
 and UI toolkit. Individual modules identify upstream algorithm sources.
 The Windows resource build adapts upstream `ide/polished-map.rc` to embed the
-unchanged multi-resolution application ICO in both Rust launchers; native window
+unchanged multi-resolution application ICO in all three Rust launchers; native window
 selection uses winit. Artwork attribution and provenance remain separately
 recorded in `docs/assets.md` and the artwork notices.
 

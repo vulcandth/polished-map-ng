@@ -3,6 +3,11 @@
 Build and run instructions are in [INSTALL.md](../INSTALL.md). The Rust API and
 JSON responses are experimental; stabilization is objective 4 of the
 [roadmap](roadmap.md). Run a subcommand with `--help` for its complete options.
+These commands use the fixed master project/asset adapters; they do not yet
+expose unified detection or plusplus attribute editing. The Rust libraries have
+separate plusplus and unified entry points. A unified GUI package does not change
+the CLI's supported formats.
+
 Examples use placeholder paths and hashes: substitute values from your project
 and the corresponding inspection or preview response.
 

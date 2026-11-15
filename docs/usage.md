@@ -47,11 +47,12 @@ Dropping files in the map workspace uses the normal Open options and unsaved
 changes guard. Only the first file is opened; drops over other controls or an
 active modal are ignored. This is independent of the internal Drag and Drop
 editing option. Native adapter implementation and remaining desktop verification
-are recorded in [compatibility](compatibility.md#native-external-file-drops).
+are recorded in [compatibility](compatibility.md#native-adapter-evidence).
 
 The editor opens binary maps using project metadata, explicit dimensions,
-or names such as `Map.20x18.johto.blk`. It finds the nearest Makefile and recognizes
-master map constants/headers and numbered tileset aliases. The GUI prefills these
+or names such as `Map.20x18.johto.blk`. Fixed master discovers the nearest Makefile;
+plusplus/unified also recognize their project markers. Metadata includes supported
+map constants/headers and numbered tileset aliases. The GUI prefills these
 options for review. Open offers factor-pair sizes from the block count, preferring
 10×9 multiples; filename or metadata dimensions take precedence. Choose the right
 size for shared block files. ASM counts reflect decoded data, not source text.
@@ -132,8 +133,9 @@ system image clipboard, with grayscale export and bounded RGB import. OK commits
 the draft and marks the tileset dirty even if unchanged; Cancel discards it.
 Tile edits have no map undo entries. File → Save Tileset saves PNG/palette files;
 Save also processes the map and blockset. Desktop editors now use separate native
-windows; closing one cancels its draft. Native clipboard transport and integrated
-window/DPI acceptance remain unfinished; see [compatibility](compatibility.md#native-dialog-hosting-and-ownership).
+windows; closing one cancels its draft. Native clipboard transport is implemented;
+cross-platform clipboard/window/DPI acceptance remains open. See
+[compatibility](compatibility.md#native-adapter-evidence).
 
 With a roof loaded, Tools → Edit Roof (Ctrl/Cmd+F) opens its nine-tile draft.
 It shares pixel gestures and clipboard commands, with the original reversed
@@ -162,8 +164,9 @@ block. Failed replacements preserve the previous assets and preview. Changing
 tilesets does not rewrite map header constants or write any files.
 
 Both Change dialogs show a read-only grayscale preview of the selected graphics.
-The fixed-size dropdown scrolls when a project has more choices; the preview
-scrolls separately when the image exceeds its pane. Selecting a name only updates
+The capped dropdown scrolls when a project has more choices. The tileset client
+fits the sheet within screen limits; larger previews scroll independently. The
+roof preview keeps a compact client. Selecting a name only updates
 the preview: OK applies the change, while Cancel preserves the loaded assets.
 
 ## Block editing
@@ -180,7 +183,7 @@ Swap Block swaps with the copied source's current contents. Ctrl/Cmd+C/V/X
 invoke these internal block operations; they do not replace the system clipboard.
 Tools → Resize Blockset (Ctrl/Cmd+B) accepts 1–256 blocks. New definitions/collisions
 are empty, and shrinking does not rewrite map IDs. These operations have no
-map undo entries. Native clipboard shortcut verification remains pending.
+map undo entries. The [roadmap](roadmap.md) tracks remaining native acceptance.
 
 ## Palette colors
 
@@ -255,9 +258,8 @@ full native theme matching remains pending.
 
 ## Saving and recovery
 
-Main Save processes edited tileset, roof, blockset and event domains before saving
-the map if needed. Saves are sequential, not one atomic transaction. Event-only
-changes do not rewrite a clean map.
+The [Save sequence](#saving) is not one atomic transaction. Event-only changes
+do not rewrite a clean map.
 
 Saving uses upstream's PNG destinations, including separate compound outputs,
 and writes two-bit grayscale PNGs. Imported 2bpp/CHR/LZ files remain intact;

@@ -24,9 +24,10 @@ offer MIT or Apache-2.0. We select Apache-2.0, retain the authors and declaratio
 and include the complete standard Apache-2.0 terms from the separately attributed
 profiling supplement. No missing copyright statement is invented.
 
-Binary packages copy these notices into the relevant per-package license folder,
-retain original authors/repository/license metadata in the dependency inventory,
-and include this complete supplement directory. Font, icon and original
-application-artwork notices remain separate in the other LICENSES directories
+Binary packages retain original authors/repository/license metadata in the
+dependency inventory and store shared supplements once in this directory.
+Inventory supplement paths are relative to `LICENSES`; ordinary package notice
+paths are relative to that package's `LICENSES/dependencies/NAME-VERSION` folder.
+Font, icon and original application-artwork notices remain separate in the other LICENSES directories
 and the corresponding asset directories. Packages fail if a supplement's bytes
 no longer match its recorded hash or a resolved registry package has no notices.

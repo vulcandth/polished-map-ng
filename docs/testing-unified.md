@@ -10,7 +10,7 @@ Human testers own the remaining native acceptance checks, per the November 8
 handoff. Use the checklist below and report functional issues; the handoff does
 not mark untested platforms or workflows as passing.
 
-For the November 8–9 fixes, prioritize these checks:
+Include these reported-problem regressions in the checklist:
 
 - On the older Intel Mac, launch normally without the previous manual environment
   workaround. With Events enabled in Print, verify Copy and Export and the labels
@@ -35,7 +35,7 @@ For the November 8–9 fixes, prioritize these checks:
 Check that `BUILD-INFO.json` says `"profile": "unified"` and that its commit
 matches the complete source archive. Platform dependencies, checksum verification
 and unsigned/ad-hoc signing limitations are described in the
-[platform setup guide](testing.md). Packages contain no game projects. The included
+[platform setup guide](testing.md#platform-setup). Packages contain no game projects. The included
 CLI remains experimental; use its documented commands in [CLI usage](cli.md).
 Rebuilding and relinking are covered in [REBUILD.md](rebuild.md).
 

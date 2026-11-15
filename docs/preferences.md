@@ -1,217 +1,135 @@
-# Preference persistence
+# Preferences
 
-The implemented settings follow the pinned master/plusplus `Main_Window` constructors,
-`exit_cb` and `Resize_Dialog::initialize`. Settings are captured by eframe's
-shutdown `App::save` hook. Periodic autosave is disabled to retain the source's
-exit-time behavior. A canceled exit leaves the current session running.
+Settings are saved at normal shutdown; periodic autosave is disabled. Canceling
+exit keeps the session running. Each launcher has independent preferences,
+recent maps and native window state.
 
 ## Stored settings and defaults
 
 | Setting | Default |
 |---|---|
-| Theme | System light/dark on first launch; Greybird if detection is unavailable |
-| Transparent | Off; requests 75% whole-window opacity |
+| Theme | System light/dark on first launch; light if detection is unavailable |
+| Transparent / Full Screen | Off |
 | Editing mode | Blocks |
 | Grid | On |
 | Rulers, zoom, block IDs, hexadecimal, Game Boy screen | Off |
 | Show Events, Show Warp IDs | On |
 | Selected palette set | Day |
-| Roof Palettes layout | Morn + Day, Night |
-| Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors | On |
+| Roof Palettes | Morn + Day, Night |
+| Auto-Load Events, Special Palettes and Roof Colors | On |
 | Resize anchor | Center |
-| Tile Priority | Off; reading PRIORITY_* palette colors enables it |
-| Monochrome, 256 Tiles | Off; missing palette maps enable Monochrome |
-| Show Priority | On; control enabled only while Tile Priority is on |
+| Classic: Tile Priority | Off; reading PRIORITY_* palette colors enables it |
+| Classic: Monochrome, 256 Tiles | Off |
+| Attributed: 512 Tiles | Off; loaded graphics/attributes may enable it |
+| Attributed: $0:80-FF Before $1:80-FF | Off; bank 1 first in the upper half |
+| Show Priority | On; classic controls require Tile Priority |
 | Recent maps | Empty; at most ten paths |
-| 128-block warning acknowledged (`meta128`) | Off; set only when its warning is dismissed |
-| Overworld Map Size | 1300 bytes; accepted range 1–4096 |
+| Classic 128-block warning acknowledgment | Off |
+| Overworld Map Size | 1300 bytes; range 1–4096 |
 | Drag and Drop | On; internal block, tile, roof and palette transfers |
-| Print Grid, IDs, Priority, Events, Warp IDs | All off; independent of editor view flags |
+| Print Grid, IDs, Priority, Events, Warp IDs | All off; independent of editor views |
 
-With no saved NG or imported legacy preferences, startup chooses the system
-light/dark theme. The fallback desktop lookup runs in the background. Saved
-settings take precedence; manually choosing a theme cancels a pending lookup.
-This initializes the preference once, rather than following later OS changes.
+Saved settings override system theme detection. Choosing a theme manually cancels
+any pending startup lookup; later OS theme changes are not followed automatically.
 
-The Dark Theme checkbox retains the existing v1 `dark` boolean (false for Greybird,
-true for Dark), so earlier settings need no migration. Choosing either theme
-updates its check mark and the shared UI style without changing document colors.
+In unified, a missing palette map makes only the current document monochrome.
+An explicit Monochrome choice is saved and affects subsequent opens. Fixed master
+retains upstream's persistent missing-palette fallback. The two tile-control
+groups in unified retain their values independently of which format is active.
 
-In the unified launcher, missing-palette Monochrome fallback affects the current
-document only. A later project with palette data opens in color unless you
-explicitly enabled Monochrome. That explicit choice is the saved preference.
-The fixed master launcher retains upstream's persistent fallback behavior.
+Auto-load toggles affect subsequent opens, not the current map. Special palettes
+and roof colors have independent toggles; the default project palette import
+still runs. Manual imports remain available. Unified Open/New may infer Roof
+Palettes or accept an override; it commits the layout only on a successful open.
+The global setting is the fallback when inference is ambiguous.
 
-The three auto-load toggles affect subsequent opens, not the current document.
-Special palettes and roof colors are independent; turning either off skips
-that optional import entirely, including its parsing and prompts. Manual palette
-and roof-color imports remain available. The default project palette import is
-independent of these toggles. Contextual palette selection on a later map open
-continues to follow upstream; restoring a selected set does not pin it forever.
+Overworld Map Size warns after a successful dirty-map write or forced Save As
+when `(width + 6) * (height + 6)` exceeds the chosen capacity. Equality is allowed.
+It does not resize the map or change game code. The separate warning for a classic
+collision blockset larger than 128 blocks is suppressed after acknowledgment.
 
-Overworld Map Size controls a post-save warning when the map's padded byte count
-exceeds the configured WRAM capacity. Changing it does not resize the map, edit
-WRAM source or immediately warn. Cancel retains the previous value; Close keeps
-the accepted value. Out-of-range persisted values preserve the original settings
-record and restore defaults, like other invalid preferences.
+Recent maps record completed opens and Save As, preserving exact path spelling.
+Canceled/failed operations, New and ordinary Save do not add entries. Clear Recent
+changes only the list. Startup neither probes the paths nor reopens a map.
 
-Saving a blockset with collisions and more than 128 blocks shows the source
-warning after success, until acknowledged. OK, Enter and Escape all acknowledge
-it. The `meta128` setting is retained across maps and saved at normal shutdown,
-matching the source preference flush lifecycle; merely displaying the warning
-does not change it. Older records without the field default to false. Save
-continuations and their dialogs are transient and never restored.
+Documents, unsaved colors, undo history, clipboard contents, block digit bindings,
+selection, scrolling and open dialogs are not saved. The selected palette set is
+saved, but its colors start from defaults next time. Print options are retained
+even when their dialog or subsequent file chooser is canceled.
 
-Documents, unsaved colors, palette dirty state, undo history, clipboard contents,
-selection, scroll positions and open dialogs are not serialized. The selected
-palette set is saved, but the color bank starts from defaults at the next launch.
-Print options are retained even when Cancel or Escape dismisses the form, as in
-the source. Canceling the subsequent file chooser also retains those values.
-Print jobs, output images and success dialogs are transient and are not stored.
-egui's general widget-memory persistence is disabled. Native window placement,
-maximized state and fullscreen use eframe's separate built-in persistence,
-including its monitor-bound checks. Full Screen defaults off on a fresh launch.
-The View menu and F11 send viewport requests; the menu reads the reported native
-state. No duplicate fullscreen value is stored in the application JSON record.
-The patched adapter tracks normal root-window geometry on move, resize and scale
-changes, independently of periodic saves. Child windows and minimized/fullscreen/
-maximized geometry do not replace it. Shutdown while minimized also retains the
-normal geometry. It is restored before applying the saved native state. Tracker
-regressions are automated; actual compositor transitions and exit/restart behavior
-remain a native acceptance gate.
+Native window geometry, maximized state and fullscreen use eframe's separate
+record. Normal geometry is restored before fullscreen/maximization; minimized or
+child-window geometry must not replace it. Transparent stores intent separately:
+an unsuccessful startup request reports an error without erasing that preference.
+Actual placement and opacity depend on the desktop/compositor.
 
 ## Format and location
 
-Transparent uses the application JSON boolean `transparent`. An enabled startup
-preference queues one native request after the window exists; an opaque startup
-does not change its styles. The menu reflects accepted requests. Failed changes
-leave that state unchanged; a failed startup application preserves the saved
-intent so moving between desktop backends does not erase it. Errors are reported
-once per request, without an automatic retry loop. Native acceptance does not
-prove that an X11 compositor honors its opacity property. The old JSON record
-without this field restores the default off value.
+Substitute the launcher's app ID into these paths:
 
-The stable app ID is `polished-map-ng`, independent of the development window
-title. eframe 0.37 stores `app.ron` in its platform data directory:
+| Launcher | App ID | JSON storage key |
+|---|---|---|
+| Unified | `polished-map-ng-unified` | `polished-map-ng-unified.preferences` |
+| Fixed master | `polished-map-ng` | `polished-map-ng.preferences` |
+| Fixed plusplus | `polished-map-ng-plusplus` | `polished-map-ng-plusplus.preferences` |
 
-| Platform | Default path |
+| Platform | Default settings file |
 |---|---|
-| Windows | `%APPDATA%\polished-map-ng\data\app.ron` |
-| Linux | `$XDG_DATA_HOME/polished-map-ng/app.ron`, or `~/.local/share/polished-map-ng/app.ron` if no absolute XDG data directory is configured |
-| macOS | `~/Library/Application Support/polished-map-ng/app.ron` |
+| Windows | `%APPDATA%\APP-ID\data\app.ron` |
+| Linux | `$XDG_DATA_HOME/APP-ID/app.ron`, or `~/.local/share/APP-ID/app.ron` when XDG_DATA_HOME is not absolute |
+| macOS | `~/Library/Application Support/APP-ID/app.ron` |
 
-The `polished-map-ng.preferences` storage key contains a version-1 JSON object.
-Its named enum values and booleans are independent of the native window record.
-Missing fields receive defaults. Unknown versions, invalid values, unknown
-fields or records exceeding 4 MiB restore defaults and disable writes to that
-key for the session, preserving the existing record. Startup status reports this.
-This is an internal settings schema, not the stable automation API promised by
-the roadmap.
+To reset settings, close the application and back up or rename its `app.ron`.
+No launcher falls back to another NG launcher's store. **Unified does not import
+original Polished Map preferences.** The legacy import below applies only to the
+fixed parity launchers.
 
-Recent paths use tagged UTF-8 strings, with native Unix bytes or Windows UTF-16
-units for names that cannot be represented as UTF-8. Native encodings from the
-other OS are rejected and the existing record is preserved. The ten-entry limit,
-nonempty paths and exact duplicate exclusion are checked on restoration. Startup
-does not probe paths or reopen a map. The larger record cap accommodates long
-paths; writing also checks the cap before replacing the saved record.
+The application key contains version-1 JSON. Missing fields receive defaults.
+Unknown versions/fields, invalid values or records larger than 4 MiB restore
+defaults and disable writes to that key for the session, preserving the original
+record. Recent paths support native Unix bytes and Windows UTF-16; foreign native
+encodings are rejected. This internal schema is not a stable automation API.
 
-The outer RON file is owned by eframe. Unreadable/malformed outer files and write
-errors follow its logged, best-effort behavior; this is not a power-loss-safe
-transaction or recovery journal. To reset settings, close the app and back up
-or rename its `app.ron` before relaunching.
+The outer RON file is owned by eframe. Its read/write failures use logged,
+best-effort behavior; settings storage is not a crash-recovery journal.
 
 ## Legacy import
 
-When no NG `app.ron` exists, startup imports the first selected original store,
-read-only. An existing NG file takes precedence even if malformed or from a newer
-version. There is no merging and no write to a legacy file or directory.
+With no existing NG `app.ron`, fixed master reads the first original store found:
 
 1. `polishedmap.prefs` beside the NG executable.
 2. `Polished Map.prefs` beside that executable.
-3. The original user's `Rangi/Polished Map.prefs` store below.
+3. `Rangi/Polished Map.prefs` under the platform root below.
 
 | Platform | Original user-store root |
 |---|---|
-| Windows | Current redirected roaming AppData, queried through the shell |
+| Windows | Redirected roaming AppData from the shell |
 | macOS | `~/Library/Preferences` |
-| Linux | `$XDG_CONFIG_HOME`, otherwise `~/.config`; falls back to `~/.fltk` only if the modern `Rangi` directory does not exist and the old one does |
+| Linux | `$XDG_CONFIG_HOME`, otherwise `~/.config`; `~/.fltk` only when the modern `Rangi` directory is absent and the old one exists |
 
-On Linux the **vendor directory**, not the preference file, decides the modern/
-old precedence. XDG `~/`, `${HOME}` and `$HOME/` expansion follows pinned FLTK.
-Linux home discovery uses Rust's OS home-directory lookup. macOS follows pinned
-FLTK: existing nonempty HOME, then existing `NSHomeDirectory`, then the real
-user's passwd entry. See [fallback evidence](compatibility.md#master-functional-gap-fixes);
-unusual account configurations and actual settings restart remain native checks.
-To import an executable-adjacent store from an older installation, copy it beside
-the NG executable before first launch. NG does not search other installations.
+Legacy files are read-only. Existing NG storage wins even if malformed or newer;
+there is no merging or continuous synchronization. To import an executable-local
+store, copy it beside NG before first launch. Other installations are not searched.
 
-The reader supports FLTK 1.0 root groups, repeated keys, continuation lines,
-CRLF, escaped backslashes/newlines/octal bytes and source integer-prefix parsing.
-Recent paths retain Unix bytes or valid UTF-8 on Windows. All settings in the
-above table, ten recent paths, normal window geometry, fullscreen and maximized
-state are mapped. Themes other than Greybird/Dark fall back to Greybird with a
-startup message, consistent with the initial two-theme scope.
-
-Normal geometry is created first; fullscreen (preferred over maximized) is
-requested after the first paint and native visibility. Removed-monitor placement
-is corrected where absolute positioning is available; Wayland placement belongs
-to the compositor. Size is bounded and the adapter clamps it to monitor limits.
-Mixed-DPI coordinates and real window-manager restoration still need M6 evidence.
-
-Invalid headers, oversized files, malformed escapes, integer overflow and
-out-of-range settings reject the entire import. Defaults are used, an error is
-reported, and writes to NG's application preference key are disabled for that
-session. Legacy bytes remain untouched. Eframe may still create its own window
-record, so retrying an import requires closing NG and backing up/renaming its
-`app.ron` after correcting the source. This is an explicit first-launch migration,
-not a continuous synchronization mechanism. See [intentional safety differences](deviations.md#legacy-preference-import-safety).
+The reader maps supported settings, recent paths and window state, preserving
+FLTK escape and integer-prefix conventions. Unsupported themes fall back to light
+with a startup message. Invalid headers, escapes, overflow, oversized files or
+out-of-range settings reject the whole import and disable application-key writes
+for that session. Eframe may still create its window record: to retry, correct
+the source, close NG and back up/rename its `app.ron`.
 
 ## Separate plusplus settings
 
-The `polished-map-plusplus` launcher uses app ID `polished-map-ng-plusplus` and
-JSON key `polished-map-ng-plusplus.preferences`. Substitute that app ID for
-`polished-map-ng` in the paths above. Its application settings and eframe window
-record are separate from master, with the same validation and preservation rules.
-Neither launcher reads the other profile's settings as a fallback.
-
-The common defaults above also apply to plusplus, except that Tile Priority,
-Monochrome, 256 Tiles and the `meta128` acknowledgment are master-only.
-Plusplus has **512 Tiles** (off) and **$0:80-FF Before $1:80-FF** (off, so bank 1
-comes first in the upper half). Loaded graphics/attributes may enable 512 Tiles.
-Show Priority is available independently of a Tile Priority option. Plusplus
-starts with eight game palettes and has no editable ninth monochrome palette.
-
-First-launch legacy discovery retains the shared precedence but uses
-`polishedmap-plusplus.prefs`, then `Polished Map++.prefs` beside the executable,
-then `Rangi/Polished Map++.prefs` in the platform user-store root above. Common
-keys retain their original meanings; `all512` and `swap01` supply the two
-plusplus options. Master-only keys are ignored. Original files remain read-only.
-See [implementation and verification evidence](compatibility.md#plusplus-launch-settings-and-help).
+Fixed plusplus uses `polishedmap-plusplus.prefs`, then `Polished Map++.prefs`
+beside the executable, then `Rangi/Polished Map++.prefs` under the same platform
+root. It imports `all512` and `swap01`; master-only options are ignored. It has
+eight game palettes and no editable ninth monochrome palette. The unified
+launcher retains both models' settings but does not run either legacy importer.
 
 ## Remaining parity and verification
 
-Legacy discovery/import, the `meta128` workflow and application-record roundtrip
-are implemented. The [native process probe](compatibility.md#native-profile-preference-lifecycle)
-exercises both profiles' real eframe storage, shutdown/restart and normal size
-restoration in temporary directories. M5 remains in progress for integrated
-storage/lifecycle acceptance, placement and restored fullscreen/maximization/transparency; M6 supplies the
-integrated platform evidence. Remaining theme/font aesthetics are deferred by
-user direction and are not a functional acceptance requirement.
-
-Tests inject an in-memory eframe Storage into the real app constructor and use
-its save callback. They cover all implemented settings, 270 palette/layout/anchor
-combinations, defaults, malformed/future-record retention, exclusion of edited
-documents/colors, first-launch precedence and byte-preserving legacy reads.
-Parser tests cover source selection, continuations, duplicate keys, escaped
-paths and malformed input; Unix adds non-UTF-8 paths. The exact vendored geometry
-tracker is tested for resize/move followed by maximize/fullscreen/minimize,
-child-window isolation and invalid-size rejection without an intervening save.
-These headless tests do not establish native filesystem shutdown delivery or
-compositor placement. The separate native probe supplies the platform-specific
-evidence linked above; it does not close integrated desktop acceptance.
-
-
-Unified Open/New can infer Roof Palettes from the selected project and exposes
-an override in Project options. It commits the chosen layout only after a
-successful open. The global Options setting still controls manual imports and
-remains the fallback for projects without an unambiguous layout.
+The [native lifecycle probe](compatibility.md#native-profile-preference-lifecycle)
+checks real storage, shutdown/restart and normal size restoration in isolated
+stores. Fullscreen, maximization, transparency and mixed-monitor placement still
+need integrated human acceptance. See the [roadmap](roadmap.md) and
+[preference implementation](../crates/gui/src/preferences.rs) for current scope.

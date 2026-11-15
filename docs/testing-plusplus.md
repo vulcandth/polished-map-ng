@@ -13,10 +13,11 @@ Availability and exact build evidence belong in [releases](releases.md).
 | macOS Intel | `x86_64-apple-darwin.zip` | `Polished Map NG++.app` |
 
 Platform dependencies, unsigned/ad-hoc signing limitations and checksum commands
-are the same as the [master packages](testing.md). Check that BUILD-INFO.json says
+are the same as the [platform setup guide](testing.md#platform-setup). Check that BUILD-INFO.json says
 `"profile": "plusplus"` and that its commit matches the corresponding source
-archive. The included CLI is `polished-map`; its plusplus commands are documented
-in [CLI usage](cli.md). [REBUILD.md](rebuild.md) explains rebuilding and relinking.
+archive. The included CLI is `polished-map`; it currently exposes master-format
+commands, not plusplus attribute editing. See [CLI usage](cli.md).
+[REBUILD.md](rebuild.md) explains rebuilding and relinking.
 Packages contain no game project fixtures.
 
 Use the pinned Polished Crystal revision in [upstream.lock.toml](../upstream.lock.toml)
@@ -30,7 +31,7 @@ The remaining native checks are:
   in the original plusplus application. Exercise compound graphics, tile banks,
   occurrence attributes and collision data. Check Cancel and save conflicts.
 - On Linux X11 and Wayland, use the desktop's actual file manager to drop a map
-  and supported assets onto their intended editor targets. Test multiple files,
+  onto the map workspace. Only the first file should open. Test multiple files,
   canceled drops and dirty-document confirmation; record the desktop/backend.
 - Check pixel/slider/swatches against the visible mouse target on a directly
   hosted desktop at normal and high DPI. Drag outside child windows and release;

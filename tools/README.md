@@ -1,7 +1,8 @@
 # Repository tools
 
-Run Python tools from the repository root with Python 3.12 or newer. They use
-the standard library; Cargo, Git and external compilers/SDKs are needed where
+Run Python tools from the repository root with Python 3.12 or newer. Most use
+the standard library; `icon_components.py` additionally requires Pillow.
+Cargo, Git and external compilers/SDKs are needed where
 specified by each tool's `--help` and [CI](../.github/workflows/ci.yml). Generated
 output and fetched fixtures belong in `.scratch/` and `.reference/`.
 

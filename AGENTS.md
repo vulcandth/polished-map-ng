@@ -40,6 +40,12 @@ exist from day one; a partial slice is not a completed parity milestone.
   "pending" claims next to newer evidence. Clearly label historical observations
   as historical; they must not override the roadmap's current task status.
   Keep temporary work logs in ignored `.scratch/`, not product documentation.
+- Keep documentation proportional to its purpose. User guides describe current
+  behavior; evidence documents retain contracts, reproducible checks and open
+  limits. Replace superseded observations instead of appending dated session
+  reports, repeated test counts or release inventories. Git history and release
+  notes retain old narratives. Keep future proposals in the roadmap, linking
+  design notes only where they contain a decision that still needs resolving.
 - Keep the roadmap's current-position table and **Next** instruction aligned
   with its checkboxes. Name the next actionable task by stable ID, and split
   broad work into separately verifiable steps as it becomes understood. Do not
@@ -66,37 +72,26 @@ exist from day one; a partial slice is not a completed parity milestone.
 - Fix crashes and corruption hazards immediately, recording observable changes
   in `docs/deviations.md`. Never silently convert formats or rewrite unrelated ASM.
 - Initial themes are upstream default light and dark. Other themes are deferred.
-- The user deferred original-font matching and remaining M4 aesthetics on
-  2026-10-30 after the palette-slider work. Separate plusplus work was authorized
-  on October 31 while master acceptance remains open. On November 6 the user
-  prioritized M8 master review fixes and refreshed tester builds, followed by
-  backporting shared fixes to `codex/plusplus-port`. Fix reviewed usability issues
-  now and plan the feature wishlist after parity. Do not resume general visual
-  matching merely to close M4. The user then resumed PP3/PP4 functionality and
-  acceptance work after the verified M8 backport; keep master acceptance open.
-  Preserve layout/sizing and separate plusplus entry points; reuse shared backend/platform code.
-  Preserve the approved exception in `docs/deviations.md` and roadmap status.
-- On November 7, after publishing M9 builds, the user authorized unified-editor
-  work before the remaining native parity gates. Retain the master/plusplus
-  launchers and do not add a mode selector. Detect the appropriate behavior from
-  project/asset context, reconcile upstream branch drift and preserve safe writes.
-- Refactor continuously for maintainability: simplify functions and consolidate
-  duplicate code when encountered. Do not defer structural cleanup to milestone
-  5; distinguish it from future feature suggestions and deliberate behavior changes.
-- On November 8, the user handed remaining native acceptance testing to human
-  testers. Do not continue autonomous GUI/platform test campaigns unless asked.
-  Keep acceptance gates open, collect tester reports, and fix reported functional
-  issues with appropriate automated regression checks.
-- On November 9 the user authorized the November 8–9 review fixes and bounded
-  menu/dialog adjustments. Keep native-menu/theme/search suggestions separate;
-  limit size/memory work to small changes without reducing compatibility.
-- The user prefers the earlier rounded egui palette sliders (2026-10-31).
-  Preserve that appearance and the retained functional fixes; do not restore
-  FLTK slider styling as part of parity work.
-- On November 11 the user authorized the November 10–11 review corrections:
-  Project options layout, multiline event fields, menu colors and status-bar
-  consistency. Record new features such as `paletteswap` for after the initial
-  release; exclude mon-palette and Polished Crystal game discussion.
+- The unified application is the default on `main`; keep both fixed parity
+  launchers and their historical branches. Application identity/settings stay
+  separate from document storage. Detect context without a mode selector or
+  silent conversion; preserve both formats' semantics and safe writes.
+- Master/plusplus native acceptance remains open despite the authorized early
+  plusplus/unified implementation. Preserve the sequencing exceptions in
+  `docs/deviations.md`; do not close gates from automated evidence alone.
+- Original-font matching and remaining M4 aesthetics are deferred (user direction,
+  October 30). Keep the preferred rounded egui palette sliders (October 31) and
+  retained functional fixes. Do not resume FLTK painting merely to close M4.
+  Fix reported functional/usability issues; future features, including
+  `paletteswap`, remain in the roadmap for after parity/initial release.
+- Remaining native acceptance testing belongs to human testers (November 8).
+  Do not run autonomous GUI/platform campaigns unless asked. Collect reports and
+  add appropriate automated regressions for functional fixes. Bounded reviewed
+  layout fixes do not authorize general aesthetic redesign.
+- Refactor continuously when needed: simplify functions and consolidate duplicate
+  code while preserving behavior. Do not defer structural cleanup to milestone 5
+  or confuse it with future feature proposals. Further size/memory changes need
+  measurement and must preserve compatibility.
 - Do not claim pokecrystal/Polished Crystal parity from synthetic tests alone.
 - The unified compatibility targets are pokered, pokeyellow, pokegold, pokecrystal
   and Polished Crystal (user direction, November 7). Pin all external fixtures in

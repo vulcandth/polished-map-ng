@@ -1,4 +1,4 @@
-# Testing development builds
+# Testing fixed-master builds and platform setup
 
 These packages are for master-profile compatibility testing, not parity or
 production releases. Use a copy of your project and keep a backup. Original-font
@@ -15,6 +15,11 @@ Download a package and its `.sha256` from the
 | Linux x86-64 | `x86_64-unknown-linux-gnu.tar.gz` | Extract and run `./polished-map-gui` |
 | macOS Apple Silicon | `aarch64-apple-darwin.zip` | Extract and open `Polished Map NG.app` |
 | macOS Intel | `x86_64-apple-darwin.zip` | Extract and open `Polished Map NG.app` |
+
+## Platform setup
+
+These requirements also apply to [unified](testing-unified.md) and
+[plusplus](testing-plusplus.md) packages.
 
 Windows builds require the [Microsoft Visual C++ v14 Redistributable (x64)](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
 if it is not already installed. Both binaries import `VCRUNTIME140.dll`; use
@@ -36,12 +41,13 @@ macOS, or compare `(Get-FileHash FILE -Algorithm SHA256).Hash` in PowerShell wit
 the checksum file. BUILD-INFO.json records the exact source commit and build host.
 The matching complete source archive and REBUILD.md support rebuilding/relinking.
 
+## Fixed-master checklist
+
 Focus testing on:
 
 - Reviewed shortcuts: Ctrl+digit assignment, Ctrl+Shift+digit clearing, map zoom,
   quick Alt menu access, and About/Print shortcuts.
 - Project-folder Browse, long roof/tileset dropdowns, Dark Theme and About links.
-
 - Open/discover real master-compatible projects, edit maps/blocks/tiles/palettes/
   roofs/events, undo/redo, save, reopen, and compare intended changes in Git.
 - Missing/malformed files, unsaved changes, save conflicts, close and exit guards.

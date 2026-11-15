@@ -1,7 +1,7 @@
 # Pinned native window adapters
 
 These are the original Cargo archives for winit 0.30.13, egui-winit 0.37.0,
-eframe 0.37.0 and arboard 3.7.0,
+eframe 0.37.0, arboard 3.7.0 and smithay-clipboard 0.7.3,
 with the changes listed in [NOTICE](NOTICE.md). The root Cargo patch table keeps
 eframe, its renderer and the editor on the same audited adapter instances.
 
@@ -16,7 +16,7 @@ the original MIT license; see [NOTICE](NOTICE.md).
 
 Run `python tools/vendor_sources.py` from the repository root. To verify the
 pristine inputs too, supply `--archives` pointing to a directory containing the
-four original `.crate` files plus `smithay-client-toolkit-0.19.2.crate`.
+five original `.crate` files plus `smithay-client-toolkit-0.19.2.crate`.
 After deliberately editing a patch, use
 `--refresh --archives DIR`, review the regenerated patch and manifest, then run
 the ordinary verification and workspace checks. Do not refresh automatically in

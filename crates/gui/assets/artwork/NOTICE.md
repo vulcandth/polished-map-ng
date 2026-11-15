@@ -26,5 +26,7 @@ No endorsement by upstream or any underlying rights holder is implied.
 NG keeps original source bytes, decodes XPM pixels to RGBA8, and paints message/
 About images without filtering at their original logical size. Source and decoded
 hashes are in `docs/artwork-inventory.json`; `tools/artwork_assets.py` verifies
-or regenerates the pixels. Retain this notice, the inventory and upstream license
-with source, binaries and snapshots that contain these images.
+or regenerates the pixels. Retain this notice and the upstream license with
+source, binaries and snapshots that contain these images. Include the original
+assets and inventory in matching source; binary copies use embedded pixels and
+retain these notices.

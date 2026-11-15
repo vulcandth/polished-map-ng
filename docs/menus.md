@@ -1,302 +1,101 @@
-# Master menu inventory
+# Menus and shortcuts
 
-Reference: `Main_Window::initialize` at pinned master
-`8b9bdc2b8aac8c865809516c2123af69c498da0b`, principally
-[`src/main-window.cpp`](https://github.com/Rangi42/polished-map/blob/8b9bdc2b8aac8c865809516c2123af69c498da0b/src/main-window.cpp).
-This is an implementation checklist, not a completed parity claim.
+The unified editor and both parity launchers use **File, Data, Edit, View,
+Mode, Tools, Options, Help**. Commands are disabled when their required document
+or asset is unavailable. See the [editing guide](usage.md) for workflows and
+[preferences](preferences.md) for defaults and persistence.
 
-The top-level order is **File, Data, Edit, View, Mode, Tools, Options, Help**.
-`crates/gui/src/menus.rs` now presents the implemented commands in those groups.
-Existing editing/persistence operations remain shared with their toolbar,
-keyboard and headless counterparts where applicable.
+| Menu | Commands |
+|---|---|
+| File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit |
+| Data | Load, Save, View, Reload and Unload Event Script; Load/Export Palettes; Load Roof Colors |
+| Edit | Undo, Redo, Copy/Paste/Swap Block |
+| View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, Palettes, Dark Theme, Transparent, Full Screen |
+| Mode | Blocks, Events, Switch Mode |
+| Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes |
+| Options | Format-specific tile controls, Roof Palettes, Auto-Load Events/Special Palettes/Roof Colors, Drag and Drop, Overworld Map Size |
+| Help | Help, About |
 
-| Group | Present in this port | Remaining source items or differences |
-|---|---|---|
-| File | New, Open, Open Recent/Clear Recent, Close, Save, Save As, Save Map, Save Blockset, Save Tileset, Save Roof, Print, Exit | Native clipboard delivery, chooser and close behavior need platform testing; exact fonts are deferred. |
-| Data | Load/Save/View/Reload/Unload Event Script; Load/Export Palettes; Load Roof Colors | Native dialog hosting is implemented; integrated desktop delivery needs testing. |
-| Edit | Undo, Redo, Copy/Paste/Swap Block | The temporary Edit Block entry is removed. Right-release on the same sidebar block opens its editor, matching upstream; native input/child-window verification remains pending. |
-| View | Grid, Rulers, Zoom, Block IDs, Hexadecimal, Show Priority, Game Boy Screen, Show Events, Show Warp IDs, six palette sets, Dark Theme (F9), Transparent, Full Screen | Other themes/fonts are deferred; Wayland opacity integration is implemented with capability checks, while compositor acceptance remains open. |
-| Mode | Blocks, Events, Switch Mode | Alt+letter menu access and item mnemonics are implemented; native keyboard verification remains. Radio items and Tab/shift-command shortcuts use the same mode transition and clear active gestures. |
-| Tools | Resize Blockset, Resize Map, Change/Edit Tileset, Change/Edit Roof, Edit Current Palettes | Native child-window fidelity and complete editor parity remain separate requirements. Resize and editor actions moved here from Edit. |
-| Options | Monochrome, Tile Priority, 256 Tiles; five Roof Palettes choices; Auto-Load Events, Auto-Load Special Palettes, Auto-Load Roof Colors; Drag and Drop; Overworld Map Size | Remaining native/persistence gaps are tracked in `preferences.md`. |
-| Help | Help/F1 with bundled source documentation; About/command-/ with project and icon attribution | Original application artwork is included with attribution; native functional acceptance remains open and appearance matching is deferred. |
+## Keyboard navigation
+
+Use Ctrl on Windows/Linux and Command on macOS for the shortcuts below unless
+noted otherwise. Text entry and modal dialogs take precedence over main-window
+commands. Alt+letter opens a menu; arrow keys navigate, Enter activates, and
+Escape closes the current menu or cancels a dialog. A number field consumes
+Enter to commit its value before the dialog can be accepted.
+
+| Action | Shortcut |
+|---|---|
+| New / Open / Close | Ctrl/Cmd+N / O / W |
+| Save / Save As | Ctrl/Cmd+S / Shift+S |
+| Undo / Redo | Ctrl/Cmd+Z / Y |
+| Copy / Paste / Swap Block | Ctrl/Cmd+C / V / X |
+| Print | Ctrl/Cmd+P |
+| Resize Blockset / Map | Ctrl/Cmd+B / E |
+| Change / Edit Tileset | Ctrl/Cmd+H / T |
+| Change / Edit Roof | Ctrl/Cmd+Shift+H / Ctrl/Cmd+F |
+| Edit Current Palettes | Ctrl/Cmd+Shift+L |
+| Load / Save Event Script | Ctrl/Cmd+A / Shift+A |
+| View / Reload / Unload Event Script | Ctrl/Cmd+U / R / Shift+W |
+| Load Palettes | Ctrl/Cmd+L |
+| Grid / Zoom / Block IDs | Ctrl/Cmd+G / = / I |
+| Rulers / Hexadecimal / Show Priority | Ctrl/Cmd+Shift+R / Shift+4 / Shift+P |
+| Game Boy Screen / Show Events / Show Warp IDs | Ctrl/Cmd+Shift+M / Shift+V / Shift+3 |
+| Blocks / Events / Switch Mode | Ctrl/Cmd+Shift+B / Shift+E / Tab |
+| Dark Theme / Transparent / Full Screen | F9 / F10 / F11 |
+| Help / About | F1 / Ctrl/Cmd+/ |
+
+Block digit bindings use **physical Ctrl on every platform**: Ctrl+digit assigns
+one digit to the selected block, Ctrl+Shift+digit clears it, and the digit selects
+and reveals its bound block. Bindings last only for the session. Assignment and
+clearing do not suppress overlapping View shortcuts. Bound Alt+digits select a
+block before Open Recent; unbound Alt+1 through Alt+0 open the recent entries.
+
+## Options by document format
+
+The unified Options menu always shows both tile-control groups. The inactive
+group is disabled; both are disabled before opening a map.
+
+- Classic assets: Monochrome, Tile Priority and 256 Tiles. Tile Priority enables
+  editing priority attributes; View → Show Priority only controls their overlay.
+- Attributed assets: 512 Tiles and `$0:80-FF Before $1:80-FF`. Bank ordering is
+  disabled when 512 Tiles is off; priority belongs to each tile occurrence.
+
+Roof Palettes chooses how later roof-color imports interpret their table:
+Custom; Morn + Day, Night; Morn, Day, Night; Morn + Day, Night, Custom; or
+Morn, Day, Night, Custom. It does not immediately reload colors. Unified Open/New
+can infer this layout or accept an explicit override under Project options.
+
+Drag and Drop controls internal block/tile/roof/palette transfers (drag swaps,
+Ctrl-drag copies). It does not disable painting, event movement or external file
+opening. External drops open the first file dropped over the map workspace,
+using the normal Open options and unsaved-change guard.
+
+Overworld Map Size sets the post-save warning threshold, not the map dimensions
+or the game's actual capacity. See [saving](usage.md#saving).
 
 ## Separate plusplus menu differences
 
-The separate plusplus launcher shares the eight menu groups and input routing.
-Its Options menu replaces Tile Priority, Monochrome and 256 Tiles with 512 Tiles
-and `$0:80-FF Before $1:80-FF`; bank ordering is disabled while 512 Tiles is off.
-Show Priority operates on occurrence attributes. File and asset actions use
-the explicit plusplus document adapters rather than changing the active profile.
-Help displays the complete pinned Polished Map++ 2.7.1 reference, and About
-identifies the plusplus port while retaining shared attribution. Help remains
-reference documentation, not a declaration that every parity gate has passed.
-See [settings](preferences.md#separate-plusplus-settings) and
-[verification evidence](compatibility.md#plusplus-launch-settings-and-help).
+The fixed master launcher shows only classic tile options; fixed plusplus shows
+only attributed options. Neither switches formats automatically. Plusplus Help
+uses the pinned Polished Map++ reference. Help identifies upstream instructions
+as reference material, rather than claiming completed NG parity.
+
+## Window and help commands
+
+Dark Theme switches the supported light/dark styles without changing map colors.
+Transparent requests 75% opacity; unsupported desktop capabilities produce an
+error and preserve the last accepted setting. Full Screen reflects the native
+window state. Escape does not exit fullscreen or close the main window.
+
+Help opens a resizable nonmodal window. About is modal and retains project and
+asset attribution. Both work before opening a map. Their OK buttons, Enter and
+Escape dismiss them without editing the project.
 
 ## Geometry and interaction gates
 
-Open accepts extra map IDs after the selected dimensions with the original
-one-button size warning, after palette choices. Acknowledgment completes the
-staged open; short input still fails without replacing the current document.
-Opening leaves files untouched. Save Map skips clean binary maps, while an edited
-save writes the acknowledged prefix with a conflict check against the complete
-source file. ASM imports retain their separate binary Save As requirement.
-
-All 27 source toolbar buttons are present, with eight six-point separators.
-Each button occupies 24×24 points and uses the selected original artwork.
-The palette label/dropdown precedes Load Palettes and Edit Current Palettes;
-blockset/map resize, tileset change/edit and roof change/edit follow in pairs.
-Undo/Redo stay visible when disabled. Change Roof requires a project roof
-inventory captured at successful map open; Edit Roof requires loaded roof pixels.
-The menu uses the same availability rules. All former toolbar placeholders use
-original artwork with attribution and recorded provenance limitations. Native
-functional testing remains required; remaining style matching is deferred.
-
-The status bar follows the same fixed-row model: five 21-point fields in a
-23-point frame, four two-point separators, and widths measured from the original
-sample labels plus 16 points. It shows block count, map dimensions, hovered block
-ID, block coordinates and (in Events mode) event coordinates. Leaving the map
-clears hover fields; closing clears all five. Counts and dimensions stay decimal.
-The display-base toggle affects only the three hover fields. Saved/modified and
-operation feedback remains available in an NG-specific status-bar tooltip.
-
-Numeric block shortcuts use physical Ctrl on all platforms: Ctrl+digit assigns
-the selected block, Ctrl+Shift+digit clears that digit, and a bound digit selects
-and reveals its block. Each block has at most one digit. Clear/assign events keep
-propagating, so Ctrl+Shift+3/4 can also run the View commands. Bound Alt+digits
-select before Open Recent; unbound ones retain the recent-map shortcut. Red digits
-with white outlines are visible independently of Block IDs, shifting down for
-three-digit decimal IDs at normal zoom. These session bindings are never saved.
-Native keyboard/numpad delivery and native font matching remain verification gates.
-
-Transparent precedes Full Screen and shares the source F10 shortcut. It requests
-75% whole-window opacity (Win32 byte 191, X11 CARDINAL `0xBFFFFFFF`, AppKit 0.75).
-The platform adapter changes the root window, including its content; no image,
-palette, export or widget alpha is modified. Native errors preserve the previous
-accepted menu state and are reported. Wayland uses the implemented native protocol
-adapter and reports a capability error on unsupported compositors/frame setups. The Windows API has a hidden-window round-trip
-test; X11 has an unmapped-window property test under Xvfb. These do not prove
-GPU/compositor appearance or actual F10 delivery. See `preferences.md` for
-startup intent and `architecture.md` for the remaining native acceptance gates.
-
-All eight current groups and their recent/palette/roof submenus now use one
-measured popup renderer. `menu_popup/specs.rs` records each implemented row's
-mark, shortcut and trailing divider. Ordinary commands reserve the source's
-transparent 16×16 column without importing an empty bitmap. Visible command
-ellipses use the source's three periods; accessible names remain stable and
-shortcuts have their own accessibility property. Recent-file names remain
-literal, including Unicode ellipses; duplicate basenames use distinct indices.
-
-Master `widgets.h` supplies one leading and nine trailing label spaces and
-12/13-point platform sizes. FLTK 1.4.5, required by master `INSTALL.md`, supplies
-the remaining calculations: a row is the largest measured label/image height
-plus four; check/radio measurement reserves 18 points, submenus add 14; shortcut
-modifier and key maxima are measured separately, with four points after keys.
-Popup width is the largest item width plus both shortcut columns plus nine,
-bounded below by title width plus twelve. With a one-point panel border, height
-is `row_height * row_count + 1`. Dividers occupy the bottom of their preceding
-row, not a separate item. The menu bar remains in its original 21-point band.
-
-The source-derived backgrounds, square frame, row bounds, check/radio positions,
-image space and shortcut alignment are implemented. Indicator drawing now uses
-the Greybird/Dark box colors, borders, gradients, six-vertex checkmarks and GTK
-radio highlights. The radio inset depends on each theme's box metrics. Disabled
-labels/shortcuts/arrows use FLTK's 33% foreground/background blend while indicator
-boxes retain their source colors. Hover changes text contrast without recoloring
-the marks. Contrast follows FLTK 1.4.5's CIELAB algorithm at master's level 50.
-Popup outer frames now preserve the source one-point upper/lower edges and
-corner ownership. Dividers use FLTK's background-derived gray ramp and overwrite
-both side edges before clipping at the popup boundary. Native arc/polygon
-coverage, shadows/placement, submenu arrow shape and fonts remain incomplete.
-Keyboard submenu opening/activation and modal guards
-are tested headlessly. Activating Enter is consumed before a command can open
-a modal, preventing accidental acceptance/dismissal in that same frame.
-Alt+letter menu opening and item mnemonic activation are implemented, including
-held Alt, nested-menu precedence and disabled/modal guards. See
-[functional input evidence](compatibility.md#master-functional-gap-fixes).
-Underline styling and additional themes are deferred. Screen-edge popup behavior and Transparent require native acceptance.
-
-Mac Shift/Option/Command captions use an unchanged, separately licensed Noto
-Sans Symbols 2 font because the existing bundled faces lack some glyphs. Its
-dedicated family does not alter ordinary UI text or claim native macOS metrics.
-See `assets.md` and `crates/gui/assets/fonts/NOTICE.md` for provenance.
-
-View places **Dark Theme** immediately before Transparent and Full Screen.
-F9 toggles it outside text entry and modals; it is a checkbox switching between the supported light
-(Greybird) and dark styles. This simplifies the original multi-theme submenu at
-the upstream reviewer's request; other themes remain deferred. T toggles it while
-View is open. The change updates shared UI/icon styles without reloading graphics
-or changing palette colors, dirty flags or history. Selection closes the menu,
-works before loading a map and survives restart through the existing v1 `dark`
-preference. This does not establish FLTK styling parity.
-
-About uses the source Help-menu order/separator and command-/ shortcut. OK,
-Enter and Escape close its modal without modifying the loaded project or
-history. Parent commands and root-window closing are guarded while it is open.
-It remains available before loading a map. The text identifies NG's own version,
-source and copyright separately from Polished Map 4.7.1/Rangi's original notice,
-and retains Fugue creator, source, CC BY 3.0 and adaptation attribution.
-
-The source `Modal_Dialog` APP_ICON layout measures at a 620-point wrap width,
-adds 80 plus OS_FONT_SIZE to the larger text width, and enforces a 280-point
-minimum. OS_FONT_SIZE is 12 on Windows and 13 elsewhere, with heading +4.
-The heading has a 25-point slot at (70,10), body starts at (70,45), and the
-80×22 OK button stays ten points from the bottom/right. The 50×50 image slot
-at (10,10) contains the selected original application artwork. Remaining native
-frame/system-font matching is deferred; window behavior still requires testing.
-
-Help opens a nonmodal, resizable child viewport with an initial 700×500 client
-size and a 48-point offset from the parent. Its body uses `(10,10,w-20,h-52)`;
-the 80×22 OK button remains ten points from the bottom/right. Reopening resets
-document scrolling and position while retaining the resized native client size.
-Menu Help and F1 share the same action, including before a map is loaded.
-OK, Enter, Escape and the window close button dismiss Help without closing or
-editing the map. Main-window controls remain available while Help is open;
-existing application modals block opening/using it.
-
-The complete pinned master text is retained as reference documentation, with
-95 display blocks and 16 linked spans. Its source product/version, copyright,
-platform paths and URLs are preserved. A separate NG notice avoids presenting
-upstream instructions as a completed parity claim. The original HTML subset is
-converted reproducibly to static blocks; links open only on explicit activation.
-Native child-window placement/focus/resize/close and FLTK HTML/font equivalence
-remain acceptance gates. Headless tests use an embedded nonmodal fallback.
-
-Print now connects its CPU compositor to the options, clipboard and PNG export
-workflow. `Print_Options_Dialog::refresh` uses 10-point outer
-margins, 22-point controls, 4-point checkbox gaps and 80-point buttons. The Show
-label width is `text_width("Show:", 4)`; each checkbox gets
-`text_width(label, 2) + 22`. The client width comes from the final checkbox plus
-the trailing margin, with a minimum of 288. The button row starts at y=48 and
-the client height is 80. Button order is Export/Copy/Cancel on Windows and
-Cancel/Copy/Export on Unix. Enter, command-C, Escape and initial Export focus
-are implemented in a centered egui modal. Its heading/frame and font metrics
-remain different from the original native child window.
-
-Grid, IDs, Priority, Events and Warp IDs are independent controls, default off.
-The source copies their values into preferences even when the options dialog is
-canceled. Warp IDs only affect output when Events is on; the checkbox itself
-stays enabled. Export opens `Print Screenshot` with the map-derived PNG filename, PNG filter
-and overwrite confirmation. Copy sends an image without writing a file. Both
-use native map dimensions regardless of zoom or current canvas visibility.
-File/Print, the toolbar and command-P share this workflow. Command-Shift-P remains
-Show Priority. Rendering captures live unsaved map, graphics and event data,
-then runs off the UI thread. The image clipboard request is emitted on the UI
-thread after completion. Export retains any existing filename suffix, adding
-`.png` only when absent, and confirms a newly suffixed existing destination.
-The save target is hashed and rechecked before installation. Native font metrics, clipboard payloads,
-file chooser behavior and dialog frame/DPI remain targeted platform checks.
-
-The main-window title appends the chosen map basename to NG's development
-identity after Open/Save As, uses `New Map` for an unsaved new map, and resets
-on Close. It has no dirty-state asterisk. Canceled or failed transitions retain
-the current name. Print suggests the same basename with `.blk` replaced by
-`.png` (case-insensitive), or `.png` appended for other input suffixes; the new
-map suggestion is `New Map.png`. A queued Print retains its captured suggestion.
-
-Full Screen follows the source View entry and F11 shortcut, including use before
-opening a map. Both request native fullscreen through eframe. The checkmark reads
-the native viewport state, so restored or OS-initiated changes are reflected.
-It does not change map bytes, history, palettes or dirty flags. Existing modal
-and text-input guards apply; Escape does not exit fullscreen or close the main
-window. Normal geometry, maximized state and fullscreen persist together in
-eframe's native window record. Actual OS transitions and restoration still need
-platform verification; headless tests cover the requests and state feedback.
-
-Drag and Drop defaults on and gates left-button internal transfers in the block
-sidebar, tileset/roof editors and palette editor. Drag swaps; Ctrl-drag copies.
-Palette transfers copy live RGB8 colors, while keyboard Copy keeps its separate
-RGB5 quantization. Selection, clipboard commands, map/pixel painting and event
-movement remain available when transfers are disabled. The option survives
-Close and exit. External file dropping onto the map is independent in upstream
-and has not yet been ported.
-
-Overworld Map Size uses the original 380-point client width, text-derived content
-height, 22-point controls, 10-point margins, 16-point button gap and platform button
-order. It accepts 1–4096 bytes (default 1300). The save warning uses
-`(width + 6) * (height + 6) > capacity`, after a successful dirty-map write or
-forced Save As. Equality is permitted. Clean ordinary saves and failed writes
-do not warn. Dismissing the warning keeps the completed save and history intact.
-The warning's native frame/icon and font rasterization still need verification;
-the port uses its existing portable warning modal without importing unaudited art.
-
-Monochrome and 256 Tiles default off. Each change reloads the current tileset,
-blocks/collisions and roof without opening the tileset chooser. Unsaved assets
-use the same warning as Change Tileset; map history and session palette edits
-survive. Cancel retains the changed preference, matching upstream, while the
-live document retains its original interpretation and save layout until a
-successful reload. Failed reads retain the whole document. Missing palette maps
-enable Monochrome again. Both options survive Close and exit and seed subsequent
-opens; the existing Map Options 256-tile checkbox starts from the session value.
-See `deviations.md` for the canceled-mode safety boundary.
-
-Tile Priority controls the tile editor's priority checkbox and palette-map gap/
-padding output. Toggling it preserves existing attribute bits, pixels, dirty flags
-and map history. It survives Close and exit; successful reads of PRIORITY_* colors
-enable it again, while ordinary palettes preserve the current setting. It is
-independent of View > Show Priority. Disabling the option must not silently enable
-it again during Save. Show Priority defaults on and has a synchronized toolbar
-toggle and Ctrl/Cmd+Shift+P shortcut. Its controls are disabled while Tile Priority
-is off, but the stored display value and existing overlays are retained. It draws
-before grids, IDs, selection borders and event markers. Main/sidebar tiles use
-8/16-pixel patterns; block sheets and tileset thumbnails use 16, block chips 24.
-Pixel-editing grids, tile-image clipboard and plain RGB export omit the overlay.
-The original roof-dialog invalid cast is handled as documented in `deviations.md`.
-
-Open Recent shows up to ten basenames with Alt+1 through Alt+0. Full paths are
-available on hover; duplicate basenames remain separate entries. Completed opens
-and Save As promote the exact path spelling, removing an existing exact match
-and evicting the oldest entry when full. New unsaved maps, canceled options,
-failed opens/saves and ordinary Save do not add entries. Selection uses the
-normal unsaved warning followed by Map Options. Clear Recent changes only the
-list, persists on exit, and remains available when empty. History survives Close.
-
-Load Roof Colors requires a known map group and resolves the modern project
-roof table before the legacy path. Manual loading is available for indoor and
-monochrome maps too. It asks OK/Cancel before replacing edited palette colors,
-preserves the edited flag and selected set, updates previews after success and
-shows the original success wording. Failed reads retain the whole session.
-Roof Palettes changes only the interpretation of subsequent manual/automatic
-imports; it does not immediately reload colors. All five choices survive Close
-within the session and are captured on exit for the next launch. See
-`preferences.md` for the implemented settings, defaults and native checks still
-required. Auto-Load Special Palettes and Auto-Load Roof Colors affect subsequent
-opens without immediately replacing colors or disabling manual imports.
-
-Close clears loaded map/events/assets, textures, map history, block clipboard,
-selection, gestures and scroll state. It retains palette colors, the selected
-palette set, palette-only dirty state, monochrome and view/mode settings.
-Save Map writes only the map; Save retains the original independent-domain
-ordering. Map conflicts preserve the loaded document and external bytes.
-Close (Ctrl/Cmd+W) and Exit (Alt+F4) share upstream's unsaved warning semantics:
-OK discards/continues, Cancel or Escape keeps the document, Enter accepts.
-Warnings name the first dirty domain in map/events/tiles/roof/blockset order;
-palette-only edits do not trigger this source guard. Shift+Ctrl/Cmd+W continues
-to unload only the event script. Native window close uses the same exit guard.
-The warning's native window, shield icon and measured client geometry remain
-pending; the current egui modal reproduces wording, button order and actions.
-
-- Preserve the 21-point menu-bar band and source top-level/command order. Tests
-  verify bounds, command placement and disabled state when data is unavailable.
-- The popup image/check column, row metrics, dividers and shortcut columns are
-  implemented. Complete theme painting and native acceptance remain.
-  Upstream's `BLANK_ICON` reserves an image column for ordinary commands;
-  it does not decorate all commands with toolbar artwork.
-- Verify source enablement for every data/profile condition. Current checks
-  cover unavailable map/blockset/tileset/roof/events, history controls, existing
-  workflow dialogs and modal guards; this is not the full profile matrix.
-- Test every command through its final menu route as it is ported. Never add
-  inert placeholders to imply that a missing source command works.
-- Keep native OS behavior separate from egui headless evidence. Screenshots and
-  synthetic interaction tests do not prove native font, menu, DPI or dialog
-  equivalence on any platform.
-
-
-In the unified application, Options always shows both format-specific groups:
-Monochrome/Tile Priority/256 Tiles, then 512 Tiles/`$0:80-FF Before $1:80-FF`. Choices
-for the inactive format are disabled; both groups are disabled before a map is
-open. Common options follow the groups. The separate parity launchers retain
-their own format's choices. Menu dividers reserve eight points of separation;
-menu-name highlights are square. These are reviewed usability changes, not a
-claim of exact FLTK appearance.
+Source-derived sizing, popup behavior, native adapters and their verification
+limits belong in [compatibility evidence](compatibility.md). Current definitions
+are in [menu specifications](../crates/gui/src/menu_popup/specs.rs) and
+[command dispatch](../crates/gui/src/menus.rs). Native acceptance and deferred
+appearance matching are tracked in the [roadmap](roadmap.md).

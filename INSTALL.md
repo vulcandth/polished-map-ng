@@ -89,34 +89,7 @@ to change an existing checkout at another revision or with tracked edits. The
 `real-project` CI job lists the environment variables and exact test commands.
 Redistribution must also satisfy the [release requirements](docs/releases.md).
 
-Native modal lifetime checks create hidden windows and do not operate the desktop.
-On Windows PowerShell run:
-
-```powershell
-$env:POLISHED_MAP_NATIVE_MODAL_PROBE = '1'
-cargo run -p polished-map-platform --locked --example native_modals
-```
-
-On macOS use `POLISHED_MAP_NATIVE_MODAL_PROBE=1 cargo run -p polished-map-platform --locked --example native_modals`.
-Linux uses isolated display/protocol peers:
-
-```sh
-xvfb-run --auto-servernum env POLISHED_MAP_NATIVE_MODAL_PROBE=1 cargo run -p polished-map-platform --locked --example native_modals
-python3 tools/wayland_modal_probe.py
-```
-
-These check ownership/lifetime and wire behavior. Integrated native desktop
-acceptance remains a separate roadmap gate.
-
-The opt-in native settings probe launches short-lived windows in separate
-processes and uses only temporary legacy/application stores. Run on an isolated
-Linux display (the CI matrix runs the same probe natively on Windows/macOS):
-
-```sh
-xvfb-run --auto-servernum env -u WAYLAND_DISPLAY POLISHED_MAP_NATIVE_PREFERENCES_PROBE=1 cargo run -p polished-map-gui --example native_preferences --features native-tests --locked
-```
-
-For a local Windows/macOS run, set `POLISHED_MAP_NATIVE_PREFERENCES_PROBE=1` and
-run the same Cargo command without `xvfb-run`/`env`. Expect ten brief application
-windows; no desktop input is sent. The `native-tests` feature is disabled in
-normal builds. See [scope and results](docs/compatibility.md#native-profile-preference-lifecycle).
+Native modal/settings and X11/Wayland protocol probes have different isolation
+requirements. Use the exact commands and environments in [CI](.github/workflows/ci.yml)
+and the [tool guide](tools/README.md). They do not replace integrated human
+acceptance on real desktops.

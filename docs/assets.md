@@ -1,220 +1,79 @@
 # Asset provenance
 
-Project fixtures and reusable game graphics are not distributed; the attributed
-[README screenshot](#readme-screenshot) is the narrow documentation exception.
-Reference checkouts and extracted oracle inputs stay ignored. The UI uses all 41 nonblank toolbar/
-editor XPMs, the three original message symbols, About image and native app icon.
-The blank menu image is represented by its measured empty column.
+Game-project fixtures are excluded from source and binary distributions. The
+attributed [README screenshot](#readme-screenshot) is the sole documentation
+exception. Original UI artwork remains the user's explicit selection; repository
+attribution does not independently establish rights to underlying third-party
+imagery. Known licenses and unresolved origins must remain distinguishable.
 
 ## Original artwork selection and provenance
 
-The user explicitly requested original upstream artwork with upstream attribution
-on 2026-10-29, including the previously unresolved toolbar and application art.
-This supersedes the earlier placeholder policy. It does not establish independent
-third-party ownership: records distinguish confirmed Fugue licensing from images
-reproduced on the basis of the upstream repository's attribution/license.
-Known third-party notices remain intact; no replacement artwork is introduced.
+All 41 nonblank toolbar/editor XPMs, original message symbols, About image and
+application icon are retained from pinned upstream. The transparent menu icon is
+represented by geometry. Original XPM/ICO bytes are unchanged; decoded RGBA and
+disabled variants are adaptations, not replacement artwork.
 
-[`icon-inventory.json`](icon-inventory.json) covers the 42 source includes in
-`src/icons.h`, with 41 distribution records. [`artwork-inventory.json`](artwork-inventory.json)
-covers message/application XPMs and the original multi-resolution Windows ICO.
-Each records the pinned Git blob and decoded RGBA hashes. The original XPM bytes
-are unchanged. All decoded artwork pixels were independently compared with Pillow.
-For `tileset.xpm` and `palettes.xpm`, decode only the declared 16-pixel width despite
-the extra final-row character, as FLTK does. Transparent pixels have zero RGB.
+| Record | Owns |
+|---|---|
+| [Icon inventory](icon-inventory.json) | Source Git blobs, source/pixel hashes, per-file origin and component records |
+| [Icon notice](../crates/gui/assets/icons/NOTICE.md) | Fugue mappings, copyright/licenses, adaptation history and unresolved artwork |
+| [Artwork inventory](artwork-inventory.json) | Message/application XPM and original multi-size ICO hashes |
+| [Artwork notice](../crates/gui/assets/artwork/NOTICE.md) | Authors, original source records, transformations and provenance limits |
+| [Root notice](../NOTICE.md) | Code adaptations and project-wide attribution |
 
-All 27 toolbar buttons now use source images with their original names, bounds,
-actions, disabled arithmetic and available dark variants. No text placeholder
-faces remain. The three 48×48 message symbols and 48×48 About image are centered
-in the source's 50×50 slots. Linux's window adapter uses the original 16×16 XPM;
-macOS receives the 48×48 application picture. Windows embeds the unchanged
-original ICO with 16/24/32/48/64 frames in both launchers and selects native
-small/large resources for each window's DPI. Its 48×48 frame exactly matches
-the application picture. `tools/windows_icon_resources.py` verifies all five
-embedded frame payloads against that ICO in CI and binary packaging. macOS
-bundle metadata and broader native display/DPI acceptance remain P2/M4/P1.
-
-Verification: `python tools/icon_assets.py` and `python tools/artwork_assets.py`
-check all distributed source/decoded hashes offline and run in CI. `--write`
-regenerates only the decoded RGBA files. Runtime pixel tests cover all 33 toolbar
-image designs at 22/24-point button sizes, light/dark, enabled/disabled, and 1×/2×
-DPI (528 combinations); message/About tests check every pixel, transparency and
-one-point centering inset over both backgrounds/scales. Native display delivery
-is not proved by these tests. Notices: [toolbar](../crates/gui/assets/icons/NOTICE.md),
-[application/messages](../crates/gui/assets/artwork/NOTICE.md), [root](../NOTICE.md).
+The original-artwork selection on October 29 includes `undo`, `redo`, `show`,
+`warp`, `gameboy`, `change`, `blocks`/`blocks-dark`, `events`, `roof`, `change-roof`
+and application imagery with unverified underlying origins. These are not
+asserted to be independently cleared Fugue or NG originals. Preserve the
+upstream citation and this limitation rather than inferring rights from similarity.
 
 ### Authoritative licensing evidence
 
-- The pinned Polished Map repository is LGPL-3.0-only. Its About dialog separately
-  credits Yusuke Kamiyamane; that credit was added in
-  [`4cd0350`](https://github.com/Rangi42/polished-map/commit/4cd03509ed8b38bd4295d99dcf487b3c9fde6571).
-  Repository licensing alone does not establish rights to third-party imagery.
-- [The creator's site](https://p.yusukekamiyamane.com/) and the downloaded Fugue
-  3.5.6 archive's `README.txt` specify **CC BY 3.0**, with copyright © 2013 Yusuke
-  Kamiyamane. [Attribution examples](https://p.yusukekamiyamane.com/icon/attribution/)
-  include an About dialog or README. Retain creator, collection, source link,
-  license link/text and adaptation notices when importing confirmed derivatives.
-  Keep these asset terms distinct from the Rust code's LGPL terms.
-- Reviewed archive:
-  [Fugue Icons 3.5.6](https://p.yusukekamiyamane.com/icon/downloads/fugue-icons-3.5.6.zip),
-  SHA-256 `59d54804343b9add8c96ea03bfb2fa3ff48f692459cf426c920a5612e771c37a`.
-  The archive includes exceptions for some unrelated logo/project icons; do not
-  treat its general license as blanket clearance of every file.
-- [Diagona 1.0](https://p.yusukekamiyamane.com/icon/downloads/diagona-icons-1.0.zip)
-  was also compared, SHA-256
-  `bf6936ce62d30d24b545642c3cdd13d9cf3f920f65527a758ecb7a66569d584c`.
-  Its README specifies CC BY 3.0 and copyright © 2007 Yusuke Kamiyamane. No exact
-  icon matches were found in either archive. Archives and comparison images stay
-  in ignored scratch storage, outside product assets.
+Pinned Polished Map is LGPL-3.0-only; its About credit identifies Yusuke Kamiyamane
+separately. Confirmed Fugue adaptations retain **CC BY 3.0** and copyright
+© 2013 Yusuke Kamiyamane, creator/collection links, full terms and change notices.
+The creator's [Fugue 3.5.6 archive](https://p.yusukekamiyamane.com/icon/downloads/fugue-icons-3.5.6.zip)
+has SHA-256 `59d54804343b9add8c96ea03bfb2fa3ff48f692459cf426c920a5612e771c37a`;
+its README states the license and exceptions for unrelated logo/project icons.
+Do not treat the general license as blanket clearance. The per-image family table
+belongs in the icon notice, not a second inventory here.
 
-### Review findings and remaining work
+### Component review
 
-Visual comparisons identify the following Fugue families behind twelve upstream
-images. These are **adaptations, not byte-identical originals**: reduced palettes,
-hard transparency, removed shadows, changed shapes or composite details. A nearest
-image score was used to find candidates, not as proof of provenance.
+Open/Load/Load Palettes are simplified/recolored Fugue composites, not identical
+source PNGs. Open's arrow matches all 28 silhouette pixels of `arrow-000-small`
+at (4,3) after alpha >127. Load retains 222 base pixels outside its modified
+arrows with three folder-color substitutions. Load Palettes retains the 112-pixel
+folder strip and matches 32 silhouette pixels of `light-bulb-small` at (3,1),
+alpha >74. Introducing commits, component hashes and adaptations are retained in
+the inventory/notice. Numerical similarity alone is not proof of authorship;
+this review also used compositions, history, upstream credit and the creator archive.
 
-| Upstream XPM stem | Fugue PNG stem (under `icons/`) |
-|---|---|
-| new | document |
-| copy | document-copy |
-| paste | clipboard-paste |
-| save | disk-black |
-| grid | grid |
-| palettes | light-bulb |
-| print | image-export |
-| reload | arrow-circle |
-| resize | arrow-in-out |
-| rulers | ruler |
-| tileset | puzzle |
-| zoom | magnifier-zoom-in |
+`add-sub`, bitmap ID/hex letters, collision quadrants and priority patterns have
+reviewed upstream drawing/history records under LGPL-3.0-only, with no identified
+separate font or external image source. The icon notice owns their introducing
+commits. No standalone font was imported for bitmap lettering.
 
-The dark `grid` variant needs the same attribution chain. The zoom replacement
-commit explicitly refers to Tilemap Studio
-([`5adf7d2`](https://github.com/Rangi42/polished-map/commit/5adf7d2bf85375c9b6a0207572804455e331427e));
-retain that intermediary history in its import record.
-
-The initial import is now covered by the per-file records and
-[`icons/NOTICE.md`](../crates/gui/assets/icons/NOTICE.md), the full CC BY 3.0 text,
-root NOTICE/README and in-app Help attribution. `tools/icon_assets.py` verifies
-every imported XPM and decoded RGBA hash; `--write` regenerates pixels from the
-bundled XPMs. The dependency CI job runs verification without network access.
-
-| Group | Import/review status |
-|---|---|
-| Twelve Fugue-family images above, plus grid-dark | Imported with original/adapted attribution, transformation history, CC BY 3.0 notice/text and LGPL adaptation notices. |
-| ids/ids-dark, hex/hex-dark | Imported as fixed Polished Map bitmap lettering under LGPL-3.0-only. History reviewed at `bf08f47`, `3e057b0` and the `530c963` recolor; no external font file or separate asset source is identified there. |
-| Eight collision-quadrant variants | Imported under LGPL-3.0-only with introducing commit `2086e18`, dark recolor `530c963`, individual source/pixel hashes and attribution. These geometric drawings now label the block editor's collision fields. |
-| blank | Its transparent 16×16 extent is represented by measured menu geometry. No bitmap is imported or required. |
-| priority | Imported under LGPL-3.0-only; Rangi's geometric zigzag matches all 252 opaque pixels in the 16×16 priority overlay, with four transparent corners. See the provenance below. |
-| add-sub | Imported under LGPL-3.0-only after reviewing its geometric drawing and introducing commit `e894ac8`; see the component audit below. |
-| open, load, load-palettes | Imported with Fugue CC BY 3.0 and LGPL adaptation notices after the component review below. |
-| undo, redo, show, warp, gameboy, change | Imported unchanged at the user’s direction with upstream attribution. Independent underlying origins remain unverified; these are not asserted to be Fugue images. |
-| blocks/blocks-dark, events, roof, change-roof | Imported unchanged with upstream attribution under the user’s original-artwork selection. Some resemble game sprites/tiles; independent underlying rights are not established by the repository citation. |
-
-Application logos and warning/error/success imagery are outside the 42-image
-`icons.h` inventory; their separate source records and notices are linked above. The imported icons
-and their disabled/dark variants appear in the Rust GUI and rendered snapshots;
-those snapshots carry the same asset notices and terms.
-
-### Resize Blockset and remaining component audit
-
-`add-sub.xpm` is the outlined geometric plus-minus symbol introduced by Rangi in
-[`e894ac8`](https://github.com/Rangi42/polished-map/commit/e894ac84fa4dd3fe021ea63d0fd9483fbac37c02),
-"Start on add/remove block interface". The full introducing change adds this XPM,
-its include, toolbar use and the resize dialog. It identifies no external image
-or font source. Its drawing is a centered four-pixel-wide vertical bar crossed
-by two fourteen-pixel-wide horizontal bars, with a one-pixel outline and lighter
-corner pixels. There are three blue colors and transparency, with no lettering,
-game tile or sprite component. The pinned Git blob is byte-identical to the
-introducing blob (SHA-256
-`a4d926150b91f3883ad27fcc020a263535da522e3842212cb8f7a912cc5c3066`).
-Retain it as Polished Map's LGPL-3.0-only drawing, with author attribution and
-an explicit distribution record. It uses the existing runtime disabled-color
-conversion. That import brought the inventory to 27 files and 20 designs;
-the later composite import below brings it to 30 files and 23 designs, with
-368 atlas size/theme/disabled/DPI combinations.
-
-The initial additional comparisons did **not** clear Open, Undo or Redo. An eight-orientation
-(quarter turns and reflection), three-alpha-threshold, ±1-pixel-translation
-search against the Fugue archive found no reliable Undo/Redo match. Redo's pixels
-are Undo rotated 180 degrees; that relates the two upstream images but does not
-establish their underlying artwork source. Their introducing commit `3e057b0`
-and later change `e0a2d6c` do not identify another collection.
-
-The initial whole-image comparisons left Open's arrow and Load Palettes' bulb
-unresolved. The following component review supersedes that conclusion for those
-composites; it does not establish underlying origins for Undo/Redo or the other images
-subsequently selected for upstream-attributed reuse.
-
-### Open, Load and Load Palettes composite review
-
-Review identifies Open's folder/document as a simplified/recolored adaptation
-of Fugue `folder-open-document`, with `arrow-000-small` overlaid at offset
-(4, 3). After thresholding the source alpha at >127, **all 28 arrow silhouette
-pixels match exactly**. This resolves the previously missing arrow component;
-the document-export family considered earlier was not the matching arrow.
-The folder/document assessment is visual provenance evidence, not a claim of
-pixel-identical source artwork. Polished Map removes shading/shadows, simplifies
-the outline and retains the characteristic open-folder diagonal and folded page.
-
-Load retains all **222 base pixels** outside the two arrows' combined footprint,
-with exactly three folder-color substitutions. Its blue folder matches the Fugue
-`blue-folder-open-document` family. The arrow shaft becomes a second chevron in
-the same three-color scheme; it is an upstream adaptation of the composition,
-not an unchanged `control-double` image. Open was present in the initial commit
-`5b6e80603c3478b794fb6db89ed9967f48422093`; Rangi added Load in
-`4fc39b25b79ec755af45f7b9f7a0942b996ebc4c`, alongside other reviewed icons.
-
-Load Palettes retains the same **112-pixel folder strip** (columns 0–6), removes
-the page fold and overlays Fugue `light-bulb-small` at (3, 1). Thresholding source
-alpha at >74 reproduces **all 32 bulb silhouette pixels**, including its two
-white highlights. Colors are simplified/recolored; shadows are removed. It was
-introduced as `load-lighting.xpm` in
-`04e802b33c149d560fa0dcfa88743dc61e2cb0a6` and renamed in
-`5cc35fe734203a25123bdd3c8e55e4cc00807195`.
-
-The review combines those component correspondences, inspection of the complete
-compositions and introducing changes, upstream's explicit creator credit, and
-the verified creator archive's license. The numerical checks alone do not prove
-authorship. All three imports retain CC BY 3.0 creator/collection attribution and
-LGPL-3.0-only upstream adaptation notices. No game imagery is involved. The
-unchanged XPMs and decoded RGBA hashes remain tied to pinned master in the inventory.
-
-The four original PNG SHA-256 values are recorded in each import's
-`fugue_components` entries in `icon-inventory.json`. Reproduce the component
-checks with Pillow installed and the previously verified creator archive:
+### Reproduction and display limits
 
 ```text
-python tools/icon_components.py --archive .scratch/fugue-icons-3.5.6.zip
 python tools/icon_assets.py
+python tools/artwork_assets.py
+python tools/icon_components.py --archive .scratch/fugue-icons-3.5.6.zip
 ```
 
-The first command checks the archive and component hashes, the two exact masks,
-the three-color base recolor and the shared folder strip. It neither downloads
-nor imports assets. That composite import covered 30 XPMs and 7,680 pixels. The current offline
-verifier covers all 41 toolbar/editor XPMs and 10,496 pixels. Comparison sheets/archive stay in ignored scratch storage.
+The first two checks run offline in CI and verify bundled sources and decoded
+pixels; `--write` regenerates RGBA. The optional component check requires Pillow
+and the verified creator archive; it does not download/import assets. For the two
+XPM rows with an extra character, decoding respects the declared 16-pixel width,
+as FLTK does. Transparent RGB is zero. Disabled colors use source integer
+luminance `(31*r + 61*g + 8*b)/100`, then `(gray + background)/2`.
 
-### Port and validation sequence
-
-1. Preserve the selected original artwork and each asset’s attribution basis. Preserve
-   the exact 16×16 pixels of those assets, including transparency and dark variants.
-2. Port `Main_Window::initialize` and `Toolbar::draw` geometry: 24×24 buttons in a
-   26-point row, separators composed of 2+2+2 points, centered 16×16 images, and
-   the original order, palette controls and clipping. Derive text widths from
-   the chosen font metrics; do not claim native-font equivalence yet.
-3. Preserve popup menu structure and check/radio marks. The pinned source uses
-   `BLANK_ICON` for non-check/radio menu entries to reserve the image column;
-   it does not assign all the toolbar pictures to popup menu commands.
-4. Disabled pixels are implemented for the imported assets from
-   `Image::make_deimage` and the inspected FLTK 1.4.5 `Fl_Pixmap.cxx`: integer
-   grayscale `(31*r + 61*g + 8*b)/100`, then `(gray + background)/2`. The portable
-   light/dark backgrounds are Greybird 206 and Dark 83. This bypasses egui's extra
-   disabled opacity. Extend the verified transformation to later imports and
-   native theme choices. Keep accessible names, keyboard actions and tooltips.
-5. Verify source hashes, every enabled/disabled/dark image pixel, 1×/2× placement,
-   button bounds and input behavior. Review toolbar/menu snapshots before
-   accepting baselines; reserve native tests for platform-specific interactions.
+Windows embeds the original 16/24/32/48/64 ICO frames in all three launchers;
+`tools/windows_icon_resources.py` verifies executable payloads. Linux receives
+the 16×16 XPM and macOS the 48×48 application picture. Native icon display/DPI
+and macOS bundle icon metadata remain separate acceptance work. Pixel/geometry
+tests do not establish those native outcomes.
 
 ## Warp ID digit patterns
 
@@ -274,37 +133,7 @@ order places selection borders above the overlay; clipboard tile images omit it.
 The core stores periodic color-index masks instead of PNG payloads. The reference
 CI job independently decodes all 896 original pixels and compares every RGBA
 channel using `tools/priority_oracle.py` and the `priority_patterns` test.
-GUI tests check texture pixels at 1×/2× DPI over light/dark backgrounds. The
-atlas also includes the later Resize Blockset import described above.
-Native FLTK/egui compositing equivalence still needs platform verification.
-
-## Application and message image source records
-
-The About `APP_ICON` path uses `res/app.xpm`, a 48×48 tree/grass image. It was
-introduced with the About dialog in
-[`4cd0350`](https://github.com/Rangi42/polished-map/commit/4cd03509ed8b38bd4295d99dcf487b3c9fde6571)
-and replaced in
-[`5862da0`](https://github.com/Rangi42/polished-map/commit/5862da0bccf0a8421ec25f57cefcbf53e7d898ef).
-The 16×16 `res/app-icon.xpm` arrived with Linux support in
-[`bc704f9`](https://github.com/Rangi42/polished-map/commit/bc704f9098c07076d840eac798fb7301dce74709).
-These history entries establish the repository changes but not an independent
-underlying-artwork permission chain. Both images are now imported unchanged with
-upstream attribution at the user’s direction, as recorded above.
-
-Pinned-master SHA-256 metadata (original Git blobs, then decoded RGBA8 pixels):
-
-| Image | Source SHA-256 | RGBA SHA-256 |
-|---|---|---|
-| app.xpm | `c12a076f845397709b2d61c9db4ea26d853baf6a2e1ad71b1f9d6582dcc51375` | `6dc8a03ed5cffd7c148fe0af647793852da71369ca18e79503c81706f8747f50` |
-| app-icon.xpm | `072e9cba4bd023562067337ad366b62e2a24d9e0000816cb24711c59908793f8` | `0ce263222ecd94986e5220d34415b1d590dfce83e284b0bccafa0fbef6e3223b` |
-
-About now paints the original 48×48 image inside its 50×50 slot. The three
-message symbols are unchanged from Remy Oukaour’s initial commit
-`5b6e80603c3478b794fb6db89ed9967f48422093`: flat-color outlined circles with cross/
-check marks, and an outlined warning triangle. The same author added the LGPL
-repository grant in `01a374288d3ba6261c978ac1d71f54eefae00a22`. Their source hashes,
-pixel hashes and the original ICO hash are in the artwork inventory. The shared
-message dialog now paints them with the source 60-point icon-to-body offset.
+GUI tests check texture pixels at 1×/2× DPI over light/dark backgrounds. Native FLTK/egui compositing equivalence still needs platform verification.
 
 ## Fonts
 
@@ -334,7 +163,7 @@ and immutable source links are in the [Help notice](../crates/gui/assets/help/NO
 `tools/help_assets.py` verifies both sources and all four generated documents;
 the reference CI job compares expansions with compiled original C++ for each
 branch. No external linked page content or game graphics are bundled here.
-See [viewer evidence](compatibility.md#plusplus-launch-settings-and-help).
+See [viewer evidence](compatibility.md#plusplus-backend-and-gui-evidence).
 
 ## Polished Crystal fixture policy
 
