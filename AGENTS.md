@@ -17,6 +17,10 @@ exist from day one; a partial slice is not a completed parity milestone.
 - Never append implementation progress, test counts, internal type names,
   per-turn notes, detailed CLI examples or outstanding-task lists to README.
   Change it only when its user-facing introduction or navigation needs changing.
+- Bundled Help is an adaptation of the original manuals: preserve their prose,
+  section order, examples and list structure. Make targeted correctness and
+  naming changes; do not replace the manual with a newly authored guide unless
+  the maintainer explicitly requests a rewrite.
 - Routine implementation completion is not a reason to edit README. Keep one
   concise development/availability notice and link to the roadmap for milestone
   status; do not duplicate the roadmap's status table or next task there.
@@ -158,7 +162,10 @@ assets or relabeling their license. The user explicitly selected original upstre
 UI artwork with upstream attribution on 2026-10-29, including previously
 unresolved toolbar/application images. Preserve that choice and the provenance
 limitations in `docs/assets.md`; do not replace those images with placeholders
-or claim independently established third-party rights. Retain known asset
+or claim independently established third-party rights. On November 15 the user
+replaced the application artwork choice with two supplied single-tree PNGs; use
+those for application icons/About while preserving the other upstream UI assets.
+Retain known asset
 licenses separately from the code license. Release matching source, licenses, lockfile, and
 rebuild/relink instructions with every binary. Do not label development builds
 as parity releases. Update the roadmap and compatibility evidence with changes.

@@ -1,6 +1,6 @@
-//! Original Polished Map artwork at the pinned master revision.
+//! Original dialog artwork and maintainer-selected application artwork.
 //! Source placement: Modal_Dialog::refresh, FL_ALIGN_CENTER and Main_Window icon.
-//! See assets/artwork/NOTICE.md and docs/artwork-inventory.json for provenance.
+//! See assets/{artwork,application}/NOTICE.md and docs/artwork-inventory.json.
 use super::*;
 
 #[derive(Clone, Copy, Debug)]
@@ -17,7 +17,7 @@ impl Image {
             Self::Error => include_bytes!("../../assets/artwork/error.rgba"),
             Self::Warning => include_bytes!("../../assets/artwork/warning.rgba"),
             Self::Success => include_bytes!("../../assets/artwork/success.rgba"),
-            Self::App => include_bytes!("../../assets/artwork/app.rgba"),
+            Self::App => include_bytes!("../../assets/application/about.rgba"),
         }
     }
 
@@ -51,9 +51,9 @@ impl Image {
     }
 }
 
-/// Original upstream application picture for the desktop window adapter.
-/// The original 64px ICO frame gives desktop adapters enough pixels for larger
-/// window/task-switcher icons. Windows uses its multi-resolution resource.
+/// Selected single-tree artwork for the desktop window adapter.
+/// The 64px fallback scales the supplied 32px image; Windows uses the same
+/// artwork in a multi-resolution resource. See assets/application/NOTICE.md.
 pub fn application_icon() -> egui::IconData {
     egui::IconData {
         rgba: include_bytes!("../../assets/application/window.rgba").to_vec(),
@@ -63,7 +63,7 @@ pub fn application_icon() -> egui::IconData {
 }
 
 /// egui's single RGBA icon cannot preserve an ICO's size-specific artwork.
-/// Use the original resource for Windows' small and task-switcher icons, at the
+/// Use the selected resource for Windows' small and task-switcher icons, at the
 /// window's native DPI. Winit owns the handles; its safe API also releases them.
 pub(super) fn install_window_icons(ctx: &egui::Context) {
     #[cfg(windows)]
@@ -89,9 +89,9 @@ pub(super) fn install_window_icons(ctx: &egui::Context) {
                     window.set_window_icon(Some(small));
                     window.set_taskbar_icon(Some(large));
                 }
-                _ => eprintln!(
-                    "Original Windows icon resource is unavailable; retaining the RGBA fallback."
-                ),
+                _ => {
+                    eprintln!("Windows icon resource is unavailable; retaining the RGBA fallback.")
+                }
             }
             ctx.data_mut(|data| data.insert_temp(key, scale));
         });

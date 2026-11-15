@@ -1,4 +1,4 @@
-"""Verify every original ICO frame is embedded unchanged in a Windows launcher.
+"""Verify every selected ICO frame is embedded unchanged in a Windows launcher.
 
 Reads PE resource directories, not shell icon caches. Uses only the standard
 library, so packaging can verify its executable offline on any build host.
@@ -7,7 +7,7 @@ import argparse
 from pathlib import Path
 import struct
 
-ICON = Path(__file__).resolve().parents[1] / "crates/gui/assets/artwork/app.ico"
+ICON = Path(__file__).resolve().parents[1] / "crates/gui/assets/application/app.ico"
 
 
 def verify(executable, icon=ICON):
@@ -57,7 +57,7 @@ def verify(executable, icon=ICON):
             node = child & 0x7FFFFFFF
         leaves = entries(node)
         if len(leaves) != 1:
-            raise ValueError("Expected one language for original icon")
+            raise ValueError("Expected one language for application icon")
         leaf, = leaves.values()
         if leaf & 0x80000000 or leaf + 16 > resource_size:
             raise ValueError("Invalid resource leaf")
@@ -67,21 +67,21 @@ def verify(executable, icon=ICON):
 
     group = payload(14, 1)  # RT_GROUP_ICON, application resource ID
     if group[:6] != source[:6]:
-        raise ValueError("Icon group header/count differs from upstream")
+        raise ValueError("Icon group header/count differs from selected artwork")
     count, = struct.unpack_from("<H", source, 4)
     sizes = set()
     for i in range(count):
         entry = source[6 + i * 16:22 + i * 16]
         embedded = group[6 + i * 14:20 + i * 14]
         if entry[:12] != embedded[:12]:
-            raise ValueError(f"Icon frame {i} metadata differs from upstream")
+            raise ValueError(f"Icon frame {i} metadata differs from selected artwork")
         length, offset = struct.unpack_from("<II", entry, 8)
         identifier, = struct.unpack_from("<H", embedded, 12)
         if payload(3, identifier) != source[offset:offset + length]:
-            raise ValueError(f"Icon frame {i} pixels differ from upstream")
+            raise ValueError(f"Icon frame {i} pixels differ from selected artwork")
         sizes.add(entry[0] or 256)
-    if sizes != {16, 24, 32, 48, 64}:
-        raise ValueError(f"Unexpected original icon sizes: {sizes}")
+    if sizes != {16, 24, 32, 48, 64, 128, 256}:
+        raise ValueError(f"Unexpected application icon sizes: {sizes}")
     return count
 
 
@@ -89,4 +89,4 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("executables", nargs="+", type=Path)
     for executable in parser.parse_args().executables:
-        print(f"Verified {verify(executable)} unchanged ICO frames: {executable}")
+        print(f"Verified {verify(executable)} matching application ICO frames: {executable}")

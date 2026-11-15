@@ -1,91 +1,134 @@
-<html><head><title>Polished Map NG Help</title></head><body>
+<html>
+<head>
+<title>Polished Map NG Help</title>
+</head>
+<body>
 <h1>Polished Map NG</h1>
-<p>A map and tileset editor for pret disassembly projects and compatible forks, including pokered, pokeyellow, pokegold, pokecrystal and Polished Crystal. Project conventions vary; check the detected options when opening a map.</p>
-<p>Maintained by vulcandth. Copyright © 2026 vulcandth and Polished Map NG contributors. Written in Rust with egui/eframe.</p>
-<p>Based on <a href="https://github.com/Rangi42/polished-map">Polished Map and Polished Map++</a>, Copyright © 2021 Rangi and contributors. NG code and this adapted guide are LGPL-3.0-only; see LICENSE.md and NOTICE.md. Artwork and fonts retain their separate notices.</p>
-<p><a href="https://github.com/vulcandth/polished-map-ng">Source and documentation</a> · <a href="https://github.com/vulcandth/polished-map-ng/releases">Downloads</a> · <a href="https://github.com/vulcandth/polished-map-ng/issues">Report a problem</a></p>
-<p>These are development builds. Keep backups and use project copies while testing. <a href="https://github.com/vulcandth/polished-map-ng/blob/main/docs/usage.md">The editing guide</a> describes supported workflows and limitations in more detail.</p>
+<p>Copyright © 2026 vulcandth and Polished Map NG contributors.</p>
+<p>Based on <a href="https://github.com/Rangi42/polished-map">Polished Map</a>, Copyright © 2021 Rangi and contributors.</p>
+<p>A map and tileset editor for <a href="https://github.com/pret/pokecrystal">pokecrystal</a>, <a href="https://github.com/pret/pokegold">pokegold</a>, <a href="https://github.com/pret/pokeyellow">pokeyellow</a>, <a href="https://github.com/pret/pokered">pokered</a>, and custom projects based on them.</p>
+<p>Inspired by <a href="https://github.com/yenatch/crowdmap">crowdmap</a> (now defunct), but implemented with Rust and <a href="https://github.com/emilk/egui">egui/eframe</a>, and with more functions for graphics editing.</p>
+<p>Source code is available at <a href="https://github.com/vulcandth/polished-map-ng">https://github.com/vulcandth/polished-map-ng</a> under the <a href="https://github.com/vulcandth/polished-map-ng/blob/main/LICENSE.md">LGPL v3.0</a> license. Artwork and fonts retain their separate notices.</p>
 <hr>
-<p><b>Getting started</b></p>
-<p>Extract the package for your operating system. On Windows or Linux, launch polished-map-unified; on macOS, open Polished Map NG.app. No install.bat or automatic file association is required. The historical executable name is retained for existing shortcuts and scripts.</p>
-<p>Use Ctrl for command shortcuts on Windows/Linux and Command on macOS. Mouse gestures that say Ctrl, and digit assignments, use the physical Control key on every platform. Text entry and dialogs take precedence over main-window shortcuts.</p>
+<p>Polished Map NG displays and edits .blk and .ablk map files. It supports the following ways to open a file:</p>
 <ul>
-<li>Open: File → Open…, the Open toolbar button, or Ctrl/Cmd+O. You can also pass a map path as a command-line argument or drop a file over the map workspace.</li>
-<li>New: File → New… or Ctrl/Cmd+N. Choose the dimensions, project folder and tileset before creating the map.</li>
-<li>Recent maps: File → Open Recent. Unassigned Alt+1 through Alt+0 open the corresponding recent entries.</li>
+<li><b>Initial:</b> Double-click a .blk or .ablk file if you have associated that extension with Polished Map NG in your operating system. Development packages do not install file associations.</li>
+<li><b>Menu bar:</b> Run polished-map-unified and select the File&nbsp;→&nbsp;Open… menu item.</li>
+<li><b>Toolbar:</b> Run polished-map-unified and click the Open toolbar button.</li>
+<li><b>Keyboard:</b> Run polished-map-unified and press Ctrl+O.</li>
+<li><b>File Explorer:</b> On Windows, drag a .blk or .ablk file onto polished-map-unified.exe.</li>
+<li><b>GUI:</b> Drag a .blk or .ablk file onto the map area of an open Polished Map NG window.</li>
+<li><b>Command Prompt:</b> Pass the .blk filename as an argument to polished-map-unified:<br><font size="2"><kbd>polished-map-unified&nbsp;pokecrystal/maps/SomeMap.blk</kbd></font></li>
 </ul>
-<p>Supported map inputs include binary .blk/.ablk and supported ASM map data. The editor discovers dimensions and assets from project metadata or filenames such as MapName.20x18.tileset.blk. Check the size and tileset in Open options, especially for shared block files. Expand Project options to choose another project folder or roof-palette layout.</p>
-<p>The controls follow the loaded assets: classic tilesets attach palettes to raw tiles; attributed blocksets attach palettes, bank, flips and priority to each tile occurrence. There is no mode selector for these formats. Changing storage models requires Save As and does not rewrite project headers or convert tileset files.</p>
-<hr>
-<p><b>Map and sidebar</b></p>
+<p>The Windows executable is polished-map-unified.exe; on Linux it is polished-map-unified, and on macOS open Polished Map NG.app. For command shortcuts below, use Command instead of Ctrl on macOS; mouse modifiers and the block number-key assignments still use Control.</p>
+<p>You can include a map's size and tileset in its filename as <var>MapName</var>.<var>WIDTH</var>x<var>HEIGHT</var>.<var>TILESET</var>.blk; for instance, NewBarkTown.10x9.blk, UnionCave1F.cave.blk, or House1.4x4.house.blk. The same naming convention applies to .ablk files.</p>
+<p>Otherwise Polished Map NG will try to guess a map's size and tileset from the assembly code. This can fail if the map and tileset filenames do not exactly correspond to their constants in the code. Then you'll just have to enter the size and tileset yourself.</p>
+<p>Check the detected size, tileset, roof and Project options when creating or opening a map. The Options menu also contains the following settings. Monochrome, Tile Priority and 256 Tiles apply to classic per-tile palettes; 512 Tiles and the bank-order setting apply to attributed blocksets. Controls for the other format are disabled:</p>
 <ul>
-<li>Left-click a sidebar block to select it; right-click and release on that block to edit its tiles and collisions.</li>
-<li>In Blocks mode, left-click or drag on the map to paint. Right-click picks a block. Shift-click fills a connected region, Ctrl-click replaces that block throughout the map, and Alt-click swaps the two block types.</li>
-<li>Wheel, arrow keys or middle-button dragging scroll the map/sidebar under the pointer.</li>
-<li>With Options → Drag and Drop enabled, dragging sidebar blocks swaps them; Ctrl-drag copies.</li>
-<li>Ctrl+digit assigns the selected block; the digit selects it; Ctrl+Shift+digit clears the binding. These session bindings use physical Ctrl on every platform. A bound Alt+digit selects its block before Open Recent.</li>
+<li><b>Monochrome:</b> Tileset palettes will not be read or written. This option is necessary for <a href="https://github.com/pret/pokered">pokered</a>-based projects.</li>
+<li><b>Tile Priority:</b> Allow tiles to have priority over sprites. <a href="https://github.com/pret/pokecrystal">pokecrystal</a>'s *_palette_map.asm files only assign a color to each tile. <a href="https://github.com/pret/pokecrystal/wiki/Allow-map-tiles-to-appear-above-sprites-(so-NPCs-can-walk-behind-tiles)-with-PRIORITY-colors">This tutorial</a> explains how to make them assign priority attributes as well. This option is necessary to correctly save the *_palette_map.asm files.</li>
+<li><b>256 Tiles:</b> Allow all 256 tile IDs from $00 to $FF. <a href="https://github.com/pret/pokecrystal">pokecrystal</a>'s tileset graphics have tiles for IDs $00 to $5F, then skip $60 to $7F and continue from $80 to $DF, with $E0 to $FF unused. <a href="https://github.com/pret/pokecrystal/wiki/Expand-tilesets-from-192-to-255-tiles">This tutorial</a> explains how to use all the IDs for map tiles except $7F, which is used for spaces in text. This option is necessary for projects that use classic per-tile palettes with larger tilesets.</li>
+<li><b>512 Tiles:</b> Allow as many tile IDs as the GBC hardware will support. VRAM has two banks, 0 and 1, each of which allows 256 tile IDs from $00 to $FF. Regular tileset graphics load into $0:00-7F and $1:00-7F, with $0:80-FF used for font tiles and $1:80-FF for NPCs' walking sprites. If your project is modified to use any of $80-FF for map tiles, this option will let you do so.</li>
+<li><b>$0:80-FF Before $1:80-FF:</b> The first 128 tiles in the tileset graphic load into $0:00-7F; the next 128 load into $1:00-7F. Polished Map NG expects an extra 128 after that to load into $1:80-FF, and a further 128 into $0:80-FF, since that's what Polished Crystal does. This option will swap them so $0:80-FF comes before $1:80-FF.</li>
+<li><b>Roof Palettes:</b> pokecrystal loads two pairs of ROOF colors per map group by default: one for Morn + Day, one for Night. If your project is modified to use different ROOF colors (such as by <a href="https://github.com/pret/pokecrystal/wiki/Make-evening-the-fourth-time-of-day">making evening the fourth time of day</a>, with its own third pair of Custom colors), this option will let you choose which palettes they load into.</li>
+<li><b>Auto-Load Events:</b> Automatically loads the .asm file corresponding to the map if one exists. For example, if you open maps/PalletTown.blk, then this option will automatically try to load maps/PalletTown.asm (for pokecrystal-based projects) or data/maps/objects/PalletTown.asm (for pokered).</li>
+<li><b>Auto-Load Special Palettes:</b> Automatically loads a .pal file associated with the map if one exists. Association is based on the map, landmark, or tileset. For example, if you open maps/IcePath1F.blk with the tileset gfx/tilesets/ice_path.png and the landmark in data/maps/maps.asm for IcePath is ICE_PATH, then this option will automatically load maps/IcePath1F.pal (corresponding to the map), or else gfx/tilesets/ice_path.pal (the landmark), or else gfx/tilesets/ice_path.pal (the tileset). You can also use Data&nbsp;→&nbsp;Load&nbsp;Palettes… to manually load any such .pal file.</li>
+<li><b>Auto-Load Roof Colors:</b> Automatically loads colors for the ROOF palette of the map's group, if the group was detected from constants/map_constants.asm and the roof palettes are defined in gfx/tilesets/roofs.pal (or tilesets/roof.pal for backwards compatibility with older pokecrystal versions). You can also use Data&nbsp;→&nbsp;Load&nbsp;Roof&nbsp;Colors to do this manually.</li>
+<li><b>Drag and Drop:</b> Enables drag-and-drop for blocks in the sidebar, tiles in the tileset editor or roof editor, and colors in the palette editor. Left-click and drag one item onto another to swap them; hold Ctrl and do the same to copy.</li>
+<li><b>Overworld Map Size:</b> The overworld map block buffer in WRAM stores the entire current map, padded by 3 blocks on each side. Polished Map NG warns you if you save a map that would overflow this buffer. If your project modifies the buffer size, this option will let you configure the warning.</li>
 </ul>
-<p>Edit → Undo/Redo (Ctrl/Cmd+Z/Y) covers map painting, with one drag per history entry. It does not undo every editing domain. Resizing a map clears its history.</p>
-<p>Edit → Copy/Paste/Swap Block (Ctrl/Cmd+C/V/X) uses an internal clipboard. Copy stores a snapshot, Paste uses that snapshot, and Swap exchanges with the copied source's current contents.</p>
-<p>Tools → Resize Map (Ctrl/Cmd+E) offers nine anchors and fills new cells with block zero. Loaded event coordinates move with the chosen anchor. Update ASM dimension declarations or dimension-bearing filenames separately. Resize Blockset (Ctrl/Cmd+B) accepts 1–256 blocks; shrinking does not rewrite map IDs.</p>
 <hr>
-<p><b>Events</b></p>
-<p>Mode → Events (Ctrl/Cmd+Shift+E) edits existing events; Ctrl/Cmd+Shift+B returns to Blocks mode. Tab switches modes when no dialog or text input has focus. Adding/removing events is not yet supported.</p>
+<p>Most functions are available via the menu bar, the toolbar, or shortcut keys.</p>
+<p>The sidebar array uses the mouse:</p>
 <ul>
-<li>Hover an event to read its definition. Left-drag moves it; right-click opens Event Options. Coordinates and macro-specific Prefix/Suffix fields are editable.</li>
-<li>Shift-click a warp to open its destination through the normal unsaved-change prompt.</li>
-<li>Double-click an event to open its saved script in an external editor. Supported Windows editors can receive a source line; Linux/macOS use their default file opener.</li>
-<li>Data → Load/Save/Reload/Unload Event Script controls the script separately. Save before opening it externally if the external editor should see your changes; reload after external edits.</li>
+<li>Left-click to select a block.</li>
+<li>Left-click and drag one block onto another to swap them.</li>
+<li>Hold Ctrl, left-click and drag one block onto another to copy it.</li>
+<li>Right-click to edit a block.</li>
+<li>Middle-click and drag to scroll.</li>
 </ul>
-<p>Enter accepts short text fields; wrapped multiline event fields insert a newline. Escape or Cancel discards the draft. Event editing does not add map undo entries.</p>
-<hr>
-<p><b>Blocks and tile attributes</b></p>
-<p>In Edit Block, select a tile from the sheet, then click or drag to place it. Right-click the block to pick its tile. The following modifiers place multiple tiles with the selected tile as their starting point:</p>
+<p>The map area also uses the mouse, but it depends on the Mode. In Blocks mode (Ctrl+Shift+B or the toolbar's Headbutt tree button):</p>
 <ul>
-<li>Ctrl: contiguous 2×2; Ctrl+Shift: contiguous 4×4.</li>
-<li>Alt: sequential 2+2 square; Alt+Shift: sequential 4+4+4+4 square.</li>
-<li>Ctrl+Alt: sequential 2−2 square with reversed rows; Ctrl+Alt+Shift: sequential 4−4−4−4 square with reversed rows.</li>
-<li>Shift: two sequential tiles in a checkerboard 2/2 square.</li>
+<li>Left-click or drag to place the block selected in the sidebar array onto the map.</li>
+<li>Right-click to select a block from the map.</li>
+<li>Middle-click and drag to scroll.</li>
+<li>Hold Shift and left-click a group of blocks to flood-fill it with the selected block.</li>
+<li>Hold Ctrl and left-click a block to replace every block of that type with the selected type.</li>
+<li>Hold Alt and left-click a block to swap every block of that type and every block of the selected type.</li>
 </ul>
-<p>Attributed tiles use the selected palette and X/Y flip/priority attributes. Alt+X, Alt+Y and Alt+P toggle them; Alt+1–8 chooses a palette. Flips also affect multi-tile placement. Classic tile palettes and optional priority are edited in Edit Tileset instead. Collision fields edit the four block quadrants when collision data is available; binary and supported ASM collision files are handled.</p>
-<hr>
-<p><b>Tilesets and roofs</b></p>
-<p>Tools → Edit Tileset (Ctrl/Cmd+T) edits a draft. Left-click a tile, then choose a hue with its swatch or keys 1–4. Paint with left-click/drag, pick with right-click, fill with Shift, replace a hue with Ctrl and swap hues with Alt.</p>
+<p>And in Events mode (Ctrl+Shift+E or the toolbar's Kris button):</p>
 <ul>
-<li>Ctrl/Cmd+C/V/X copies, pastes or swaps tiles internally. Delete clears the selected tile.</li>
-<li>Drag tiles to swap; Ctrl-drag copies when Drag and Drop is enabled.</li>
-<li>The image Copy/Paste buttons, or Ctrl/Cmd+Shift+C/V, use the system clipboard. Copy produces grayscale pixels; pasted colors convert to four hues.</li>
-<li>For classic assets, Alt+1–8 assigns a tile palette. For attributed assets, palette selection here previews colors; the block editor owns occurrence attributes.</li>
+<li>Hover over an event to see a tooltip with its full definition.</li>
+<li>Left-click and drag an event to move it. You can drag into the three-block margin around a map.</li>
+<li>Right-click to edit an event.</li>
+<li>Double-click an event to open the .asm file in the system text editor. If you use Notepad++, Notepad2, Notepad3, Sublime Text, or VS Code on Windows, then it will also open to the specific event's line number. If you edit and save the .asm file, you can reload it in Polished Map NG with Data&nbsp;→&nbsp;Reload&nbsp;Event&nbsp;Script or Ctrl+R.</li>
+<li>Middle-click and drag to scroll.</li>
+<li>Hold Shift and left-click a warp event to open the map it warps to. The map's filename is guessed from the warp event's constant. For example, a warp to UNION_CAVE_B1F will try to open UnionCaveB1F.blk or UnionCaveB1F.ablk, using the current map's extension.</li>
 </ul>
-<p>OK accepts the draft; Cancel or closing the editor discards it. Tile edits have no map undo entries. Save Tileset writes PNG graphics and applicable palette data; imported binary graphics remain intact. Roof overlays are saved separately and never baked into the base tileset.</p>
-<p>Tools → Change Tileset (Ctrl/Cmd+H) and Change Roof (Ctrl/Cmd+Shift+H) show a preview before applying a selection. Lists scroll when needed. Choosing the current entry reloads it from disk; unsaved asset edits require confirmation. These commands do not change map headers.</p>
-<p>Choose a roof in Open options or Change Roof; use (none) to remove it. Tools → Edit Roof (Ctrl/Cmd+F) uses the same pixel controls for the nine-tile overlay, without Delete or palette controls. Save Roof writes only that roof.</p>
-<hr>
-<p><b>Palettes</b></p>
-<p>View → Palettes or the toolbar selector chooses among the six palette sets. Tools → Edit Current Palettes (Ctrl/Cmd+Shift+L) opens the current colors. Select a swatch, adjust RGB channels from 0–31, or type a six-digit RGB hex value. Windows also offers its native color chooser from the preview swatch; Linux/macOS use the RGB/hex controls.</p>
+<p>The arrow keys, or the mouse's scrolling function if it has one, will scroll the sidebar array or the map area (whichever one the cursor is over).</p>
+<p>The number keys 0-9 are hotkeys for the sidebar array.</p>
 <ul>
-<li>Drag swatches to swap; Ctrl-drag copies when Drag and Drop is enabled.</li>
-<li>Ctrl/Cmd+C/V/X copies, pastes or swaps colors when no text input has focus.</li>
-<li>Middle-click a channel spinner or slider to restore the value from when that swatch was selected. OK accepts; Cancel discards.</li>
+<li>Press Ctrl+0-9 to assign that key to the selected block.</li>
+<li>Press 0-9 to select the block assigned to that key.</li>
+<li>Press Ctrl+Shift+0-9 to unassign that key.</li>
 </ul>
-<p>Data → Load Palettes (Ctrl/Cmd+L) reads supported palette files. Data → Export Palettes writes colors explicitly: palette changes alone do not dirty the map or trigger its close warning. Export to a separate file and copy the sets required by your project's palette layout rather than replacing unrelated palette definitions.</p>
-<p>Automatic palette imports prompt before replacing edited colors. Cancel keeps the edited colors and continues opening the map. Default and special files replace only the sets they contain; an active Custom set remains selected.</p>
+<p>In Block mode, you can view and edit the map's blocks. In Event mode, you can view and edit the map's events (NPCs, warps, signs, etc). Events are also visible in Block mode if View&nbsp;→&nbsp;Show&nbsp;Events is checked.</p>
 <hr>
-<p><b>Options and view</b></p>
+<p>The block editor window has some simple mouse controls:</p>
 <ul>
-<li>Monochrome, Tile Priority and 256 Tiles apply to classic assets. Monochrome skips tile palette read/write; Tile Priority enables editable priority. Select options that match the game's engine.</li>
-<li>512 Tiles and $0:80-FF Before $1:80-FF apply to attributed assets. They control tile capacity and upper-bank order. Inapplicable groups are disabled.</li>
-<li>Roof Palettes describes the roof table's time-of-day layout for later imports. It does not reload colors immediately. Open/New Project options can infer a layout or accept an override.</li>
-<li>Auto-Load Events, Auto-Load Special Palettes and Auto-Load Roof Colors control subsequent opens. Special palettes can be associated with a map, landmark or tileset. Data offers manual load actions.</li>
-<li>Drag and Drop controls internal item transfers, not painting, event movement or opening externally dropped files.</li>
-<li>Overworld Map Size sets the post-save buffer warning threshold. It does not resize maps or change the game's capacity.</li>
+<li>Left-click the tileset array to select a tile.</li>
+<li>Left-click or drag inside the block area to place the selected tile in the block.</li>
+<li>Right-click inside the block area to select a tile from the block.</li>
 </ul>
-<p>View toggles Grid (Ctrl/Cmd+G), Zoom (Ctrl/Cmd+=), Block IDs (Ctrl/Cmd+I), Rulers (Ctrl/Cmd+Shift+R), Hexadecimal (Ctrl/Cmd+Shift+4), Show Priority (Ctrl/Cmd+Shift+P), Show Events (Ctrl/Cmd+Shift+V) and Show Warp IDs (Ctrl/Cmd+Shift+3). Display settings do not rewrite event expressions or project data.</p>
-<p>Game Boy Screen (Ctrl/Cmd+Shift+M) shows a translucent 160×144 guide around the hovered event cell in Events mode. Dark Theme (F9) changes interface colors, Transparent (F10) requests window opacity where supported, and Full Screen (F11) changes the main window state.</p>
-<p>Number fields step with arrows or Up/Down and wrap at their limits. Typed values commit with Enter or focus loss and clamp to the range; Enter commits a number before accepting the dialog. Middle-click resets supported numeric controls to their opening value. Palette sliders stop at their limits instead of wrapping.</p>
+<p>And some more complex ones for placing multiple tiles at once, with the selected tile as the top-left:</p>
+<ul>
+<li>Hold Ctrl and left-click to place a contiguous 2x2 square.</li>
+<li>Hold Ctrl+Shift and left-click to place a contiguous 4x4 square.</li>
+<li>Hold Alt and left-click to place a sequential 2+2 line in a square.</li>
+<li>Hold Alt+Shift and left-click to place a sequential 4+4+4+4 line in a square.</li>
+<li>Hold Ctrl+Alt and left-click to place a sequential 2-2 line in a square, with the rows going backwards.</li>
+<li>Hold Ctrl+Alt+Shift and left-click to place a sequential 4-4-4-4 line in a square, with the rows going backwards.</li>
+<li>Hold Shift and left-click to place two sequential tiles in a checkerboard 2/2 square.</li>
+</ul>
+<p>For attributed blocksets, when you place tiles, they use the currently selected attributes. The attributes are:</p>
+<ul>
+<li><b>X flip:</b> Flip the tile horizontally. Alt+X will toggle this.</li>
+<li><b>Y flip:</b> Flip the tile vertically. Alt+Y will toggle this.</li>
+<li><b>Priority:</b> Display the tile above sprites, including NPCs and the player. (The lightest hue will be transparent to sprites.) Alt+P will toggle this.</li>
+<li><b>Color:</b> The tile's color. The TEXT color is meant for menus and text boxes, and should not be used for map tiles. Alt+1 through Alt+8 will select the <i>N</i>th palette.</li>
+</ul>
+<p>Selecting the X or Y flip attributes also affects placement of multiple tiles at once with Ctrl/Alt/Shift, so large symmetrical designs can be placed more easily.</p>
+<p>For pokecrystal-based projects, you can also edit the collision values of the block's four quadrants. Old-style collision.bin files and up-to-date collision.asm files are both supported.</p>
 <hr>
-<p><b>Saving and sharing</b></p>
-<p>File → Save (Ctrl/Cmd+S) processes changed tilesets, roofs, blocksets/collisions, event scripts and maps in that order. Acknowledge each message to continue. Cancel or failure stops the sequence; earlier successful writes remain saved. Save As (Ctrl/Cmd+Shift+S) chooses another map destination. Individual Save commands affect only their named data.</p>
-<p>File → Print (Ctrl/Cmd+P) previews the map with independent Grid, IDs, Priority, Events and Warp IDs options. Copy sends an image to the clipboard; Export writes a PNG. This does not export a complete unused-block contact sheet.</p>
-<p>Help (F1) stays open while you edit. About (Ctrl/Cmd+/) contains code and artwork credits. For installation, supported formats and all shortcuts, see the <a href="https://github.com/vulcandth/polished-map-ng/blob/main/INSTALL.md">installation guide</a>, <a href="https://github.com/vulcandth/polished-map-ng/blob/main/docs/usage.md">editing guide</a> and <a href="https://github.com/vulcandth/polished-map-ng/blob/main/docs/menus.md">menu reference</a>.</p>
-</body></html>
+<p>The tileset editor window (Ctrl+T or the toolbar's green puzzle piece button) has more mouse controls, similar to the map editor:</p>
+<ul>
+<li>Left-click the tileset array to select a tile.</li>
+<li>Left-click and drag one tile onto another to swap them.</li>
+<li>Hold Ctrl, left-click and drag one tile onto another to copy it.</li>
+<li>Left-click a swatch, or press the 1/2/3/4 keys, to choose a hue.</li>
+<li>Left-click or drag inside the pixel area to draw with the chosen hue in the selected tile.</li>
+<li>Right-click inside the pixel area to choose a hue from the tile.</li>
+<li>Hold Shift and left-click a group of pixels to flood-fill it with the selected hue.</li>
+<li>Hold Ctrl and left-click a pixel to replace every pixel of that hue with the selected hue.</li>
+<li>Hold Alt and left-click a pixel to swap every pixel of that hue and every pixel of the selected hue.</li>
+</ul>
+<p>Ctrl+C, Ctrl+V, and Ctrl+X will copy, paste, and swap tiles respectively, just like they do for blocks in the map editor's sidebar array. Delete will clear a tile's graphics and, for classic assets, set its color to UNDEFINED.</p>
+<p>The Copy and Paste buttons, or Ctrl+Shift+C and Ctrl+Shift+V, will copy and paste the tile graphics using the system clipboard. Tile graphics are always copied in monochrome grayscale, just like the tileset PNGs. Graphics can be pasted as any color; they get converted to four-hue monochrome when pasted. (So you can easily rip tiles from full-color game screenshots.)</p>
+<p>For classic assets, every tile has a single color. The TEXT color is meant for menus and text boxes, and should not be used for map tiles. Alt+1 through Alt+8 will set the current tile to use the <i>N</i>th palette. The "<span>Priority (above sprites)</span>" checkbox sets the PRIORITY attribute bit for a tile so it will appear above sprites, including NPCs and the player; this is <a href="https://github.com/pret/pokecrystal/wiki/Allow-map-tiles-to-appear-above-sprites-(so-NPCs-can-walk-behind-tiles)-with-PRIORITY-colors">a feature</a> of projects that support priority in their per-tile palette maps. For attributed assets, the block editor controls each occurrence's palette, flips and priority; choosing a palette in the tileset editor only changes its preview.</p>
+<hr>
+<p>Tilesets can be augmented by roofs. A roof is assumed to take up the nine tiles from $0A to $12. When a roof is loaded, it visibly affects the map and the block editor, but not the tileset editor. Thus you can edit the tileset without the loaded roof overwriting those nine tiles.</p>
+<p>When you open a map, Polished Map NG tries to select its roof from the project's roof and map-group tables. Check the selection and preview in Open options; if it cannot be detected, select the roof yourself. Projects with <a href="https://github.com/pret/pokecrystal/wiki/Hard-coded-logic#tilesets-that-have-per-mapgroup-roofs">hard-coded roof logic</a> may need a manual choice. Choosing a roof does not change the game's map headers.</p>
+<p>The roof editor window (Ctrl+F or the toolbar's green roof button) is similar to the tileset editor. However, it does not support Delete.</p>
+<hr>
+<p>The colors' exact appearance depends on the current palettes: MORN, DAY, NITE, DARK, INDOOR, or CUSTOM. The default set of palettes' colors is based on pokecrystal, but custom ones will be read from gfx/tilesets/bg_tiles.pal (or tilesets/bg.pal for backwards compatibility with older pokecrystal versions) if it exists.</p>
+<p>When a map <var>MapName</var>.blk or .ablk is opened with the tileset <var>tileset</var>.png, Polished Map NG looks for a special palette file: first <var>MapName</var>.pal, then <var>landmark</var>.pal if the map has a <var>LANDMARK</var>, then <var>tileset</var>.pal. It loads the first one found. This is convenient for maps like Ice Path with custom palettes. This can be disabled via Options&nbsp;→&nbsp;Auto-Load&nbsp;Special&nbsp;Palettes.</p>
+<p>The palette editor window (Ctrl+Shift+L or the toolbar's lightbulb button) has some mouse controls:</p>
+<ul>
+<li>Left-click the palette array to select a color.</li>
+<li>Left-click and drag one color onto another to swap them.</li>
+<li>Hold Ctrl, left-click and drag one color onto another to copy it.</li>
+</ul>
+<p>Ctrl+C, Ctrl+V, and Ctrl+X will copy, paste, and swap colors respectively, just like they do for blocks and tiles in their own editor dialogs.</p>
+<p>You can export the edited colors of all the palettes at once to a single .pal file. Do not overwrite an existing file with this; instead, copy+paste only the palettes you need. For example, bg_tiles.pal defines MORN, DAY, NITE, and INDOOR palettes (as well as separate WATER colors for MORN/DAY and NITE), and ice_path.pal defines a CUSTOM palette.</p>
+</body>
+</html>

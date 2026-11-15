@@ -18,12 +18,13 @@ are unchanged. Menubar padding increases to eight points per side at normal
 widths and contracts uniformly in narrow windows. Dropdown rows fill their
 available interactive width while long lists retain separate scrollbars.
 
-Help describes the current NG application and both asset models instead of
-displaying the original C++/FLTK manuals. Their immutable sources and notices
-remain available. Main-window, Help/About and macOS bundle display names omit
+Help preserves the original manual's structure and prose, merging its classic
+and attributed controls with targeted corrections for NG. The initial wholesale
+rewrite was rejected by the maintainer and replaced; immutable sources and
+notices remain available. Main-window, Help/About and macOS bundle display names omit
 “Unified”; executable names, preference keys and application/bundle IDs remain
-compatible. The maintainer chose the original cherry-tree artwork for #26;
-only desktop containers and metadata change. See the
+compatible. The maintainer supplied replacement single-tree artwork for #26 on November 15;
+all application icon sizes and the About image now derive from those two PNGs. See the
 [review evidence](compatibility.md#november-14-review-corrections).
 
 ## Initial-release input robustness corrections

@@ -69,16 +69,17 @@ XPM rows with an extra character, decoding respects the declared 16-pixel width,
 as FLTK does. Transparent RGB is zero. Disabled colors use source integer
 luminance `(31*r + 61*g + 8*b)/100`, then `(gray + background)/2`.
 
-Windows embeds the original 16/24/32/48/64 ICO frames in all three launchers;
-`tools/windows_icon_resources.py` verifies executable payloads. Window adapters
-use the original 64×64 frame. macOS packages include an ICNS and `CFBundleIconFile`;
-Linux packages include a PNG and optional desktop-entry template. Larger raster
-representations repeat the original pixels without smoothing. The maintainer
-reaffirmed the cherry-tree artwork for issue #26 on November 15; no replacement
-design was adopted. [Container provenance](../crates/gui/assets/application/NOTICE.md)
-and `tools/application_assets.py` own regeneration and hash verification.
-Native shell icon display/DPI remains part of human platform acceptance;
-container and pixel checks do not establish those native outcomes.
+Application icons now use the maintainer's two supplied single-tree PNGs
+(November 15), preserving their original 32×32 and 48×48 pixels. The Windows
+ICO, macOS ICNS, Linux launcher PNG, window fallback and About image are generated
+from those images. The 64×64 fallback enlarges one 32×32 tree; the previous
+upstream 64×64 frame contained four trees and is no longer used by the application.
+The original upstream asset inventory remains unchanged as provenance evidence.
+[Application artwork notice](../crates/gui/assets/application/NOTICE.md) records
+selection and rights limitations; `tools/application_assets.py` owns scaling and
+hash verification. `tools/windows_icon_resources.py` checks every selected ICO
+frame embedded in built executables. Native shell/DPI acceptance remains with
+human testers; container checks alone do not establish those outcomes.
 
 ## Warp ID digit patterns
 

@@ -68,13 +68,12 @@ fn current_guide_covers_both_storage_models_and_retains_attribution() {
         "Polished Map NG",
         "vulcandth",
         "Copyright © 2021 Rangi",
-        "Rust with egui/eframe",
-        ".blk/.ablk",
+        "Rust and egui/eframe",
+        ".blk and .ablk",
         "classic",
         "attributed",
         "Alt+X",
-        "Ctrl/Cmd+Shift+E",
-        "Adding/removing events is not yet supported",
+        "Ctrl+Shift+E",
     ] {
         assert!(text.contains(phrase), "missing {phrase}");
     }
@@ -173,8 +172,11 @@ fn help_geometry_scrolling_links_and_close_without_a_native_window() {
     h.run();
     #[cfg(feature = "visual-tests")]
     h.snapshot("help-document-top");
-    h.get_by_role_and_label(egui::Role::Link, "Source and documentation")
-        .click();
+    h.get_by_role_and_label(
+        egui::Role::Link,
+        "https://github.com/vulcandth/polished-map-ng",
+    )
+    .click();
     let mut links = Vec::new();
     for _ in 0..4 {
         h.step();

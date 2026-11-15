@@ -1,21 +1,23 @@
-# Desktop application icon containers
+# Application cherry-tree artwork
 
-These files repackage the original Polished Map cherry-tree artwork selected by
-the maintainer, reaffirmed for review issue #26 on November 15, 2026. No new icon
-design or game-project graphics have been introduced.
+The maintainer supplied `cherry-tree-32.png` and `cherry-tree-48.png` on
+November 15, 2026 and explicitly selected them to replace the application icon.
+They are preserved byte-for-byte from the two attached PNGs. Their SHA-256
+values are pinned in `tools/application_assets.py`.
 
-The source is `../artwork/app.ico`, from Rangi42/Polished Map at pinned commit
-8b9bdc2b8aac8c865809516c2123af69c498da0b. Retain the full attribution, source
-license and underlying-origin limitations in `../artwork/NOTICE.md`,
-`docs/artwork-inventory.json` and `docs/assets.md`. Container conversion does not
-establish or change rights to the underlying imagery.
+These are supplied artwork, not newly drawn NG code. This selection does not
+establish an independent copyright license or change underlying artwork rights.
+Retain the upstream attribution and origin limitations in
+[the artwork notice](../artwork/NOTICE.md) and `docs/assets.md` in the matching source archive.
+No other project/game graphics are included by this selection.
 
-`tools/application_assets.py --write` uses Pillow to copy the original
-32/64-pixel frames into a macOS ICNS (including 16/32-point Retina representations),
-repeating 64-pixel cells with nearest
-neighbor scaling for larger representations. `app.png` is the 256-pixel Linux
-launcher image; `window.rgba` is the original 64-pixel frame for window adapters.
-Windows continues embedding the unchanged original multi-resolution ICO.
-`hashes.json` records both the source and generated files. Ordinary verification
-requires only Python's standard library; these files were generated with
-Pillow 11.2.1, which can also be used for regeneration.
+`tools/application_assets.py --write` (Pillow 11.2.1) generates a Windows ICO
+with 16/24/32/48/64/128/256-pixel frames, macOS ICNS, Linux PNG, a 64-pixel
+window fallback and the 48-pixel About image. The supplied 32/48-pixel frames
+are exact; other sizes resample a single complete image with nearest-neighbor
+scaling. The 64-pixel image is a 2× enlargement of the 32-pixel tree, not the
+old upstream frame containing four trees. The original upstream artwork stays
+unchanged in `../artwork` as provenance evidence and for other dialog images.
+
+`hashes.json` records generated files. Verification needs only Python's standard
+library; regeneration also decodes and checks every generated ICO frame.

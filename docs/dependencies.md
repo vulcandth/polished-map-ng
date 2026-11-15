@@ -14,7 +14,7 @@ See [package policy](releases.md#binary-content-policy) and [asset rights](asset
 | rfd, arboard, smithay-clipboard, webbrowser | Native file dialogs, explicit image paste/copy and activated links. Wayland images use the patched standard data-device path; X11 retains arboard's FLTK BMP fallback. |
 | Fontique, Skrifa, Vello CPU | Installed-font enumeration, outlines and CPU Print text masks. No display/GPU is needed for headless rendering. Fontconfig is loaded dynamically; explicit font files bypass discovery. System fonts are not redistributed. |
 | dark-light | Background first-launch theme detection; never overrides saved settings or a subsequent manual choice. |
-| embed-resource | Build-only Windows SDK resource compiler integration for the original multi-resolution icon. |
+| embed-resource | Build-only Windows SDK resource compiler integration for the selected multi-resolution application icon. |
 | png, image | Two-bit grayscale export and bounded PNG/BMP decoding; feature selection avoids unrelated image formats. |
 | serde/serde_json, eframe persistence | Validated application settings; native window records remain separate. See [preferences](preferences.md). |
 | OS-specific interop crates | Narrow Windows, AppKit, X11 and Wayland operations behind the platform/native boundaries. Target features are explicit so isolated crate builds do not rely on GUI feature unification. |

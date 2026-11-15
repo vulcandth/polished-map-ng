@@ -43,7 +43,7 @@ jobs:
         run: cargo test -p polished-map-cli --locked --test commands preview_then_apply_and_failed_batch_never_partially_writes -- --exact
       - name: Verify complete workspace
         run: cargo test --workspace --locked
-      - name: Verify original Windows executable icons
+      - name: Verify selected Windows executable icons
         if: runner.os == 'Windows'
         run: python tools/windows_icon_resources.py target/debug/polished-map-gui.exe target/debug/polished-map-plusplus.exe target/debug/polished-map-unified.exe
       - name: Check native settings probe

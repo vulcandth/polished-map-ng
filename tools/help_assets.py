@@ -175,8 +175,8 @@ def main():
     parser.add_argument("--git", default="git")
     parser.add_argument("--profile", choices=["master", "plusplus"])
     args = parser.parse_args()
-    # NG's displayed guide is authored separately; immutable upstream sources
-    # remain verifiable evidence rather than current application instructions.
+    # NG preserves the original manual's structure/prose with targeted corrections
+    # and merged format-specific controls. Immutable upstream sources stay intact.
     current = Document()
     current.feed((ASSETS / "ng-help.html").read_text(encoding="utf8"))
     current.close()

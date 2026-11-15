@@ -12,7 +12,7 @@ contributors. Code is distributed under LGPL-3.0-only. See `LICENSE.md` and
 This port changes implementation language, ownership, validation, architecture,
 and UI toolkit. Individual modules identify upstream algorithm sources.
 The Windows resource build adapts upstream `ide/polished-map.rc` to embed the
-unchanged multi-resolution application ICO in all three Rust launchers; native window
+maintainer-selected multi-resolution application ICO in all three Rust launchers; native window
 selection uses winit. Artwork attribution and provenance remain separately
 recorded in `docs/assets.md` and the artwork notices.
 
@@ -150,13 +150,15 @@ The Help window adapts `help-window.cpp` and `widgets.cpp::HTML_View`. Its
 bundled original documentation is Copyright © 2021 Rangi under LGPL-3.0-only;
 see `crates/gui/assets/help/NOTICE.md` for the immutable source, reproducible
 Windows/Unix reference conversion and preserved upstream attribution. The
-displayed `ng-help.html`/`ng.json` guide adapts those controls to current NG
-behavior and replaces obsolete installer/product claims; Copyright © 2026
+displayed `ng-help.html`/`ng.json` manual preserves the original structure and prose,
+merging attributed controls and targeted correctness/branding edits for current NG
+behavior, including obsolete installer/product claims; Copyright © 2026
 vulcandth and Polished Map NG contributors, LGPL-3.0-only.
 About adapts `Main_Window::initialize/about_cb`, `Modal_Dialog::refresh` and
 the platform sizes in `themes.h`. Its text distinguishes NG's own identity from
-the retained Rangi/Fugue notices. Original application artwork is included with the upstream attribution and
-provenance limitations in `crates/gui/assets/artwork/NOTICE.md`.
+the retained Rangi/Fugue notices. The maintainer-selected application artwork has
+separate provenance in `crates/gui/assets/application/NOTICE.md`; preserved original
+artwork retains the notices in `crates/gui/assets/artwork/NOTICE.md`.
 The shared error/warning/success message layout also adapts `Modal_Dialog::refresh`
 and the 280/700 width range in `Main_Window::initialize`. Enter follows
 `Default_Button`; Escape follows FLTK's modal-window cancel dispatch. Shield

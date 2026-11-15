@@ -20,8 +20,10 @@ external page contents or font files are included in this asset directory.
 
 The displayed guide is `ng-help.html`, adapted for the current Rust application
 by vulcandth and Polished Map NG contributors, © 2026, under LGPL-3.0-only.
-It retains upstream attribution and shared controls, corrects obsolete commands,
-describes both storage models, and replaces legacy installer/product claims.
+It preserves the original master manual's order, paragraphs, examples and lists,
+merges the attributed tile controls from the plusplus manual, and makes targeted
+corrections to branding, obsolete instructions and unified behavior. Upstream
+attribution and original HTML sources remain intact.
 `ng.json` is its generated display representation. The four original-reference
 JSON files remain source evidence and are not embedded in the application.
 
