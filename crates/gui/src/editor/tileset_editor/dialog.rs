@@ -302,12 +302,17 @@ impl Editor {
                         ui.add_enabled_ui(!form.draft.classic().unwrap().monochrome(), |ui| {
                             ui.horizontal(|ui| {
                                 let label = ui.label("Palette:");
-                                egui::ComboBox::from_id_salt("tile-palette")
+                                crate::editor::widgets::dropdown::combo("tile-palette")
                                     .selected_text(PALETTES[usize::from(palette)])
                                     .width(82.0)
                                     .show_ui(ui, |ui| {
                                         for (id, label) in PALETTES.iter().enumerate().take(8) {
-                                            ui.selectable_value(&mut palette, id as u8, *label);
+                                            crate::editor::widgets::dropdown::value(
+                                                ui,
+                                                &mut palette,
+                                                id as u8,
+                                                *label,
+                                            );
                                         }
                                     })
                                     .response

@@ -73,16 +73,12 @@ impl AboutDialog {
     pub(super) fn show(&mut self, ctx: &egui::Context, application: Application) -> bool {
         let plus = application == Application::Parity(documents::Storage::Attributed);
         let unified = application.is_unified();
-        let title = if unified {
-            "About Polished Map NG Unified"
-        } else if plus {
+        let title = if plus {
             "About Polished Map NG++"
         } else {
             TITLE
         };
-        let subject = if unified {
-            SUBJECT.replacen("Polished Map NG", "Polished Map NG Unified", 1)
-        } else if plus {
+        let subject = if plus {
             SUBJECT.replacen("Polished Map NG", "Polished Map NG++", 1)
         } else {
             SUBJECT.into()

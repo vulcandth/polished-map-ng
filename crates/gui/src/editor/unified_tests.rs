@@ -143,7 +143,7 @@ fn open(h: &mut Harness<'_, Editor>, path: &Path, storage: Storage) {
             .last_window_title
             .as_ref()
             .unwrap()
-            .contains("NG Unified")
+            .contains("Polished Map NG")
     );
 }
 

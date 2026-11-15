@@ -122,6 +122,7 @@ jobs:
         run: python3 -m unittest discover -s tools -p 'test_*.py'
       - run: python3 tools/icon_assets.py
       - run: python3 tools/artwork_assets.py
+      - run: python3 tools/application_assets.py
       - run: python3 tools/vendor_sources.py
       - run: python3 tools/font_assets.py
       - run: python3 tools/help_assets.py

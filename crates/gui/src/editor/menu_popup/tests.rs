@@ -5,6 +5,60 @@ use egui_kittest::{
 };
 
 #[test]
+fn menubar_labels_have_eight_point_side_padding_and_adjacent_menu_navigation() {
+    for dark in [false, true] {
+        for scale in [1.0, 1.5, 2.0] {
+            let mut h = Harness::builder()
+                .with_size(Vec2::new(400.0, 300.0))
+                .with_pixels_per_point(scale)
+                .with_theme(if dark {
+                    egui::Theme::Dark
+                } else {
+                    egui::Theme::Light
+                })
+                .build_eframe(|cc| Editor::new_unified(cc));
+            h.run();
+            let file = h.get_by_label("File").rect();
+            let text_width = h
+                .output()
+                .shapes
+                .iter()
+                .find_map(|s| match &s.shape {
+                    egui::Shape::Text(t) if t.galley.text() == "File" => Some(t.galley.size().x),
+                    _ => None,
+                })
+                .unwrap();
+            assert!((file.width() - text_width - 16.0).abs() < 1.0);
+            h.get_by_label("File").click();
+            h.run();
+            assert!(h.query_by_label("Save Map").is_some());
+            h.get_by_label("Data").hover();
+            h.run();
+            assert!(h.query_by_label("Load Event Script…").is_some());
+            h.key_press(egui::Key::Escape);
+            h.run();
+            assert!(h.query_by_label("Load Event Script…").is_none());
+        }
+    }
+}
+
+#[test]
+fn minimum_window_width_keeps_every_menu_reachable() {
+    let mut h = Harness::builder()
+        .with_size(Vec2::new(335.0, 262.0))
+        .build_eframe(|cc| Editor::new_unified(cc));
+    h.run();
+    let help = h.get_by_label("Help").rect();
+    assert!(help.right() <= 335.0, "{help:?}");
+    h.get_by_label("Help").click();
+    h.run();
+    h.get_by_role_and_label(egui::Role::MenuItem, "About")
+        .click();
+    h.run();
+    assert!(h.state().about.is_some());
+}
+
+#[test]
 fn released_alt_in_the_same_native_frame_still_opens_both_profile_menus() {
     for plusplus in [false, true] {
         let mut h = Harness::builder()

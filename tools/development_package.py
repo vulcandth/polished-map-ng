@@ -21,11 +21,13 @@ import zipfile
 from package_docs import copy_documentation
 from windows_icon_resources import verify as verify_windows_icons
 
+ROOT = Path(__file__).resolve().parents[1]
+
 
 PROFILES = {
     "master": ("polished-map-gui", "Polished Map NG", "io.github.vulcandth.polished-map-ng"),
     "plusplus": ("polished-map-plusplus", "Polished Map NG++", "io.github.vulcandth.polished-map-ng.plusplus"),
-    "unified": ("polished-map-unified", "Polished Map NG Unified", "io.github.vulcandth.polished-map-ng.unified"),
+    "unified": ("polished-map-unified", "Polished Map NG", "io.github.vulcandth.polished-map-ng.unified"),
 }
 
 
@@ -60,13 +62,24 @@ def copy_gui(destination, binaries, target, profile, version):
         bundle = destination / (display_name + ".app")
         contents = bundle / "Contents"
         (contents / "MacOS").mkdir(parents=True)
+        resources = contents / "Resources"
+        resources.mkdir(exist_ok=True)
+        shutil.copy2(ROOT / "crates/gui/assets/application/app.icns", resources / "app.icns")
         gui = contents / "MacOS" / executable
         with (contents / "Info.plist").open("wb") as file:
             plistlib.dump({"CFBundleName": display_name, "CFBundleDisplayName": display_name,
                           "CFBundleIdentifier": identifier, "CFBundleExecutable": executable,
                           "CFBundlePackageType": "APPL", "CFBundleVersion": version,
                           "CFBundleShortVersionString": version, "LSMinimumSystemVersion": "11.0",
-                          "NSHighResolutionCapable": True}, file)
+                          "NSHighResolutionCapable": True, "CFBundleIconFile": "app.icns"}, file)
+    elif "linux" in target:
+        shutil.copy2(ROOT / "crates/gui/assets/application/app.png", destination / "polished-map-ng.png")
+        (destination / "polished-map-ng.desktop").write_text(
+            "[Desktop Entry]\nType=Application\nName=" + display_name
+            + "\nComment=Map and tileset editor\nExec=" + executable + " %f\n"
+            + "Icon=polished-map-ng\nTerminal=false\nCategories=Graphics;Development;\n"
+            + "StartupWMClass=" + {"master": "polished-map-ng", "plusplus": "polished-map-ng-plusplus", "unified": "polished-map-ng-unified"}[profile] + "\n",
+            encoding="utf-8")
     shutil.copy2(binaries / (executable + suffix), gui)
     return bundle
 

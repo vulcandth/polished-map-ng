@@ -274,14 +274,19 @@ impl Editor {
                 egui::UiBuilder::new().max_rect(rect(offset, 10.0, combo_width, 22.0)),
                 |ui| {
                     ui.spacing_mut().interact_size.y = 22.0;
-                    egui::ComboBox::from_id_salt("tileset-choice")
+                    crate::editor::widgets::dropdown::combo("tileset-choice")
                         .height(choice_preview::MENU_HEIGHT)
                         .width(combo_width)
                         .truncate()
                         .selected_text(current)
                         .show_ui(ui, |ui| {
                             for (i, choice) in form.choices.iter().enumerate() {
-                                ui.selectable_value(&mut form.selected, i, &choice.label);
+                                crate::editor::widgets::dropdown::value(
+                                    ui,
+                                    &mut form.selected,
+                                    i,
+                                    &choice.label,
+                                );
                             }
                         })
                         .response

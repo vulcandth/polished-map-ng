@@ -149,7 +149,10 @@ worker lifetime, validation and error reporting are Rust implementations.
 The Help window adapts `help-window.cpp` and `widgets.cpp::HTML_View`. Its
 bundled original documentation is Copyright © 2021 Rangi under LGPL-3.0-only;
 see `crates/gui/assets/help/NOTICE.md` for the immutable source, reproducible
-Windows/Unix conversion and preserved upstream attribution.
+Windows/Unix reference conversion and preserved upstream attribution. The
+displayed `ng-help.html`/`ng.json` guide adapts those controls to current NG
+behavior and replaces obsolete installer/product claims; Copyright © 2026
+vulcandth and Polished Map NG contributors, LGPL-3.0-only.
 About adapts `Main_Window::initialize/about_cb`, `Modal_Dialog::refresh` and
 the platform sizes in `themes.h`. Its text distinguishes NG's own identity from
 the retained Rangi/Fugue notices. Original application artwork is included with the upstream attribution and

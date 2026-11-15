@@ -22,7 +22,7 @@ entire milestone has passed. `[ ]` means work or acceptance remains. Unchecked
 tasks are not started unless explicitly marked **in progress**; a next task is
 scheduled, not completed or necessarily started. A milestone closes only when
 its acceptance gate passes, including approved exceptions.
-**Next:** Collect **U3** reports from human testers using the
+**Next:** Collect **U3** human acceptance reports using the
 [published unified build](releases.md#unified-development-packaging) and
 [five-project checklist](testing-unified.md); fix reported functional issues.
 Native testing was handed to humans on November 8. Do not resume autonomous
@@ -51,6 +51,13 @@ format semantics.
 
 Authorized November 12 on `main`; preserve functionality and deferred aesthetics.
 This preparation does not waive native parity or final release acceptance.
+
+- [x] **R6:** Implement the November 14 checkbox/dropdown/menubar, Help
+  content/spacing and application naming/icon corrections (#20–26), with focused
+  automated checks and asset provenance. [Review evidence](compatibility.md#november-14-review-corrections).
+  Human shell-icon acceptance in [#26](https://github.com/vulcandth/polished-map-ng/issues/26)
+  and existing testing #27–28 remain open under U3/P1. Post-release proposals
+  and milestone acceptance gates are unchanged.
 
 - [x] **R1:** Contributor navigation and GUI module boundaries reviewed and
   improved without behavior/snapshot changes. [Layout decision](architecture.md#crate-and-module-layout-review).

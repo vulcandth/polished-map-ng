@@ -60,10 +60,14 @@ class DevelopmentArchiveTests(unittest.TestCase):
                 for profile, executable, display in [
                     ("master", "polished-map-gui", "Polished Map NG"),
                     ("plusplus", "polished-map-plusplus", "Polished Map NG++"),
-                    ("unified", "polished-map-unified", "Polished Map NG Unified"),
+                    ("unified", "polished-map-unified", "Polished Map NG"),
                 ]:
-                    bundle = copy_gui(destination, binaries, target, profile, "1.2.3")
-                    output = destination / (executable + suffix)
+                    # Each release profile has its own archive. The main and
+                    # historical classic apps now share a display name only.
+                    profile_destination = destination / profile
+                    profile_destination.mkdir()
+                    bundle = copy_gui(profile_destination, binaries, target, profile, "1.2.3")
+                    output = profile_destination / (executable + suffix)
                     if "apple" in target:
                         self.assertEqual(bundle.name, display + ".app")
                         with (bundle / "Contents/Info.plist").open("rb") as file:
@@ -72,11 +76,20 @@ class DevelopmentArchiveTests(unittest.TestCase):
                         self.assertEqual(plist["CFBundleDisplayName"], display)
                         self.assertEqual(plist["CFBundleVersion"], "1.2.3")
                         self.assertEqual(plist["CFBundleShortVersionString"], "1.2.3")
+                        self.assertEqual(plist["CFBundleIconFile"], "app.icns")
+                        self.assertEqual((bundle / "Contents/Resources/app.icns").read_bytes(),
+                                         Path("crates/gui/assets/application/app.icns").read_bytes())
                         self.assertNotIn(plist["CFBundleIdentifier"], identities)
                         identities.add(plist["CFBundleIdentifier"])
                         output = bundle / "Contents/MacOS" / executable
                     else:
                         self.assertIsNone(bundle)
+                        if "linux" in target:
+                            desktop = (profile_destination / "polished-map-ng.desktop").read_text(encoding="utf-8")
+                            self.assertIn(f"Name={display}\n", desktop)
+                            self.assertIn(f"Exec={executable} %f\n", desktop)
+                            self.assertEqual((profile_destination / "polished-map-ng.png").read_bytes(),
+                                             Path("crates/gui/assets/application/app.png").read_bytes())
                     source = binaries / (executable + suffix)
                     self.assertEqual(output.read_bytes(), source.read_bytes())
                     self.assertEqual(output.stat().st_mode, source.stat().st_mode)

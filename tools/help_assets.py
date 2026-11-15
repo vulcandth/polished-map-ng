@@ -1,4 +1,4 @@
-"""Verify/rebuild the complete pinned master/plusplus help documents, without network access.
+"""Verify/rebuild NG Help and pinned upstream references without network access.
 
 The bundled original is a C++ concatenation of literals and version constants.
 Expand only that known grammar, then parse its HTML subset into display blocks.
@@ -175,6 +175,20 @@ def main():
     parser.add_argument("--git", default="git")
     parser.add_argument("--profile", choices=["master", "plusplus"])
     args = parser.parse_args()
+    # NG's displayed guide is authored separately; immutable upstream sources
+    # remain verifiable evidence rather than current application instructions.
+    current = Document()
+    current.feed((ASSETS / "ng-help.html").read_text(encoding="utf8"))
+    current.close()
+    if current.block or current.tags or current.in_body:
+        raise ValueError("Unclosed NG help document")
+    data = json.dumps(current.blocks, ensure_ascii=False, indent=2) + "\n"
+    path = ASSETS / "ng.json"
+    if args.write:
+        path.write_text(data, encoding="utf8", newline="\n")
+    elif path.read_text(encoding="utf8") != data:
+        raise ValueError("Rebuild ng.json using --write")
+    print(f"Verified NG guide: {len(current.blocks)} blocks")
     profiles = [args.profile] if args.profile else (["master"] if args.reference_checkout else ["master", "plusplus"])
     for profile in profiles:
         prefix = "plusplus-" if profile == "plusplus" else ""

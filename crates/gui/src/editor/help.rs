@@ -1,11 +1,11 @@
 //! Pinned master/plusplus Help_Window and HTML_View, LGPL-3.0-only.
-//! Full attributed help text is generated from the bundled original by help_assets.py.
+//! Current NG guide is generated from assets/help/ng-help.html by help_assets.py.
+//! Pinned upstream manuals remain attributed reference evidence.
 use super::*;
 use serde::Deserialize;
 use std::sync::OnceLock;
 
 const TITLE: &str = "Polished Map NG Help";
-const REFERENCE_NOTE: &str = "Polished Map 4.7.1 reference — NG parity is in progress.";
 
 pub(super) fn font_definitions() -> egui::FontDefinitions {
     let mut fonts = egui::FontDefinitions::default();
@@ -54,31 +54,12 @@ struct Block {
     spans: Vec<Span>,
 }
 
-fn document(windows: bool, storage: documents::Storage) -> &'static [Block] {
-    static WINDOWS: OnceLock<Vec<Block>> = OnceLock::new();
-    static UNIX: OnceLock<Vec<Block>> = OnceLock::new();
-    static PLUS_WINDOWS: OnceLock<Vec<Block>> = OnceLock::new();
-    static PLUS_UNIX: OnceLock<Vec<Block>> = OnceLock::new();
-    let (document, source) = if storage == documents::Storage::Attributed {
-        if windows {
-            (
-                &PLUS_WINDOWS,
-                include_str!("../../assets/help/plusplus-windows.json"),
-            )
-        } else {
-            (
-                &PLUS_UNIX,
-                include_str!("../../assets/help/plusplus-unix.json"),
-            )
-        }
-    } else if windows {
-        (&WINDOWS, include_str!("../../assets/help/windows.json"))
-    } else {
-        (&UNIX, include_str!("../../assets/help/unix.json"))
-    };
-    document.get_or_init(|| {
-        // Compiled, hash-verified assets, never user-provided JSON.
-        serde_json::from_str(source).expect("verified bundled help document")
+fn document() -> &'static [Block] {
+    static DOCUMENT: OnceLock<Vec<Block>> = OnceLock::new();
+    DOCUMENT.get_or_init(|| {
+        // Compiled, verified assets, never user-provided JSON.
+        serde_json::from_str(include_str!("../../assets/help/ng.json"))
+            .expect("verified bundled help document")
     })
 }
 
@@ -93,7 +74,6 @@ pub(super) struct HelpWindow {
     reposition: bool,
     reset_scroll: bool,
     native_size: Vec2,
-    windows_paths: bool,
     #[cfg(test)]
     pub(super) bounds: Rect,
     #[cfg(test)]
@@ -109,7 +89,6 @@ impl Default for HelpWindow {
             reposition: false,
             reset_scroll: false,
             native_size: Vec2::new(700.0, 500.0),
-            windows_paths: cfg!(windows),
             #[cfg(test)]
             bounds: Rect::NOTHING,
             #[cfg(test)]
@@ -121,7 +100,7 @@ impl Default for HelpWindow {
 impl HelpWindow {
     fn title(&self) -> &'static str {
         if self.application.is_unified() {
-            "Polished Map NG Unified Help"
+            TITLE
         } else if self.storage == documents::Storage::Attributed {
             "Polished Map NG++ Help"
         } else {
@@ -227,20 +206,11 @@ impl HelpWindow {
                     }
                     let result = scroll.show(ui, |ui| {
                         ui.style_mut().interaction.selectable_labels = true;
-                        if self.application.is_unified() {
-                            ui.label("Controls adapt to the loaded map's assets. The reference below follows its current attribute storage; unified development is in progress.");
+                        if !self.application.is_unified() {
+                            ui.label("This compatibility launcher uses a fixed asset format. The main Polished Map NG application supports both formats described below.");
                             ui.add_space(8.0);
                         }
-                        let note = if self.storage == documents::Storage::Attributed {
-                            "Polished Map++ 2.7.1 reference — NG parity is in progress."
-                        } else {
-                            REFERENCE_NOTE
-                        };
-                        ui.label(egui::RichText::new(note).size(13.0));
-                        ui.add_space(8.0);
-                        for block in document(self.windows_paths, self.storage) {
-                            render_block(ui, block);
-                        }
+                        render_document(ui, document());
                     });
                     #[cfg(test)]
                     {
@@ -268,9 +238,22 @@ impl HelpWindow {
     }
 }
 
+fn render_document(ui: &mut egui::Ui, blocks: &[Block]) {
+    let mut after_list = false;
+    for block in blocks {
+        if after_list && !matches!(block.kind, Kind::Bullet) {
+            ui.add_space(8.0);
+        }
+        render_block(ui, block);
+        after_list = matches!(block.kind, Kind::Bullet);
+    }
+}
+
 fn render_block(ui: &mut egui::Ui, block: &Block) {
     if matches!(block.kind, Kind::Rule) {
+        ui.add_space(8.0);
         ui.separator();
+        ui.add_space(8.0);
         return;
     }
     let bullet = matches!(block.kind, Kind::Bullet);

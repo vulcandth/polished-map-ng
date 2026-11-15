@@ -5,6 +5,18 @@ for compatibility testing; see
 [tester instructions](docs/testing-unified.md) and the [roadmap](docs/roadmap.md).
 The instructions below build the development version from source.
 
+The main application's display name is **Polished Map NG**. Its executable
+remains `polished-map-unified` (`.exe` on Windows), and existing settings and
+shortcuts keep their identifiers. On macOS, new packages contain `Polished Map NG.app`.
+
+Linux packages also include `polished-map-ng.desktop` and `polished-map-ng.png`
+for optional launcher integration. Before installing the desktop entry under
+`~/.local/share/applications`, set its `Exec` to the quoted absolute executable
+path followed by `%f`, and its `Icon` to the absolute PNG path. Alternatively,
+place the executable on PATH and install the PNG as `polished-map-ng.png` under
+`~/.local/share/icons/hicolor/256x256/apps`. Extracting the archive does not install
+desktop entries or register file associations automatically.
+
 ## Prerequisites
 
 Install Rust with rustup. The repository's [rust-toolchain.toml](rust-toolchain.toml)

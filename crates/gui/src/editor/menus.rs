@@ -9,9 +9,11 @@ fn action(ui: &mut egui::Ui, enabled: bool, name: &str) -> bool {
 impl Editor {
     pub(super) fn menu_bar(&mut self, ui: &mut egui::Ui) {
         let ctx = ui.ctx().clone();
+        let side_padding = menu_popup::bar_padding(ui);
         egui::MenuBar::new()
             .config(menu_popup::config())
             .ui(ui, |ui| {
+                ui.spacing_mut().button_padding.x = side_padding;
                 menu_popup::menu(ui, "File", |ui| {
                     if action(ui, true, "New…") {
                         self.choose_new();

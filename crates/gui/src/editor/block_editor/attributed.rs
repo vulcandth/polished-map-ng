@@ -348,12 +348,17 @@ impl BlockForm {
             .scope_builder(
                 egui::UiBuilder::new().max_rect(rect(293.0 + offset, 176.0, 174.0 - offset, 22.0)),
                 |ui| {
-                    egui::ComboBox::from_id_salt("occurrence-palette")
+                    crate::editor::widgets::dropdown::combo("occurrence-palette")
                         .selected_text(PALETTES[usize::from(occurrence.palette)])
                         .width(174.0 - offset)
                         .show_ui(ui, |ui| {
                             for (i, name) in PALETTES.iter().enumerate() {
-                                ui.selectable_value(&mut occurrence.palette, i as u8, *name);
+                                crate::editor::widgets::dropdown::value(
+                                    ui,
+                                    &mut occurrence.palette,
+                                    i as u8,
+                                    *name,
+                                );
                             }
                         })
                         .response

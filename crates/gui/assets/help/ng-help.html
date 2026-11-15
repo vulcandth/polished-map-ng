@@ -1,0 +1,91 @@
+<html><head><title>Polished Map NG Help</title></head><body>
+<h1>Polished Map NG</h1>
+<p>A map and tileset editor for pret disassembly projects and compatible forks, including pokered, pokeyellow, pokegold, pokecrystal and Polished Crystal. Project conventions vary; check the detected options when opening a map.</p>
+<p>Maintained by vulcandth. Copyright © 2026 vulcandth and Polished Map NG contributors. Written in Rust with egui/eframe.</p>
+<p>Based on <a href="https://github.com/Rangi42/polished-map">Polished Map and Polished Map++</a>, Copyright © 2021 Rangi and contributors. NG code and this adapted guide are LGPL-3.0-only; see LICENSE.md and NOTICE.md. Artwork and fonts retain their separate notices.</p>
+<p><a href="https://github.com/vulcandth/polished-map-ng">Source and documentation</a> · <a href="https://github.com/vulcandth/polished-map-ng/releases">Downloads</a> · <a href="https://github.com/vulcandth/polished-map-ng/issues">Report a problem</a></p>
+<p>These are development builds. Keep backups and use project copies while testing. <a href="https://github.com/vulcandth/polished-map-ng/blob/main/docs/usage.md">The editing guide</a> describes supported workflows and limitations in more detail.</p>
+<hr>
+<p><b>Getting started</b></p>
+<p>Extract the package for your operating system. On Windows or Linux, launch polished-map-unified; on macOS, open Polished Map NG.app. No install.bat or automatic file association is required. The historical executable name is retained for existing shortcuts and scripts.</p>
+<p>Use Ctrl for command shortcuts on Windows/Linux and Command on macOS. Mouse gestures that say Ctrl, and digit assignments, use the physical Control key on every platform. Text entry and dialogs take precedence over main-window shortcuts.</p>
+<ul>
+<li>Open: File → Open…, the Open toolbar button, or Ctrl/Cmd+O. You can also pass a map path as a command-line argument or drop a file over the map workspace.</li>
+<li>New: File → New… or Ctrl/Cmd+N. Choose the dimensions, project folder and tileset before creating the map.</li>
+<li>Recent maps: File → Open Recent. Unassigned Alt+1 through Alt+0 open the corresponding recent entries.</li>
+</ul>
+<p>Supported map inputs include binary .blk/.ablk and supported ASM map data. The editor discovers dimensions and assets from project metadata or filenames such as MapName.20x18.tileset.blk. Check the size and tileset in Open options, especially for shared block files. Expand Project options to choose another project folder or roof-palette layout.</p>
+<p>The controls follow the loaded assets: classic tilesets attach palettes to raw tiles; attributed blocksets attach palettes, bank, flips and priority to each tile occurrence. There is no mode selector for these formats. Changing storage models requires Save As and does not rewrite project headers or convert tileset files.</p>
+<hr>
+<p><b>Map and sidebar</b></p>
+<ul>
+<li>Left-click a sidebar block to select it; right-click and release on that block to edit its tiles and collisions.</li>
+<li>In Blocks mode, left-click or drag on the map to paint. Right-click picks a block. Shift-click fills a connected region, Ctrl-click replaces that block throughout the map, and Alt-click swaps the two block types.</li>
+<li>Wheel, arrow keys or middle-button dragging scroll the map/sidebar under the pointer.</li>
+<li>With Options → Drag and Drop enabled, dragging sidebar blocks swaps them; Ctrl-drag copies.</li>
+<li>Ctrl+digit assigns the selected block; the digit selects it; Ctrl+Shift+digit clears the binding. These session bindings use physical Ctrl on every platform. A bound Alt+digit selects its block before Open Recent.</li>
+</ul>
+<p>Edit → Undo/Redo (Ctrl/Cmd+Z/Y) covers map painting, with one drag per history entry. It does not undo every editing domain. Resizing a map clears its history.</p>
+<p>Edit → Copy/Paste/Swap Block (Ctrl/Cmd+C/V/X) uses an internal clipboard. Copy stores a snapshot, Paste uses that snapshot, and Swap exchanges with the copied source's current contents.</p>
+<p>Tools → Resize Map (Ctrl/Cmd+E) offers nine anchors and fills new cells with block zero. Loaded event coordinates move with the chosen anchor. Update ASM dimension declarations or dimension-bearing filenames separately. Resize Blockset (Ctrl/Cmd+B) accepts 1–256 blocks; shrinking does not rewrite map IDs.</p>
+<hr>
+<p><b>Events</b></p>
+<p>Mode → Events (Ctrl/Cmd+Shift+E) edits existing events; Ctrl/Cmd+Shift+B returns to Blocks mode. Tab switches modes when no dialog or text input has focus. Adding/removing events is not yet supported.</p>
+<ul>
+<li>Hover an event to read its definition. Left-drag moves it; right-click opens Event Options. Coordinates and macro-specific Prefix/Suffix fields are editable.</li>
+<li>Shift-click a warp to open its destination through the normal unsaved-change prompt.</li>
+<li>Double-click an event to open its saved script in an external editor. Supported Windows editors can receive a source line; Linux/macOS use their default file opener.</li>
+<li>Data → Load/Save/Reload/Unload Event Script controls the script separately. Save before opening it externally if the external editor should see your changes; reload after external edits.</li>
+</ul>
+<p>Enter accepts short text fields; wrapped multiline event fields insert a newline. Escape or Cancel discards the draft. Event editing does not add map undo entries.</p>
+<hr>
+<p><b>Blocks and tile attributes</b></p>
+<p>In Edit Block, select a tile from the sheet, then click or drag to place it. Right-click the block to pick its tile. The following modifiers place multiple tiles with the selected tile as their starting point:</p>
+<ul>
+<li>Ctrl: contiguous 2×2; Ctrl+Shift: contiguous 4×4.</li>
+<li>Alt: sequential 2+2 square; Alt+Shift: sequential 4+4+4+4 square.</li>
+<li>Ctrl+Alt: sequential 2−2 square with reversed rows; Ctrl+Alt+Shift: sequential 4−4−4−4 square with reversed rows.</li>
+<li>Shift: two sequential tiles in a checkerboard 2/2 square.</li>
+</ul>
+<p>Attributed tiles use the selected palette and X/Y flip/priority attributes. Alt+X, Alt+Y and Alt+P toggle them; Alt+1–8 chooses a palette. Flips also affect multi-tile placement. Classic tile palettes and optional priority are edited in Edit Tileset instead. Collision fields edit the four block quadrants when collision data is available; binary and supported ASM collision files are handled.</p>
+<hr>
+<p><b>Tilesets and roofs</b></p>
+<p>Tools → Edit Tileset (Ctrl/Cmd+T) edits a draft. Left-click a tile, then choose a hue with its swatch or keys 1–4. Paint with left-click/drag, pick with right-click, fill with Shift, replace a hue with Ctrl and swap hues with Alt.</p>
+<ul>
+<li>Ctrl/Cmd+C/V/X copies, pastes or swaps tiles internally. Delete clears the selected tile.</li>
+<li>Drag tiles to swap; Ctrl-drag copies when Drag and Drop is enabled.</li>
+<li>The image Copy/Paste buttons, or Ctrl/Cmd+Shift+C/V, use the system clipboard. Copy produces grayscale pixels; pasted colors convert to four hues.</li>
+<li>For classic assets, Alt+1–8 assigns a tile palette. For attributed assets, palette selection here previews colors; the block editor owns occurrence attributes.</li>
+</ul>
+<p>OK accepts the draft; Cancel or closing the editor discards it. Tile edits have no map undo entries. Save Tileset writes PNG graphics and applicable palette data; imported binary graphics remain intact. Roof overlays are saved separately and never baked into the base tileset.</p>
+<p>Tools → Change Tileset (Ctrl/Cmd+H) and Change Roof (Ctrl/Cmd+Shift+H) show a preview before applying a selection. Lists scroll when needed. Choosing the current entry reloads it from disk; unsaved asset edits require confirmation. These commands do not change map headers.</p>
+<p>Choose a roof in Open options or Change Roof; use (none) to remove it. Tools → Edit Roof (Ctrl/Cmd+F) uses the same pixel controls for the nine-tile overlay, without Delete or palette controls. Save Roof writes only that roof.</p>
+<hr>
+<p><b>Palettes</b></p>
+<p>View → Palettes or the toolbar selector chooses among the six palette sets. Tools → Edit Current Palettes (Ctrl/Cmd+Shift+L) opens the current colors. Select a swatch, adjust RGB channels from 0–31, or type a six-digit RGB hex value. Windows also offers its native color chooser from the preview swatch; Linux/macOS use the RGB/hex controls.</p>
+<ul>
+<li>Drag swatches to swap; Ctrl-drag copies when Drag and Drop is enabled.</li>
+<li>Ctrl/Cmd+C/V/X copies, pastes or swaps colors when no text input has focus.</li>
+<li>Middle-click a channel spinner or slider to restore the value from when that swatch was selected. OK accepts; Cancel discards.</li>
+</ul>
+<p>Data → Load Palettes (Ctrl/Cmd+L) reads supported palette files. Data → Export Palettes writes colors explicitly: palette changes alone do not dirty the map or trigger its close warning. Export to a separate file and copy the sets required by your project's palette layout rather than replacing unrelated palette definitions.</p>
+<p>Automatic palette imports prompt before replacing edited colors. Cancel keeps the edited colors and continues opening the map. Default and special files replace only the sets they contain; an active Custom set remains selected.</p>
+<hr>
+<p><b>Options and view</b></p>
+<ul>
+<li>Monochrome, Tile Priority and 256 Tiles apply to classic assets. Monochrome skips tile palette read/write; Tile Priority enables editable priority. Select options that match the game's engine.</li>
+<li>512 Tiles and $0:80-FF Before $1:80-FF apply to attributed assets. They control tile capacity and upper-bank order. Inapplicable groups are disabled.</li>
+<li>Roof Palettes describes the roof table's time-of-day layout for later imports. It does not reload colors immediately. Open/New Project options can infer a layout or accept an override.</li>
+<li>Auto-Load Events, Auto-Load Special Palettes and Auto-Load Roof Colors control subsequent opens. Special palettes can be associated with a map, landmark or tileset. Data offers manual load actions.</li>
+<li>Drag and Drop controls internal item transfers, not painting, event movement or opening externally dropped files.</li>
+<li>Overworld Map Size sets the post-save buffer warning threshold. It does not resize maps or change the game's capacity.</li>
+</ul>
+<p>View toggles Grid (Ctrl/Cmd+G), Zoom (Ctrl/Cmd+=), Block IDs (Ctrl/Cmd+I), Rulers (Ctrl/Cmd+Shift+R), Hexadecimal (Ctrl/Cmd+Shift+4), Show Priority (Ctrl/Cmd+Shift+P), Show Events (Ctrl/Cmd+Shift+V) and Show Warp IDs (Ctrl/Cmd+Shift+3). Display settings do not rewrite event expressions or project data.</p>
+<p>Game Boy Screen (Ctrl/Cmd+Shift+M) shows a translucent 160×144 guide around the hovered event cell in Events mode. Dark Theme (F9) changes interface colors, Transparent (F10) requests window opacity where supported, and Full Screen (F11) changes the main window state.</p>
+<p>Number fields step with arrows or Up/Down and wrap at their limits. Typed values commit with Enter or focus loss and clamp to the range; Enter commits a number before accepting the dialog. Middle-click resets supported numeric controls to their opening value. Palette sliders stop at their limits instead of wrapping.</p>
+<hr>
+<p><b>Saving and sharing</b></p>
+<p>File → Save (Ctrl/Cmd+S) processes changed tilesets, roofs, blocksets/collisions, event scripts and maps in that order. Acknowledge each message to continue. Cancel or failure stops the sequence; earlier successful writes remain saved. Save As (Ctrl/Cmd+Shift+S) chooses another map destination. Individual Save commands affect only their named data.</p>
+<p>File → Print (Ctrl/Cmd+P) previews the map with independent Grid, IDs, Priority, Events and Warp IDs options. Copy sends an image to the clipboard; Export writes a PNG. This does not export a complete unused-block contact sheet.</p>
+<p>Help (F1) stays open while you edit. About (Ctrl/Cmd+/) contains code and artwork credits. For installation, supported formats and all shortcuts, see the <a href="https://github.com/vulcandth/polished-map-ng/blob/main/INSTALL.md">installation guide</a>, <a href="https://github.com/vulcandth/polished-map-ng/blob/main/docs/usage.md">editing guide</a> and <a href="https://github.com/vulcandth/polished-map-ng/blob/main/docs/menus.md">menu reference</a>.</p>
+</body></html>

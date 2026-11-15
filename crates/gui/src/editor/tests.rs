@@ -443,6 +443,12 @@ fn synthetic_editor_appearance() {
     harness.run();
     harness.snapshot("synthetic-dark");
     harness.state_mut().prepare_resize();
+    harness
+        .state_mut()
+        .resize_form
+        .as_mut()
+        .unwrap()
+        .windows_buttons = false;
     harness.run();
     harness.snapshot("resize-dialog");
 }

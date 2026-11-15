@@ -70,10 +70,15 @@ as FLTK does. Transparent RGB is zero. Disabled colors use source integer
 luminance `(31*r + 61*g + 8*b)/100`, then `(gray + background)/2`.
 
 Windows embeds the original 16/24/32/48/64 ICO frames in all three launchers;
-`tools/windows_icon_resources.py` verifies executable payloads. Linux receives
-the 16×16 XPM and macOS the 48×48 application picture. Native icon display/DPI
-and macOS bundle icon metadata remain separate acceptance work. Pixel/geometry
-tests do not establish those native outcomes.
+`tools/windows_icon_resources.py` verifies executable payloads. Window adapters
+use the original 64×64 frame. macOS packages include an ICNS and `CFBundleIconFile`;
+Linux packages include a PNG and optional desktop-entry template. Larger raster
+representations repeat the original pixels without smoothing. The maintainer
+reaffirmed the cherry-tree artwork for issue #26 on November 15; no replacement
+design was adopted. [Container provenance](../crates/gui/assets/application/NOTICE.md)
+and `tools/application_assets.py` own regeneration and hash verification.
+Native shell icon display/DPI remains part of human platform acceptance;
+container and pixel checks do not establish those native outcomes.
 
 ## Warp ID digit patterns
 

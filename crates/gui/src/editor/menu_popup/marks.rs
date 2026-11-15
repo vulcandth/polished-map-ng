@@ -140,7 +140,7 @@ fn drawing(dark: bool, radio: bool, selected: bool, row_height: i32) -> Drawing 
         }
     } else {
         if dark {
-            out.gradient([x + 1, y + 2, w - 2, w - 2], 117, 98);
+            out.gradient([x + 1, y + 1, w - 2, w - 2], 117, 98);
         } else {
             out.rect(background, [x + 1, y + 1, w - 2, w - 2]);
         }
@@ -157,23 +157,14 @@ fn drawing(dark: bool, radio: bool, selected: bool, row_height: i32) -> Drawing 
         if dark {
             out.h(gray(145), x + 2, y + 1, x + w - 3);
         }
-        // fl_xyline / fl_yxline corners are two orthogonal segments, not diagonals.
+        // One inset pixel joins each pair of edges. The source's orthogonal
+        // corner segments protruded into the surrounding menu (#20).
         let upper = gray(if dark { 71 } else { 166 });
         let lower = gray(if dark { 71 } else { 176 });
-        out.h(upper, x, y + 1, x + 1);
-        out.v(upper, x + 1, y + 1, y);
-        if dark {
-            out.h(lower, x, y + w - 2, x + 1);
-            out.v(lower, x + 1, y + w - 2, y + w - 1);
+        for xx in [x + 1, x + w - 2] {
+            out.rect(upper, [xx, y + 1, 1, 1]);
+            out.rect(lower, [xx, y + w - 2, 1, 1]);
         }
-        out.v(upper, x + w - 2, y, y + 1);
-        out.h(upper, x + w - 2, y + 1, x + w - 1);
-        if !dark {
-            out.h(lower, x, y + w - 2, x + 1);
-            out.v(lower, x + 1, y + w - 2, y + w - 1);
-        }
-        out.v(lower, x + w - 2, y + w - 1, y + w - 2);
-        out.h(lower, x + w - 2, y + w - 2, x + w - 1);
         if selected {
             out.0.push((
                 mark,

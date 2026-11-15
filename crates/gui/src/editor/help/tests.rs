@@ -2,77 +2,121 @@ use super::*;
 use egui_kittest::{Harness, kittest::Queryable};
 
 #[test]
-fn plusplus_help_uses_its_complete_source_and_separate_window_identity() {
-    for windows in [false, true] {
-        let blocks = document(windows, documents::Storage::Attributed);
-        let text = blocks
-            .iter()
-            .flat_map(|b| &b.spans)
-            .map(|s| s.text.as_str())
-            .collect::<String>();
-        assert_eq!(blocks.len(), 104);
-        assert!(text.contains("Polished Map++") && text.contains("polishedmap-plusplus"));
-        assert!(text.contains("512") && text.contains(".ablk"));
-        assert!(!text.contains("PROGRAM_") && !text.contains("DIR_SEP"));
-        assert_eq!(
-            blocks
-                .iter()
-                .flat_map(|b| &b.spans)
-                .filter(|s| s.link.is_some())
-                .count(),
-            15
-        );
+fn rules_and_list_boundaries_have_readable_spacing_even_when_wrapped() {
+    #[cfg(feature = "visual-tests")]
+    let mut snapshots = egui_kittest::SnapshotResults::new();
+    let block = |kind, text: &str| Block {
+        kind,
+        spans: vec![Span {
+            text: text.into(),
+            bold: false,
+            italic: false,
+            mono: false,
+            small: false,
+            link: None,
+        }],
+    };
+    let blocks = [
+        block(Kind::Paragraph, "Before rule"),
+        block(Kind::Rule, ""),
+        block(Kind::Paragraph, "After rule"),
+        block(Kind::Bullet, "First item"),
+        block(Kind::Bullet, "Second item"),
+        block(
+            Kind::Paragraph,
+            "Following paragraph wraps in a narrow window without overlapping the list above it.",
+        ),
+    ];
+    for width in [220.0, 540.0] {
+        for dark in [false, true] {
+            let mut h = Harness::builder()
+                .with_size(Vec2::new(width, 440.0))
+                .with_theme(if dark {
+                    egui::Theme::Dark
+                } else {
+                    egui::Theme::Light
+                })
+                .build_ui(|ui| render_document(ui, &blocks));
+            h.run();
+            let before = h.get_by_label("Before rule").rect();
+            let after = h.get_by_label("After rule").rect();
+            assert!(after.top() - before.bottom() >= 24.0);
+            let first = h.get_by_label("First item").rect();
+            let second = h.get_by_label("Second item").rect();
+            let following = h.get_by_label(&blocks[5].spans[0].text).rect();
+            assert!(following.top() - second.bottom() >= second.top() - first.bottom() + 8.0);
+            assert!(following.bottom() < 440.0);
+            #[cfg(feature = "visual-tests")]
+            snapshots.add(h.try_snapshot(format!(
+                "help-spacing-{width}-{}",
+                if dark { "dark" } else { "light" }
+            )));
+        }
     }
-    let mut h = Harness::builder()
-        .with_size(Vec2::new(900.0, 700.0))
-        .build_eframe(|cc| Editor::new_plusplus(cc));
-    h.key_press(egui::Key::F1);
-    h.run();
-    assert!(h.state().help_window.open);
-    assert_eq!(
-        h.state().help_window.builder(Pos2::ZERO).title.as_deref(),
-        Some("Polished Map NG++ Help")
-    );
-    h.get_by_label("Polished Map++ 2.7.1 reference — NG parity is in progress.");
+    #[cfg(feature = "visual-tests")]
+    snapshots.unwrap();
 }
 
 #[test]
-fn complete_bundled_documents_preserve_upstream_text_links_and_platform_paths() {
-    for (source, executable, path) in [
-        (
-            include_str!("../../../assets/help/windows.json"),
-            "polishedmap.exe",
-            "pokecrystal\\maps\\SomeMap.blk",
-        ),
-        (
-            include_str!("../../../assets/help/unix.json"),
-            "polishedmap",
-            "pokecrystal/maps/SomeMap.blk",
-        ),
+fn current_guide_covers_both_storage_models_and_retains_attribution() {
+    let text = document()
+        .iter()
+        .flat_map(|b| &b.spans)
+        .map(|s| s.text.as_str())
+        .collect::<String>();
+    for phrase in [
+        "Polished Map NG",
+        "vulcandth",
+        "Copyright © 2021 Rangi",
+        "Rust with egui/eframe",
+        ".blk/.ablk",
+        "classic",
+        "attributed",
+        "Alt+X",
+        "Ctrl/Cmd+Shift+E",
+        "Adding/removing events is not yet supported",
     ] {
-        let blocks: Vec<Block> = serde_json::from_str(source).unwrap();
-        assert_eq!(blocks.len(), 95);
-        let text = blocks
-            .iter()
-            .flat_map(|b| &b.spans)
-            .map(|s| s.text.as_str())
-            .collect::<String>();
-        assert!(text.contains("Copyright © 2021 Rangi"));
-        assert!(text.contains(executable) && text.contains(path));
-        assert!(text.ends_with("ice_path.pal defines a CUSTOM palette."));
-        assert!(!text.contains("PROGRAM_") && !text.contains("DIR_SEP"));
-        let links: Vec<_> = blocks
-            .iter()
-            .flat_map(|b| &b.spans)
-            .filter_map(|s| s.link.as_deref())
-            .collect();
-        assert_eq!(links.len(), 16);
-        assert!(links.contains(&"https://github.com/Rangi42/polished-map"));
-        assert!(
-            links
-                .iter()
-                .all(|url| url.starts_with("https://") || url.starts_with("http://"))
-        );
+        assert!(text.contains(phrase), "missing {phrase}");
+    }
+    for obsolete in [
+        "implemented with C++",
+        "Run install.bat",
+        "unified development is in progress",
+        "polishedmap-plusplus",
+        "PROGRAM_",
+        "DIR_SEP",
+    ] {
+        assert!(!text.contains(obsolete), "obsolete {obsolete}");
+    }
+    let links: Vec<_> = document()
+        .iter()
+        .flat_map(|b| &b.spans)
+        .filter_map(|s| s.link.as_deref())
+        .collect();
+    assert!(links.contains(&"https://github.com/Rangi42/polished-map"));
+    assert!(links.contains(&"https://github.com/vulcandth/polished-map-ng"));
+    assert!(links.iter().all(|url| url.starts_with("https://")));
+}
+
+#[test]
+fn all_launchers_use_current_help_with_stable_window_identities() {
+    for application in [
+        Application::Unified,
+        Application::Parity(documents::Storage::Classic),
+        Application::Parity(documents::Storage::Attributed),
+    ] {
+        let mut help = HelpWindow {
+            application,
+            storage: application.initial_storage(),
+            ..Default::default()
+        };
+        help.open();
+        let expected = if application == Application::Parity(documents::Storage::Attributed) {
+            "Polished Map NG++ Help"
+        } else {
+            "Polished Map NG Help"
+        };
+        assert_eq!(help.builder(Pos2::ZERO).title.as_deref(), Some(expected));
     }
 }
 
@@ -98,10 +142,10 @@ fn native_window_builder_uses_source_size_offset_and_reopen_position() {
 
 #[test]
 fn help_geometry_scrolling_links_and_close_without_a_native_window() {
-    // Stable document text for the cross-platform visual baseline; both native
-    // platform expansions are independently checked above and by the generator.
+    // Every launcher uses the same current guide; the generator separately
+    // preserves and verifies the original manuals as provenance evidence.
     let mut help = HelpWindow {
-        windows_paths: true,
+        application: Application::Unified,
         ..Default::default()
     };
     help.open();
@@ -129,7 +173,7 @@ fn help_geometry_scrolling_links_and_close_without_a_native_window() {
     h.run();
     #[cfg(feature = "visual-tests")]
     h.snapshot("help-document-top");
-    h.get_by_role_and_label(egui::Role::Link, "crowdmap")
+    h.get_by_role_and_label(egui::Role::Link, "Source and documentation")
         .click();
     let mut links = Vec::new();
     for _ in 0..4 {
@@ -140,7 +184,7 @@ fn help_geometry_scrolling_links_and_close_without_a_native_window() {
             }
         }
     }
-    assert_eq!(links, ["https://github.com/yenatch/crowdmap"]);
+    assert_eq!(links, ["https://github.com/vulcandth/polished-map-ng"]);
     h.hover_at(area.center());
     h.run();
     h.event(egui::Event::MouseWheel {

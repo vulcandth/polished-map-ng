@@ -381,7 +381,7 @@ impl Editor {
                 ui.spacing_mut().button_padding = Vec2::splat(3.0);
                 ui.spacing_mut().icon_width = 16.0;
                 ui.spacing_mut().item_spacing.x = 3.0;
-                egui::ComboBox::from_id_salt("map-palette-set")
+                crate::editor::widgets::dropdown::combo("map-palette-set")
                     .width(dropdown_width)
                     .selected_text(egui::RichText::new(name).font(font))
                     .show_ui(ui, |ui| self.palette_set_menu(ui, false))
@@ -402,7 +402,7 @@ impl Editor {
             let response = if source_menu {
                 menu_popup::radio(ui, selected == set, name)
             } else {
-                ui.selectable_label(selected == set, name)
+                widgets::dropdown::label(ui, selected == set, name)
             };
             if response.clicked() {
                 let mut draft = self.palette_document().to_owned();

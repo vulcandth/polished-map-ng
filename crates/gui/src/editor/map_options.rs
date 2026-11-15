@@ -79,7 +79,7 @@ fn combo(
     let mut child = ui.new_child(egui::UiBuilder::new().max_rect(rect));
     child.spacing_mut().interact_size.y = 22.0;
     child.add_enabled_ui(enabled, |ui| {
-        egui::ComboBox::from_id_salt(name)
+        crate::editor::widgets::dropdown::combo(name)
             .width(rect.width())
             .truncate()
             .selected_text(selected)
@@ -200,7 +200,12 @@ impl Editor {
                     true,
                     |ui| {
                         for &(w, h) in sizes.choices() {
-                            ui.selectable_value(&mut dimensions, (w, h), format!("{w} x {h}"));
+                            crate::editor::widgets::dropdown::value(
+                                ui,
+                                &mut dimensions,
+                                (w, h),
+                                format!("{w} x {h}"),
+                            );
                         }
                     },
                 );
@@ -227,7 +232,12 @@ impl Editor {
                 !form.tilesets.is_empty(),
                 |ui| {
                     for choice in &form.tilesets {
-                        ui.selectable_value(&mut form.tileset, choice.name.clone(), &choice.label);
+                        crate::editor::widgets::dropdown::value(
+                            ui,
+                            &mut form.tileset,
+                            choice.name.clone(),
+                            &choice.label,
+                        );
                     }
                 },
             );
@@ -246,9 +256,19 @@ impl Editor {
                 &current,
                 !form.roofs.is_empty(),
                 |ui| {
-                    ui.selectable_value(&mut form.roof, String::new(), "(none)");
+                    crate::editor::widgets::dropdown::value(
+                        ui,
+                        &mut form.roof,
+                        String::new(),
+                        "(none)",
+                    );
                     for name in &form.roofs {
-                        ui.selectable_value(&mut form.roof, name.clone(), name);
+                        crate::editor::widgets::dropdown::value(
+                            ui,
+                            &mut form.roof,
+                            name.clone(),
+                            name,
+                        );
                     }
                 },
             );
@@ -333,21 +353,23 @@ impl Editor {
                                 .iter()
                                 .find(|(layout, _)| *layout == selected)
                                 .map_or("", |(_, name)| *name);
-                            let response = egui::ComboBox::from_id_salt("project-roof-palettes")
-                                .width(control_width)
-                                .truncate()
-                                .selected_text(name)
-                                .show_ui(ui, |ui| {
-                                    for (layout, name) in roof_colors::LAYOUTS {
-                                        ui.selectable_value(
-                                            &mut form.roof_layout,
-                                            Some(layout),
-                                            name,
-                                        );
-                                    }
-                                })
-                                .response
-                                .labelled_by(label.id);
+                            let response =
+                                crate::editor::widgets::dropdown::combo("project-roof-palettes")
+                                    .width(control_width)
+                                    .truncate()
+                                    .selected_text(name)
+                                    .show_ui(ui, |ui| {
+                                        for (layout, name) in roof_colors::LAYOUTS {
+                                            crate::editor::widgets::dropdown::value(
+                                                ui,
+                                                &mut form.roof_layout,
+                                                Some(layout),
+                                                name,
+                                            );
+                                        }
+                                    })
+                                    .response
+                                    .labelled_by(label.id);
                             response.widget_info(|| {
                                 egui::WidgetInfo::labeled(
                                     egui::Role::ComboBox,

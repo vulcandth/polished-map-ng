@@ -9,6 +9,7 @@
 *.ablk binary
 *.png binary
 *.ico binary
+*.icns binary
 *.ttf binary
 *.rgba binary
 *.xpm text eol=lf

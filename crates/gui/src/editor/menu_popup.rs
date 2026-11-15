@@ -302,6 +302,25 @@ pub(super) fn menu<R>(ui: &mut egui::Ui, name: &str, contents: impl FnOnce(&mut 
     menu_for_storage(ui, name, documents::Storage::Classic, contents);
 }
 
+pub(super) fn bar_padding(ui: &egui::Ui) -> f32 {
+    let labels = [
+        "File", "Data", "Edit", "View", "Mode", "Tools", "Options", "Help",
+    ];
+    let font = egui::TextStyle::Button.resolve(ui.style());
+    let text_width: f32 = labels
+        .iter()
+        .map(|name| {
+            ui.painter()
+                .layout_no_wrap((*name).into(), font.clone(), ui.visuals().text_color())
+                .size()
+                .x
+        })
+        .sum();
+    // Eight points per side at normal widths, uniformly reduced only when
+    // necessary to keep every menu reachable in the minimum-width window.
+    ((ui.available_width() - text_width - 7.0 * ui.spacing().item_spacing.x) / 16.0).clamp(2.0, 8.0)
+}
+
 pub(super) fn menu_for_storage<R>(
     ui: &mut egui::Ui,
     name: &str,

@@ -9,6 +9,23 @@ This document records observable differences and approved scope exceptions.
 Current workflows belong in [usage](usage.md), design in [architecture](architecture.md),
 and verification/status in [compatibility](compatibility.md) and the [roadmap](roadmap.md).
 
+## November 14 review adjustments
+
+Review issues #20–26 authorize bounded interface corrections. Checkbox corners
+use single inset pixels instead of upstream's protruding orthogonal segments;
+the dark fill remains inside the border. Radio marks and source contrast rules
+are unchanged. Menubar padding increases to eight points per side at normal
+widths and contracts uniformly in narrow windows. Dropdown rows fill their
+available interactive width while long lists retain separate scrollbars.
+
+Help describes the current NG application and both asset models instead of
+displaying the original C++/FLTK manuals. Their immutable sources and notices
+remain available. Main-window, Help/About and macOS bundle display names omit
+“Unified”; executable names, preference keys and application/bundle IDs remain
+compatible. The maintainer chose the original cherry-tree artwork for #26;
+only desktop containers and metadata change. See the
+[review evidence](compatibility.md#november-14-review-corrections).
+
 ## Initial-release input robustness corrections
 
 The public direct PNG writer validates RGB dimensions and byte count before

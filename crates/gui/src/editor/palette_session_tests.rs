@@ -242,6 +242,7 @@ fn premap_colors_survive_new_and_second_map_when_default_import_is_skipped() {
     assert!(h.state().pending_open.is_some());
     #[cfg(feature = "visual-tests")]
     {
+        h.state_mut().discard_windows_buttons = false;
         h.remove_cursor();
         h.run();
         h.snapshot("map-palette-import");

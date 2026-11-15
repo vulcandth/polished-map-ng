@@ -77,9 +77,8 @@ or the game's actual capacity. See [saving](usage.md#saving).
 ## Separate plusplus menu differences
 
 The fixed master launcher shows only classic tile options; fixed plusplus shows
-only attributed options. Neither switches formats automatically. Plusplus Help
-uses the pinned Polished Map++ reference. Help identifies upstream instructions
-as reference material, rather than claiming completed NG parity.
+only attributed options. Neither switches formats automatically. All launchers
+use the current NG Help guide; fixed launchers identify their format restriction.
 
 ## Window and help commands
 

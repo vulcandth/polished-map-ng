@@ -62,7 +62,9 @@ Binaries ship one selected GUI launcher (a bundle on macOS), the headless CLI,
 BUILD-INFO, TESTING, INSTALL and REBUILD, the editing/menu/preferences/CLI and
 tester guides, project/asset/vendor attribution, complete applicable license
 texts and a dependency notice inventory. Fonts, Help and UI images are embedded;
-no loose runtime asset tree is needed. Shared supplemental license texts are
+no loose runtime asset tree is needed. macOS bundles also carry their ICNS icon;
+Linux packages include an optional desktop-entry template and launcher PNG.
+Shared supplemental license texts are
 stored once under `LICENSES/dependency-supplements`; each inventory record points
 to those paths relative to `LICENSES`. The record's `notices` paths are relative
 to `LICENSES/dependencies/NAME-VERSION`.
@@ -134,14 +136,15 @@ Before a parity/production release:
 
 - Close applicable compatibility/native/clean-machine gates, including minimum OS
   claims and both Mac architectures. Keep deferred aesthetics separate from
-  functional acceptance. macOS bundle icon metadata remains P2 work.
+  functional acceptance. macOS bundles now include icon metadata; human shell
+  display and high-DPI acceptance remain P2 work.
 - Retain project/upstream attribution, LGPL v3 and GPL v3 texts, and applicable
   dependency/asset notices. Keep the [original-artwork rights limits](assets.md)
   visible; attribution does not independently establish third-party permission.
 - Publish matching complete source with Cargo.lock, toolchain, all registry
   sources, native patches/manifests, original/converted UI assets and rebuild/relink
   instructions. Preserve the root Cargo patch table and verify an offline rebuild.
-- Verify source assets using `artwork_assets.py`, `icon_assets.py`, `font_assets.py`
+- Verify source assets using `artwork_assets.py`, `application_assets.py`, `icon_assets.py`, `font_assets.py`
   and `help_assets.py`; verify patches using `vendor_sources.py`. Retain source
   inventories, original Help, font/FLTK/Fugue/SCTK terms and modification notices.
   Binary packages retain embedded assets and notices under the policy above;

@@ -197,15 +197,25 @@ impl Editor {
                 egui::UiBuilder::new().max_rect(rect(offset, 10.0, combo_width, 22.0)),
                 |ui| {
                     ui.spacing_mut().interact_size.y = 22.0;
-                    egui::ComboBox::from_id_salt("roof-choice")
+                    crate::editor::widgets::dropdown::combo("roof-choice")
                         .height(choice_preview::MENU_HEIGHT)
                         .width(combo_width)
                         .truncate()
                         .selected_text(current)
                         .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut form.selected, 0, "(none)");
+                            crate::editor::widgets::dropdown::value(
+                                ui,
+                                &mut form.selected,
+                                0,
+                                "(none)",
+                            );
                             for (i, name) in form.names.iter().enumerate() {
-                                ui.selectable_value(&mut form.selected, i + 1, name);
+                                crate::editor::widgets::dropdown::value(
+                                    ui,
+                                    &mut form.selected,
+                                    i + 1,
+                                    name,
+                                );
                             }
                         })
                         .response

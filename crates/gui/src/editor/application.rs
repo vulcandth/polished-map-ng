@@ -52,7 +52,7 @@ impl Application {
         match self {
             Self::Parity(Storage::Classic) => crate::editor::WINDOW_TITLE,
             Self::Parity(Storage::Attributed) => "Polished Map NG++ — development",
-            Self::Unified => "Polished Map NG Unified — development",
+            Self::Unified => "Polished Map NG — development",
         }
     }
 }

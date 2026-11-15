@@ -84,6 +84,16 @@ fn event_two_line_suffix_fits_without_scrolling_and_keeps_its_frame_when_edited(
         h.state_mut().request_event_change(EventChange::Load(path));
         let ctx = h.ctx.clone();
         h.state_mut().event_action(EventAction::Options(0), &ctx);
+        #[cfg(feature = "visual-tests")]
+        {
+            // Shared snapshots use Unix metrics on every test host.
+            h.state_mut()
+                .event_ui
+                .form
+                .as_mut()
+                .unwrap()
+                .windows_buttons = false;
+        }
         h.run();
         let rect = h.get_by_label("Event suffix").rect();
         assert!(rect.height() > 22.0);

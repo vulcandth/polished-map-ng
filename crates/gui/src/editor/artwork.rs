@@ -52,22 +52,13 @@ impl Image {
 }
 
 /// Original upstream application picture for the desktop window adapter.
-/// Linux uses its original 16px XPM; other platforms use the 48px About/ICO frame.
-/// Windows replaces this fallback with its embedded multi-resolution resource.
+/// The original 64px ICO frame gives desktop adapters enough pixels for larger
+/// window/task-switcher icons. Windows uses its multi-resolution resource.
 pub fn application_icon() -> egui::IconData {
-    icon_for_linux(cfg!(target_os = "linux"))
-}
-
-fn icon_for_linux(linux: bool) -> egui::IconData {
-    let (size, pixels): (u32, &[u8]) = if linux {
-        (16, include_bytes!("../../assets/artwork/app-icon.rgba"))
-    } else {
-        (48, Image::App.pixels())
-    };
     egui::IconData {
-        rgba: pixels.to_vec(),
-        width: size,
-        height: size,
+        rgba: include_bytes!("../../assets/application/window.rgba").to_vec(),
+        width: 64,
+        height: 64,
     }
 }
 
@@ -114,23 +105,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn native_icon_payloads_match_original_xpm_and_ico_frame() {
-        for (linux, size, expected) in [
-            (
-                true,
-                16,
-                include_bytes!("../../assets/artwork/app-icon.rgba").as_slice(),
-            ),
-            (
-                false,
-                48,
-                include_bytes!("../../assets/artwork/app.rgba").as_slice(),
-            ),
-        ] {
-            let icon = icon_for_linux(linux);
-            assert_eq!((icon.width, icon.height), (size, size));
-            assert_eq!(icon.rgba, expected);
-        }
+    fn native_icon_has_a_complete_high_resolution_payload() {
+        let icon = application_icon();
+        assert_eq!((icon.width, icon.height), (64, 64));
+        assert_eq!(icon.rgba.len(), 64 * 64 * 4);
+        assert!(icon.rgba.as_chunks::<4>().0.iter().any(|p| p[3] == 255));
     }
 
     #[cfg(feature = "visual-tests")]

@@ -21,7 +21,7 @@ fn recorded(drawing: Drawing) -> String {
 
 #[test]
 #[ignore = "requires tools/menu_marks_oracle.py; runs in visual CI"]
-fn reference_menu_marks_match_original_drawing_commands() {
+fn reference_menu_marks_radio_colors_and_panels_match_original_drawing_commands() {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../.scratch/reference-menu-marks.tsv");
     let data = std::fs::read_to_string(path).unwrap();
@@ -61,6 +61,11 @@ fn reference_menu_marks_match_original_drawing_commands() {
             );
             dividers += 1;
         } else {
+            // Checkbox corners intentionally differ after review #20. Their
+            // independent silhouette regression below replaces source equality.
+            if fields[2] == "0" {
+                continue;
+            }
             assert_eq!(
                 recorded(drawing(
                     fields[0] == "1",
@@ -75,7 +80,39 @@ fn reference_menu_marks_match_original_drawing_commands() {
             drawings += 1;
         }
     }
-    assert_eq!((drawings, colors, panels, dividers), (72, 8, 18, 32));
+    assert_eq!((drawings, colors, panels, dividers), (36, 8, 18, 32));
+}
+
+#[test]
+fn checkbox_corners_have_single_inset_pixels_without_protrusions() {
+    for dark in [false, true] {
+        for height in 18..=26 {
+            let mut pixels = std::collections::HashSet::new();
+            for (_, primitive) in drawing(dark, false, false, height).0 {
+                if let Primitive::Rect([x, y, w, h]) = primitive {
+                    for yy in y..y + h {
+                        for xx in x..x + w {
+                            pixels.insert((xx, yy));
+                        }
+                    }
+                }
+            }
+            let left = pixels.iter().map(|p| p.0).min().unwrap();
+            let right = pixels.iter().map(|p| p.0).max().unwrap();
+            let top = pixels.iter().map(|p| p.1).min().unwrap();
+            let bottom = pixels.iter().map(|p| p.1).max().unwrap();
+            for (x, dx) in [(left, 1), (right, -1)] {
+                for (y, dy) in [(top, 1), (bottom, -1)] {
+                    assert!(!pixels.contains(&(x, y)));
+                    assert!(!pixels.contains(&(x + dx, y)));
+                    assert!(!pixels.contains(&(x, y + dy)));
+                    assert!(pixels.contains(&(x + dx, y + dy)));
+                    assert!(pixels.contains(&(x + 2 * dx, y)));
+                    assert!(pixels.contains(&(x, y + 2 * dy)));
+                }
+            }
+        }
+    }
 }
 
 #[test]
