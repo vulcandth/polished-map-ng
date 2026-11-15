@@ -1,6 +1,6 @@
 use polished_map_core::{
     BlockBrush, Point,
-    plusplus::{AttributeBlockset, AttributeCommand, BankOrder, TileReference},
+    attributed::{AttributeBlockset, AttributeCommand, BankOrder, TileReference},
 };
 
 fn output(mode: &str) -> Vec<u8> {
@@ -94,7 +94,7 @@ fn original_brush_all_tiles_modifiers_flips_and_edges() {
 fn original_render_strides_match_banks_palettes_flips_undefined_tiles_and_roofs() {
     use polished_map_core::{
         Palette, Tile,
-        plusplus::{Graphics, RawTileset},
+        attributed::{Graphics, RawTileset},
     };
     let bytes = output("render");
     let raw = RawTileset::new(

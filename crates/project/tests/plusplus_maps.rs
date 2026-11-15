@@ -1,5 +1,5 @@
 use polished_map_core::Command;
-use polished_map_project::{OpenOptions, ProjectError, plusplus::*};
+use polished_map_project::{OpenOptions, ProjectError, attributed::*};
 use std::{
     fs,
     path::{Path, PathBuf},
@@ -310,7 +310,7 @@ fn real_map_discovery_edit_save_reopen_preserves_bytes() {
     let graphics = tiles.graphics(
         blocks.blockset(),
         colors,
-        polished_map_core::plusplus::BankOrder::default(),
+        polished_map_core::attributed::BankOrder::default(),
     );
     let pixels = graphics.render_map(doc.map()).unwrap();
     let before = fs::read(&original).unwrap();

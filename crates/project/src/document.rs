@@ -42,7 +42,7 @@ pub enum ProjectError {
     #[error(transparent)]
     Blockset(#[from] BlocksetError),
     #[error(transparent)]
-    PlusPlus(#[from] polished_map_core::plusplus::Error),
+    PlusPlus(#[from] polished_map_core::attributed::Error),
     #[error(transparent)]
     Tileset(#[from] polished_map_core::TilesetError),
     #[error(transparent)]
@@ -239,8 +239,8 @@ impl MapDocument {
     pub fn with_plusplus_tileset(
         &self,
         name: &str,
-    ) -> Result<crate::plusplus::MapDocument, ProjectError> {
-        Ok(crate::plusplus::MapDocument::from_inner(
+    ) -> Result<crate::attributed::MapDocument, ProjectError> {
+        Ok(crate::attributed::MapDocument::from_inner(
             self.with_storage(Rules::PlusPlus, name)?,
         ))
     }

@@ -77,6 +77,11 @@ cargo test --workspace --locked
 cargo doc --workspace --no-deps --locked
 ```
 
+For contributor navigation, add `--document-private-items --open` to the doc
+command. CI also builds public and private documentation with `RUSTDOCFLAGS="-D warnings"`.
+See [Rust API documentation](CONTRIBUTING.md#rust-api-documentation) for coverage
+and writing conventions.
+
 The GUI package defaults to the unified launcher. License collection and its
 pinned tools are documented in [dependency checks](docs/dependencies.md#continuous-license-checks).
 

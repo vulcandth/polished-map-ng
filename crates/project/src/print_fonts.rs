@@ -369,7 +369,7 @@ mod tests {
         }
         for kind in polished_map_core::EventKind::ALL
             .into_iter()
-            .chain(polished_map_core::plusplus::EVENT_KINDS)
+            .chain(polished_map_core::event_catalog::EVENT_KINDS)
         {
             let mask = fonts
                 .rasterize(PrintFont::HelveticaBold14, &kind.symbol().to_string())
@@ -464,7 +464,7 @@ mod tests {
         }
         for kind in polished_map_core::EventKind::ALL
             .into_iter()
-            .chain(polished_map_core::plusplus::EVENT_KINDS)
+            .chain(polished_map_core::event_catalog::EVENT_KINDS)
         {
             fonts
                 .rasterize(PrintFont::HelveticaBold14, &kind.symbol().to_string())

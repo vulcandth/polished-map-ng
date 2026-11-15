@@ -1,6 +1,6 @@
 use polished_map_core::{
     BlockBrush, CollisionRow, Point,
-    plusplus::{AttributeBlockset, AttributeCommand, BankOrder, TileReference},
+    attributed::{AttributeBlockset, AttributeCommand, BankOrder, TileReference},
 };
 
 #[test]

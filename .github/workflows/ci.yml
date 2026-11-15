@@ -91,7 +91,12 @@ jobs:
       - run: cargo test -p polished-map-project --locked --lib installed_native_font -- --ignored --nocapture
       - run: cargo test -p polished-map-gui --locked --lib installed_native_fonts -- --ignored --nocapture
       - run: cargo test -p polished-map-cli --locked --test printing installed_print_fonts -- --ignored --nocapture
-      - run: cargo doc --workspace --no-deps --locked
+      - name: Check public and contributor Rust documentation
+        env:
+          RUSTDOCFLAGS: '-D warnings'
+        run: |
+          cargo doc --workspace --no-deps --locked
+          cargo doc --workspace --no-deps --locked --document-private-items
   msrv:
     runs-on: ubuntu-24.04
     steps:

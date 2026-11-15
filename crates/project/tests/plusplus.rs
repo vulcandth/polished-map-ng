@@ -1,14 +1,14 @@
-use polished_map_core::{CollisionRow, plusplus::AttributeCommand};
+use polished_map_core::{CollisionRow, attributed::AttributeCommand};
 use polished_map_project::{
     ProjectError,
-    plusplus::{BlocksetDocument, prepare_binary_save_as},
+    attributed::{BlocksetDocument, prepare_binary_save_as},
     prepare_collision_save_as,
 };
 use std::fs;
 
 #[test]
 fn expanded_codecs_keep_master_limits_and_bound_allocation() {
-    use polished_map_project::{PngPlatform, codecs, plusplus::read_tiles};
+    use polished_map_project::{PngPlatform, attributed::read_tiles, codecs};
     let bytes = vec![0xaa; 8192];
     assert!(codecs::decode_2bpp(&bytes).is_err());
     let tiles = codecs::decode_plusplus_2bpp(&bytes).unwrap();

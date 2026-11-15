@@ -1,6 +1,6 @@
 //! Unified catalog regressions: event syntax is independent of tileset storage.
 use polished_map_core::{EventCommand, EventKind};
-use polished_map_project::{EventDocument, EventScript, ProjectError, plusplus};
+use polished_map_project::{EventDocument, EventScript, ProjectError, attributed};
 use std::{fs, path::PathBuf};
 
 const MIXED: &str = "; mixed line endings\r\nTown_MapEvents:\n\twarp SCRIPT_MAP, 4, 5 ; script command\r\n\twarp 1, 2, 3, DEST_MAP ; legacy map warp\n\tpokemon_event 4, 5, PIKACHU, FLAGS ; modern object\r\n\ttreebase_left_event_1 6, 7, FLAGS\n\tobject SPRITE_RED, 8, 9, FLAGS\n\twarp_event 10, 11, OTHER_MAP, 1\n\tcustom_macro 12, 13, KEEP\n\tdb 77";
@@ -31,7 +31,7 @@ fn combined_catalog_preserves_script_warps_and_both_parity_catalogs() {
         3
     );
     assert_eq!(
-        plusplus::parse_event_script(MIXED)
+        attributed::parse_event_script(MIXED)
             .unwrap()
             .events()
             .entries()
@@ -102,7 +102,7 @@ fn unified_catalog_reads_five_pinned_script_sets_without_changing_source() {
             }
             let source = fs::read_to_string(&path).unwrap();
             let parity = if plus {
-                plusplus::parse_event_script(&source)
+                attributed::parse_event_script(&source)
             } else {
                 EventScript::parse(&source)
             }

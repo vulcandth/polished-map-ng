@@ -1,9 +1,47 @@
 //! Project discovery, codecs and persistence for Polished Map NG.
+//!
+//! # Choosing an entry point
+//!
+//! Start with [`detect_map_format`] for a project whose storage is not known.
+//! Detection chooses a loader; it does not validate or convert asset contents.
+//! [`MapEncoding`] is independent of [`AttributeStorage`]: an ASM map can use
+//! either storage model. Preserve the returned context through editing and saving.
+//!
+//! | Responsibility | API |
+//! |---|---|
+//! | Context and discovery | [`DetectedFormat`], [`discover_unified_map`] |
+//! | Classic maps/blocks/graphics | [`MapDocument`], [`BlocksetDocument`], [`MasterTilesetDocument`] |
+//! | Per-occurrence attributes | [`attributed`] |
+//! | Source-preserving events | [`EventDocument`] |
+//! | Shared decoding and bounded reads | [`codecs`], [`read_bounded`] |
+//! | Observed destinations and guarded writes | [`SaveTarget`], [`prepare_save_as`] |
+//! | CPU Print font adapters | [`PrintFonts`], [`NativeFonts`] |
+//!
+//! Constructors named `open_unified_in_project` accept the combined supported
+//! source layouts. Fixed-format entry points retain their discovery precedence.
+//! The old `plusplus` module import remains an alias for existing Rust callers;
+//! implementation lives in [`attributed`]. These APIs are not yet stabilized.
+//!
+//! # Example: inspect context without opening a window or writing files
+//!
+//! ```no_run
+//! use std::path::Path;
+//! use polished_map_project::detect_map_format;
+//! let context = detect_map_format(Path::new("maps/CherrygroveCity.ablk"), None, None)?;
+//! println!("{:?}: {:?}", context.encoding(), context.format().attribute_storage());
+//! # Ok::<(), polished_map_project::FormatDetectionError>(())
+//! ```
+//!
+//! Reads/codecs return typed errors. Writes compare observed source hashes and
+//! stage replacements; a conflict requires reloading or obtaining new consent,
+//! not an unchecked retry. Multi-domain saves are not a whole-project transaction.
+//!
 //! Derived from upstream master config.cpp, tiled-image.cpp, parse-asm.cpp,
 //! palette-map.cpp and tileset.cpp; see upstream.lock.toml. LGPL-3.0-only.
 
 mod asset_names;
 mod asset_paths;
+pub mod attributed;
 mod blockset;
 pub mod codecs;
 mod collisions;
@@ -18,7 +56,10 @@ mod map_sizes;
 mod native_fonts;
 mod palette_document;
 mod palettes;
-pub mod plusplus;
+
+/// Compatibility import for callers using the former branch-named module.
+#[doc(hidden)]
+pub use attributed as plusplus;
 mod png_export;
 mod png_import;
 mod print_fonts;

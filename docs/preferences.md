@@ -132,4 +132,4 @@ The [native lifecycle probe](compatibility.md#native-profile-preference-lifecycl
 checks real storage, shutdown/restart and normal size restoration in isolated
 stores. Fullscreen, maximization, transparency and mixed-monitor placement still
 need integrated human acceptance. See the [roadmap](roadmap.md) and
-[preference implementation](../crates/gui/src/preferences.rs) for current scope.
+[preference implementation](../crates/gui/src/editor/preferences.rs) for current scope.

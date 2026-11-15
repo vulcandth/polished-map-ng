@@ -1,36 +1,57 @@
 //! Formulas from pinned upstream main-window.cpp::update_layout and event.h.
 
+/// Menu strip height in logical points.
 pub const MENU_HEIGHT: f32 = 21.0;
+/// Toolbar strip height in logical points.
 pub const TOOLBAR_HEIGHT: f32 = 26.0;
 // Review correction: the status strip shares the toolbar's height and inset.
+/// Status strip height in logical points.
 pub const STATUS_HEIGHT: f32 = TOOLBAR_HEIGHT;
+/// Blank workspace border measured in map blocks.
 pub const MAP_MARGIN: f32 = 3.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+/// Rectangle in logical points, relative to the main client origin.
 pub struct Rect {
+    /// Left edge in logical points.
     pub x: f32,
+    /// Top edge in logical points.
     pub y: f32,
+    /// Horizontal extent in logical points.
     pub width: f32,
+    /// Vertical extent in logical points.
     pub height: f32,
 }
 
 #[derive(Debug)]
+/// Computed workspace regions; independent of native window placement.
 pub struct Layout {
+    /// Block-picker viewport, including its scrollbar allocation.
     pub sidebar: Rect,
+    /// Map viewport after reserving sidebar, rulers and status strip.
     pub canvas: Rect,
+    /// Bottom status strip.
     pub status: Rect,
+    /// Map block extent: 32 points normally or 64 when zoomed.
     pub block_size: f32,
+    /// Ruler regions when rulers are enabled.
     pub rulers: Option<RulerRects>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+/// Horizontal/vertical rulers and their shared corner.
 pub struct RulerRects {
+    /// Ruler above the map viewport.
     pub horizontal: Rect,
+    /// Ruler to the left of the map viewport.
     pub vertical: Rect,
+    /// Intersection of the two rulers.
     pub corner: Rect,
 }
 
 impl Layout {
+    /// Compute regions from client width/height and scrollbar width in logical points.
+    /// Negative remaining body dimensions are clamped to zero.
     pub fn new(width: f32, height: f32, zoom: bool, rulers: bool, scrollbar: f32) -> Self {
         let block_size = if zoom { 64.0 } else { 32.0 };
         let top = MENU_HEIGHT + TOOLBAR_HEIGHT;
@@ -98,6 +119,8 @@ impl Layout {
     }
 }
 
+/// Round a logical coordinate to the closest physical pixel boundary.
+/// `pixels_per_point` must be a positive finite display scale.
 pub fn snap_to_pixel(point: f32, pixels_per_point: f32) -> f32 {
     (point * pixels_per_point).round() / pixels_per_point
 }
@@ -136,12 +159,19 @@ pub fn open_scroll(content: f32, viewport: f32, block_size: f32, scrollbar: f32)
 /// Main_Window::update_event_cursor. Coordinates are relative to the map origin.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct EventCursor {
+    /// Map-block column containing the cursor.
     pub block_x: u8,
+    /// Map-block row containing the cursor.
     pub block_y: u8,
+    /// Event-grid column; two cells span one map block.
     pub event_x: u16,
+    /// Event-grid row; two cells span one map block.
     pub event_y: u16,
 }
 impl EventCursor {
+    /// Resolve pointer coordinates in logical points, optionally overriding the
+    /// block location with event-grid coordinates. Returns `None` for invalid scale,
+    /// nonfinite pointer coordinates or a block outside the map.
     pub fn at(
         x: f32,
         y: f32,

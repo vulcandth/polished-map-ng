@@ -1,7 +1,7 @@
 //! Unified discovery combines pinned option-dialogs.cpp metadata syntax without
 //! widening either parity adapter. No game assets are included.
 use polished_map_project::{
-    FormatDetectionError, ProjectFormat, detect_map_format, discover_unified_map, plusplus,
+    FormatDetectionError, ProjectFormat, attributed, detect_map_format, discover_unified_map,
 };
 use std::{
     fs,
@@ -40,14 +40,17 @@ fn legacy_dimensions_and_headers_apply_to_occurrence_attributes() {
     assert_eq!(detected.metadata().group, 1);
     assert_eq!(detected.metadata().header_source, Some(header));
     assert_eq!(detected.metadata().tileset.as_deref(), Some("overworld"));
-    let doc =
-        plusplus::MapDocument::open_unified_in_project_with_report(&map, &Default::default(), None)
-            .unwrap()
-            .document;
+    let doc = attributed::MapDocument::open_unified_in_project_with_report(
+        &map,
+        &Default::default(),
+        None,
+    )
+    .unwrap()
+    .document;
     assert_eq!((doc.map().width(), doc.map().height()), (2, 1));
     assert_eq!(doc.metadata().tileset.as_deref(), Some("overworld"));
-    assert!(plusplus::MapDocument::open(&map, &Default::default()).is_err());
-    let parity = plusplus::discover_map(&map, Some(root)).unwrap();
+    assert!(attributed::MapDocument::open(&map, &Default::default()).is_err());
+    let parity = attributed::discover_map(&map, Some(root)).unwrap();
     assert!(parity.dimensions.is_none() && parity.header_source.is_none());
 }
 
@@ -69,7 +72,7 @@ fn ablk_filename_hint_short_circuits_headers_and_resolves_chr_inventory() {
     assert_eq!(detected.metadata().dimensions, Some((2, 1)));
     assert!(detected.metadata().header_source.is_none());
     assert!(detected.metadata().environment.is_empty());
-    let doc = plusplus::MapDocument::open_unified_in_project_with_report(
+    let doc = attributed::MapDocument::open_unified_in_project_with_report(
         &map,
         &Default::default(),
         Some(root),
@@ -125,7 +128,7 @@ fn unified_save_as_uses_union_roots_and_asm_still_needs_binary_destination() {
         "\tmapconst DEMO, 1, 2\n",
     );
     let source = file(root, "source/maps/Demo.map", "\tdb 0, 1\n");
-    let mut doc = plusplus::MapDocument::open_unified_in_project_with_report(
+    let mut doc = attributed::MapDocument::open_unified_in_project_with_report(
         &source,
         &Default::default(),
         None,
@@ -135,7 +138,7 @@ fn unified_save_as_uses_union_roots_and_asm_still_needs_binary_destination() {
     assert!(doc.save().is_err());
     file(root, "target/Makefile", "");
     let path = root.join("target/Demo.ablk");
-    doc.save_as(&plusplus::prepare_save_as(&path).unwrap())
+    doc.save_as(&attributed::prepare_save_as(&path).unwrap())
         .unwrap();
     assert_eq!(
         doc.metadata().root.as_deref(),

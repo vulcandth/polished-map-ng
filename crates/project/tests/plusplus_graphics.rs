@@ -1,10 +1,11 @@
 use polished_map_core::{
     Palette, Point, Tile,
-    plusplus::{AttributeBlockset, BankOrder, RawTileCommand as C},
+    attributed::{AttributeBlockset, BankOrder, RawTileCommand as C},
 };
 use polished_map_project::{
-    PngPlatform, ProjectError, codecs,
-    plusplus::{RoofDocument, TilesetDocument, read_tiles},
+    PngPlatform, ProjectError,
+    attributed::{RoofDocument, TilesetDocument, read_tiles},
+    codecs,
 };
 use std::{fs, path::Path};
 
@@ -307,8 +308,9 @@ fn real_graphics_edit_save_reopen_preserves_rendering_and_roofs() {
             .collect::<Vec<_>>();
         assert!(!names.is_empty(), "missing graphics {base}");
         for name in names {
-            let b = polished_map_project::plusplus::BlocksetDocument::open_in_project(&root, &name)
-                .unwrap();
+            let b =
+                polished_map_project::attributed::BlocksetDocument::open_in_project(&root, &name)
+                    .unwrap();
             let mut doc = TilesetDocument::open_in_project(dest, &name, PngPlatform::Unix).unwrap();
             let index = doc.model().defined().iter().rposition(|&d| d).unwrap() as u16;
             let hue = (doc.model().tiles()[usize::from(index)].hues()[0] + 1) % 4;

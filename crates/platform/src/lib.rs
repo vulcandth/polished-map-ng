@@ -1,5 +1,7 @@
 //! Narrow platform interop for native dialogs, window opacity and script editing.
 //! LGPL-3.0-only. GUI, project and core crates retain their unsafe-code prohibition.
+#![deny(missing_docs)]
+
 mod legacy_home;
 mod opacity;
 mod script;

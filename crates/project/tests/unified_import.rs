@@ -1,4 +1,4 @@
-use polished_map_project::{OpenOptions, plusplus};
+use polished_map_project::{OpenOptions, attributed};
 use std::fs;
 
 #[test]
@@ -11,25 +11,25 @@ fn unified_asm_import_reports_trailing_bytes_and_requires_explicit_binary_save()
         width: Some(2),
         height: Some(1),
     };
-    assert!(plusplus::MapDocument::open(&path, &options).is_err());
+    assert!(attributed::MapDocument::open(&path, &options).is_err());
     let report =
-        plusplus::MapDocument::import_asm_with_report(&path, &options, Some(dir.path())).unwrap();
+        attributed::MapDocument::import_asm_with_report(&path, &options, Some(dir.path())).unwrap();
     assert_eq!(report.trailing_blocks, 1);
     let mut doc = report.document;
     assert_eq!(doc.map().blocks(), [0x12, 0x34]);
     assert!(doc.save().unwrap_err().to_string().contains(".ablk"));
     assert_eq!(fs::read(&path).unwrap(), source);
-    assert!(plusplus::prepare_save_as(&path).is_err());
-    let target = plusplus::prepare_save_as(&dir.path().join("Imported")).unwrap();
+    assert!(attributed::prepare_save_as(&path).is_err());
+    let target = attributed::prepare_save_as(&dir.path().join("Imported")).unwrap();
     doc.save_as(&target).unwrap();
     assert_eq!(target.path().extension().unwrap(), "ablk");
     assert_eq!(fs::read(target.path()).unwrap(), [0x12, 0x34]);
     assert_eq!(fs::read(path).unwrap(), source);
     assert!(
-        plusplus::MapDocument::import_asm_with_report(target.path(), &options, Some(dir.path()))
+        attributed::MapDocument::import_asm_with_report(target.path(), &options, Some(dir.path()))
             .is_err()
     );
-    let reopened = plusplus::MapDocument::open(target.path(), &options).unwrap();
+    let reopened = attributed::MapDocument::open(target.path(), &options).unwrap();
     assert_eq!(reopened.map().blocks(), doc.map().blocks());
 }
 
@@ -48,7 +48,7 @@ fn unified_asm_import_rejects_short_or_malformed_input_without_writes() {
     ] {
         fs::write(&path, bytes).unwrap();
         assert!(
-            plusplus::MapDocument::import_asm_with_report(&path, &options, Some(dir.path()))
+            attributed::MapDocument::import_asm_with_report(&path, &options, Some(dir.path()))
                 .is_err()
         );
         assert_eq!(fs::read(&path).unwrap(), bytes);

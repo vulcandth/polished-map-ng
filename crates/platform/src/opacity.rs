@@ -9,11 +9,14 @@ mod native;
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum WindowOpacity {
     #[default]
+    /// Full opacity.
     Opaque,
+    /// The supported translucent mode: 75% opacity.
     Transparent,
 }
 
 impl WindowOpacity {
+    /// Normalized alpha used by floating-point native APIs.
     pub const fn alpha(self) -> f64 {
         match self {
             Self::Opaque => 1.0,
@@ -39,16 +42,21 @@ impl WindowOpacity {
 }
 
 #[derive(Debug, thiserror::Error)]
+/// Failure to apply a window-opacity request; callers retain the last accepted state.
 pub enum OpacityError {
     #[error(
         "Wayland opacity must be dispatched through the window's native connection and event queue"
     )]
+    /// Use the existing winit Wayland connection rather than this handle-only API.
     WaylandProtocolRequired,
     #[error("Native window handle unavailable: {0}")]
+    /// A borrowed window or display handle is unavailable.
     Handle(#[from] raw_window_handle::HandleError),
     #[error("{0}")]
+    /// This platform or handle type has no supported opacity implementation.
     Unsupported(&'static str),
     #[error("Could not set window opacity: {0}")]
+    /// The native API rejected the request, with a platform diagnostic.
     Native(String),
 }
 

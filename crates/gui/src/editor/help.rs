@@ -1,0 +1,317 @@
+//! Pinned master/plusplus Help_Window and HTML_View, LGPL-3.0-only.
+//! Full attributed help text is generated from the bundled original by help_assets.py.
+use super::*;
+use serde::Deserialize;
+use std::sync::OnceLock;
+
+const TITLE: &str = "Polished Map NG Help";
+const REFERENCE_NOTE: &str = "Polished Map 4.7.1 reference — NG parity is in progress.";
+
+pub(super) fn font_definitions() -> egui::FontDefinitions {
+    let mut fonts = egui::FontDefinitions::default();
+    // Ubuntu lacks the source's right-arrow glyph. The already-bundled Hack
+    // face supplies it; keep the existing proportional faces first.
+    fonts
+        .families
+        .get_mut(&egui::FontFamily::Proportional)
+        .unwrap()
+        .push("Hack".into());
+    // Mac menu modifier symbols are absent from the other bundled faces.
+    // Keep this audited OFL font in its own family: ordinary text is unchanged.
+    fonts.font_data.insert(
+        "NotoSansSymbols2".into(),
+        std::sync::Arc::new(egui::FontData::from_static(include_bytes!(
+            "../../assets/fonts/NotoSansSymbols2-Regular.ttf"
+        ))),
+    );
+    fonts.families.insert(
+        egui::FontFamily::Name("Menu Symbols".into()),
+        vec!["NotoSansSymbols2".into()],
+    );
+    fonts
+}
+
+#[derive(Clone, Copy, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum Kind {
+    Heading,
+    Paragraph,
+    Bullet,
+    Rule,
+}
+#[derive(Deserialize)]
+struct Span {
+    text: String,
+    bold: bool,
+    italic: bool,
+    mono: bool,
+    small: bool,
+    link: Option<String>,
+}
+#[derive(Deserialize)]
+struct Block {
+    kind: Kind,
+    spans: Vec<Span>,
+}
+
+fn document(windows: bool, profile: documents::Storage) -> &'static [Block] {
+    static WINDOWS: OnceLock<Vec<Block>> = OnceLock::new();
+    static UNIX: OnceLock<Vec<Block>> = OnceLock::new();
+    static PLUS_WINDOWS: OnceLock<Vec<Block>> = OnceLock::new();
+    static PLUS_UNIX: OnceLock<Vec<Block>> = OnceLock::new();
+    let (document, source) = if profile == documents::Storage::Attributed {
+        if windows {
+            (
+                &PLUS_WINDOWS,
+                include_str!("../../assets/help/plusplus-windows.json"),
+            )
+        } else {
+            (
+                &PLUS_UNIX,
+                include_str!("../../assets/help/plusplus-unix.json"),
+            )
+        }
+    } else if windows {
+        (&WINDOWS, include_str!("../../assets/help/windows.json"))
+    } else {
+        (&UNIX, include_str!("../../assets/help/unix.json"))
+    };
+    document.get_or_init(|| {
+        // Compiled, hash-verified assets, never user-provided JSON.
+        serde_json::from_str(source).expect("verified bundled help document")
+    })
+}
+
+fn viewport_id() -> egui::ViewportId {
+    egui::ViewportId::from_hash_of("help-window")
+}
+
+pub(super) struct HelpWindow {
+    pub(super) application: Application,
+    pub(super) profile: documents::Storage,
+    pub(super) open: bool,
+    reposition: bool,
+    reset_scroll: bool,
+    native_size: Vec2,
+    windows_paths: bool,
+    #[cfg(test)]
+    pub(super) bounds: Rect,
+    #[cfg(test)]
+    scroll: f32,
+}
+
+impl Default for HelpWindow {
+    fn default() -> Self {
+        Self {
+            application: Application::default(),
+            profile: documents::Storage::Classic,
+            open: false,
+            reposition: false,
+            reset_scroll: false,
+            native_size: Vec2::new(700.0, 500.0),
+            windows_paths: cfg!(windows),
+            #[cfg(test)]
+            bounds: Rect::NOTHING,
+            #[cfg(test)]
+            scroll: 0.0,
+        }
+    }
+}
+
+impl HelpWindow {
+    fn title(&self) -> &'static str {
+        if self.application.is_unified() {
+            "Polished Map NG Unified Help"
+        } else if self.profile == documents::Storage::Attributed {
+            "Polished Map NG++ Help"
+        } else {
+            TITLE
+        }
+    }
+    pub(super) fn open(&mut self) {
+        self.open = true;
+        self.reposition = true;
+        self.reset_scroll = true;
+    }
+
+    fn builder(&self, parent: Pos2) -> egui::ViewportBuilder {
+        let builder = egui::ViewportBuilder::default()
+            .with_title(self.title())
+            .with_inner_size(self.native_size)
+            .with_resizable(true);
+        if self.reposition {
+            builder
+                .with_position(parent + Vec2::splat(48.0))
+                .with_active(true)
+        } else {
+            builder
+        }
+    }
+
+    pub(super) fn show(&mut self, ctx: &egui::Context, enabled: bool) {
+        if !self.open {
+            return;
+        }
+        let parent = ctx.input(|i| i.viewport().outer_rect.map_or(Pos2::ZERO, |r| r.min));
+        if ctx.embed_viewports() {
+            // Egui's automatic embedded viewport currently omits a close button
+            // and ignores position. Use its ordinary nonmodal Window fallback.
+            let mut open = self.open;
+            let mut window = egui::Window::new(self.title())
+                .id(egui::Id::unique("embedded-help-window"))
+                .open(&mut open)
+                .collapsible(false)
+                .resizable(true)
+                .default_size([700.0, 500.0]);
+            if self.reposition {
+                window = window.current_pos(Pos2::new(48.0, 48.0));
+            }
+            window.show(ctx, |ui| {
+                if !enabled {
+                    ui.disable();
+                }
+                self.content(ui);
+            });
+            if enabled {
+                self.open &= open;
+            }
+        } else {
+            ctx.show_viewport_immediate(viewport_id(), self.builder(parent), |ui, _class| {
+                if !enabled {
+                    ui.disable();
+                }
+                self.content(ui);
+                // Upstream hides its existing Help window; retain its resized
+                // client size when eframe recreates our closed child viewport.
+                self.native_size = ui.max_rect().size();
+                if ui.input(|i| i.viewport().close_requested()) {
+                    if enabled {
+                        self.open = false;
+                    } else {
+                        ui.ctx()
+                            .send_viewport_cmd(egui::ViewportCommand::CancelClose);
+                    }
+                }
+            });
+        }
+        self.reposition = false;
+    }
+
+    fn content(&mut self, ui: &mut egui::Ui) {
+        let area = ui.max_rect();
+        #[cfg(test)]
+        {
+            self.bounds = area;
+        }
+        let body = Rect::from_min_size(
+            area.min + Vec2::splat(10.0),
+            (area.size() - Vec2::new(20.0, 52.0)).max(Vec2::ZERO),
+        );
+        let ok = Rect::from_min_size(
+            Pos2::new(area.right() - 90.0, area.bottom() - 32.0),
+            Vec2::new(80.0, 22.0),
+        );
+        ui.scope_builder(egui::UiBuilder::new().max_rect(body), |ui| {
+            ui.set_clip_rect(body.intersect(ui.clip_rect()));
+            egui::Frame::new()
+                .fill(ui.visuals().extreme_bg_color)
+                .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+                .inner_margin(4.0)
+                .show(ui, |ui| {
+                    let mut scroll = egui::ScrollArea::vertical()
+                        .id_salt("help-content")
+                        .max_height((body.height() - 8.0).max(0.0))
+                        .auto_shrink([false, false]);
+                    if self.reset_scroll {
+                        scroll = scroll.vertical_scroll_offset(0.0);
+                    }
+                    let result = scroll.show(ui, |ui| {
+                        ui.style_mut().interaction.selectable_labels = true;
+                        if self.application.is_unified() {
+                            ui.label("Controls adapt to the loaded map's assets. The reference below follows its current attribute storage; unified development is in progress.");
+                            ui.add_space(8.0);
+                        }
+                        let note = if self.profile == documents::Storage::Attributed {
+                            "Polished Map++ 2.7.1 reference — NG parity is in progress."
+                        } else {
+                            REFERENCE_NOTE
+                        };
+                        ui.label(egui::RichText::new(note).size(13.0));
+                        ui.add_space(8.0);
+                        for block in document(self.windows_paths, self.profile) {
+                            render_block(ui, block);
+                        }
+                    });
+                    #[cfg(test)]
+                    {
+                        self.scroll = result.state.clamped_offset().y;
+                    }
+                    #[cfg(not(test))]
+                    let _ = result;
+                });
+        });
+        self.reset_scroll = false;
+        if ui
+            .put(ok, egui::Button::new("OK"))
+            .on_hover_text("OK (Enter)")
+            .clicked()
+            || (ui.is_enabled()
+                && ui.input_mut(|i| {
+                    i.consume_key(egui::Modifiers::NONE, egui::Key::Enter)
+                        || i.consume_key(egui::Modifiers::NONE, egui::Key::Escape)
+                }))
+        {
+            self.open = false;
+        }
+        // Keep the resizable body independent of document length.
+        ui.allocate_rect(area, Sense::hover());
+    }
+}
+
+fn render_block(ui: &mut egui::Ui, block: &Block) {
+    if matches!(block.kind, Kind::Rule) {
+        ui.separator();
+        return;
+    }
+    let bullet = matches!(block.kind, Kind::Bullet);
+    ui.horizontal_top(|ui| {
+        ui.spacing_mut().item_spacing.x = 0.0;
+        if bullet {
+            ui.label(egui::RichText::new("• ").size(16.0));
+            ui.add_space(4.0);
+        }
+        ui.horizontal_wrapped(|ui| {
+            ui.spacing_mut().item_spacing = Vec2::ZERO;
+            for span in &block.spans {
+                let size = if matches!(block.kind, Kind::Heading) {
+                    32.0
+                } else if span.small {
+                    14.0
+                } else {
+                    16.0
+                };
+                let mut text = egui::RichText::new(&span.text).size(size);
+                if span.bold || matches!(block.kind, Kind::Heading) {
+                    text = text.strong();
+                }
+                if span.italic {
+                    text = text.italics();
+                }
+                if span.mono {
+                    text = text.monospace();
+                }
+                if let Some(link) = &span.link {
+                    ui.hyperlink_to(text, link);
+                } else {
+                    ui.add(egui::Label::new(text).wrap());
+                }
+            }
+        });
+    });
+    if !bullet {
+        ui.add_space(8.0);
+    }
+}
+
+#[cfg(test)]
+mod tests;

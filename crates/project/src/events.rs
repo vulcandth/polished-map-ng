@@ -69,7 +69,7 @@ impl EventScript {
     pub fn parse_unified(source: &str) -> Result<Self, EventScriptError> {
         Self::parse_catalog(source, |name| {
             EventKind::from_macro(name)
-                .or_else(|| polished_map_core::plusplus::event_kind_from_macro(name))
+                .or_else(|| polished_map_core::event_catalog::event_kind_from_macro(name))
         })
     }
     pub(crate) fn parse_with_rules(source: &str, rules: Rules) -> Result<Self, EventScriptError> {
@@ -77,7 +77,7 @@ impl EventScript {
             source,
             match rules {
                 Rules::Master => EventKind::from_macro,
-                Rules::PlusPlus => polished_map_core::plusplus::event_kind_from_macro,
+                Rules::PlusPlus => polished_map_core::event_catalog::event_kind_from_macro,
             },
         )
     }

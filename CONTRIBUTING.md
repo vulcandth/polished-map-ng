@@ -13,8 +13,8 @@ separates user help, design decisions and verification evidence.
 |---|---|---|
 | `crates/core` | Validated models, edit commands, history, CPU rendering | [Library](crates/core/src/lib.rs) |
 | `crates/project` | Project discovery, codecs, bounded file I/O, safe persistence | [Library](crates/project/src/lib.rs) |
-| `crates/gui` | egui presentation and editor workflow orchestration | [Editor](crates/gui/src/lib.rs), [application identity](crates/gui/src/application.rs) |
-| `crates/cli` | Experimental headless commands and JSON output | [Command entry point](crates/cli/src/main.rs) |
+| `crates/gui` | egui presentation and editor workflow orchestration | [Public API](crates/gui/src/lib.rs), [session state](crates/gui/src/editor.rs) |
+| `crates/cli` | Experimental headless commands and JSON output | [Arguments](crates/cli/src/args.rs), [execution](crates/cli/src/commands.rs), [JSON records](crates/cli/src/output.rs) |
 | `crates/platform` | OS integration and narrowly isolated native interop | [Library](crates/platform/src/lib.rs) |
 | `tools` | Asset/provenance checks, packaging and independent reference probes | [Tool guide](tools/README.md) |
 | `vendor` | Five patched native dependencies, with reproducible patch records | [Vendor notice](vendor/NOTICE.md), [dependency audit](docs/dependencies.md) |
@@ -24,6 +24,45 @@ use the same project/core operations. The [architecture](docs/architecture.md)
 explains the boundaries and why the native dependencies are patched. Scratch
 outputs belong in ignored `.scratch/`; immutable reference checkouts belong in
 ignored `.reference/`. Neither is product source or a release input.
+
+### Where to make a change
+
+The implementation uses **classic** for per-tile palettes and **attributed** for
+per-occurrence palette/bank/flip/priority. These are file-storage contracts used
+by the same editor. `attributed` replaces the former `plusplus` implementation
+directories; old Rust imports remain compatibility aliases. Historical names
+remain in launcher identities, serialized values and upstream reference tests.
+
+| Change | Start here |
+|---|---|
+| Map painting, resize, undo | [Core map commands](crates/core/src/map.rs), [GUI canvas](crates/gui/src/editor/canvas.rs) |
+| Attribute bytes, banks or flips | [Attribute models](crates/core/src/attributed.rs), [persistence](crates/project/src/attributed.rs) |
+| Detect/Open/Save a project | [Detection](crates/project/src/format.rs), [Open](crates/gui/src/editor/map_open.rs), [loading](crates/gui/src/editor/map_loading.rs), [Save](crates/gui/src/editor/map_save.rs) |
+| Event fields or markers | [Event dialog](crates/gui/src/editor/event_workflows/dialog.rs), [canvas](crates/gui/src/editor/event_workflows/canvas.rs); [source-preserving edits](crates/project/src/events.rs) |
+| Tile/roof pixel editing | [Draft and save lifecycle](crates/gui/src/editor/tileset_editor.rs), [dialog](crates/gui/src/editor/tileset_editor/dialog.rs), [clipboard](crates/gui/src/editor/tileset_editor/clipboard.rs) |
+| Palette controls or numeric inputs | [Palette form](crates/gui/src/editor/palette_editor.rs), [reusable widgets](crates/gui/src/editor/widgets.rs) |
+| Menu commands, layout or startup | [Menu specs](crates/gui/src/editor/menu_popup/specs.rs), [geometry](crates/gui/src/geometry.rs), [frame](crates/gui/src/editor/frame.rs), [startup](crates/gui/src/editor/startup.rs) |
+| Preferences, native windows | [Preferences](crates/gui/src/editor/preferences.rs), [native startup](crates/gui/src/editor/preferences/native_startup.rs), [dialog host](crates/gui/src/editor/dialog_host.rs) |
+
+Follow an operation from GUI/CLI orchestration to a project document, then to its
+core command. Keep validation in the backend; the UI owns drafts and user consent.
+Tests for a feature live beside it or in the corresponding crate's `tests/`.
+Files named `plusplus_reference` deliberately identify an upstream test oracle.
+
+### Rust API documentation
+
+Run `cargo doc --workspace --no-deps --locked --open` for public APIs. Add
+`--document-private-items` when navigating editor internals. Crate landing pages
+link the main concepts; examples run as doctests in the workspace test suite.
+CI treats rustdoc warnings as errors for both public and private documentation.
+
+Document new public items with purpose, units/invariants, meaningful examples and
+`# Errors`/`# Panics`/`# Safety` where applicable. Prefer checked intra-doc links.
+The GUI/platform public APIs, detection module and attributed core model enforce
+`missing_docs`; older core/project APIs still need fuller item documentation
+during API stabilization. A passing rustdoc build is not a claim of complete
+API documentation or a stable interface. Follow the
+[Rust API documentation guidelines](https://rust-lang.github.io/api-guidelines/documentation.html).
 
 ## Making a change
 

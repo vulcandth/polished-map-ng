@@ -56,7 +56,7 @@ fn filename_hint_is_resolved_without_picking_the_first_graphics_file() {
     assert_eq!(detected.metadata().tileset.as_deref(), Some("target"));
     assert_eq!(detected.metadata().dimensions, Some((1, 1)));
     // Missing offsets are the selected loader's error, never a master fallback.
-    assert!(crate::plusplus::BlocksetDocument::open_in_project(root, "target").is_err());
+    assert!(crate::attributed::BlocksetDocument::open_in_project(root, "target").is_err());
 }
 
 #[test]
@@ -93,7 +93,7 @@ fn compound_resolution_is_shared_with_actual_loaders() {
         AssetKind::Attributes.path(root, "demo.extra").unwrap(),
         preferred
     );
-    crate::plusplus::BlocksetDocument::open_in_project(root, "demo.extra").unwrap();
+    crate::attributed::BlocksetDocument::open_in_project(root, "demo.extra").unwrap();
     // A malformed preferred attribute file must fail, not try the valid base.
     fs::write(&preferred, [0]).unwrap();
     assert_eq!(
@@ -102,7 +102,7 @@ fn compound_resolution_is_shared_with_actual_loaders() {
             .format(),
         ProjectFormat::PlusPlus
     );
-    assert!(crate::plusplus::BlocksetDocument::open_in_project(root, "demo.extra").is_err());
+    assert!(crate::attributed::BlocksetDocument::open_in_project(root, "demo.extra").is_err());
 }
 
 #[test]
@@ -196,7 +196,7 @@ fn shared_collision_resolution_retains_both_parity_precedences() {
         b"\ttilecoll WALL, WALL, WALL, WALL\n",
     );
     let master = crate::BlocksetDocument::open_in_project(root, "demo").unwrap();
-    let plusplus = crate::plusplus::BlocksetDocument::open_in_project(root, "demo").unwrap();
+    let plusplus = crate::attributed::BlocksetDocument::open_in_project(root, "demo").unwrap();
     assert_eq!(
         master.collision_path(),
         Some(fs::canonicalize(binary).unwrap().as_path())

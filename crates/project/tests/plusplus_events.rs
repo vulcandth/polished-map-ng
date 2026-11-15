@@ -1,5 +1,5 @@
-use polished_map_core::{EventCommand, EventKind, plusplus::EVENT_KINDS};
-use polished_map_project::{OpenOptions, ProjectError, plusplus::*};
+use polished_map_core::{EventCommand, EventKind, event_catalog::EVENT_KINDS};
+use polished_map_project::{OpenOptions, ProjectError, attributed::*};
 use std::{
     collections::BTreeMap,
     fs,
@@ -81,7 +81,9 @@ fn catalogs_remain_explicit_and_preserve_macro_metadata_and_warp_ids() {
         EventKind::Object,
         EventKind::WarpTo,
     ] {
-        assert!(polished_map_core::plusplus::event_kind_from_macro(kind.macro_name()).is_none());
+        assert!(
+            polished_map_core::event_catalog::event_kind_from_macro(kind.macro_name()).is_none()
+        );
     }
     for kind in EVENT_KINDS
         .into_iter()
@@ -302,7 +304,7 @@ fn save_previews_and_conflicts_preserve_source_and_dirty_edits() {
 fn all_event_symbols_print_through_the_shared_plusplus_compositor() {
     use polished_map_core::{
         Map, PrintOptions, PrintStyle, Tile,
-        plusplus::{AttributeBlockset, BankOrder, Graphics, RawTileset},
+        attributed::{AttributeBlockset, BankOrder, Graphics, RawTileset},
     };
     let graphics = Graphics::new(
         RawTileset::new(vec![Tile::new([0; 64]).unwrap()], vec![true]).unwrap(),

@@ -97,7 +97,7 @@ explicit vendor adaptation notices: the complete SCTK MIT terms were already
 present elsewhere, but their adaptation notice/link was missing. The current
 package policy fixes these issues without removing corresponding source.
 
-The completed [R3 review](roadmap.md#initial-release-review--complete) verified
+The completed [R3 review](roadmap.md#initial-release-review) verified
 `1bf228cbb222337a42e347816b4be82944d47447`. All eight
 [CI jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43347427575)
 and all five [source/platform packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43347427189)

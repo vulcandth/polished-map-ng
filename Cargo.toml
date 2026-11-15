@@ -41,6 +41,13 @@ unsafe_code = "forbid"
 dbg_macro = "deny"
 todo = "deny"
 
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "deny"
+private_intra_doc_links = "deny"
+invalid_codeblock_attributes = "deny"
+invalid_html_tags = "deny"
+missing_crate_level_docs = "deny"
+
 [profile.release]
 lto = "thin"
 codegen-units = 1

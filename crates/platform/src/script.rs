@@ -7,10 +7,15 @@ use std::{
 };
 
 #[derive(Debug)]
+/// Failure to validate or dispatch an external script-editor request.
 pub enum ScriptOpenError {
+    /// A requested line was zero; editor line numbers are one-based.
     InvalidLine,
+    /// The resolved path is not a regular file.
     NotFile,
+    /// File resolution or launching the system opener failed.
     Io(io::Error),
+    /// The system opener reported a failure or the platform is unsupported.
     Platform(String),
 }
 impl fmt::Display for ScriptOpenError {
@@ -44,15 +49,21 @@ pub struct ScriptOpenRequest {
     line: Option<NonZeroUsize>,
 }
 impl ScriptOpenRequest {
+    /// Prepare a request without opening or reading the file.
+    ///
+    /// # Errors
+    /// Returns [`ScriptOpenError::InvalidLine`] if `line` is `Some(0)`.
     pub fn new(path: PathBuf, line: Option<usize>) -> Result<Self, ScriptOpenError> {
         let line = line
             .map(|line| NonZeroUsize::new(line).ok_or(ScriptOpenError::InvalidLine))
             .transpose()?;
         Ok(Self { path, line })
     }
+    /// Path supplied by the caller; canonicalization happens when opening.
     pub fn path(&self) -> &Path {
         &self.path
     }
+    /// Requested one-based line, or `None` to leave placement to the editor.
     pub fn line(&self) -> Option<usize> {
         self.line.map(NonZeroUsize::get)
     }

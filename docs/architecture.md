@@ -39,10 +39,27 @@ without a GUI or display server. A smaller file is not by itself a reason for
 another crate. Font discovery/rasterization serves both GUI and headless Print
 and belongs in project, outside core.
 
-The [contributor source map](../CONTRIBUTING.md#finding-the-code) identifies entry
-points. Within GUI, `lib.rs` owns state/startup/frame orchestration; `toolbar`,
-`sidebar` and `canvas` own views; `map_open`/`map_save` own file workflows;
-`editor_dialogs` dispatches drafts and `dialog_host` owns native viewport behavior.
+The [contributor source map](../CONTRIBUTING.md#where-to-make-a-change) routes common
+changes to their owning modules. GUI `lib.rs` is a small public facade;
+`editor.rs` owns private session state. Its child modules separate startup,
+frame routing, views, drafts, workflows and reusable widgets. Event canvas/form
+code and tile clipboard/dialog code have dedicated files. Native startup lives
+with preferences, including the fixed launchers' optional legacy migration.
+The CLI separates argument grammar, command execution and JSON records.
+
+Implementation names describe storage, not upstream branches. Core/project
+`attributed` owns per-occurrence attributes; shared events, map commands, codecs
+and persistence remain shared. Event macro catalogs describe source syntax and
+are independent of attribute storage. `plusplus` is only a compatibility import
+alias in the public libraries. Existing public type/variant names, serialized
+values, preference keys, launcher behavior and provenance stay intact. Their
+historical spelling does not imply a second implementation of the unified app.
+
+Avoid a trait layer solely to hide two storage models: enum dispatch in GUI
+`documents` makes the supported cases explicit. `Loaded` is the publication
+boundary for a fully prepared candidate; failed open/preview/save operations
+must not partially replace the current document. Feature `impl Editor` blocks
+can access private parent state without exposing it to library callers.
 
 ### Domain and adapter responsibilities
 
@@ -53,9 +70,9 @@ points. Within GUI, `lib.rs` owns state/startup/frame orchestration; `toolbar`,
 | GUI / CLI | Presentation and orchestration over shared backend commands. The current CLI exposes master adapters, not the complete unified/plusplus workflow. |
 | Platform / native patches | Narrow OS operations, borrowed live handles, typed failures, explicit lifetimes and target-specific features. |
 
-Plusplus occurrences own palette, bank, flips and priority; raw tiles own pixels
-and independent definition flags. Do not widen master IDs globally or reinterpret
-master palette-map bytes as occurrence attributes. Paired offsets/attributes stay
+Attributed occurrences own palette, bank, flips and priority; raw tiles own pixels
+and independent definition flags. Do not widen classic IDs globally or reinterpret
+classic palette-map bytes as occurrence attributes. Paired offsets/attributes stay
 synchronized behind validated APIs. Shared raster, brush and collision operations
 sit below concrete document adapters.
 

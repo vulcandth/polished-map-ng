@@ -4,6 +4,8 @@
 //! upstream.lock.toml). Root markers locate a project, not its format: both
 //! project families can contain Makefile and main.asm. A .blk is also shared.
 //! Detection never writes or falls back to another parser after a load error.
+#![deny(missing_docs)]
+
 use std::path::{Path, PathBuf};
 
 use serde::Serialize;
@@ -19,7 +21,9 @@ use crate::{
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ProjectFormat {
+    /// Classic per-tile palettes; the historical name is retained in the public API/JSON.
     Master,
+    /// Per-occurrence attributes with two tile banks; public API/JSON retain the old name.
     PlusPlus,
 }
 
@@ -27,7 +31,9 @@ pub enum ProjectFormat {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AttributeStorage {
+    /// Palette and priority are associated with a raw tile through a palette map.
     TilePaletteMap,
+    /// Each tile occurrence stores palette, bank, flips and priority in a companion row.
     BlockOccurrences,
 }
 
@@ -36,11 +42,14 @@ pub enum AttributeStorage {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum MapEncoding {
+    /// One raw block ID per byte.
     Binary,
+    /// Block IDs decoded from supported assembly data directives.
     Assembly,
 }
 
 impl ProjectFormat {
+    /// Attribute ownership implied by this format, independent of map encoding.
     pub fn attribute_storage(self) -> AttributeStorage {
         match self {
             Self::Master => AttributeStorage::TilePaletteMap,
@@ -59,10 +68,15 @@ impl ProjectFormat {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
+/// Reason a file contributes evidence for a storage model.
 pub enum FormatEvidenceKind {
+    /// A format-specific map suffix, such as `.ablk`.
     MapExtension,
+    /// A discovered tile-palette map.
     PaletteMap,
+    /// A discovered block-attribute companion file.
     OccurrenceAttributes,
+    /// A classic `.bst` or assembly `.CEL` blockset.
     LegacyBlockset,
     /// Binary block definitions without an occurrence-attribute companion are
     /// also valid master monochrome data; a palette map is not required.
@@ -70,9 +84,13 @@ pub enum FormatEvidenceKind {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+/// One discovered fact used to select a loader or explain a conflict.
 pub struct FormatEvidence {
+    /// Storage model indicated by this fact.
     pub format: ProjectFormat,
+    /// Why the file indicates that storage model.
     pub kind: FormatEvidenceKind,
+    /// File that supplied the evidence.
     pub path: PathBuf,
 }
 
@@ -87,39 +105,56 @@ pub struct DetectedFormat {
 }
 
 impl DetectedFormat {
+    /// Selected storage model; its contents have not yet been decoded.
     pub fn format(&self) -> ProjectFormat {
         self.format
     }
+    /// How the selected map bytes must be decoded.
     pub fn encoding(&self) -> MapEncoding {
         self.encoding
     }
+    /// Resolved root, dimensions and selected asset context.
     pub fn metadata(&self) -> &MapMetadata {
         &self.metadata
     }
+    /// Facts considered during detection, retained for diagnostics.
     pub fn evidence(&self) -> &[FormatEvidence] {
         &self.evidence
     }
 }
 
 #[derive(Debug, Error)]
+/// Missing, contradictory or unreadable context; no fallback interpretation is applied.
 pub enum FormatDetectionError {
     #[error(transparent)]
+    /// Discovery or file inspection failed.
     Project(#[from] ProjectError),
     #[error("{path}: choose a project folder and tileset to identify this map's attribute storage")]
-    ContextRequired { path: PathBuf },
+    /// No decisive asset evidence; the caller must supply project/tileset context.
+    ContextRequired {
+        /// Map or tileset whose context is insufficient.
+        path: PathBuf,
+    },
     #[error(
         "{path}: metadata identifies different tilesets ({master} and {plusplus}); choose the intended tileset"
     )]
+    /// Supported metadata dialects disagree about the selected tileset.
     ConflictingTilesets {
+        /// Map whose metadata disagrees.
         path: PathBuf,
+        /// Tileset selected by the classic metadata rules.
         master: String,
+        /// Tileset selected by the extended metadata rules.
         plusplus: String,
     },
     #[error(
         "{path}: conflicting master and plusplus asset evidence; check the project folder and selected tileset"
     )]
+    /// The selected files indicate incompatible storage models.
     ConflictingEvidence {
+        /// Map or tileset under inspection.
         path: PathBuf,
+        /// Conflicting facts; retained so callers can explain the ambiguity.
         evidence: Vec<FormatEvidence>,
     },
 }

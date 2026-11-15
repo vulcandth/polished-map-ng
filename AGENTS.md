@@ -113,6 +113,18 @@ exist from day one; a partial slice is not a completed parity milestone.
   allocation. Validate whole commands before modifying state.
 - Keep UI work responsive. Share editing operations between GUI and CLI.
 - Add dependencies deliberately, minimizing features; commit Cargo.lock.
+- Organize implementation by domain and storage semantics, not historical
+  `master`/`plusplus` branches. Shared functionality belongs in shared modules;
+  classic per-tile palettes and attributed occurrences retain distinct codecs
+  and invariants. Preserve externally observed names/values and provenance when
+  renaming internals. Keep the contributor source map current after moves.
+- Keep crate roots navigable and feature responsibilities explicit. Split mixed
+  responsibilities, not files merely because they are long. Prefer ordinary
+  Rust module paths over path overrides or a second parallel source tree.
+- New public APIs need useful rustdoc, checked links and examples where they
+  teach usage; explain error conditions and units/invariants. Do not add filler
+  comments solely to satisfy a lint. Keep strict documentation checks enabled;
+  expand `missing_docs` enforcement as older API documentation is completed.
 
 ## Verification
 

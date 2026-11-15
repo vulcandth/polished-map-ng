@@ -38,7 +38,7 @@ fn check_project(root: &Path, extension: &str, format: ProjectFormat) -> (usize,
                 verify_master_map(root, &path, tileset, copies.path());
             }
             ProjectFormat::PlusPlus => {
-                polished_map_project::plusplus::BlocksetDocument::open_in_project(root, tileset)
+                polished_map_project::attributed::BlocksetDocument::open_in_project(root, tileset)
                     .unwrap();
             }
         }

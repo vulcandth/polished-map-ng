@@ -1,5 +1,5 @@
 use polished_map_core::{Command, Point};
-use polished_map_project::{MapDocument, OpenOptions, ProjectError, plusplus};
+use polished_map_project::{MapDocument, OpenOptions, ProjectError, attributed};
 use std::fs;
 
 #[test]
@@ -38,7 +38,7 @@ fn storage_rebinding_keeps_edits_history_source_hash_and_explicit_save_boundary(
     assert!(classic.map().can_redo());
     let copy = dir.path().join("Copy.ablk");
     attributed
-        .save_as(&plusplus::prepare_save_as(&copy).unwrap())
+        .save_as(&attributed::prepare_save_as(&copy).unwrap())
         .unwrap();
     assert!(!attributed.needs_save_as());
     assert_eq!(fs::read(copy).unwrap(), [9, 1]);
@@ -52,8 +52,8 @@ fn unified_new_map_keeps_union_root_policy_after_save_as() {
     let target = dir.path().join("target");
     fs::create_dir_all(&target).unwrap();
     fs::write(target.join("Makefile"), "").unwrap();
-    let mut doc = plusplus::MapDocument::new_unified_map(dir.path(), 1, 1).unwrap();
-    doc.save_as(&plusplus::prepare_save_as(&target.join("Map.ablk")).unwrap())
+    let mut doc = attributed::MapDocument::new_unified_map(dir.path(), 1, 1).unwrap();
+    doc.save_as(&attributed::prepare_save_as(&target.join("Map.ablk")).unwrap())
         .unwrap();
     assert_eq!(
         doc.metadata().root.as_deref(),

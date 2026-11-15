@@ -1,6 +1,6 @@
 use polished_map_core::{
     Map, Palette, Point, PrintOptions, PrintStyle, Tile, UNDEFINED_COLORS,
-    plusplus::{AttributeBlockset, BankOrder, Graphics, RawTileCommand as C, RawTileset},
+    attributed::{AttributeBlockset, BankOrder, Graphics, RawTileCommand as C, RawTileset},
 };
 
 fn raw() -> RawTileset {
@@ -149,7 +149,7 @@ fn occurrence_palette_bank_flips_roof_and_print_share_a_single_compositor() {
     hues[56] = 3;
     r.apply(&C::Set {
         tile: 256,
-        value: polished_map_core::plusplus::RawTileSnapshot {
+        value: polished_map_core::attributed::RawTileSnapshot {
             pixels: hues.to_vec(),
             defined: true,
         },
@@ -169,7 +169,7 @@ fn occurrence_palette_bank_flips_roof_and_print_share_a_single_compositor() {
         .with_roof(std::array::from_fn(|_| Tile::new([2; 64]).unwrap()));
     let image = g.render_block(0).unwrap();
     for slot in 0..16 {
-        let tile = g.render_tile(polished_map_core::plusplus::TileReference::from_bytes(
+        let tile = g.render_tile(polished_map_core::attributed::TileReference::from_bytes(
             offsets[slot],
             attrs[slot],
         ));

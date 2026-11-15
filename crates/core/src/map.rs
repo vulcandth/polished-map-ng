@@ -5,7 +5,9 @@ use thiserror::Error;
 
 const HISTORY_LIMIT: usize = 100;
 
-/// Coordinates in map blocks, not tiles or event coordinates.
+/// Integer coordinates whose units are defined by the receiving operation.
+/// Map commands use blocks, block commands use tile cells, and pixel-edit
+/// commands use pixels within an 8×8 tile.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Point {
     pub x: u16,

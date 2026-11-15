@@ -47,7 +47,7 @@ format semantics.
   source-reference, visual and real-project jobs established.
   Evidence: [workflow](../.github/workflows/ci.yml).
 
-## Initial-release review — complete
+## Initial-release review
 
 Authorized November 12 on `main`; preserve functionality and deferred aesthetics.
 This preparation does not waive native parity or final release acceptance.
@@ -61,6 +61,11 @@ This preparation does not waive native parity or final release acceptance.
 - [x] **R4:** Five-crate input/persistence review completed; two panics and a
   wrong-row palette write fixed with regressions. CI and packaging passed.
   [Review evidence](compatibility.md#initial-release-review).
+- [x] **R5:** Implementation organized by storage semantics and feature ownership;
+  contributor navigation and checked rustdoc entry points established without
+  changing behavior. Workspace, all-feature GUI lint, rustdoc/examples and link
+  checks passed on Windows; existing native acceptance gates remain open.
+  [Review evidence](compatibility.md#code-organization-and-rustdoc).
 
 ## 1. Master parity — in progress
 
@@ -253,6 +258,8 @@ using the same underlying operations in the meantime.
   inspect/render/edit previews/apply exist; see [CLI guide](cli.md).
 - [ ] **A1:** Define versioned Rust/JSON contracts for inspect, validate, render,
   edit and batch, with stable error codes, schemas and deterministic responses.
+  Complete older core/project item documentation and extend `missing_docs`
+  enforcement, including error contracts and runnable examples for the stabilized API.
 - [ ] **A2:** Make dry-run, explicit apply, input/output hash conflicts and
   recoverable multi-file commits consistent across document types. Finish
   interrupted-journal discovery/replay; current backup/rollback support is partial.

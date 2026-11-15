@@ -61,7 +61,7 @@ impl EventKind {
         }
     }
 
-    /// Master's catalog; plusplus has an explicit catalog in `plusplus::EVENT_KINDS`.
+    /// Master's catalog; plusplus has an explicit catalog in `event_catalog::EVENT_KINDS`.
     pub const ALL: [Self; 22] = [
         Self::Warp,
         Self::Sign,

@@ -3,7 +3,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::Palette;
 
-#[path = "palette_edit.rs"]
 mod edit;
 pub use edit::{ColorSlot, PaletteCommand, PaletteError};
 
