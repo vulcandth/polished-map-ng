@@ -8,7 +8,7 @@ identify published builds; later source/CI artifacts are not automatically relea
 
 | Application | Current published build | Source revision | Tester guide |
 |---|---|---|---|
-| Unified | [November 15](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-unified-2026-11-15-d099e6e) | `d099e6e4107e49ef5fadae8377e42040f85a7c33` | [Unified](testing-unified.md) |
+| Polished Map NG | [November 15](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-15-7b3fd7a) | `7b3fd7a16b3fc46a4d17872d44dda0d72f45ba18` | [Tester guide](testing-unified.md) |
 | Fixed master | [November 7](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-2026-11-07-618aefd) | `618aefd47f29bd6b0025ff3db6d0faf5a1e5c454` | [Master](testing.md) |
 | Fixed plusplus | [November 7](https://github.com/vulcandth/polished-map-ng/releases/tag/dev-plusplus-2026-11-07-618aefd) | `618aefd47f29bd6b0025ff3db6d0faf5a1e5c454` | [Plusplus](testing-plusplus.md) |
 
@@ -17,17 +17,20 @@ and Intel macOS app-bundle ZIPs, plus matching complete source and SHA-256 files
 See [platform prerequisites and verification](testing.md). Older release narratives
 remain in Git history and [GitHub release notes](https://github.com/vulcandth/polished-map-ng/releases).
 
-## Unified development packaging
+<a id="unified-development-packaging"></a>
 
-The published unified build comes from reviewed `main` at `d099e6e`. It includes
-the November 14 menu/Help/naming corrections, cherry-tree desktop icon packaging,
-and macOS clipboard maintenance. Its
-[full CI](https://github.com/vulcandth/polished-map-ng/actions/runs/43734836925)
-and all five [source/platform packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43734836877)
+## Polished Map NG development packaging
+
+The published build comes from reviewed `main` at `7b3fd7a`. It restores the
+original Help with targeted corrections, uses the supplied single-tree icons,
+retains the last-used automatic palette independently of theme, and adopts the
+`polished-map-ng` executable and shorter archive/extraction paths. Its
+[full CI](https://github.com/vulcandth/polished-map-ng/actions/runs/43752273138)
+and all five [source/platform packaging jobs](https://github.com/vulcandth/polished-map-ng/actions/runs/43752273043)
 passed. All four binaries were built offline from the accompanying source archive.
-Source/archive contents, uploaded asset digests, executable architectures, Windows
-icons, macOS bundle metadata/signatures and Linux launcher assets were verified;
-see the [archive audit](#initial-release-archive-audit).
+Source/archive contents, uploaded asset digests, licenses, executable architectures,
+Windows icon frames/extraction paths, macOS bundle metadata/signatures and Linux
+launcher assets were verified. See the [archive audit](#initial-release-archive-audit).
 Human native acceptance remains open, and general aesthetic matching is deferred.
 
 ## Plusplus development packages
@@ -44,7 +47,7 @@ build hosts. This does not close either launcher's native parity gates.
 ## Creating a development package
 
 The [manual workflow](../.github/workflows/development.yml) creates complete source
-and builds all four targets **offline from that archive**. It defaults to unified;
+and builds all four targets **offline from that archive**. It defaults to `ng`;
 explicit `master` and `plusplus` profiles remain supported. The branch name does
 not select a profile. Source and binaries must agree on profile and exact commit.
 BUILD-INFO records toolchain, build host, target, source archive and signing status.
@@ -102,29 +105,29 @@ package policy fixes these issues without removing corresponding source.
 
 The completed [R3 review](roadmap.md#initial-release-review) established the package
 policy. It was reverified for the published November 15 development build at
-`d099e6e4107e49ef5fadae8377e42040f85a7c33`, with the successful CI and packaging
+`7b3fd7a16b3fc46a4d17872d44dda0d72f45ba18`, with the successful CI and packaging
 runs linked above. This is a tester release, not initial-release acceptance.
 
 | Verified target | Files | Dependency notice records | Compressed bytes | Support bytes excluding GUI/CLI executables |
 |---|---:|---:|---:|---:|
-| Windows x86-64 | 454 | 232 | 10,200,425 | 2,635,982 |
-| Linux x86-64 | 585 | 308 | 11,451,551 | 3,210,821 |
-| macOS Apple Silicon | 444 | 229 | 8,662,406 | 2,530,696 |
-| macOS Intel | 444 | 229 | 9,525,788 | 2,530,696 |
+| Windows x86-64 | 454 | 232 | 10,141,612 | 2,636,907 |
+| Linux x86-64 | 585 | 308 | 11,451,351 | 3,211,920 |
+| macOS Apple Silicon | 444 | 229 | 8,599,653 | 2,532,967 |
+| macOS Intel | 444 | 229 | 9,465,953 | 2,532,967 |
 
 Independent inspection checked each archive's SHA-256, BUILD-INFO, selected
 launcher, native executable architecture/modes, explicit content allowlist,
 offline help links, exact curated/dependency license bytes and supplemental
 notice hashes. Test-only notice entries and internal documentation are absent.
 All ten uploaded archives/checksum files match their local SHA-256 digests.
-The packaged Windows CLI inspected a synthetic two-block map, and all five
-embedded icon frames match upstream. Packaging ran each platform's CLI on its
-build host; both macOS jobs verified their ad-hoc signatures. Developer ID
+The packaged Windows CLI inspected a synthetic two-block map, and all seven
+embedded icon frames match the selected artwork. Packaging ran each platform's
+CLI on its build host; both macOS jobs verified their ad-hoc signatures. Developer ID
 signing and native user acceptance remain separate gates. These archive sizes
 measure distribution overhead, not application memory use.
 
-The corresponding source contains 23,250 files (496,376,487 bytes unpacked).
-Its 963 tracked files match the commit exactly; all 460 registry source packages
+The corresponding source contains 23,255 files (496,624,221 bytes unpacked).
+Its 968 tracked files match the commit exactly; all 460 registry source packages
 were checked against their lockfile archive checksums and individual file hashes.
 Generated offline Cargo configuration, BUILD-INFO and the exact copied REBUILD
 instructions account for the additional non-registry files. Complete source,

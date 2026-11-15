@@ -33,8 +33,9 @@ and storage models; explicit metadata and Custom precedence remain tested in
 F9, normal restart and a cached storage switch. Existing settings IDs survive the
 main launcher rename. Packaging tests check short archive roots, source/profile
 identity and a Windows path budget including Explorer's extra extraction folder;
-license contents and inventory paths are retained. These automated checks do not
-close human native acceptance.
+license contents and inventory paths are retained.
+[Required CI and publication checks](releases.md#unified-development-packaging)
+passed for `7b3fd7a`; human native acceptance remains open.
 
 ## November 14 review corrections
 
@@ -62,7 +63,7 @@ shared snapshots use explicit platform metrics rather than host defaults.
 Container/pixel verification does not complete #26's human shell-icon criterion.
 Human DPI and macOS retesting remain in #27–28 and U3/P1; post-release proposals
 and general aesthetic matching remain deferred. These fixes do not complete
-native acceptance. Fresh packages from `d099e6e` passed full CI and the
+native acceptance. Fresh packages from `7b3fd7a` passed full CI and the
 [publication audit](releases.md#unified-development-packaging).
 
 ## Reproducing automated evidence

@@ -71,4 +71,4 @@ expected and observed behavior in a
 [bug report](https://github.com/vulcandth/polished-map-ng/issues). Attach only
 redistributable samples. Aesthetics and original-font matching remain deferred.
 Passing automated tests or launching successfully does not close
-[unified native acceptance](roadmap.md#3-unified-editor--in-progress).
+[native acceptance](roadmap.md#3-unified-editor--in-progress).

@@ -52,17 +52,18 @@ format semantics.
 Authorized November 12 on `main`; preserve functionality and deferred aesthetics.
 This preparation does not waive native parity or final release acceptance.
 
-- [ ] **R7 (in progress):** Retain the last-used automatic palette independently
+- [x] **R7:** Retain the last-used automatic palette independently
   of theme, use Polished Map NG in current product/launcher names, and shorten
   Windows extraction paths. Acceptance: palette/restart and packaging regressions,
-  required CI and four fresh prerelease archives with matching source.
+  required CI and four fresh prerelease archives with matching source passed.
+  [Verification and downloads](releases.md#unified-development-packaging).
 
 - [x] **R6:** Implement the November 14 checkbox/dropdown/menubar, Help
   content/spacing and application naming/icon corrections (#20–26), with focused
   automated checks and asset provenance. The November 15 maintainer correction
   restores the original Help prose with targeted updates and replaces the
   application icon with the two supplied single-tree images. These corrections
-  follow the already [published development packages](releases.md#unified-development-packaging).
+  are included in the [published development packages](releases.md#unified-development-packaging).
   [Review evidence](compatibility.md#november-14-review-corrections).
   Human shell-icon acceptance in [#26](https://github.com/vulcandth/polished-map-ng/issues/26)
   and existing testing #27–28 remain open under U3/P1. Post-release proposals

@@ -51,7 +51,8 @@ are recorded in [compatibility](compatibility.md#native-adapter-evidence).
 
 The editor opens binary maps using project metadata, explicit dimensions,
 or names such as `Map.20x18.johto.blk`. Fixed master discovers the nearest Makefile;
-plusplus/unified also recognize their project markers. Metadata includes supported
+Polished Map NG and the fixed plusplus launcher also recognize their project
+markers. Metadata includes supported
 map constants/headers and numbered tileset aliases. The GUI prefills these
 options for review. Open offers factor-pair sizes from the block count, preferring
 10×9 multiples; filename or metadata dimensions take precedence. Choose the right
