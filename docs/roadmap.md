@@ -282,12 +282,23 @@ duplicate paths as encountered while keeping both compatibility suites running.
   Windows, retaining exact RGB8 edits and RGB5 controls/export. Parity currently
   targets upstream's Windows native chooser and RGB/hex controls on all OSes.
 - [ ] **I3:** Evaluate separately scoped future proposals after parity:
-  remaining themes, all-domain undo, adding/removing events, field-specific event
-  controls, more map zoom levels, movable blocks sidebar, map-connection navigation,
-  update checks, newer project conventions, NPC sprite previews with custom-data
-  fallback, replacement artwork, native macOS menus, searchable collision choices,
-  theme-library assessment and external popup integration. `paletteswap` rectangle
-  previews are explicitly deferred until after the initial release.
+  [remaining themes](https://github.com/vulcandth/polished-map-ng/issues/36),
+  [all-domain undo](https://github.com/vulcandth/polished-map-ng/issues/30),
+  [adding/removing events](https://github.com/vulcandth/polished-map-ng/issues/11),
+  [field-specific event controls](https://github.com/vulcandth/polished-map-ng/issues/31),
+  [more map zoom levels](https://github.com/vulcandth/polished-map-ng/issues/32),
+  [movable blocks sidebar](https://github.com/vulcandth/polished-map-ng/issues/33),
+  [map-connection navigation](https://github.com/vulcandth/polished-map-ng/issues/7),
+  [update checks](https://github.com/vulcandth/polished-map-ng/issues/34),
+  [newer project conventions](https://github.com/vulcandth/polished-map-ng/issues/10),
+  [NPC sprite previews with custom-data fallback](https://github.com/vulcandth/polished-map-ng/issues/35),
+  [replacement artwork](https://github.com/vulcandth/polished-map-ng/issues/26),
+  [native macOS menus](https://github.com/vulcandth/polished-map-ng/issues/38),
+  [searchable collision choices](https://github.com/vulcandth/polished-map-ng/issues/18),
+  [theme-library assessment](https://github.com/vulcandth/polished-map-ng/issues/37)
+  and [external popup integration](https://github.com/vulcandth/polished-map-ng/issues/39).
+  [`paletteswap` rectangle previews](https://github.com/vulcandth/polished-map-ng/issues/40)
+  are explicitly deferred until after the initial release.
   [Unresolved design questions](architecture.md#deferred-proposals),
   [paletteswap scope](architecture.md#paletteswap-preview-after-the-initial-release).
 - [ ] **I4 — Acceptance:** Each chosen change has a stated benefit, appropriate
@@ -303,6 +314,8 @@ and release acceptance follow the preceding objectives.
 - [ ] **P1 (in progress):** Finish native runtime acceptance on Windows, Linux X11/Wayland and
   macOS, including both Mac architectures. Carry forward M6 and plusplus/unified
   results; distinguish compilation, automated native checks and interactive checks.
+  Human review follow-ups: [high/mixed DPI](https://github.com/vulcandth/polished-map-ng/issues/27)
+  and [older Intel/Apple Silicon macOS retesting](https://github.com/vulcandth/polished-map-ng/issues/28).
 - [ ] **P2 (in progress):** Produce Windows x86-64 MSVC ZIP, Linux x86-64 tarball and macOS
   Intel/Apple Silicon app bundles, including the CLI and clean-machine launch checks.
   Development packages are built, verified and published for all four targets;
