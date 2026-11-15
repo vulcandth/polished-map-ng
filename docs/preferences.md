@@ -14,7 +14,7 @@ recent maps and native window state.
 | Grid | On |
 | Rulers, zoom, block IDs, hexadecimal, Game Boy screen | Off |
 | Show Events, Show Warp IDs | On |
-| Selected palette set | Day |
+| Selected palette set | Last used; Day on first launch |
 | Roof Palettes | Morn + Day, Night |
 | Auto-Load Events, Special Palettes and Roof Colors | On |
 | Resize anchor | Center |
@@ -31,15 +31,19 @@ recent maps and native window state.
 
 Saved settings override system theme detection. Choosing a theme manually cancels
 any pending startup lookup; later OS theme changes are not followed automatically.
+Theme changes do not select game palettes. Opening a map with automatic palettes
+keeps the last-used set, including across storage formats and normal restarts.
+Explicit map metadata (such as indoor/night palettes) and special palette imports
+still select their applicable sets.
 
-In unified, a missing palette map makes only the current document monochrome.
+In Polished Map NG, a missing palette map makes only the current document monochrome.
 An explicit Monochrome choice is saved and affects subsequent opens. Fixed master
 retains upstream's persistent missing-palette fallback. The two tile-control
-groups in unified retain their values independently of which format is active.
+groups in Polished Map NG retain their values independently of which format is active.
 
 Auto-load toggles affect subsequent opens, not the current map. Special palettes
 and roof colors have independent toggles; the default project palette import
-still runs. Manual imports remain available. Unified Open/New may infer Roof
+still runs. Manual imports remain available. Open/New may infer Roof
 Palettes or accept an override; it commits the layout only on a successful open.
 The global setting is the fallback when inference is ambiguous.
 
@@ -69,7 +73,7 @@ Substitute the launcher's app ID into these paths:
 
 | Launcher | App ID | JSON storage key |
 |---|---|---|
-| Unified | `polished-map-ng-unified` | `polished-map-ng-unified.preferences` |
+| Polished Map NG | `polished-map-ng-unified` | `polished-map-ng-unified.preferences` |
 | Fixed master | `polished-map-ng` | `polished-map-ng.preferences` |
 | Fixed plusplus | `polished-map-ng-plusplus` | `polished-map-ng-plusplus.preferences` |
 
@@ -80,7 +84,7 @@ Substitute the launcher's app ID into these paths:
 | macOS | `~/Library/Application Support/APP-ID/app.ron` |
 
 To reset settings, close the application and back up or rename its `app.ron`.
-No launcher falls back to another NG launcher's store. **Unified does not import
+No launcher falls back to another NG launcher's store. **Polished Map NG does not import
 original Polished Map preferences.** The legacy import below applies only to the
 fixed parity launchers.
 

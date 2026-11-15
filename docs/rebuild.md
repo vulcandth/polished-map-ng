@@ -1,9 +1,8 @@
 # Rebuild and relink a development package
 
 Every development release includes a complete source archive named in
-`BUILD-INFO.json` (`source_archive`). Plusplus packages use a
-`polished-map-ng-plusplus-dev-` prefix; master packages use `polished-map-ng-dev-`;
-unified packages use `polished-map-ng-unified-dev-`.
+`BUILD-INFO.json` (`source_archive`). Current packages use a
+`polished-map-ng-dev-` prefix; fixed parity packages add `master` or `plusplus`.
 Match its commit to `BUILD-INFO.json` in the binary package and verify the adjacent
 SHA-256 files before extracting. This is complete corresponding source, including
 Cargo.lock, the Rust toolchain pin, modified native dependencies, all registry
@@ -30,19 +29,18 @@ To modify or replace the library, edit `crates/core`, `crates/project` or the
 workspace dependency paths, then repeat the build. Both GUI and CLI are relinked
 with your changes; there are no application-imposed signing keys or installation
 locks. The executable outputs are in `target/release`. For a Mac bundle, replace
-`Polished Map NG.app/Contents/MacOS/polished-map-gui` and apply a local ad-hoc
+`Polished Map NG.app/Contents/MacOS/polished-map-ng` and apply a local ad-hoc
 signature with `codesign --force --sign - "Polished Map NG.app"`.
-For plusplus, replace `Polished Map NG++.app/Contents/MacOS/polished-map-plusplus`
-and sign `Polished Map NG++.app` instead. For unified, replace
-`Polished Map NG Unified.app/Contents/MacOS/polished-map-unified` and sign
-`Polished Map NG Unified.app`. All three launchers are built from the same
+For fixed parity builds, the executable is `polished-map-gui` (master) or
+`Polished Map NG++.app/Contents/MacOS/polished-map-plusplus` (plusplus).
+All three launchers are built from the same
 workspace; choose the one matching the package's `profile` field.
 
 To reproduce release packaging from Git, use a clean checkout of the exact BUILD-INFO commit,
 build with `--target TARGET`, and run
 `python tools/development_package.py binary --target TARGET --profile PROFILE`,
-where PROFILE is `master`, `plusplus` or `unified`.
-New Git packages default to `unified` if `--profile` is omitted. Commit local
+where PROFILE is `ng`, `master` or `plusplus`.
+New Git packages default to `ng` if `--profile` is omitted. Commit local
 changes before packaging so the archive identifies their actual source revision.
 Run `python tools/development_package.py source --profile PROFILE` to regenerate
 the source bundle. Source packaging requires Git metadata. Binary packaging from

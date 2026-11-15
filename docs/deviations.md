@@ -9,6 +9,16 @@ This document records observable differences and approved scope exceptions.
 Current workflows belong in [usage](usage.md), design in [architecture](architecture.md),
 and verification/status in [compatibility](compatibility.md) and the [roadmap](roadmap.md).
 
+## Palette selection and product packaging
+
+At the maintainer's request, Polished Map NG retains the last-used palette for
+automatic maps regardless of theme. Explicit map palettes, indoor metadata and
+special palette imports retain their precedence. The fixed parity launchers keep
+the original theme-based fallback. The main executable is now `polished-map-ng`;
+persisted application IDs and settings keys remain compatible. Development
+archives use short platform names and a short inner directory so Explorer's
+default extraction in Downloads does not duplicate long target/version paths.
+
 ## November 14 review adjustments
 
 Review issues #20–26 authorize bounded interface corrections. Checkbox corners

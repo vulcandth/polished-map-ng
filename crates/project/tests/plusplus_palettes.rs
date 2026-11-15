@@ -303,6 +303,48 @@ fn contextual_palette_order_and_explicit_selection_match_source_rules() {
 }
 
 #[test]
+fn ng_palette_fallback_retains_selection_independently_of_theme() {
+    let dir = tempfile::tempdir().unwrap();
+    for (environment, palette, context) in [
+        ("TOWN", "PALETTE_AUTO", None),
+        ("INDOOR", "PALETTE_AUTO", Some(PaletteSet::Indoor)),
+        ("TOWN", "PALETTE_NITE", Some(PaletteSet::Nite)),
+        ("TOWN", "PALETTE_MORN", Some(PaletteSet::Morn)),
+    ] {
+        let doc = map(dir.path(), environment, palette);
+        for dark_theme in [false, true] {
+            for selected in PaletteSet::ALL {
+                for explicit in [None, Some(PaletteSet::Darkness)] {
+                    let mut plan = MapPalettePlan::for_unified_map(
+                        &doc,
+                        "demo",
+                        &PaletteOptions {
+                            dark_theme,
+                            palette: explicit,
+                            ..Default::default()
+                        },
+                    )
+                    .unwrap();
+                    let mut colors = PaletteDocument::default();
+                    colors.select(selected);
+                    while !plan.is_finished() {
+                        plan.advance(&mut colors, false).unwrap();
+                    }
+                    let expected = explicit.unwrap_or_else(|| {
+                        if selected == PaletteSet::Custom {
+                            selected
+                        } else {
+                            context.unwrap_or(selected)
+                        }
+                    });
+                    assert_eq!(colors.selected(), expected);
+                }
+            }
+        }
+    }
+}
+
+#[test]
 #[ignore = "requires compiled pinned plusplus palette oracle"]
 fn palette_layouts_roofs_and_exports_match_original_functions() {
     let oracle = std::env::var_os("POLISHED_MAP_PLUSPLUS_PALETTE_ORACLE")

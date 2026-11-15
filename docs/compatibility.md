@@ -25,6 +25,17 @@ Remaining original-font and general M4 aesthetic matching are deferred by user
 direction. Functional focus, usable placement, input, clipboard and safe writes
 remain requirements. Human testers own remaining desktop acceptance.
 
+## Palette and packaging review
+
+Polished Map NG's automatic fallback preserves the session palette in both themes
+and storage models; explicit metadata and Custom precedence remain tested in
+`plusplus_palettes` and `unified_sources`. The GUI preference regression covers
+F9, normal restart and a cached storage switch. Existing settings IDs survive the
+main launcher rename. Packaging tests check short archive roots, source/profile
+identity and a Windows path budget including Explorer's extra extraction folder;
+license contents and inventory paths are retained. These automated checks do not
+close human native acceptance.
+
 ## November 14 review corrections
 
 The bounded fixes for review issues #20–26 preserve editing and file formats.

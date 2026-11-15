@@ -16,7 +16,7 @@ fn menubar_labels_have_eight_point_side_padding_and_adjacent_menu_navigation() {
                 } else {
                     egui::Theme::Light
                 })
-                .build_eframe(|cc| Editor::new_unified(cc));
+                .build_eframe(|cc| Editor::new_ng(cc));
             h.run();
             let file = h.get_by_label("File").rect();
             let text_width = h
@@ -46,7 +46,7 @@ fn menubar_labels_have_eight_point_side_padding_and_adjacent_menu_navigation() {
 fn minimum_window_width_keeps_every_menu_reachable() {
     let mut h = Harness::builder()
         .with_size(Vec2::new(335.0, 262.0))
-        .build_eframe(|cc| Editor::new_unified(cc));
+        .build_eframe(|cc| Editor::new_ng(cc));
     h.run();
     let help = h.get_by_label("Help").rect();
     assert!(help.right() <= 335.0, "{help:?}");

@@ -1,6 +1,6 @@
-# Testing unified development builds
+# Testing development builds
 
-The unified application selects editing controls from the opened map and its
+The Polished Map NG application selects editing controls from the opened map and its
 tileset. There is no mode selector. The separate [master](testing.md) and
 [plusplus](testing-plusplus.md) launchers remain available for parity comparisons.
 These are development builds; native acceptance is still open. See
@@ -27,12 +27,12 @@ Include these reported-problem regressions in the checklist:
 
 | Platform | Package suffix | Start the editor |
 |---|---|---|
-| Windows x86-64 | `x86_64-pc-windows-msvc.zip` | `polished-map-unified.exe` |
-| Linux x86-64 | `x86_64-unknown-linux-gnu.tar.gz` | `./polished-map-unified` |
-| macOS Apple Silicon | `aarch64-apple-darwin.zip` | `Polished Map NG Unified.app` |
-| macOS Intel | `x86_64-apple-darwin.zip` | `Polished Map NG Unified.app` |
+| Windows x86-64 | `windows-x64.zip` | `polished-map-ng.exe` |
+| Linux x86-64 | `linux-x64.tar.gz` | `./polished-map-ng` |
+| macOS Apple Silicon | `macos-arm64.zip` | `Polished Map NG.app` |
+| macOS Intel | `macos-x64.zip` | `Polished Map NG.app` |
 
-Check that `BUILD-INFO.json` says `"profile": "unified"` and that its commit
+Check that `BUILD-INFO.json` says `"profile": "ng"` and that its commit
 matches the complete source archive. Platform dependencies, checksum verification
 and unsigned/ad-hoc signing limitations are described in the
 [platform setup guide](testing.md#platform-setup). Packages contain no game projects. The included

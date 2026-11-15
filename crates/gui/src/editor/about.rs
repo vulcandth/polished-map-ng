@@ -72,7 +72,7 @@ impl Default for AboutDialog {
 impl AboutDialog {
     pub(super) fn show(&mut self, ctx: &egui::Context, application: Application) -> bool {
         let plus = application == Application::Parity(documents::Storage::Attributed);
-        let unified = application.is_unified();
+        let unified = application.is_ng();
         let title = if plus {
             "About Polished Map NG++"
         } else {

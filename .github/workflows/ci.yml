@@ -45,7 +45,7 @@ jobs:
         run: cargo test --workspace --locked
       - name: Verify selected Windows executable icons
         if: runner.os == 'Windows'
-        run: python tools/windows_icon_resources.py target/debug/polished-map-gui.exe target/debug/polished-map-plusplus.exe target/debug/polished-map-unified.exe
+        run: python tools/windows_icon_resources.py target/debug/polished-map-gui.exe target/debug/polished-map-plusplus.exe target/debug/polished-map-ng.exe
       - name: Check native settings probe
         run: cargo clippy -p polished-map-gui --all-targets --features native-tests --locked -- -D warnings
       - name: Verify native settings shutdown and restart

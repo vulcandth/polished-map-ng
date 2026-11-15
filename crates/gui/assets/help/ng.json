@@ -271,7 +271,7 @@
         "link": null
       },
       {
-        "text": " Run polished-map-unified and select the File → Open… menu item.",
+        "text": " Run polished-map-ng and select the File → Open… menu item.",
         "bold": false,
         "italic": false,
         "mono": false,
@@ -292,7 +292,7 @@
         "link": null
       },
       {
-        "text": " Run polished-map-unified and click the Open toolbar button.",
+        "text": " Run polished-map-ng and click the Open toolbar button.",
         "bold": false,
         "italic": false,
         "mono": false,
@@ -313,7 +313,7 @@
         "link": null
       },
       {
-        "text": " Run polished-map-unified and press Ctrl+O.",
+        "text": " Run polished-map-ng and press Ctrl+O.",
         "bold": false,
         "italic": false,
         "mono": false,
@@ -334,7 +334,7 @@
         "link": null
       },
       {
-        "text": " On Windows, drag a .blk or .ablk file onto polished-map-unified.exe.",
+        "text": " On Windows, drag a .blk or .ablk file onto polished-map-ng.exe.",
         "bold": false,
         "italic": false,
         "mono": false,
@@ -376,7 +376,7 @@
         "link": null
       },
       {
-        "text": " Pass the .blk filename as an argument to polished-map-unified:\n",
+        "text": " Pass the .blk filename as an argument to polished-map-ng:\n",
         "bold": false,
         "italic": false,
         "mono": false,
@@ -384,7 +384,7 @@
         "link": null
       },
       {
-        "text": "polished-map-unified pokecrystal/maps/SomeMap.blk",
+        "text": "polished-map-ng pokecrystal/maps/SomeMap.blk",
         "bold": false,
         "italic": false,
         "mono": true,
@@ -397,7 +397,7 @@
     "kind": "paragraph",
     "spans": [
       {
-        "text": "The Windows executable is polished-map-unified.exe; on Linux it is polished-map-unified, and on macOS open Polished Map NG.app. For command shortcuts below, use Command instead of Ctrl on macOS; mouse modifiers and the block number-key assignments still use Control.",
+        "text": "The Windows executable is polished-map-ng.exe; on Linux it is polished-map-ng, and on macOS open Polished Map NG.app. For command shortcuts below, use Command instead of Ctrl on macOS; mouse modifiers and the block number-key assignments still use Control.",
         "bold": false,
         "italic": false,
         "mono": false,

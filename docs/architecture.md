@@ -6,7 +6,7 @@ owns verification evidence and [deviations](deviations.md) owns intentional diff
 
 ## Unified application boundary
 
-`polished-map-unified` is the default application on `main`. Application identity
+`polished-map-ng` is the default application on `main`. Application identity
 and settings are independent of document storage. `polished-map-gui` and
 `polished-map-plusplus` remain fixed parity launchers; unified has no mode selector.
 

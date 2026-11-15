@@ -99,7 +99,7 @@ impl Default for HelpWindow {
 
 impl HelpWindow {
     fn title(&self) -> &'static str {
-        if self.application.is_unified() {
+        if self.application.is_ng() {
             TITLE
         } else if self.storage == documents::Storage::Attributed {
             "Polished Map NG++ Help"
@@ -206,7 +206,7 @@ impl HelpWindow {
                     }
                     let result = scroll.show(ui, |ui| {
                         ui.style_mut().interaction.selectable_labels = true;
-                        if !self.application.is_unified() {
+                        if !self.application.is_ng() {
                             ui.label("This compatibility launcher uses a fixed asset format. The main Polished Map NG application supports both formats described below.");
                             ui.add_space(8.0);
                         }

@@ -232,3 +232,40 @@ fn contextual_palette_import_follows_the_selected_graphics_directory() {
         root.join("MAPDATA/attributed.pal")
     );
 }
+
+#[test]
+fn classic_ng_map_open_keeps_last_palette_in_both_themes() {
+    use polished_map_core::PaletteSet;
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    file(root, "gfx/tilesets/demo.CHR", chr(1));
+    file(
+        root,
+        "gfx/tilesets/demo_palette_map.asm",
+        "tilepal 0, GRAY\n",
+    );
+    let path = file(root, "Town.1x1.demo.blk", [0]);
+    let doc =
+        polished_map_project::MapDocument::open_in_project(&path, &Default::default(), Some(root))
+            .unwrap();
+    for dark_theme in [false, true] {
+        for selected in PaletteSet::ALL {
+            let mut colors = polished_map_project::PaletteDocument::default();
+            colors.select(selected);
+            let (mut tiles, mut plan) = MasterTilesetDocument::begin_unified_for_map(
+                &doc,
+                "demo",
+                &MasterGraphicsOptions {
+                    dark_theme,
+                    ..Default::default()
+                },
+                &colors,
+            )
+            .unwrap();
+            while !plan.is_finished() {
+                plan.advance(tiles.palettes_mut(), true).unwrap();
+            }
+            assert_eq!(tiles.palettes().selected(), selected);
+        }
+    }
+}

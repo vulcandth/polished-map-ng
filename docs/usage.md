@@ -1,6 +1,6 @@
 # Editing guide
 
-This guide describes the unified development editor and shared editing workflows.
+This guide describes the development editor and shared editing workflows.
 The separate master and [plusplus editor](#separate-plusplus-editor) retain their
 format-specific behavior, described below. Native acceptance is in progress. Use project copies
 while acceptance testing is incomplete. See the [roadmap](roadmap.md) for the
@@ -25,9 +25,9 @@ the block and tileset editors. Middle dragging pans without selecting or editing
 tiles. Common pixel tools, palette editing, event workflows and save guards are
 shared with master. See the [roadmap](roadmap.md) for remaining acceptance gates.
 
-## Unified development editor
+## Development editor
 
-The `polished-map-unified` launcher uses its own preferences and
+The `polished-map-ng` launcher uses its own preferences and
 automatically follows the selected map and tileset. There is no mode selector.
 It accepts legacy map/graphics sources with the appropriate attribute model;
 missing or conflicting context requires a project folder or tileset choice.
@@ -61,10 +61,10 @@ at 10×9. Headless opens still require explicit dimensions when metadata is abse
 Tileset choices show the project's discovered graphics, including numbered labels
 and compound names. Roof choices start at `(none)`; the control is disabled when
 no roofs exist. Expand Project options and use Browse… to choose a project
-folder and refresh its choices. Unified Project options describes the detected
+folder and refresh its choices. Project options describes the detected
 attribute storage and tile capacity; project names there are examples of the
 format, not a promise about every fork. Roof palettes is also selectable here.
-Unified opens infer its layout from the roof table and group count when
+Map opens infer its layout from the roof table and group count when
 unambiguous. Three-set tables need a recognized ordering comment; otherwise
 check the retained setting. An explicit choice overrides inference for that open,
 and Cancel leaves the active session unchanged. If typing the folder manually, use Reload project

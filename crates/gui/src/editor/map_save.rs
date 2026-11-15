@@ -168,7 +168,7 @@ impl Editor {
         let source = loaded.document.path();
         let name = loaded
             .document
-            .save_path_suggestion(self.application.is_unified());
+            .save_path_suggestion(self.application.is_ng());
         let path = rfd::FileDialog::new()
             .add_filter("Map blocks", loaded.document.save_extensions())
             .set_directory(source.parent().unwrap_or(source))

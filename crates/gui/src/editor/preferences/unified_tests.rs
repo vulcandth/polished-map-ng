@@ -5,7 +5,7 @@ use egui_kittest::Harness;
 fn restore(storage: &dyn Storage) -> Harness<'_, Editor> {
     Harness::builder().build_eframe(|cc| {
         cc.storage = Some(storage);
-        Editor::new_unified(cc)
+        Editor::new_ng(cc)
     })
 }
 
@@ -40,11 +40,38 @@ fn unified_preferences_survive_restart_with_both_capability_sets_and_separate_id
     assert_eq!(storage.get_string(PLUSPLUS_KEY), original_plus);
     assert!(
         storage
-            .get_string(application_key(Application::Unified))
+            .get_string(application_key(Application::Ng))
             .is_some()
     );
     let h = restore(&storage);
     assert_eq!(Preferences::capture(h.state()), expected);
-    assert!(h.state().application.is_unified());
+    assert!(h.state().application.is_ng());
     assert!(h.state().loaded.is_none());
+}
+
+#[test]
+fn last_palette_survives_theme_changes_restart_and_cached_storage_switches() {
+    for selected in PaletteSet::ALL {
+        let mut storage = tests::MemoryStorage::default();
+        let mut h = restore(&storage);
+        h.state_mut().unloaded_palettes.select(selected);
+        h.state_mut().inactive_palettes =
+            Some(polished_map_project::attributed::PaletteDocument::default().into());
+        h.key_press(egui::Key::F9);
+        h.run();
+        assert!(h.state().dark);
+        assert_eq!(h.state().palette_document().selected(), selected);
+        assert_eq!(
+            h.state()
+                .palettes_for_open(documents::Storage::Attributed)
+                .selected(),
+            selected
+        );
+        let mut editor = std::mem::take(h.state_mut());
+        drop(h);
+        eframe::App::save(&mut editor, &mut storage);
+        let h = restore(&storage);
+        assert!(h.state().dark);
+        assert_eq!(h.state().palette_document().selected(), selected);
+    }
 }

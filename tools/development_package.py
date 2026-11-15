@@ -27,13 +27,16 @@ ROOT = Path(__file__).resolve().parents[1]
 PROFILES = {
     "master": ("polished-map-gui", "Polished Map NG", "io.github.vulcandth.polished-map-ng"),
     "plusplus": ("polished-map-plusplus", "Polished Map NG++", "io.github.vulcandth.polished-map-ng.plusplus"),
-    "unified": ("polished-map-unified", "Polished Map NG", "io.github.vulcandth.polished-map-ng.unified"),
+    "ng": ("polished-map-ng", "Polished Map NG", "io.github.vulcandth.polished-map-ng.unified"),
 }
 
 
 def package_profile(requested, source_info):
     # Archives predating profiles were master builds; new packages default to main.
-    inherited = source_info.get("profile", "master" if source_info else "unified")
+    inherited = source_info.get("profile", "master" if source_info else "ng")
+    # Accept the old automation spelling without emitting it in new builds.
+    inherited = "ng" if inherited == "unified" else inherited
+    requested = "ng" if requested == "unified" else requested
     if inherited not in PROFILES:
         raise ValueError(f"Unknown source profile: {inherited}")
     if requested is not None and requested not in PROFILES:
@@ -49,7 +52,26 @@ def profile_suffix(profile):
 
 
 def package_stem(commit, profile):
-    return "polished-map-ng" + profile_suffix(profile) + "-dev-" + commit[:12]
+    suffix = "" if profile == "ng" else "-" + profile
+    return "polished-map-ng" + suffix + "-dev-" + commit[:8]
+
+
+TARGET_NAMES = {
+    "x86_64-pc-windows-msvc": "windows-x64",
+    "x86_64-unknown-linux-gnu": "linux-x64",
+    "aarch64-apple-darwin": "macos-arm64",
+    "x86_64-apple-darwin": "macos-x64",
+}
+
+
+def verify_windows_paths(stage, archive_name):
+    """Allow Explorer's extra ZIP-named folder under a 64-character Downloads path."""
+    for path in stage.rglob("*"):
+        relative = path.relative_to(stage.parent).as_posix()
+        # MAX_PATH includes the trailing NUL. Also leave room for directory creation.
+        length = 64 + 1 + len(archive_name) + 1 + len(relative)
+        if length >= 248:
+            raise ValueError(f"Windows extraction path is too long ({length}): {relative}")
 
 
 def copy_gui(destination, binaries, target, profile, version):
@@ -78,7 +100,7 @@ def copy_gui(destination, binaries, target, profile, version):
             "[Desktop Entry]\nType=Application\nName=" + display_name
             + "\nComment=Map and tileset editor\nExec=" + executable + " %f\n"
             + "Icon=polished-map-ng\nTerminal=false\nCategories=Graphics;Development;\n"
-            + "StartupWMClass=" + {"master": "polished-map-ng", "plusplus": "polished-map-ng-plusplus", "unified": "polished-map-ng-unified"}[profile] + "\n",
+            + "StartupWMClass=" + {"master": "polished-map-ng", "plusplus": "polished-map-ng-plusplus", "ng": "polished-map-ng-unified"}[profile] + "\n",
             encoding="utf-8")
     shutil.copy2(binaries / (executable + suffix), gui)
     return bundle
@@ -149,10 +171,11 @@ def supplemental_notices(root=Path(".")):
     return {(r["name"], r["version"]): r for r in records}
 
 
-def archive_tree(output, root, name, fmt):
+def archive_tree(output, root, name, fmt, archive_name=None):
+    archive_name = archive_name or name
     if fmt != "zip":
-        return Path(shutil.make_archive(str(output / name), fmt, root, name))
-    archive = output / (name + ".zip")
+        return Path(shutil.make_archive(str(output / archive_name), fmt, root, name))
+    archive = output / (archive_name + ".zip")
     # Cargo registry sources use reproducible epoch timestamps, predating ZIP's
     # 1980 limit. Clamp only archive metadata; retain exact license/asset bytes
     # and Unix executable modes (needed when macOS extracts the app bundle).
@@ -208,7 +231,8 @@ def notices(destination, packages):
 
 def common(destination, info):
     copy_documentation(destination, info["commit"])
-    guide = "testing" + profile_suffix(package_profile(None, info)) + ".md"
+    profile = package_profile(None, info)
+    guide = "testing" + ("-unified" if profile == "ng" else profile_suffix(profile)) + ".md"
     # Keep the guide in docs/ so its relative links work offline. The package
     # root provides a short entry point instead of relocating the document.
     (destination / "TESTING.md").write_text(
@@ -222,7 +246,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("kind", choices=["source", "binary"])
     parser.add_argument("--target")
-    parser.add_argument("--profile", choices=PROFILES)
+    parser.add_argument("--profile", choices=[*PROFILES, "unified"])
     parser.add_argument("--output", type=Path, default=Path(".scratch/dist"))
     args = parser.parse_args()
     if args.kind == "binary" and not args.target:
@@ -241,7 +265,8 @@ def main():
             "signing": "ad-hoc only" if args.target and "apple" in args.target else "unsigned"}
     with tempfile.TemporaryDirectory(prefix="polished-map-package-") as temporary:
         root = Path(temporary)
-        name = stem + ("-source" if args.kind == "source" else "-" + args.target)
+        archive_name = stem + ("-source" if args.kind == "source" else "-" + TARGET_NAMES[args.target])
+        name = "polished-map-ng" + ("-source" if args.kind == "source" else "")
         stage = root / name
         stage.mkdir()
         if args.kind == "source":
@@ -274,7 +299,9 @@ def main():
             # Run the shipped CLI, not a separate debug artifact.
             subprocess.run([str(stage / ("polished-map" + suffix)), "--help"], check=True, stdout=subprocess.DEVNULL)
         fmt = "zip" if args.target and ("windows" in args.target or "apple" in args.target) else "gztar"
-        archive = archive_tree(output, root, name, fmt)
+        if args.target and "windows" in args.target:
+            verify_windows_paths(stage, archive_name)
+        archive = archive_tree(output, root, name, fmt, archive_name)
         with archive.open("rb") as file:
             digest = hashlib.file_digest(file, "sha256").hexdigest()
         archive.with_name(archive.name + ".sha256").write_text(f"{digest}  {archive.name}\n", encoding="utf-8")

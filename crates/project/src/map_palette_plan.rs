@@ -15,7 +15,7 @@ enum Step {
         missing_ok: bool,
     },
     Select {
-        automatic: PaletteSet,
+        automatic: Option<PaletteSet>,
         explicit: Option<PaletteSet>,
     },
     Roof {
@@ -104,15 +104,19 @@ impl MapPalettePlan {
             metadata.palette.as_str(),
             "PALETTE_NITE" | "PALETTE_DARK" | "2" | "4"
         ) {
-            PaletteSet::Nite
+            Some(PaletteSet::Nite)
         } else if matches!(metadata.environment.as_str(), "INDOOR" | "GATE" | "3" | "6") {
-            PaletteSet::Indoor
+            Some(PaletteSet::Indoor)
         } else if matches!(metadata.palette.as_str(), "PALETTE_MORN" | "3") {
-            PaletteSet::Morn
+            Some(PaletteSet::Morn)
+        } else if unified {
+            // NG's display theme does not choose the game's time of day.
+            // Retain the session selection, including a special-file import.
+            None
         } else if options.dark_theme && !options.monochrome {
-            PaletteSet::Nite
+            Some(PaletteSet::Nite)
         } else {
-            PaletteSet::Day
+            Some(PaletteSet::Day)
         };
         steps.push_back(Step::Select {
             automatic,
@@ -179,7 +183,7 @@ impl MapPalettePlan {
                     if draft.selected() == PaletteSet::Custom {
                         PaletteSet::Custom
                     } else {
-                        *automatic
+                        automatic.unwrap_or(draft.selected())
                     }
                 }));
             }

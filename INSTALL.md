@@ -1,13 +1,16 @@
 # Building and running Polished Map NG
 
-[Download unified development packages](docs/releases.md#unified-development-packaging)
+[Download development packages](docs/releases.md#unified-development-packaging)
 for compatibility testing; see
 [tester instructions](docs/testing-unified.md) and the [roadmap](docs/roadmap.md).
 The instructions below build the development version from source.
 
 The main application's display name is **Polished Map NG**. Its executable
-remains `polished-map-unified` (`.exe` on Windows), and existing settings and
-shortcuts keep their identifiers. On macOS, new packages contain `Polished Map NG.app`.
+is `polished-map-ng` (`.exe` on Windows). Existing settings are retained;
+update shortcuts that point to the old executable name. On macOS, new packages contain `Polished Map NG.app`.
+
+Packages extract into a short `polished-map-ng` folder. Windows binary packaging
+checks paths with room for Explorer's extra ZIP-named folder in Downloads.
 
 Linux packages also include `polished-map-ng.desktop` and `polished-map-ng.png`
 for optional launcher integration. Before installing the desktop entry under
@@ -48,7 +51,7 @@ From a local checkout of this repository:
 
 ```text
 rustup show
-cargo run -p polished-map-gui --bin polished-map-unified --locked --
+cargo run -p polished-map-gui --bin polished-map-ng --locked --
 cargo run -p polished-map-cli --locked -- --help
 ```
 
@@ -63,9 +66,9 @@ Both parity launchers accept an optional map path after `--`, retain separate
 settings and stay fixed to their respective formats. Their parity acceptance is
 still in progress; master and plusplus tester packages are published separately.
 
-The unified application detects storage from the map and selected tileset, uses
+The Polished Map NG application detects storage from the map and selected tileset, uses
 its own settings, and has no mode selector. Published packages include the
-[unified tester guide](docs/testing-unified.md). Integrated/native acceptance
+[tester guide](docs/testing-unified.md). Integrated/native acceptance
 remains open in the [roadmap](docs/roadmap.md#3-unified-editor--in-progress).
 
 For optimized binaries:
@@ -94,7 +97,7 @@ command. CI also builds public and private documentation with `RUSTDOCFLAGS="-D 
 See [Rust API documentation](CONTRIBUTING.md#rust-api-documentation) for coverage
 and writing conventions.
 
-The GUI package defaults to the unified launcher. License collection and its
+The GUI package defaults to the Polished Map NG launcher. License collection and its
 pinned tools are documented in [dependency checks](docs/dependencies.md#continuous-license-checks).
 
 Additional reference, real-project, visual, native-adapter and license checks are

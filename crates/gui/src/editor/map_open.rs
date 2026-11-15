@@ -18,7 +18,7 @@ impl Editor {
         if let Some(path) = rfd::FileDialog::new()
             .add_filter(
                 "Map blocks",
-                if self.application.is_unified() {
+                if self.application.is_ng() {
                     &["ablk", "blk", "map"]
                 } else if self.storage() == documents::Storage::Attributed {
                     &["ablk", "blk"]
@@ -59,7 +59,7 @@ impl Editor {
     /// The normal dialog validation and adoption guards still apply.
     pub fn prepare_new_in(&mut self, root: PathBuf) {
         let mut form = OpenForm {
-            unified: self.application.is_unified(),
+            unified: self.application.is_ng(),
             roof_layout: Some(self.roof_palette_layout),
             new_map: true,
             storage: self.storage(),
@@ -88,7 +88,7 @@ impl Editor {
             }
         };
         let mut form = OpenForm {
-            unified: self.application.is_unified(),
+            unified: self.application.is_ng(),
             roof_layout: Some(self.roof_palette_layout),
             storage: self.storage(),
             allow_512: self.allow_512,

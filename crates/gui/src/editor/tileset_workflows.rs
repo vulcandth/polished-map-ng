@@ -91,7 +91,7 @@ impl Editor {
         let Some((root, name)) = self.loaded.as_ref().and_then(|l| l.tileset_location()) else {
             return;
         };
-        let choices = if self.application.is_unified() {
+        let choices = if self.application.is_ng() {
             polished_map_project::unified_tileset_choices(root)
         } else {
             self.storage()
@@ -116,7 +116,7 @@ impl Editor {
     }
 
     fn change_loaded_tileset(&mut self, ctx: &egui::Context, name: &str) -> Result<(), String> {
-        if self.application.is_unified() {
+        if self.application.is_ng() {
             let (root, _) = self
                 .loaded
                 .as_ref()
@@ -141,7 +141,7 @@ impl Editor {
                 .map_err(|e| e.to_string())?;
             let graphics = assets.graphics(&assets.palettes);
             let textures = documents::block_textures(ctx, &graphics)?;
-            if self.application.is_unified() {
+            if self.application.is_ng() {
                 loaded
                     .document
                     .select_tileset(name)
@@ -169,7 +169,7 @@ impl Editor {
             .map_err(|e| e.to_string())?
             .into();
         let textures = documents::block_textures(ctx, &graphics)?;
-        if self.application.is_unified() {
+        if self.application.is_ng() {
             loaded
                 .document
                 .select_tileset(name)

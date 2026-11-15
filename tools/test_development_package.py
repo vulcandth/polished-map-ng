@@ -12,7 +12,7 @@ import zipfile
 
 from development_package import (PROFILES, archive_tree, common, copy_gui, notices,
                                  package_profile, package_revision, package_stem, select_packages,
-                                 source_commit, supplemental_notices)
+                                 source_commit, supplemental_notices, verify_windows_paths)
 from package_docs import LINK, USER_DOCS, rewrite_links
 
 COMMIT = "1234567890abcdef1234567890abcdef12345678"
@@ -20,7 +20,9 @@ COMMIT = "1234567890abcdef1234567890abcdef12345678"
 
 class DevelopmentArchiveTests(unittest.TestCase):
     def test_profile_inheritance_and_source_binary_mismatch(self):
-        self.assertEqual(package_profile(None, {}), "unified")
+        self.assertEqual(package_profile(None, {}), "ng")
+        self.assertEqual(package_profile("unified", {}), "ng")
+        self.assertEqual(package_profile(None, {"profile": "unified"}), "ng")
         self.assertEqual(package_profile(None, {"commit": "old"}), "master")
         for profile in PROFILES:
             self.assertEqual(package_profile(profile, {}), profile)
@@ -38,10 +40,27 @@ class DevelopmentArchiveTests(unittest.TestCase):
         commit = "1234567890abcdef"
         names = {package_stem(commit, profile) for profile in PROFILES}
         self.assertEqual(names, {
-            "polished-map-ng-dev-1234567890ab",
-            "polished-map-ng-plusplus-dev-1234567890ab",
-            "polished-map-ng-unified-dev-1234567890ab",
+            "polished-map-ng-master-dev-12345678",
+            "polished-map-ng-plusplus-dev-12345678",
+            "polished-map-ng-dev-12345678",
         })
+
+    def test_short_windows_paths_include_explorer_outer_folder(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            stage = root / "polished-map-ng"
+            path = stage / ("LICENSES/dependency-supplements/rust-dark-light_rust-dark-light/"
+                            "ff54a35edf9ee9665b15a964f5a879f1176c455b/Cargo.toml.orig")
+            path.parent.mkdir(parents=True)
+            path.write_bytes(b"license")
+            name = package_stem(COMMIT, "ng") + "-windows-x64"
+            verify_windows_paths(stage, name)
+            archive = archive_tree(root, root, stage.name, "zip", name)
+            with zipfile.ZipFile(archive) as data:
+                self.assertEqual([i.filename for i in data.infolist() if not i.is_dir()],
+                                 [path.relative_to(root).as_posix()])
+            with self.assertRaisesRegex(ValueError, "too long"):
+                verify_windows_paths(stage, name + "x" * 100)
 
     def test_launchers_and_mac_bundle_identities_are_separate(self):
         for target in ["x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu",
@@ -60,7 +79,7 @@ class DevelopmentArchiveTests(unittest.TestCase):
                 for profile, executable, display in [
                     ("master", "polished-map-gui", "Polished Map NG"),
                     ("plusplus", "polished-map-plusplus", "Polished Map NG++"),
-                    ("unified", "polished-map-unified", "Polished Map NG"),
+                    ("ng", "polished-map-ng", "Polished Map NG"),
                 ]:
                     # Each release profile has its own archive. The main and
                     # historical classic apps now share a display name only.
@@ -98,13 +117,13 @@ class DevelopmentArchiveTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             (root / "polished-map-gui").write_bytes(b"master")
-            for profile in ["plusplus", "unified"]:
+            for profile in ["plusplus", "ng"]:
                 with self.assertRaises(FileNotFoundError):
                     copy_gui(root, root, "x86_64-unknown-linux-gnu", profile, "1.2.3")
 
     def test_binary_tester_entry_points_preserve_offline_guide_links(self):
         for profile, guide in [("master", "testing.md"), ("plusplus", "testing-plusplus.md"),
-                               ("unified", "testing-unified.md")]:
+                               ("ng", "testing-unified.md")]:
             with self.subTest(profile=profile), tempfile.TemporaryDirectory() as temporary:
                 destination = Path(temporary)
                 common(destination, {"development": True, "profile": profile, "commit": COMMIT})

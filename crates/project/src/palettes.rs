@@ -48,7 +48,8 @@ pub struct MasterGraphicsOptions {
     pub allow_priority: bool,
     /// Explicit display set, or automatic selection from metadata.
     pub palette: Option<PaletteSet>,
-    /// Use the dark-theme automatic palette fallback.
+    /// Use the fixed parity launcher's dark-theme automatic palette fallback.
+    /// NG imports retain the current set when metadata does not choose one.
     pub dark_theme: bool,
     /// Render through the monochrome palette instead of game palette attributes.
     pub monochrome: bool,

@@ -100,7 +100,7 @@ fn current_guide_covers_both_storage_models_and_retains_attribution() {
 #[test]
 fn all_launchers_use_current_help_with_stable_window_identities() {
     for application in [
-        Application::Unified,
+        Application::Ng,
         Application::Parity(documents::Storage::Classic),
         Application::Parity(documents::Storage::Attributed),
     ] {
@@ -144,7 +144,7 @@ fn help_geometry_scrolling_links_and_close_without_a_native_window() {
     // Every launcher uses the same current guide; the generator separately
     // preserves and verifies the original manuals as provenance evidence.
     let mut help = HelpWindow {
-        application: Application::Unified,
+        application: Application::Ng,
         ..Default::default()
     };
     help.open();

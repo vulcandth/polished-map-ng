@@ -109,7 +109,8 @@ impl PaletteDocument {
 pub struct PaletteOptions {
     /// Explicit set, or automatic selection from map metadata.
     pub palette: Option<PaletteSet>,
-    /// Use the dark-theme automatic fallback where metadata does not select a set.
+    /// Use the fixed parity launcher's dark-theme automatic fallback.
+    /// NG imports retain the current set when metadata does not choose one.
     pub dark_theme: bool,
     /// Import discovered map/landmark/tileset-specific palette files.
     pub special_palettes: bool,

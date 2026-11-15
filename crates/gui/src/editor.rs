@@ -224,7 +224,7 @@ struct ResizeForm {
 
 /// One editor session: document adapters, drafts, view state and pending work.
 ///
-/// Use [`Self::new_unified`] for automatic project detection. `Default` and
+/// Use [`Self::new_ng`] for automatic project detection. `Default` and
 /// [`Self::new`] retain the fixed classic launcher behavior for existing callers.
 /// Persistent edits go through core/project commands; this type coordinates UI.
 /// Session internals are private so callers cannot bypass draft/save guards.

@@ -127,10 +127,10 @@ impl Editor {
         Self::new_for_storage(cc, documents::Storage::Attributed)
     }
 
-    /// Construct an automatically detected editor using independent unified settings.
+    /// Construct an automatically detected editor using independent NG settings.
     /// A document selects its storage model only after Open/New succeeds.
-    pub fn new_unified(cc: &eframe::CreationContext<'_>) -> Self {
-        Self::new_for_application(cc, Application::Unified)
+    pub fn new_ng(cc: &eframe::CreationContext<'_>) -> Self {
+        Self::new_for_application(cc, Application::Ng)
     }
 
     pub(super) fn new_for_storage(
@@ -158,9 +158,8 @@ impl Editor {
             editor.status =
                 "Open a map to begin. Development build: plusplus parity is incomplete.".into();
         }
-        if application.is_unified() {
-            editor.status =
-                "Open a map to begin. Development build: unified editing is incomplete.".into();
+        if application.is_ng() {
+            editor.status = "Open a map to begin. Polished Map NG development build.".into();
         }
         editor.restore_preferences(cc.storage);
         // Ctrl+= belongs to map zoom and Ctrl+0 to block assignment. Letting

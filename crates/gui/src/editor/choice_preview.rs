@@ -25,7 +25,7 @@ impl Request {
             storage: editor.storage(),
             name: name.map(str::to_owned),
             roof,
-            unified: editor.application.is_unified(),
+            unified: editor.application.is_ng(),
         })
     }
 

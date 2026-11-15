@@ -1,7 +1,7 @@
 //! Native map editor and deterministic egui embedding surface.
 //!
-//! Desktop callers normally use [`NativeStartup::discover_unified`] and
-//! [`NativeStartup::run`]. [`Editor::new_unified`] embeds the same editor in an
+//! Desktop callers normally use [`NativeStartup::discover_ng`] and
+//! [`NativeStartup::run`]. [`Editor::new_ng`] embeds the same editor in an
 //! existing eframe application. The fixed-format constructors remain available
 //! for existing launchers; they share the editor implementation.
 //!

@@ -16,7 +16,7 @@ fn key(storage: documents::Storage) -> &'static str {
 fn application_key(application: Application) -> &'static str {
     match application {
         Application::Parity(storage) => key(storage),
-        Application::Unified => "polished-map-ng-unified.preferences",
+        Application::Ng => "polished-map-ng-unified.preferences",
     }
 }
 const MAX_BYTES: usize = 4 * 1024 * 1024;
@@ -92,10 +92,10 @@ impl Preferences {
             allow_priority: editor.allow_priority,
             monochrome: editor.monochrome_preference(),
             allow_256: editor.allow_256,
-            allow_512: (editor.application.is_unified()
+            allow_512: (editor.application.is_ng()
                 || editor.storage() == documents::Storage::Attributed)
                 .then_some(editor.allow_512),
-            bank0_first: (editor.application.is_unified()
+            bank0_first: (editor.application.is_ng()
                 || editor.storage() == documents::Storage::Attributed)
                 .then_some(
                     editor.bank_order == polished_map_core::attributed::BankOrder::Bank0First,
@@ -127,12 +127,12 @@ impl Preferences {
         editor.event_ui.auto_load = self.auto_events;
         editor.auto_special_palettes = self.auto_special_palettes;
         editor.auto_roof_colors = self.auto_roof_colors;
-        if editor.application.is_unified() || editor.storage() == documents::Storage::Classic {
+        if editor.application.is_ng() || editor.storage() == documents::Storage::Classic {
             editor.allow_priority = self.allow_priority;
             editor.set_monochrome_preference(self.monochrome);
             editor.allow_256 = self.allow_256;
         }
-        if editor.application.is_unified() || editor.storage() == documents::Storage::Attributed {
+        if editor.application.is_ng() || editor.storage() == documents::Storage::Attributed {
             editor.allow_512 = self.allow_512.unwrap_or(false);
             editor.bank_order = if self.bank0_first.unwrap_or(false) {
                 polished_map_core::attributed::BankOrder::Bank0First
@@ -142,7 +142,7 @@ impl Preferences {
         }
         editor.drag_and_drop = self.drag_and_drop;
         editor.overworld_map_size = self.overworld_map_size;
-        if editor.application.is_unified() || editor.storage() == documents::Storage::Classic {
+        if editor.application.is_ng() || editor.storage() == documents::Storage::Classic {
             editor.meta128 = self.meta128;
         }
         editor.show_priority = self.show_priority;

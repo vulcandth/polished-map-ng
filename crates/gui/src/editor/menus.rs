@@ -176,7 +176,7 @@ impl Editor {
                         self.prepare_palettes();
                     }
                 });
-                let unified = self.application.is_unified();
+                let unified = self.application.is_ng();
                 let attributed = self.storage() == documents::Storage::Attributed;
                 let has_context = !unified || self.loaded.is_some();
                 menu_popup::options_menu(ui, unified, self.storage(), |ui| {

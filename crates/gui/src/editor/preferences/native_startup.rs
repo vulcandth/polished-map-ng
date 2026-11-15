@@ -1,5 +1,5 @@
 //! Native launch setup for all applications and optional fixed-launcher migration.
-//! Unified has independent settings and does not import historical preferences.
+//! Polished Map NG has independent settings and does not import historical preferences.
 use super::*;
 use polished_map_project::{
     LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_plusplus_preferences,
@@ -45,11 +45,11 @@ impl NativeStartup {
         Self::discover_storage(documents::Storage::Attributed)
     }
 
-    /// The unified application has independent NG settings. Neither legacy
+    /// Polished Map NG has independent settings. Neither legacy
     /// editor's preferences are silently selected or rewritten on its behalf.
-    pub fn discover_unified() -> Self {
+    pub fn discover_ng() -> Self {
         Self {
-            application: Application::Unified,
+            application: Application::Ng,
             ..Self::default()
         }
     }

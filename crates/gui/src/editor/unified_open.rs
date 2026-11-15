@@ -14,7 +14,7 @@ impl From<polished_map_project::ProjectFormat> for documents::Storage {
 
 impl Editor {
     pub(super) fn open_metadata(&self, path: &Path) -> Result<MapMetadata, ProjectError> {
-        if self.application.is_unified() {
+        if self.application.is_ng() {
             Ok(MapMetadata {
                 root: polished_map_project::find_unified_project_root(path)?,
                 ..Default::default()

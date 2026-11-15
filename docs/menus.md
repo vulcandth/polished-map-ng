@@ -1,6 +1,6 @@
 # Menus and shortcuts
 
-The unified editor and both parity launchers use **File, Data, Edit, View,
+The Polished Map NG editor and both parity launchers use **File, Data, Edit, View,
 Mode, Tools, Options, Help**. Commands are disabled when their required document
 or asset is unavailable. See the [editing guide](usage.md) for workflows and
 [preferences](preferences.md) for defaults and persistence.
@@ -63,7 +63,7 @@ group is disabled; both are disabled before opening a map.
 
 Roof Palettes chooses how later roof-color imports interpret their table:
 Custom; Morn + Day, Night; Morn, Day, Night; Morn + Day, Night, Custom; or
-Morn, Day, Night, Custom. It does not immediately reload colors. Unified Open/New
+Morn, Day, Night, Custom. It does not immediately reload colors. Open/New
 can infer this layout or accept an explicit override under Project options.
 
 Drag and Drop controls internal block/tile/roof/palette transfers (drag swaps,

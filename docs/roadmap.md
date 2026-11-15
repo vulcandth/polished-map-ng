@@ -52,6 +52,11 @@ format semantics.
 Authorized November 12 on `main`; preserve functionality and deferred aesthetics.
 This preparation does not waive native parity or final release acceptance.
 
+- [ ] **R7 (in progress):** Retain the last-used automatic palette independently
+  of theme, use Polished Map NG in current product/launcher names, and shorten
+  Windows extraction paths. Acceptance: palette/restart and packaging regressions,
+  required CI and four fresh prerelease archives with matching source.
+
 - [x] **R6:** Implement the November 14 checkbox/dropdown/menubar, Help
   content/spacing and application naming/icon corrections (#20–26), with focused
   automated checks and asset provenance. The November 15 maintainer correction

@@ -273,7 +273,7 @@ impl Editor {
             }
         };
         if let Some(path) = path {
-            match if self.application.is_unified() {
+            match if self.application.is_ng() {
                 loaded.document.open_unified_events(&path)
             } else {
                 loaded.document.open_events(&path)
