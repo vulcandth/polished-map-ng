@@ -96,6 +96,9 @@ missing clarified license texts.
 Workflow actions are pinned to reviewed Node.js 24 releases by full commit hash.
 CI downloads its uploaded license report and compares both files byte-for-byte;
 artifact digest mismatches fail both CI and development source downloads.
+All eight jobs in the [maintenance verification](https://github.com/vulcandth/polished-map-ng/actions/runs/43672932248)
+passed, including the two-architecture binding checks and artifact comparison. This updates
+future workflows; the November 14 tester archives retain their exact source revision.
 
 [about.toml](../about.toml) includes checksummed clarifications for workspace
 LGPL terms and non-Cargo components: Fugue CC BY 3.0 icons, the OFL fallback font,
