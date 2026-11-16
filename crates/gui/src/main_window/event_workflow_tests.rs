@@ -648,7 +648,7 @@ fn real_new_bark_town_auto_events_edit_and_save_on_temporary_script() {
     assert!(h.state().loading.is_none());
     assert!(h.state().error.is_none(), "{:?}", h.state().error);
     let loaded = h.state().loaded.as_ref().unwrap();
-    let expected = polished_map_project::EventDocument::open(&path).unwrap();
+    let expected = polished_map_core::EventDocument::open(&path).unwrap();
     assert_eq!(
         loaded.events.as_ref().unwrap().script().events(),
         expected.script().events()
@@ -674,7 +674,7 @@ fn real_new_bark_town_auto_events_edit_and_save_on_temporary_script() {
     assert!(h.state().error.is_none());
     assert!(!h.state().is_modified());
     assert_eq!(
-        polished_map_project::EventDocument::open(&copy)
+        polished_map_core::EventDocument::open(&copy)
             .unwrap()
             .script()
             .events()

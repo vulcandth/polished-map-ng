@@ -106,10 +106,14 @@ exist from day one; a partial slice is not a completed parity milestone.
 
 ## Architecture and Rust
 
-- `core` owns validated models, edit commands, history, and CPU rendering;
-  `project` owns discovery/codecs/persistence; GUI and CLI consume both.
-- No egui, filesystem operations, global mutable configuration, or GPU dependency
-  in core. Headless operations must not require a window or display server.
+- `core` is the shared headless backend: validated models, edit commands, history,
+  discovery/codecs/guarded persistence, fonts and CPU rendering. GUI and CLI
+  consume it; there is no separate project crate (maintainer direction, November 16).
+- Keep model/edit operations separate from explicit file I/O within each domain.
+  No egui, global mutable configuration, native window or GPU dependency in core.
+  Headless operations must not require a window or display server.
+- Keep platform separate from GUI for now. Core is not published to crates.io;
+  crate consolidation does not authorize changes to file formats or behavior.
 - Use private invariant-bearing fields, checked conversions, typed errors,
   `Path`/`PathBuf`, idiomatic ownership, and Rust API Guidelines naming.
 - Forbid unsafe in core; platform interop must be narrowly isolated and justified.

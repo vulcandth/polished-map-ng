@@ -364,7 +364,7 @@ fn plusplus_automatic_events_and_warp_paths_follow_the_owning_document() {
             .0
             .is_none()
     );
-    let classic: MapDocument = polished_map_project::MapDocument::open(
+    let classic: MapDocument = polished_map_core::MapDocument::open(
         &dir.path().join("Map.2x1.blk"),
         &OpenOptions::default(),
     )

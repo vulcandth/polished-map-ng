@@ -3,7 +3,7 @@
 //! shared editor controls call the existing project documents for persistence.
 use super::*;
 use polished_map_core::attributed::BankOrder;
-use polished_map_project::{ProjectError, attributed};
+use polished_map_core::{ProjectError, attributed};
 
 #[cfg(test)]
 mod switching_tests;

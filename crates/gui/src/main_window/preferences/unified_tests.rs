@@ -30,7 +30,7 @@ fn unified_preferences_survive_restart_with_both_capability_sets_and_separate_id
     editor.recent_maps.remember("master.blk".into());
     editor.recent_maps.remember("plus.ablk".into());
     // Saving while plusplus is active must still use the unified app's key.
-    editor.unloaded_palettes = polished_map_project::attributed::PaletteDocument::default().into();
+    editor.unloaded_palettes = polished_map_core::attributed::PaletteDocument::default().into();
     assert!(editor.storage() == documents::Storage::Attributed);
     let expected = Preferences::capture(editor);
     let mut editor = std::mem::take(h.state_mut());
@@ -56,7 +56,7 @@ fn last_palette_survives_theme_changes_restart_and_cached_storage_switches() {
         let mut h = restore(&storage);
         h.state_mut().unloaded_palettes.select(selected);
         h.state_mut().inactive_palettes =
-            Some(polished_map_project::attributed::PaletteDocument::default().into());
+            Some(polished_map_core::attributed::PaletteDocument::default().into());
         h.key_press(egui::Key::F9);
         h.run();
         assert!(h.state().dark);

@@ -171,10 +171,10 @@ fn basename(path: &std::path::Path) -> String {
 mod tests {
     use super::*;
     use egui_kittest::kittest::Queryable;
+    use polished_map_core::EventDocument;
     use polished_map_core::{
         BlockCommand, ColorSlot, EventCommand, PaletteCommand, PaletteSet, TileCommand,
     };
-    use polished_map_project::EventDocument;
     use std::{fs, path::Path};
 
     fn dirty(editor: &mut Editor, root: &Path, domain: &str) {

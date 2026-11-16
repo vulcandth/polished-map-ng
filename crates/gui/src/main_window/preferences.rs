@@ -2,7 +2,7 @@
 //! LGPL-3.0-only. eframe owns platform storage and native window placement.
 use super::*;
 use polished_map_core::PaletteSet;
-use polished_map_project::RoofPaletteLayout;
+use polished_map_core::RoofPaletteLayout;
 use serde::{Deserialize, Serialize};
 
 const KEY: &str = "polished-map-ng.preferences";

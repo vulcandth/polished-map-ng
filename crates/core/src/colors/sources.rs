@@ -1,0 +1,200 @@
+//! Master project palette-file precedence and metadata selection from config.cpp,
+//! colors.cpp and Main_Window::open_map.
+use std::path::{Path, PathBuf};
+
+use crate::{Palette, PaletteBank, PaletteSet};
+
+use crate::{MapDocument, ProjectError, read_bounded};
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+/// Time/environment set ordering for each map group’s roof-color pairs.
+pub enum RoofPaletteLayout {
+    /// One custom pair.
+    Custom,
+    #[default]
+    /// Day and night pairs; morning reuses day.
+    DayNite,
+    /// Separate morning, day and night pairs.
+    MornDayNite,
+    /// Day, night and custom pairs; morning reuses day.
+    DayNiteCustom,
+    /// Separate morning, day, night and custom pairs.
+    MornDayNiteCustom,
+}
+
+/// Config::roofs_pal_path: prefer the modern table, otherwise return the legacy
+/// path (including when absent, so an explicit load reports the missing file).
+pub fn roof_palette_path(root: &Path) -> PathBuf {
+    let modern = root.join("gfx/tilesets/roofs.pal");
+    if modern.is_file() {
+        modern
+    } else {
+        root.join("tilesets/roof.pal")
+    }
+}
+
+#[derive(Clone, Debug)]
+/// Classic per-tile palette loading and rendering options.
+///
+/// The historical public type name is retained; unified editing also uses
+/// these options when the selected assets have per-tile palettes.
+pub struct MasterGraphicsOptions {
+    /// PNG alpha handling; defaults to the host's original-platform behavior.
+    pub png_platform: crate::PngPlatform,
+    /// Use all tile slots instead of reserved classic bank gaps.
+    pub allow_256: bool,
+    /// Session Tile Priority option; reading priority palette colors enables it too.
+    pub allow_priority: bool,
+    /// Explicit display set, or automatic selection from metadata.
+    pub palette: Option<PaletteSet>,
+    /// Use the fixed parity launcher's dark-theme automatic palette fallback.
+    /// NG imports retain the current set when metadata does not choose one.
+    pub dark_theme: bool,
+    /// Render through the monochrome palette instead of game palette attributes.
+    pub monochrome: bool,
+    /// Import discovered map/landmark/tileset-specific palette files.
+    pub special_palettes: bool,
+    /// Load map-group roof colors after base palette imports.
+    pub roof_colors: bool,
+    /// Set ordering in the roof-color table.
+    pub roof_layout: RoofPaletteLayout,
+    /// Optional graphic replacement from gfx/tilesets/roofs (nine tiles).
+    pub roof: Option<String>,
+}
+
+impl Default for MasterGraphicsOptions {
+    fn default() -> Self {
+        Self {
+            png_platform: crate::PngPlatform::default(),
+            allow_256: false,
+            allow_priority: false,
+            palette: None,
+            dark_theme: false,
+            monochrome: false,
+            special_palettes: true,
+            roof_colors: true,
+            roof_layout: RoofPaletteLayout::DayNite,
+            roof: None,
+        }
+    }
+}
+
+/// RGB macros store WHITE,LIGHT,DARK,BLACK. Return expanded colors in that order.
+/// Reject partial triples and out-of-range five-bit channels without guessing.
+pub fn parse_rgb_colors(text: &str) -> Result<Vec<[u8; 3]>, String> {
+    let mut values = Vec::new();
+    for (line_number, line) in text.lines().enumerate() {
+        if !line.starts_with([' ', '\t']) {
+            continue;
+        }
+        let line = line.split(';').next().unwrap_or("").trim();
+        let Some(rest) = line
+            .strip_prefix("RGB")
+            .filter(|s| s.starts_with(char::is_whitespace))
+        else {
+            continue;
+        };
+        for token in rest.trim().split(',') {
+            let value = token
+                .trim()
+                .parse::<u8>()
+                .ok()
+                .filter(|&v| v <= 31)
+                .ok_or_else(|| {
+                    format!(
+                        "invalid five-bit RGB channel on line {}: {}",
+                        line_number + 1,
+                        token.trim()
+                    )
+                })?;
+            values.push((u16::from(value) * 33 / 4) as u8);
+        }
+    }
+    let (colors, trailing) = values.as_chunks::<3>();
+    if !trailing.is_empty() {
+        return Err("incomplete RGB triple".into());
+    }
+    Ok(colors.to_vec())
+}
+
+/// Parse RGB5 assembly macros into RGB8 palettes in white/dark/light/black order.
+///
+/// # Errors
+/// Returns a diagnostic for invalid channels, partial triples, or incomplete
+/// four-color palettes. Unrecognized source lines are ignored.
+pub fn parse_rgb_palettes(text: &str) -> Result<Vec<Palette>, String> {
+    let colors = parse_rgb_colors(text)?;
+    let (palettes, trailing) = colors.as_chunks::<4>();
+    if !trailing.is_empty() {
+        return Err("incomplete four-color palette".into());
+    }
+    Ok(palettes.iter().map(|p| [p[0], p[2], p[1], p[3]]).collect())
+}
+
+fn text(path: &Path) -> Result<String, ProjectError> {
+    String::from_utf8(read_bounded(path, 4 * 1024 * 1024)?).map_err(|e| ProjectError::Format {
+        path: path.into(),
+        message: e.to_string(),
+    })
+}
+
+pub(crate) fn map_palette_bank(
+    doc: &MapDocument,
+    tileset: &str,
+    options: &MasterGraphicsOptions,
+) -> Result<(PaletteBank, PaletteSet), ProjectError> {
+    let mut palettes = crate::PaletteDocument::default();
+    let mut plan = crate::MapPalettePlan::for_map(doc, tileset, options)?;
+    while !plan.is_finished() {
+        // Preserve deterministic headless behavior: absent optional roof colors
+        // are ignored; existing malformed files are still errors.
+        let load =
+            !(plan.next_is_roof_colors() && plan.next_import_path().is_some_and(|p| !p.is_file()));
+        plan.advance(&mut palettes, load)?;
+    }
+    Ok((palettes.bank().clone(), palettes.selected()))
+}
+
+pub(crate) fn apply_roofs(
+    bank: &mut PaletteBank,
+    path: &Path,
+    group: usize,
+    layout: RoofPaletteLayout,
+) -> Result<(), ProjectError> {
+    use PaletteSet::*;
+    let sets: &[PaletteSet] = match layout {
+        RoofPaletteLayout::Custom => &[Custom],
+        RoofPaletteLayout::DayNite => &[Day, Nite],
+        RoofPaletteLayout::MornDayNite => &[Morn, Day, Nite],
+        RoofPaletteLayout::DayNiteCustom => &[Day, Nite, Custom],
+        RoofPaletteLayout::MornDayNiteCustom => &[Morn, Day, Nite, Custom],
+    };
+    let colors = parse_rgb_colors(&text(path)?).map_err(|message| ProjectError::Format {
+        path: path.into(),
+        message,
+    })?;
+    let start = group
+        .checked_mul(sets.len() * 2)
+        .ok_or_else(|| ProjectError::Format {
+            path: path.into(),
+            message: "roof palette index overflow".into(),
+        })?;
+    let colors = colors
+        .get(start..)
+        .and_then(|s| s.get(..sets.len() * 2))
+        .ok_or_else(|| ProjectError::Format {
+            path: path.into(),
+            message: format!("no roof colors for map group {group}"),
+        })?;
+    for (i, &set) in sets.iter().enumerate() {
+        bank.set_roof(set, colors[2 * i], colors[2 * i + 1]);
+    }
+    if matches!(
+        layout,
+        RoofPaletteLayout::DayNite | RoofPaletteLayout::DayNiteCustom
+    ) {
+        bank.set_roof(Morn, colors[0], colors[1]);
+    }
+    Ok(())
+}

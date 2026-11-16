@@ -1,6 +1,6 @@
 //! Native font installation and source font-role mapping. LGPL-3.0-only.
 use super::*;
-use polished_map_project::{FontPlatform, NativeFontFace, NativeFonts};
+use polished_map_core::{FontPlatform, NativeFontFace, NativeFonts};
 use std::sync::Arc;
 
 const MONO_BOLD: &str = "Reference Courier Bold";

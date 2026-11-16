@@ -33,11 +33,11 @@ impl Request {
         self.read().map_err(|error| error.to_string())
     }
 
-    fn read(&self) -> Result<egui::ColorImage, polished_map_project::ProjectError> {
+    fn read(&self) -> Result<egui::ColorImage, polished_map_core::ProjectError> {
         let name = self.name.as_deref().expect("named preview request");
         let storage = if self.unified && !self.roof {
-            polished_map_project::detect_tileset_format(&self.root, name)
-                .map_err(|e| polished_map_project::ProjectError::Format {
+            polished_map_core::detect_tileset_format(&self.root, name)
+                .map_err(|e| polished_map_core::ProjectError::Format {
                     path: self.root.join(name),
                     message: e.to_string(),
                 })?
@@ -48,9 +48,9 @@ impl Request {
         let tiles = match (storage, self.roof) {
             (documents::Storage::Classic, true) => {
                 let open = if self.unified {
-                    polished_map_project::RoofDocument::open_unified_in_project
+                    polished_map_core::RoofDocument::open_unified_in_project
                 } else {
-                    polished_map_project::RoofDocument::open_in_project_with_png_platform
+                    polished_map_core::RoofDocument::open_in_project_with_png_platform
                 };
                 open(&self.root, name, [0; 9], Default::default())?
                     .roof()
@@ -60,9 +60,9 @@ impl Request {
             }
             (documents::Storage::Attributed, true) => {
                 let open = if self.unified {
-                    polished_map_project::attributed::RoofDocument::open_unified_in_project
+                    polished_map_core::attributed::RoofDocument::open_unified_in_project
                 } else {
-                    polished_map_project::attributed::RoofDocument::open_in_project
+                    polished_map_core::attributed::RoofDocument::open_in_project
                 };
                 open(&self.root, name, Default::default())?.tiles().to_vec()
             }
@@ -87,9 +87,9 @@ impl Request {
             }
             (documents::Storage::Attributed, false) => {
                 let open = if self.unified {
-                    polished_map_project::attributed::TilesetDocument::open_unified_in_project
+                    polished_map_core::attributed::TilesetDocument::open_unified_in_project
                 } else {
-                    polished_map_project::attributed::TilesetDocument::open_in_project
+                    polished_map_core::attributed::TilesetDocument::open_in_project
                 };
                 open(&self.root, name, Default::default())?
                     .model()

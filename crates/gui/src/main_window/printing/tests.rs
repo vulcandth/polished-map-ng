@@ -316,7 +316,7 @@ fn copy_and_png_capture_unsaved_map_palettes_events_and_print_flags() {
         PrintOutput::Exported(_)
     ));
     let expected_path = dir.path().join("expected.png");
-    polished_map_project::write_new_png(&expected_path, &expected).unwrap();
+    polished_map_core::write_new_png(&expected_path, &expected).unwrap();
     assert_eq!(
         fs::read(target.path()).unwrap(),
         fs::read(expected_path).unwrap()

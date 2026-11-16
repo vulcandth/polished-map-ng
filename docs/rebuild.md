@@ -25,7 +25,7 @@ the root Cargo patches still select the modified `vendor/` native adapters.
 Do not substitute unmodified crates for those patches. The normal repository
 checkout instead downloads the exact dependencies in Cargo.lock.
 
-To modify or replace the library, edit `crates/core`, `crates/project` or the
+To modify or replace the library, edit `crates/core` or the
 workspace dependency paths, then repeat the build. Both GUI and CLI are relinked
 with your changes; there are no application-imposed signing keys or installation
 locks. The executable outputs are in `target/release`. For a Mac bundle, replace

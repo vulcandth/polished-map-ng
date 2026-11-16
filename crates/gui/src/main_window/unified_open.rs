@@ -1,13 +1,13 @@
 //! Automatic Open/New context, separate from the two immutable parity launchers.
 use super::*;
-use polished_map_project::{FormatDetectionError, MapMetadata, ProjectError, detect_map_format};
+use polished_map_core::{FormatDetectionError, MapMetadata, ProjectError, detect_map_format};
 use std::path::Path;
 
-impl From<polished_map_project::ProjectFormat> for documents::Storage {
-    fn from(format: polished_map_project::ProjectFormat) -> Self {
+impl From<polished_map_core::ProjectFormat> for documents::Storage {
+    fn from(format: polished_map_core::ProjectFormat) -> Self {
         match format {
-            polished_map_project::ProjectFormat::Master => Self::Classic,
-            polished_map_project::ProjectFormat::PlusPlus => Self::Attributed,
+            polished_map_core::ProjectFormat::Master => Self::Classic,
+            polished_map_core::ProjectFormat::PlusPlus => Self::Attributed,
         }
     }
 }
@@ -16,7 +16,7 @@ impl Editor {
     pub(super) fn open_metadata(&self, path: &Path) -> Result<MapMetadata, ProjectError> {
         if self.application.is_ng() {
             Ok(MapMetadata {
-                root: polished_map_project::find_unified_project_root(path)?,
+                root: polished_map_core::find_unified_project_root(path)?,
                 ..Default::default()
             })
         } else {
@@ -37,14 +37,14 @@ impl OpenForm {
 
     pub(super) fn refresh_unified_choices(&mut self) -> Result<(), ProjectError> {
         let root = Path::new(&self.root);
-        let choices = polished_map_project::unified_tileset_choices(root)?;
+        let choices = polished_map_core::unified_tileset_choices(root)?;
         let metadata = if self.new_map {
             None
         } else {
             match detect_map_format(&self.path, Some(root), None) {
                 Ok(detected) => Some(detected.metadata().clone()),
                 Err(FormatDetectionError::Project(error)) => return Err(error),
-                Err(_) => Some(polished_map_project::discover_unified_map(
+                Err(_) => Some(polished_map_core::discover_unified_map(
                     &self.path,
                     Some(root),
                 )?),
@@ -62,16 +62,16 @@ impl OpenForm {
             })
             .unwrap_or_default();
         self.tilesets = choices;
-        self.roofs = polished_map_project::list_roofs(root)?;
+        self.roofs = polished_map_core::list_roofs(root)?;
         self.roof.clear();
         self.sizes = metadata
-            .map(|m| polished_map_project::inspect_map_sizes(&self.path, m.dimensions))
+            .map(|m| polished_map_core::inspect_map_sizes(&self.path, m.dimensions))
             .transpose()?;
         if let Some(sizes) = &self.sizes {
             (self.width, self.height) = sizes.dimensions();
         }
         self.choices_root = self.root.clone();
-        match polished_map_project::infer_roof_palette_layout(root) {
+        match polished_map_core::infer_roof_palette_layout(root) {
             Ok(Some(layout)) => {
                 self.roof_layout = Some(layout);
                 self.roof_layout_note =
@@ -106,7 +106,7 @@ impl OpenForm {
                     }
                     documents::Storage::Classic
                         if detected.evidence().iter().any(|e| {
-                            e.kind == polished_map_project::FormatEvidenceKind::PaletteMap
+                            e.kind == polished_map_core::FormatEvidenceKind::PaletteMap
                         }) =>
                     {
                         "Tile palette map · 256-tile capacity (pokecrystal style)"

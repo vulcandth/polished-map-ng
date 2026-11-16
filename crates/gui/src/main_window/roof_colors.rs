@@ -1,7 +1,7 @@
 //! master Main_Window::{load_roof_colors,load_roof_colors_cb,roof_*_cb}.
 //! LGPL-3.0-only. Manual imports deliberately omit the automatic outside/mono guard.
 use super::*;
-use polished_map_project::{RoofPaletteLayout, roof_palette_path};
+use polished_map_core::{RoofPaletteLayout, roof_palette_path};
 
 pub(super) const LAYOUTS: [(RoofPaletteLayout, &str); 5] = [
     (RoofPaletteLayout::Custom, "Custom"),

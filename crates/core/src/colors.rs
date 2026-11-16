@@ -193,3 +193,12 @@ const DEFAULT_COLORS: [[[[u8; 3]; 4]; 9]; 6] = [
         [[31, 31, 31], [10, 10, 10], [20, 20, 20], [0, 0, 0]],
     ],
 ];
+
+mod document;
+mod sources;
+pub use document::{PaletteDocument, prepare_palette_export};
+pub use sources::{
+    MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,
+    roof_palette_path,
+};
+pub(crate) use sources::{apply_roofs, map_palette_bank};

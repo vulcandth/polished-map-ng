@@ -2,12 +2,12 @@
 //! Pinned palette-window.cpp/colors.cpp; LGPL-3.0-only. No ninth palette is
 //! exposed by the plusplus adapter and commands keep backend validation.
 use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
-use polished_map_project::{ProjectError, RoofPaletteLayout, SaveTarget, attributed};
+use polished_map_core::{ProjectError, RoofPaletteLayout, SaveTarget, attributed};
 use std::path::Path;
 
 #[derive(Clone, Debug)]
 pub(crate) enum PaletteDocument {
-    Classic(polished_map_project::PaletteDocument),
+    Classic(polished_map_core::PaletteDocument),
     Attributed(attributed::PaletteDocument),
 }
 impl Default for PaletteDocument {
@@ -15,8 +15,8 @@ impl Default for PaletteDocument {
         Self::Classic(Default::default())
     }
 }
-impl From<polished_map_project::PaletteDocument> for PaletteDocument {
-    fn from(d: polished_map_project::PaletteDocument) -> Self {
+impl From<polished_map_core::PaletteDocument> for PaletteDocument {
+    fn from(d: polished_map_core::PaletteDocument) -> Self {
         Self::Classic(d)
     }
 }
@@ -28,7 +28,7 @@ impl From<attributed::PaletteDocument> for PaletteDocument {
 
 #[derive(Clone, Copy)]
 pub(crate) enum PaletteRef<'a> {
-    Classic(&'a polished_map_project::PaletteDocument),
+    Classic(&'a polished_map_core::PaletteDocument),
     Attributed(&'a attributed::PaletteDocument),
 }
 impl PaletteRef<'_> {

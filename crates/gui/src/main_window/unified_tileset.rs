@@ -33,7 +33,7 @@ impl Editor {
             ..Default::default()
         };
         let mut warnings = Vec::new();
-        let prepared = || -> Result<_, polished_map_project::ProjectError> {
+        let prepared = || -> Result<_, polished_map_core::ProjectError> {
             match (&document, palettes) {
                 (
                     documents::MapDocument::Classic(doc),
@@ -62,10 +62,10 @@ impl Editor {
                 ) => {
                     if initialize_palettes {
                         let mut plan =
-                            polished_map_project::attributed::MapPalettePlan::for_unified_map(
+                            polished_map_core::attributed::MapPalettePlan::for_unified_map(
                                 doc,
                                 name,
-                                &polished_map_project::attributed::PaletteOptions {
+                                &polished_map_core::attributed::PaletteOptions {
                                     dark_theme: options.dark_theme,
                                     special_palettes: options.special_palettes,
                                     roof_colors: options.roof_colors,
@@ -93,7 +93,7 @@ impl Editor {
                     )?;
                     Ok((assets.graphics(&assets.palettes), None, None, Some(assets)))
                 }
-                _ => Err(polished_map_project::ProjectError::Format {
+                _ => Err(polished_map_core::ProjectError::Format {
                     path: root.clone(),
                     message: "Map and palette storage do not match".into(),
                 }),

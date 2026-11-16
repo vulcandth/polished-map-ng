@@ -3,8 +3,8 @@ use egui_kittest::{
     Harness,
     kittest::{NodeT, Queryable},
 };
+use polished_map_core::prepare_palette_export;
 use polished_map_core::{ColorSlot, PaletteSet};
-use polished_map_project::prepare_palette_export;
 use std::fs;
 
 fn open(h: &mut Harness<'_, Editor>) {

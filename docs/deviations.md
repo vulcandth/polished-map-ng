@@ -45,7 +45,7 @@ could truncate an existing file and then panic inside the image encoder. It now
 returns a format error and leaves the destination untouched. Valid PNG bytes
 and large-image support are unchanged; this compatibility writer still replaces
 files directly. Use the guarded PNG export APIs for staged publication.
-Evidence: [PNG export regressions](../crates/project/tests/png_export.rs).
+Evidence: [PNG export regressions](../crates/core/tests/png_export.rs).
 
 Palette-map saves ignore commas inside comments when identifying `tilepal`
 rows, consistently with the decoder. A line such as `tilepal ; unused, RED`

@@ -2,9 +2,9 @@
 //! LGPL-3.0-only; adapted from the pinned Main_Window/map-events implementations.
 //! The owning document fixes its parsing and persistence rules. Application
 //! identity belongs to `application`; an uncommitted picker cannot change storage.
+pub(super) use polished_map_core::EventDocument;
 use polished_map_core::Map;
-pub(super) use polished_map_project::EventDocument;
-use polished_map_project::{MapMetadata, ProjectError, attributed};
+use polished_map_core::{MapMetadata, ProjectError, attributed};
 use std::path::{Path, PathBuf};
 
 mod graphics;
@@ -42,7 +42,7 @@ impl Storage {
         root: Option<&Path>,
     ) -> Result<MapMetadata, ProjectError> {
         match self {
-            Self::Classic => polished_map_project::discover_map(path, root),
+            Self::Classic => polished_map_core::discover_map(path, root),
             Self::Attributed => attributed::discover_map(path, root),
         }
     }
@@ -50,15 +50,15 @@ impl Storage {
         self,
         root: &Path,
         hint: Option<&str>,
-    ) -> Result<polished_map_project::TilesetOptions, ProjectError> {
+    ) -> Result<polished_map_core::TilesetOptions, ProjectError> {
         match self {
-            Self::Classic => polished_map_project::tileset_options(root, hint),
+            Self::Classic => polished_map_core::tileset_options(root, hint),
             Self::Attributed => attributed::tileset_options(root, hint),
         }
     }
     pub fn list_roofs(self, root: &Path) -> Result<Vec<String>, ProjectError> {
         match self {
-            Self::Classic => polished_map_project::list_roofs(root),
+            Self::Classic => polished_map_core::list_roofs(root),
             Self::Attributed => attributed::list_roofs(root),
         }
     }
@@ -66,9 +66,9 @@ impl Storage {
         self,
         path: &Path,
         preferred: Option<(u16, u16)>,
-    ) -> Result<polished_map_project::MapSizeOptions, ProjectError> {
+    ) -> Result<polished_map_core::MapSizeOptions, ProjectError> {
         match self {
-            Self::Classic => polished_map_project::inspect_map_sizes(path, preferred),
+            Self::Classic => polished_map_core::inspect_map_sizes(path, preferred),
             Self::Attributed => attributed::inspect_map_sizes(path, preferred),
         }
     }
@@ -81,7 +81,7 @@ impl Storage {
 }
 
 pub(super) enum PalettePlan {
-    Classic(polished_map_project::MapPalettePlan),
+    Classic(polished_map_core::MapPalettePlan),
     Attributed(attributed::MapPalettePlan),
 }
 impl PalettePlan {
@@ -107,12 +107,12 @@ impl PalettePlan {
 
 #[derive(Debug)]
 pub(super) enum MapDocument {
-    Classic(polished_map_project::MapDocument),
+    Classic(polished_map_core::MapDocument),
     Attributed(attributed::MapDocument),
 }
 
-impl From<polished_map_project::MapDocument> for MapDocument {
-    fn from(document: polished_map_project::MapDocument) -> Self {
+impl From<polished_map_core::MapDocument> for MapDocument {
+    fn from(document: polished_map_core::MapDocument) -> Self {
         Self::Classic(document)
     }
 }
@@ -139,7 +139,7 @@ impl MapDocument {
             source.with_extension(self.default_extension())
         };
         if unified && self.needs_save_as() {
-            polished_map_project::map_path_with_context(
+            polished_map_core::map_path_with_context(
                 &suggested,
                 (self.map().width(), self.map().height()),
                 // A failed inventory read cannot justify a tileset hint.
@@ -229,7 +229,7 @@ impl MapDocument {
     }
     pub fn save_as(&mut self, path: &Path) -> Result<(), ProjectError> {
         match self {
-            Self::Classic(d) => d.save_as(&polished_map_project::prepare_save_as(path)?),
+            Self::Classic(d) => d.save_as(&polished_map_core::prepare_save_as(path)?),
             Self::Attributed(d) => d.save_as(&attributed::prepare_save_as(path)?),
         }
     }
@@ -271,7 +271,7 @@ impl MapDocument {
             .metadata()
             .root
             .as_deref()
-            .map(|root| polished_map_project::event_script_path(root, &self.metadata().name))
+            .map(|root| polished_map_core::event_script_path(root, &self.metadata().name))
             .transpose()?;
         let path = discovered
             .filter(|p| p.is_file())

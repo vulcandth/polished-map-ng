@@ -266,10 +266,10 @@ fn edit_palette(h: &mut Harness<'_, Editor>, root: &Path) {
     crate::main_window::palette_editor_tests::hex(h, hex);
     h.get_by_label("OK").click();
     h.run();
-    let target = polished_map_project::prepare_palette_export(&root.join("edited.pal")).unwrap();
+    let target = polished_map_core::prepare_palette_export(&root.join("edited.pal")).unwrap();
     h.state_mut().export_palette_target(&target).unwrap();
     crate::main_window::save_feedback::tests::dismiss(h);
-    let mut colors = polished_map_project::PaletteDocument::default();
+    let mut colors = polished_map_core::PaletteDocument::default();
     colors.load(target.path()).unwrap();
     assert_eq!(colors.bank().color(slot).unwrap(), exported);
 }

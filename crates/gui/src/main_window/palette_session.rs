@@ -6,7 +6,7 @@ fn advance_import(
     loaded: &mut Loaded,
     load: bool,
     warnings: &mut Vec<String>,
-) -> Result<(), polished_map_project::ProjectError> {
+) -> Result<(), polished_map_core::ProjectError> {
     let roof = loaded
         .palette_plan
         .as_ref()
@@ -20,8 +20,8 @@ pub(super) fn advance_step(
     roof: bool,
     load: bool,
     warnings: &mut Vec<String>,
-    mut advance: impl FnMut(bool) -> Result<(), polished_map_project::ProjectError>,
-) -> Result<(), polished_map_project::ProjectError> {
+    mut advance: impl FnMut(bool) -> Result<(), polished_map_core::ProjectError>,
+) -> Result<(), polished_map_core::ProjectError> {
     match advance(load) {
         Err(error) if roof => {
             warnings.push(format!("Roof colors were not loaded:\n{error}"));

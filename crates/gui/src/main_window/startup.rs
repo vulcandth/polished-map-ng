@@ -49,7 +49,7 @@ impl Default for Editor {
             pending_palette_load: None,
             pending_roof_colors: None,
             roof_color_success: None,
-            roof_palette_layout: polished_map_project::RoofPaletteLayout::default(),
+            roof_palette_layout: polished_map_core::RoofPaletteLayout::default(),
             auto_special_palettes: true,
             auto_roof_colors: true,
             allow_priority: false,
@@ -154,7 +154,7 @@ impl Editor {
         editor.help_window.storage = storage;
         if storage == documents::Storage::Attributed {
             editor.unloaded_palettes =
-                polished_map_project::attributed::PaletteDocument::default().into();
+                polished_map_core::attributed::PaletteDocument::default().into();
             editor.status =
                 "Open a map to begin. Development build: plusplus parity is incomplete.".into();
         }

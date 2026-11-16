@@ -1,6 +1,6 @@
 //! JSON result records and stable error codes. LGPL-3.0-only.
 use polished_map_core::PaletteSet;
-use polished_map_project::{
+use polished_map_core::{
     BlocksetDocument, EventDocument, MasterTilesetDocument, PaletteDocument, ProjectError,
     RoofDocument,
 };

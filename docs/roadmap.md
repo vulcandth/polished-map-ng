@@ -50,8 +50,10 @@ format semantics.
 ## Initial-release review
 
 - [x] **R8:** Make source navigation familiar to upstream
-  contributors without changing behavior or crate boundaries. Acceptance:
-  broad upstream-named implementation families across core/project/GUI, preserved public imports, complete
+  contributors without changing behavior. Core absorbs project by domain;
+  platform remains separate. Acceptance:
+  broad upstream-named implementation families across core/GUI, consolidated
+  project documents and fonts into core by domain, preserved type names and behavior, complete
   [exact-filename index](upstream-source-index.md), updated
   [source crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree), and required
   workspace/reference checks. [Verification](compatibility.md#source-layout-compatibility).

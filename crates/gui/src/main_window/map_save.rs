@@ -150,7 +150,7 @@ impl Editor {
 
     pub(super) fn finish_blockset_save(
         &mut self,
-        result: Result<(), polished_map_project::ProjectError>,
+        result: Result<(), polished_map_core::ProjectError>,
     ) {
         match result {
             Ok(()) => {

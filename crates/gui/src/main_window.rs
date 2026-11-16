@@ -117,11 +117,11 @@ use documents::MapGraphics;
 use eframe::egui::{self, Color32, Pos2, Rect, Sense, Vec2};
 #[cfg(test)]
 use polished_map_core::Graphics;
-use polished_map_core::{Command, Point, ResizeAnchor};
-use polished_map_project::{
+use polished_map_core::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument, OpenOptions,
     prepare_blockset_save_as, prepare_collision_save_as,
 };
+use polished_map_core::{Command, Point, ResizeAnchor};
 
 /// Development application identity, also used before a map is open.
 pub const WINDOW_TITLE: &str = "Polished Map NG — development";
@@ -130,7 +130,7 @@ pub const WINDOW_TITLE: &str = "Polished Map NG — development";
 /// Attributed storage uses `attributed_assets`; classic storage uses `blockset`
 /// and `tileset`. Open/Change Tileset publish these together with graphics.
 struct Loaded {
-    roof_layout: Option<polished_map_project::RoofPaletteLayout>,
+    roof_layout: Option<polished_map_core::RoofPaletteLayout>,
     // Retain chosen spelling for history/title independently of canonical I/O paths.
     recent_path: Option<PathBuf>,
     trailing_blocks: usize,
@@ -148,7 +148,7 @@ type LoadResult = Result<Loaded, String>;
 
 #[derive(Default)]
 struct OpenForm {
-    roof_layout: Option<polished_map_project::RoofPaletteLayout>,
+    roof_layout: Option<polished_map_core::RoofPaletteLayout>,
     detected_context: String,
     roof_layout_note: String,
     unified: bool,
@@ -163,8 +163,8 @@ struct OpenForm {
     width: u16,
     height: u16,
     allow_256: bool,
-    sizes: Option<polished_map_project::MapSizeOptions>,
-    tilesets: Vec<polished_map_project::TilesetChoice>,
+    sizes: Option<polished_map_core::MapSizeOptions>,
+    tilesets: Vec<polished_map_core::TilesetChoice>,
     roofs: Vec<String>,
     choices_root: String,
     #[cfg(test)]
@@ -174,7 +174,7 @@ struct OpenForm {
 }
 
 impl OpenForm {
-    fn refresh_choices(&mut self) -> Result<(), polished_map_project::ProjectError> {
+    fn refresh_choices(&mut self) -> Result<(), polished_map_core::ProjectError> {
         if self.unified {
             return self.refresh_unified_choices();
         }
@@ -236,7 +236,7 @@ pub struct Editor {
     allow_512: bool,
     bank_order: polished_map_core::attributed::BankOrder,
     last_window_title: Option<String>,
-    native_fonts: Option<std::sync::Arc<polished_map_project::NativeFonts>>,
+    native_fonts: Option<std::sync::Arc<polished_map_core::NativeFonts>>,
     about: Option<about::AboutDialog>,
     help_window: help_window::HelpWindow,
     event_ui: event_workflows::EventUi,
@@ -276,7 +276,7 @@ pub struct Editor {
     drag_and_drop: bool,
     pending_roof_colors: Option<PathBuf>,
     roof_color_success: Option<String>,
-    roof_palette_layout: polished_map_project::RoofPaletteLayout,
+    roof_palette_layout: polished_map_core::RoofPaletteLayout,
     auto_special_palettes: bool,
     auto_roof_colors: bool,
     allow_priority: bool,

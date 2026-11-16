@@ -2793,7 +2793,6 @@ dependencies = [
  "epaint_default_fonts",
  "image",
  "polished-map-core",
- "polished-map-project",
  "serde",
  "serde_json",
  "tempfile",
@@ -2803,8 +2802,17 @@ dependencies = [
 name = "polished-map-core"
 version = "0.1.0"
 dependencies = [
+ "epaint_default_fonts",
+ "fontique",
+ "image",
+ "png",
  "serde",
+ "serde_json",
+ "sha2",
+ "skrifa",
+ "tempfile",
  "thiserror 2.0.21",
+ "vello_cpu",
 ]
 
 [[package]]
@@ -2819,7 +2827,6 @@ dependencies = [
  "embed-resource",
  "polished-map-core",
  "polished-map-platform",
- "polished-map-project",
  "rfd",
  "serde",
  "serde_json",
@@ -2846,24 +2853,6 @@ dependencies = [
  "winit",
  "x11-dl",
  "x11rb",
-]
-
-[[package]]
-name = "polished-map-project"
-version = "0.1.0"
-dependencies = [
- "epaint_default_fonts",
- "fontique",
- "image",
- "png",
- "polished-map-core",
- "serde",
- "serde_json",
- "sha2",
- "skrifa",
- "tempfile",
- "thiserror 2.0.21",
- "vello_cpu",
 ]
 
 [[package]]

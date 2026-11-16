@@ -155,8 +155,7 @@ fn plusplus_open_palette_controls_preview_export_and_closed_session_are_shared()
             })
             .is_err()
     );
-    let target =
-        polished_map_project::prepare_palette_export(&dir.path().join("colors.pal")).unwrap();
+    let target = polished_map_core::prepare_palette_export(&dir.path().join("colors.pal")).unwrap();
     h.state_mut().export_palette_target(&target).unwrap();
     crate::main_window::save_feedback::tests::dismiss(&mut h);
     let text = fs::read_to_string(target.path()).unwrap();
@@ -183,7 +182,7 @@ fn plusplus_open_palette_controls_preview_export_and_closed_session_are_shared()
     let ctx = h.ctx.clone();
     assert!(
         h.state_mut()
-            .commit_palettes(&ctx, polished_map_project::PaletteDocument::default())
+            .commit_palettes(&ctx, polished_map_core::PaletteDocument::default())
             .is_err()
     );
 }
@@ -447,7 +446,7 @@ fn real_plusplus_open_palette_edit_and_save_copy_use_shared_gui() {
     edit_color(&mut h, "123456", true);
     let temporary = tempfile::tempdir().unwrap();
     let target =
-        polished_map_project::prepare_palette_export(&temporary.path().join("colors.pal")).unwrap();
+        polished_map_core::prepare_palette_export(&temporary.path().join("colors.pal")).unwrap();
     h.state_mut().export_palette_target(&target).unwrap();
     crate::main_window::save_feedback::tests::dismiss(&mut h);
     let mut colors = attributed::PaletteDocument::default();
@@ -518,7 +517,7 @@ fn real_plusplus_open_palette_edit_and_save_copy_use_shared_gui() {
         attributed::prepare_binary_save_as(&temporary.path().join("attributes.bin")).unwrap();
     let collisions = doc.collision_path().map(|path| {
         let ext = path.extension().unwrap();
-        polished_map_project::prepare_collision_save_as(
+        polished_map_core::prepare_collision_save_as(
             &temporary.path().join("collisions").with_extension(ext),
             ext == "bin",
         )

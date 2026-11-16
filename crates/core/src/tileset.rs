@@ -408,3 +408,6 @@ impl Tileset {
         })
     }
 }
+
+mod document;
+pub use document::*;

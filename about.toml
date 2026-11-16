@@ -26,14 +26,6 @@ path = "../../LICENSE.md"
 license = "LGPL-3.0-only"
 checksum = "1e950a32358912876fcd3ea0bdd975c9ea8a7822eddc3cda662817c3abe99b1c"
 
-[polished-map-project.clarify]
-license = "LGPL-3.0-only"
-
-[[polished-map-project.clarify.files]]
-path = "../../LICENSE.md"
-license = "LGPL-3.0-only"
-checksum = "1e950a32358912876fcd3ea0bdd975c9ea8a7822eddc3cda662817c3abe99b1c"
-
 [polished-map-platform.clarify]
 license = "LGPL-3.0-only"
 

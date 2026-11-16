@@ -11,7 +11,7 @@ and settings are independent of document storage. `polished-map-gui` and
 `polished-map-plusplus` remain fixed parity launchers; unified has no mode selector.
 
 Detection separates **map encoding** (binary/ASM) from **attribute storage**
-(per raw tile/per occurrence). `project::detect_map_format` uses metadata and the
+(per raw tile/per occurrence). `polished_map_core::detect_map_format` uses metadata and the
 selected tileset, returning evidence or a typed missing-context/conflict error.
 Project markers locate roots; they do not decide storage. Detection and loaders
 share asset resolution. A malformed selected asset fails instead of retrying
@@ -33,28 +33,36 @@ survive shared implementation refactoring.
 
 ### Crate and module layout review
 
-Keep the five crates. Core/project separation protects pure editing from I/O;
-platform separation makes unsafe/native interop auditable; CLI stays usable
-without a GUI or display server. A smaller file is not by itself a reason for
-another crate. Font discovery/rasterization serves both GUI and headless Print
-and belongs in project, outside core.
+The workspace has four crates: core, GUI, CLI and platform. At the maintainer's
+request, core contains the former project backend, including fonts. Core is an
+internal shared backend, not a separately published crates.io product. Both
+frontends use its validated models, codecs, discovery, guarded persistence and
+CPU rendering. No compatibility project crate or parallel project module tree
+is retained.
 
-In particular, project depends on image codecs, filesystem transactions and font
-adapters used by both frontends; merging it into core would destroy the pure
-model boundary. Platform is currently consumed only by GUI, but keeps its narrow
-unsafe allowances and target-specific dependencies outside crates that forbid
-unsafe. Neither belongs in core. A future platform-to-GUI consolidation would
-need to justify losing that independently auditable boundary; it is not part of
-the source-layout convention.
+Domain names remain the navigation unit. `map`, `metatileset`, `tileset` and
+`roof` contain their models and focused `document` children for file lifecycles;
+`colors` contains palette models, source decoding and palette documents.
+Attributed metatileset models and paired persistence share the corresponding
+family under `attributed/metatileset`. Model operations still do no I/O; explicit
+document/open/save methods perform file operations. Public type names, CLI
+records and storage formats are unchanged; Rust consumers use the single
+`polished_map_core` namespace.
+
+Core retains `forbid(unsafe_code)` and no egui, windowing or GPU dependency.
+Fontique/Skrifa/Vello CPU adapters stay headless; font discovery is explicit and
+plain pixel export does not initialize it. Platform remains a separate GUI-only
+native boundary. A possible future platform-to-GUI change requires its own safe
+API work and is not part of this consolidation.
 
 Upstream-familiar filenames identify matching responsibilities without copying
-the flat C++ tree. Project `tiled_image`, `parse_asm` and `palette_map` own separate
+the flat C++ tree. Core `tiled_image`, `parse_asm` and `palette_map` own separate
 codec families; public `codecs` remains their compatibility facade and error
 contract. GUI `main_window/` owns the feature family; `block_window`, `palette_window`,
 `option_dialogs` and `tileset_window` own forms, while workflow modules remain
 separate. `roof_window` owns roof editing lifecycle without duplicating the
 shared pixel engine. Core `tile`/`metatile` and attributed `tile`/`deep_tile`
-separate single-item logic from collection/rendering. Project `config`, `image`,
+separate single-item logic from collection/rendering. Core `config`, `image`,
 `map_events` and `metatileset` identify the corresponding actual source owners. The [upstream source crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree)
 records one-to-many mappings and intentional naming differences. Its
 [exact-filename index](upstream-source-index.md) covers every pinned upstream
@@ -70,17 +78,17 @@ code and tile clipboard/dialog code have dedicated files. Native startup lives
 with preferences, including the fixed launchers' optional legacy migration.
 The CLI separates argument grammar, command execution and JSON records.
 
-Project `map` owns the map lifecycle; `file_io` owns bounded reads,
+Core `map/document` owns the map lifecycle; `file_io` owns bounded reads,
 observed destinations and single-file publication; `transaction` owns paired
 staging/rollback; `error` owns shared failures and CLI error codes. Attributed
 block persistence lives in `attributed/metatileset`, alongside its tile, roof and
 palette adapters, rather than in the module facade.
 
-Implementation names describe storage, not upstream branches. Core/project
+Implementation names describe storage, not upstream branches. Core
 `attributed` owns per-occurrence attributes; shared events, map commands, codecs
 and persistence remain shared. Event macro catalogs describe source syntax and
 are independent of attribute storage. `plusplus` is only a compatibility import
-alias in the public libraries. Existing public type/variant names, serialized
+alias in the core library. Existing public type/variant names, serialized
 values, preference keys, launcher behavior and provenance stay intact. Their
 historical spelling does not imply a second implementation of the unified app.
 
@@ -101,8 +109,8 @@ The main-window registry lists production modules separately from regression tes
 
 | Layer | Contract |
 |---|---|
-| Core | Validated models, commands, history and deterministic CPU pixels. No filesystem, egui, GPU or unsafe code. Validate whole command batches before mutation. |
-| Project | Discovery, bounded codecs, source-span preservation, hashes and staged persistence. Public APIs are experimental until objective 4. |
+| Core models/rendering | Validated models, commands, history and deterministic CPU pixels. Model operations do not perform I/O; validate whole batches before mutation. |
+| Core documents/adapters | Discovery, bounded codecs, source-span preservation, hashes, staged persistence and CPU fonts. Explicit file operations; no egui, windows, GPU or unsafe code. Public APIs remain experimental. |
 | GUI / CLI | Presentation and orchestration over shared backend commands. The current CLI exposes master adapters, not the complete unified/plusplus workflow. |
 | Platform / native patches | Narrow OS operations, borrowed live handles, typed failures, explicit lifetimes and target-specific features. |
 
@@ -118,7 +126,7 @@ kind. Palette sessions share RGB commands but preserve master's monochrome palet
 and plusplus's eight-palette restriction. GUI draft adapters commit model and
 preview together; a failed preview cannot leave live state partially replaced.
 
-Core/project/GUI/CLI forbid unsafe. Platform interop isolates and documents it.
+Core/GUI/CLI forbid unsafe. Platform interop isolates and documents it.
 External script opening validates a regular file, preserves native path encoding
 and passes arguments as data, never shell code. Windows owns its worker COM
 lifetime; Linux uses `xdg-open`, macOS `open`. The Windows color chooser borrows
@@ -157,7 +165,7 @@ Core rasterizes pixels; eframe/wgpu displays nearest-neighbor textures. Visible
 regions and dirty caches avoid full-map work each frame. Headless exports share
 the same rendering. The Print compositor receives validated text coverage masks
 and separate layout/ink offsets from the font adapter; font choice and outlines
-remain outside core. Each distinct font/text pair is rasterized once per image.
+live in dedicated core font modules, separate from model/raster logic. Each distinct font/text pair is rasterized once per image.
 
 `PrintFonts` uses Fontique, Skrifa and Vello CPU, preserving collection indices
 and variable-axis coordinates. Explicit font bytes bypass system discovery.
@@ -227,7 +235,7 @@ remain human checks.
 requests are queued once, with accepted state separate from saved intent; failure
 reports an error without frame-by-frame retries. Windows uses layered-window
 alpha, X11 a locked live display and native-long format-32 property buffer, and
-macOS main-thread NSWindow alpha. Core/project pixels are unchanged.
+macOS main-thread NSWindow alpha. Core pixels are unchanged.
 
 Wayland uses alpha-modifier on the existing connection, including all five
 subsurfaces of the adapted SCTK fallback frame. Resources are destroyed before

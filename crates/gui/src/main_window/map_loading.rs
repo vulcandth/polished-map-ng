@@ -2,7 +2,7 @@
 //! Shared Open/New orchestration retains the pinned storage adapters' semantics.
 use super::*;
 use polished_map_core::attributed::BankOrder;
-use polished_map_project::{MapMetadata, ProjectError};
+use polished_map_core::{MapMetadata, ProjectError};
 
 pub(super) struct LoadSettings {
     pub graphics: MasterGraphicsOptions,
@@ -54,7 +54,7 @@ impl Loaded {
                 Self::open_attributed(
                     form,
                     palettes,
-                    polished_map_project::attributed::PaletteOptions {
+                    polished_map_core::attributed::PaletteOptions {
                         dark_theme: options.dark_theme,
                         special_palettes: options.special_palettes,
                         roof_colors: options.roof_colors,
@@ -81,13 +81,13 @@ impl Loaded {
 
     fn open_classic(
         form: OpenForm,
-        palettes: polished_map_project::PaletteDocument,
+        palettes: polished_map_core::PaletteDocument,
         mut options: MasterGraphicsOptions,
         auto_events: bool,
     ) -> Result<Self, ProjectError> {
         let root = PathBuf::from(&form.root);
         let report = if form.new_map {
-            polished_map_project::MapOpenReport {
+            polished_map_core::MapOpenReport {
                 document: if form.unified {
                     MapDocument::new_unified_map(&root, form.width, form.height)?
                 } else {

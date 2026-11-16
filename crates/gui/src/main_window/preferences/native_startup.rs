@@ -1,7 +1,7 @@
 //! Native launch setup for all applications and optional fixed-launcher migration.
 //! Polished Map NG has independent settings and does not import historical preferences.
 use super::*;
-use polished_map_project::{
+use polished_map_core::{
     LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_plusplus_preferences,
     find_legacy_preferences,
 };

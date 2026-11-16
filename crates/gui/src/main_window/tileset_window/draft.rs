@@ -1,10 +1,10 @@
 //! Explicit asset drafts behind the shared tile/roof controls. Adapts the pinned
 //! master/plusplus Tileset_Window and Roof_Window editing domains; LGPL-3.0-only.
+use polished_map_core::{MasterTilesetDocument, attributed};
 use polished_map_core::{
     Palette, TileCommand, TileSnapshot, UNDEFINED_COLORS,
     attributed::{BankOrder, RawTileCommand, RawTileSnapshot, TileReference},
 };
-use polished_map_project::{MasterTilesetDocument, attributed};
 
 pub(crate) enum Draft {
     Classic {

@@ -1,7 +1,7 @@
 use super::*;
 use egui_kittest::{Harness, kittest::Queryable};
 use polished_map_core::{BlockCommand, EventCommand, TileCommand};
-use polished_map_project::{EventDocument, prepare_palette_export};
+use polished_map_core::{EventDocument, prepare_palette_export};
 use std::{collections::BTreeMap, fs};
 
 pub(crate) fn dismiss(h: &mut Harness<'_, Editor>) {

@@ -1,7 +1,7 @@
 //! Pinned master/plusplus Main_Window::change_tileset_cb/force_add_sub_metatiles and
 //! Tileset_Options_Dialog. LGPL-3.0-only. Failed replacements preserve the session.
 use super::*;
-use polished_map_project::TilesetChoice;
+use polished_map_core::TilesetChoice;
 
 pub(super) struct TilesetChoiceForm {
     choices: Vec<TilesetChoice>,
@@ -92,7 +92,7 @@ impl Editor {
             return;
         };
         let choices = if self.application.is_ng() {
-            polished_map_project::unified_tileset_choices(root)
+            polished_map_core::unified_tileset_choices(root)
         } else {
             self.storage()
                 .tileset_options(root, None)
@@ -122,7 +122,7 @@ impl Editor {
                 .as_ref()
                 .and_then(|l| l.tileset_location())
                 .ok_or("No tileset is loaded")?;
-            let storage = polished_map_project::detect_tileset_format(root, name)
+            let storage = polished_map_core::detect_tileset_format(root, name)
                 .map_err(|e| e.to_string())?
                 .into();
             if storage != self.storage() {
@@ -158,7 +158,7 @@ impl Editor {
         let (tileset, blocks) = previous
             .prepare_replacement_in_mode(
                 name,
-                polished_map_project::MasterTileMode {
+                polished_map_core::MasterTileMode {
                     monochrome,
                     allow_256: self.allow_256,
                 },

@@ -11,8 +11,7 @@
 //! module builds sessions, `frame` drives input/drawing, `documents` dispatches
 //! storage-specific operations, and `widgets` contains reusable controls.
 //! [`geometry`] holds testable layout calculations without creating a window.
-//! Editing and persistence belong in `polished_map_core` and
-//! `polished_map_project`, respectively.
+//! Editing and persistence belong in the shared `polished_map_core` backend.
 //!
 //! LGPL-3.0-only; upstream adaptations retain attribution in their modules.
 

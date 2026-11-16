@@ -4,7 +4,7 @@ use super::*;
 use polished_map_core::{
     Events, Map, PrintError, PrintFont, PrintOptions, PrintStyle, PrintTextMask,
 };
-use polished_map_project::{PngExportTarget, PrintFonts, prepare_png_export, write_png_export};
+use polished_map_core::{PngExportTarget, PrintFonts, prepare_png_export, write_png_export};
 
 #[cfg(test)]
 mod tests;
@@ -24,7 +24,7 @@ pub(super) enum Destination {
 }
 pub(super) struct PrintJob {
     filename: std::ffi::OsString,
-    fonts: Option<std::sync::Arc<polished_map_project::NativeFonts>>,
+    fonts: Option<std::sync::Arc<polished_map_core::NativeFonts>>,
     map: Map,
     graphics: MapGraphics,
     events: Option<Events>,

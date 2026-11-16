@@ -4,7 +4,7 @@
 use super::*;
 use documents::{PaletteDocument, PaletteRef};
 use polished_map_core::{ColorSlot, PaletteCommand, PaletteSet};
-use polished_map_project::{SaveTarget, prepare_palette_export};
+use polished_map_core::{SaveTarget, prepare_palette_export};
 
 const NAMES: [&str; 9] = [
     "GRAY",

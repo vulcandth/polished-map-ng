@@ -460,7 +460,7 @@ fn render_roof_option_reaches_shared_compositor_without_modifying_inputs() {
         String::from_utf8_lossy(&result.stdout)
     );
     let expected = root.join("expected.png");
-    polished_map_project::write_png(
+    polished_map_core::write_png(
         &expected,
         &polished_map_core::RgbImage {
             width: 32,

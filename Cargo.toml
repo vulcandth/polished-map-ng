@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/core", "crates/project", "crates/gui", "crates/cli", "crates/platform"]
+members = ["crates/core", "crates/gui", "crates/cli", "crates/platform"]
 resolver = "3"
 exclude = ["vendor/smithay-clipboard-0.7.3", "vendor/winit-0.30.13", "vendor/egui-winit-0.37.0", "vendor/eframe-0.37.0", "vendor/arboard-3.7.0"]
 
@@ -19,7 +19,6 @@ repository = "https://github.com/vulcandth/polished-map-ng"
 
 [workspace.dependencies]
 polished-map-core = { version = "0.1.0", path = "crates/core" }
-polished-map-project = { version = "0.1.0", path = "crates/project" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"

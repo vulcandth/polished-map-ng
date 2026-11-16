@@ -995,7 +995,7 @@ fn unified_open_exposes_context_and_keeps_roof_override_transactional() {
     assert!(form.detected_context.contains("512-tile"));
     assert_eq!(
         form.roof_layout,
-        Some(polished_map_project::RoofPaletteLayout::DayNiteCustom)
+        Some(polished_map_core::RoofPaletteLayout::DayNiteCustom)
     );
     h.run();
     h.key_press(egui::Key::Escape);
@@ -1012,10 +1012,10 @@ fn unified_open_exposes_context_and_keeps_roof_override_transactional() {
             .contains("256-tile")
     );
     h.state_mut().open_form.as_mut().unwrap().roof_layout =
-        Some(polished_map_project::RoofPaletteLayout::Custom);
+        Some(polished_map_core::RoofPaletteLayout::Custom);
     submit(&mut h);
     assert_eq!(
         h.state().roof_palette_layout,
-        polished_map_project::RoofPaletteLayout::Custom
+        polished_map_core::RoofPaletteLayout::Custom
     );
 }

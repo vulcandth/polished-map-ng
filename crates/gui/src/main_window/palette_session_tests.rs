@@ -109,7 +109,7 @@ fn tile_modes_carry_through_close_new_and_subsequent_opens() {
     assert!(!tiles.monochrome() && tiles.allow_256());
 }
 
-fn edit(palettes: &mut polished_map_project::PaletteDocument) {
+fn edit(palettes: &mut polished_map_core::PaletteDocument) {
     palettes
         .apply_batch(&[PaletteCommand::SetRgb {
             slot: ColorSlot {

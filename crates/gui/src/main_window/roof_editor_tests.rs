@@ -17,7 +17,7 @@ pub(super) fn fixture() -> (tempfile::TempDir, Harness<'static, Editor>) {
         .collect();
     fs::write(
         root.join("gfx/tilesets/roofs/demo.2bpp"),
-        polished_map_project::codecs::encode_2bpp(&tiles),
+        polished_map_core::codecs::encode_2bpp(&tiles),
     )
     .unwrap();
     fs::write(
@@ -127,7 +127,7 @@ fn roof_draft_accept_save_conflict_and_dirty_guard_leave_base_and_map_unchanged(
         palette
     );
     let reopened =
-        polished_map_project::RoofDocument::open_in_project(dir.path(), "demo", [0; 9]).unwrap();
+        polished_map_core::RoofDocument::open_in_project(dir.path(), "demo", [0; 9]).unwrap();
     assert_eq!(reopened.roof().tileset().tiles()[6].hues()[0], 3);
     open(&mut h);
     h.get_by_label("OK").click();

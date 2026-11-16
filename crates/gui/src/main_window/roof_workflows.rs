@@ -73,7 +73,7 @@ impl Editor {
                             value,
                         }])?;
                     }
-                    Ok::<_, polished_map_project::ProjectError>(roof)
+                    Ok::<_, polished_map_core::ProjectError>(roof)
                 })
                 .transpose()
                 .map_err(|e| e.to_string())?;

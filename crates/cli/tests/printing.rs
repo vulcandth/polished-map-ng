@@ -151,7 +151,7 @@ fn installed_print_fonts_report_the_shared_policy_and_substitution() {
     use polished_map_core::PrintFont;
     let temp = tempfile::tempdir().unwrap();
     fixture(temp.path());
-    let expected = polished_map_project::PrintFonts::system().unwrap();
+    let expected = polished_map_core::PrintFonts::system().unwrap();
     let (ok, output) = run(temp.path(), "native.png", &["--print-ids"]);
     assert!(ok, "{output}");
     let fonts = &output["result"]["print"]["fonts"];

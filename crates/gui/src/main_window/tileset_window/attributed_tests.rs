@@ -362,7 +362,7 @@ fn raw_tile_and_roof_dialogs_match_geometry_keep_dirty_domains_and_save() {
         assert!(h.state().error.is_none(), "{:?}", h.state().error);
         assert!(!h.state().is_modified());
         if roof {
-            let reopened = polished_map_project::attributed::RoofDocument::open_in_project(
+            let reopened = polished_map_core::attributed::RoofDocument::open_in_project(
                 dir.path(),
                 "demo",
                 Default::default(),
@@ -371,7 +371,7 @@ fn raw_tile_and_roof_dialogs_match_geometry_keep_dirty_domains_and_save() {
             assert_eq!(reopened.tiles()[6].hues()[0], 3);
             assert!(!dir.path().join("gfx/tilesets/demo.png").exists());
         } else {
-            let reopened = polished_map_project::attributed::TilesetDocument::open_in_project(
+            let reopened = polished_map_core::attributed::TilesetDocument::open_in_project(
                 dir.path(),
                 "demo",
                 Default::default(),

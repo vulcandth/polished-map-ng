@@ -244,7 +244,7 @@ fn attributes_collisions_cancel_accept_and_save_use_shared_block_dialog() {
     h.state_mut().save_blockset();
     assert!(h.state().error.is_none(), "{:?}", h.state().error);
     let reopened =
-        polished_map_project::attributed::BlocksetDocument::open_in_project(dir.path(), "demo")
+        polished_map_core::attributed::BlocksetDocument::open_in_project(dir.path(), "demo")
             .unwrap();
     assert_eq!(
         reopened.blockset().offsets().bytes(),

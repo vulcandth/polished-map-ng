@@ -1,9 +1,9 @@
 //! Optional Print overlays for headless render; defaults preserve plain export.
 use crate::output::Failure;
 use clap::Args;
+use polished_map_core::{EventDocument, MapDocument, read_bounded};
 use polished_map_core::{Graphics, PrintFont, PrintOptions, PrintStyle, RgbImage};
-use polished_map_project::{EventDocument, MapDocument, read_bounded};
-use polished_map_project::{PrintFontFace, PrintFonts, event_script_path};
+use polished_map_core::{PrintFontFace, PrintFonts, event_script_path};
 use serde_json::{Value, json};
 use std::path::PathBuf;
 

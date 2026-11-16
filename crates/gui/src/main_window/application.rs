@@ -22,9 +22,9 @@ impl Application {
         self,
         storage: Storage,
         root: &std::path::Path,
-    ) -> Result<Vec<String>, polished_map_project::ProjectError> {
+    ) -> Result<Vec<String>, polished_map_core::ProjectError> {
         if self.is_ng() {
-            polished_map_project::list_roofs(root)
+            polished_map_core::list_roofs(root)
         } else {
             storage.list_roofs(root)
         }
@@ -96,7 +96,7 @@ impl Editor {
             let mut palettes = match storage {
                 Storage::Classic => PaletteDocument::default(),
                 Storage::Attributed => {
-                    polished_map_project::attributed::PaletteDocument::default().into()
+                    polished_map_core::attributed::PaletteDocument::default().into()
                 }
             };
             palettes.select(self.palette_document().selected());

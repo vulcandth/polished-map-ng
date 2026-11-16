@@ -269,3 +269,6 @@ impl Blockset {
         Ok(())
     }
 }
+
+mod document;
+pub use document::*;
