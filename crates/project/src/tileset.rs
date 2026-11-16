@@ -1,17 +1,14 @@
 //! master Tileset::{read_graphics,write_graphics}, Main_Window::{save_tileset,change_tileset_cb}.
 //! Base tiles and roof overlays remain separate; edits never bake a roof into
 //! the base sheet. Multi-file output is staged before any destination is changed.
+use crate::image::encode_grayscale_png;
 use crate::{
     BlocksetDocument, MapDocument, MasterGraphicsOptions, PaletteDocument, ProjectError,
     RoofDocument, SaveTarget, codecs,
+    colors::map_palette_bank,
     file_io::{optional_hash, prepare_target},
-    graphics::{
-        encode_grayscale_png, graphics_path, palette_map_path, read_tiles, tile_slot,
-        validate_tileset,
-    },
-    palette_map,
-    palettes::map_palette_bank,
-    read_bounded,
+    graphics::{graphics_path, palette_map_path, read_tiles, tile_slot, validate_tileset},
+    palette_map, read_bounded,
     transaction::{Change, persist_pair},
 };
 use polished_map_core::{

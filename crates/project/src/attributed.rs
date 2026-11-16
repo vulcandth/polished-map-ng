@@ -13,21 +13,21 @@
 use crate::ProjectError;
 use std::path::{Path, PathBuf};
 
-mod blockset;
-mod events;
+mod colors;
 mod map;
-mod palettes;
+mod map_events;
+mod metatileset;
 mod roof;
 mod tileset;
-pub use blockset::{BlocksetDocument, prepare_binary_save_as};
-pub use events::{
-    EventDocument, event_script_for_map, event_script_path, parse_event_script, warp_map_path,
-};
+pub use colors::{MapPalettePlan, PaletteDocument, PaletteOptions};
 pub use map::{
     MapDocument, MapOpenReport, discover_map, find_project_root, inspect_map_sizes, list_tilesets,
     prepare_save_as, tileset_choices, tileset_options,
 };
-pub use palettes::{MapPalettePlan, PaletteDocument, PaletteOptions};
+pub use map_events::{
+    EventDocument, event_script_for_map, event_script_path, parse_event_script, warp_map_path,
+};
+pub use metatileset::{BlocksetDocument, prepare_binary_save_as};
 pub use roof::{RoofDocument, list_roofs};
 pub use tileset::TilesetDocument;
 

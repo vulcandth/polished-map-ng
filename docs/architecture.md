@@ -50,8 +50,12 @@ the source-layout convention.
 Upstream-familiar filenames identify matching responsibilities without copying
 the flat C++ tree. Project `tiled_image`, `parse_asm` and `palette_map` own separate
 codec families; public `codecs` remains their compatibility facade and error
-contract. GUI `block_window`, `palette_window` and `tileset_window` own forms,
-while their workflow modules remain separate. The [upstream source crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree)
+contract. GUI `main_window/` owns the feature family; `block_window`, `palette_window`,
+`option_dialogs` and `tileset_window` own forms, while workflow modules remain
+separate. `roof_window` owns roof editing lifecycle without duplicating the
+shared pixel engine. Core `tile`/`metatile` and attributed `tile`/`deep_tile`
+separate single-item logic from collection/rendering. Project `config`, `image`,
+`map_events` and `metatileset` identify the corresponding actual source owners. The [upstream source crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree)
 records one-to-many mappings and intentional naming differences. Its
 [exact-filename index](upstream-source-index.md) covers every pinned upstream
 source/header filename. Self-contained components such as `gameboy_screen` own
@@ -60,16 +64,16 @@ facade; the public geometry entry point delegates to the same guide bounds.
 
 The [contributor source map](../CONTRIBUTING.md#where-to-make-a-change) routes common
 changes to their owning modules. GUI `lib.rs` is a small public facade;
-`editor.rs` owns private session state. Its child modules separate startup,
+`main_window.rs` owns private session state. Its child modules separate startup,
 frame routing, views, drafts, workflows and reusable widgets. Event canvas/form
 code and tile clipboard/dialog code have dedicated files. Native startup lives
 with preferences, including the fixed launchers' optional legacy migration.
 The CLI separates argument grammar, command execution and JSON records.
 
-Project `map_document` owns the map lifecycle; `file_io` owns bounded reads,
+Project `map` owns the map lifecycle; `file_io` owns bounded reads,
 observed destinations and single-file publication; `transaction` owns paired
 staging/rollback; `error` owns shared failures and CLI error codes. Attributed
-block persistence lives in `attributed/blockset`, alongside its tile, roof and
+block persistence lives in `attributed/metatileset`, alongside its tile, roof and
 palette adapters, rather than in the module facade.
 
 Implementation names describe storage, not upstream branches. Core/project
@@ -91,7 +95,7 @@ selected at parse time, source spans, dirty state and conflict hash. Map and
 palette adapters still enforce different extension/discovery and palette-slot
 constraints, so their typed boundaries remain. Tile drafts name their actual
 storage (`Classic`, `AttributedTiles`, `AttributedRoof`), not source branches.
-The editor registry lists production modules separately from regression tests.
+The main-window registry lists production modules separately from regression tests.
 
 ### Domain and adapter responsibilities
 

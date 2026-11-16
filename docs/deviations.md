@@ -96,7 +96,7 @@ malformed-PNG diagnostic text need not match libpng. See
   and palette-map output complete their staged domain write before success
   dialogs are queued; upstream acknowledges PNG success before attempting the
   palette-map write. No success message is emitted for a failed domain.
-  Evidence: [save workflow tests](../crates/gui/src/editor/save_feedback/tests.rs).
+  Evidence: [save workflow tests](../crates/gui/src/main_window/save_feedback/tests.rs).
 
 
 - New PNG exports stage the full image and use an atomic no-clobber install.

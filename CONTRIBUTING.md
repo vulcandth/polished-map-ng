@@ -17,7 +17,7 @@ It has one clickable row per original source/header file, including
 |---|---|---|
 | `crates/core` | Validated models, edit commands, history, CPU rendering | [Library](crates/core/src/lib.rs) |
 | `crates/project` | Project discovery, codecs, bounded file I/O, safe persistence | [Library](crates/project/src/lib.rs) |
-| `crates/gui` | egui presentation and editor workflow orchestration | [Public API](crates/gui/src/lib.rs), [session state](crates/gui/src/editor.rs) |
+| `crates/gui` | egui presentation and editor workflow orchestration | [Public API](crates/gui/src/lib.rs), [session state](crates/gui/src/main_window.rs) |
 | `crates/cli` | Experimental headless commands and JSON output | [Arguments](crates/cli/src/args.rs), [execution](crates/cli/src/commands.rs), [JSON records](crates/cli/src/output.rs) |
 | `crates/platform` | OS integration and narrowly isolated native interop | [Library](crates/platform/src/lib.rs) |
 | `tools` | Asset/provenance checks, packaging and independent reference probes | [Tool guide](tools/README.md) |
@@ -39,16 +39,16 @@ remain in launcher identities, serialized values and upstream reference tests.
 
 | Change | Start here |
 |---|---|
-| Map painting, resize, undo | [Core map commands](crates/core/src/map.rs), [GUI canvas](crates/gui/src/editor/canvas.rs) |
-| Attribute bytes, banks or flips | [Attribute models](crates/core/src/attributed.rs), [paired persistence](crates/project/src/attributed/blockset.rs) |
-| Detect/Open/Save a project | [Detection](crates/project/src/format.rs), [Open](crates/gui/src/editor/map_open.rs), [loading](crates/gui/src/editor/map_loading.rs), [Save](crates/gui/src/editor/map_save.rs) |
+| Map painting, resize, undo | [Core map commands](crates/core/src/map.rs), [GUI canvas](crates/gui/src/main_window/canvas.rs) |
+| Attribute bytes, banks or flips | [Attribute models](crates/core/src/attributed.rs), [paired persistence](crates/project/src/attributed/metatileset.rs) |
+| Detect/Open/Save a project | [Detection](crates/project/src/format.rs), [Open](crates/gui/src/main_window/map_open.rs), [loading](crates/gui/src/main_window/map_loading.rs), [Save](crates/gui/src/main_window/map_save.rs) |
 | File limits, conflicts or save errors | [Bounded reads and single-file writes](crates/project/src/file_io.rs), [paired transactions](crates/project/src/transaction.rs), [errors](crates/project/src/error.rs) |
-| Map file lifecycle or metadata | [Map document](crates/project/src/map_document.rs), [discovery](crates/project/src/discovery.rs) |
-| Event fields or markers | [Event dialog](crates/gui/src/editor/event_workflows/dialog.rs), [canvas](crates/gui/src/editor/event_workflows/canvas.rs); [source-preserving edits](crates/project/src/events.rs) |
-| Tile/roof pixel editing | [Draft and save lifecycle](crates/gui/src/editor/tileset_window.rs), [dialog](crates/gui/src/editor/tileset_window/dialog.rs), [clipboard](crates/gui/src/editor/tileset_window/clipboard.rs) |
-| Palette controls or numeric inputs | [Palette form](crates/gui/src/editor/palette_window.rs), [reusable widgets](crates/gui/src/editor/widgets.rs) |
-| Menu commands, layout or startup | [Menu specs](crates/gui/src/editor/menu_popup/specs.rs), [geometry](crates/gui/src/geometry.rs), [frame](crates/gui/src/editor/frame.rs), [startup](crates/gui/src/editor/startup.rs) |
-| Preferences, native windows | [Preferences](crates/gui/src/editor/preferences.rs), [native startup](crates/gui/src/editor/preferences/native_startup.rs), [dialog host](crates/gui/src/editor/dialog_host.rs) |
+| Map file lifecycle or metadata | [Map document](crates/project/src/map.rs), [discovery](crates/project/src/config.rs) |
+| Event fields or markers | [Event dialog](crates/gui/src/main_window/event_workflows/dialog.rs), [canvas](crates/gui/src/main_window/event_workflows/canvas.rs); [source-preserving edits](crates/project/src/map_events.rs) |
+| Tile/roof pixel editing | [Draft and save lifecycle](crates/gui/src/main_window/tileset_window.rs), [dialog](crates/gui/src/main_window/tileset_window/dialog.rs), [clipboard](crates/gui/src/main_window/tileset_window/clipboard.rs) |
+| Palette controls or numeric inputs | [Palette form](crates/gui/src/main_window/palette_window.rs), [reusable widgets](crates/gui/src/main_window/widgets.rs) |
+| Menu commands, layout or startup | [Menu specs](crates/gui/src/main_window/menu_popup/specs.rs), [geometry](crates/gui/src/geometry.rs), [frame](crates/gui/src/main_window/frame.rs), [startup](crates/gui/src/main_window/startup.rs) |
+| Preferences, native windows | [Preferences](crates/gui/src/main_window/preferences.rs), [native startup](crates/gui/src/main_window/preferences/native_startup.rs), [dialog host](crates/gui/src/main_window/dialog_host.rs) |
 
 Follow an operation from GUI/CLI orchestration to a project document, then to its
 core command. Keep validation in the backend; the UI owns drafts and user consent.
@@ -66,12 +66,16 @@ counterpart. For example, `gameboy-screen.cpp` maps to the real
 Keep Cargo's five crates and underscore spellings for matching upstream names.
 Do not flatten model, I/O and UI ownership into the old C++ `src/` directory.
 Public `Master*` names and `plusplus` compatibility aliases remain unchanged.
-Shared tile/roof forms intentionally avoid a duplicate `roof_window` module;
-existing `*_editor_tests` names remain stable for test selectors.
+The source tree now has real matching modules for 32 of 35 upstream stems.
+The [coverage ledger and exceptions](docs/upstream-source-index.md#physical-filename-coverage)
+explain each. `main_window/` owns the entire GUI feature tree; `roof_window`
+owns roof lifecycle while `tileset_window` shares pixel controls. Existing
+`*_editor_tests` names and snapshot IDs remain; fully qualified GUI test names
+now begin with `main_window::`.
 
 Upstream `res/` maps to [GUI assets](crates/gui/assets), whose paths are consumed
 by packaging; `doc/` and Help content map to [documentation](docs/README.md) and
-[Help](crates/gui/src/editor/help.rs). Cargo, platform adapters and
+[Help](crates/gui/src/main_window/help_window.rs). Cargo, platform adapters and
 [build tooling](tools/README.md) replace C++ `include/`, `ide/` and `Makefile`
 responsibilities. Upstream `example/` and external game projects remain reference
 inputs, not release assets.

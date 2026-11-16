@@ -32,11 +32,12 @@
 #![deny(missing_docs)]
 
 pub mod attributed;
-mod blockset;
+mod colors;
+mod event;
 pub mod event_catalog;
-mod events;
 mod map;
-mod palettes;
+mod metatile;
+mod metatileset;
 mod pixel_edit;
 
 /// Compatibility import for callers using the former branch-named module.
@@ -46,19 +47,24 @@ mod printing;
 mod priority;
 mod raster;
 mod roof;
+mod tile;
 mod tileset;
 mod tileset_export;
 mod warp_label;
 
-pub use blockset::{BlockBrush, BlockCommand, Blockset, BlocksetError, CollisionRow};
-pub use events::{Event, EventCommand, EventDefinition, EventError, EventKind, Events};
+pub use colors::{ColorSlot, PaletteBank, PaletteCommand, PaletteError, PaletteSet};
+pub use event::{Event, EventCommand, EventDefinition, EventError, EventKind, Events};
 pub use map::{Command, Map, MapError, Point, ResizeAnchor};
-pub use palettes::{ColorSlot, PaletteBank, PaletteCommand, PaletteError, PaletteSet};
+pub use metatileset::{BlockCommand, Blockset, BlocksetError, CollisionRow};
 pub use printing::{PrintError, PrintFont, PrintOptions, PrintStyle, PrintTextMask};
 pub use priority::PriorityPattern;
-pub use raster::{Graphics, Palette, RasterError, RgbImage, Tile, day_palettes};
+pub use raster::{Graphics, Palette, RasterError, RgbImage, day_palettes};
 pub use roof::Roof;
 pub use tileset::{
     TileCommand, TileSnapshot, Tileset, TilesetError, UNDEFINED_COLORS, UNDEFINED_PALETTE,
 };
 pub use warp_label::{WarpDigit, WarpIdLabel};
+
+pub use tile::Tile;
+
+pub use metatile::BlockBrush;

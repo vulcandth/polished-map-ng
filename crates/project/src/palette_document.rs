@@ -70,7 +70,7 @@ impl PaletteDocument {
         group: usize,
         layout: crate::RoofPaletteLayout,
     ) -> Result<(), ProjectError> {
-        crate::palettes::apply_roofs(&mut self.bank, path, group, layout)
+        crate::colors::apply_roofs(&mut self.bank, path, group, layout)
     }
     /// Atomically validate/apply colors and mark nonempty batches dirty.
     ///
@@ -84,13 +84,13 @@ impl PaletteDocument {
     /// Import overlays the layouts recognized by upstream; other sets survive.
     /// Callers decide whether to discard pending color edits before invoking this.
     pub fn load(&mut self, path: &Path) -> Result<(), ProjectError> {
-        self.load_with_rules(path, crate::discovery::Rules::Master)
+        self.load_with_rules(path, crate::config::Rules::Master)
     }
 
     pub(crate) fn load_with_rules(
         &mut self,
         path: &Path,
-        rules: crate::discovery::Rules,
+        rules: crate::config::Rules,
     ) -> Result<(), ProjectError> {
         let source = prepare_target(path)?;
         let raw = read_bounded(path, 4 * 1024 * 1024)?;
@@ -107,7 +107,7 @@ impl PaletteDocument {
         }
         // Plusplus has eight game palettes; 1..6-palette monochrome imports
         // are a master-only format and do not change its selection or colors.
-        if rules == crate::discovery::Rules::Master || palettes.len() > 6 {
+        if rules == crate::config::Rules::Master || palettes.len() > 6 {
             self.selected = self.bank.apply(&palettes, self.selected);
         }
         self.source = Some(source);

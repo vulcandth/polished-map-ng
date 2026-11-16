@@ -1,9 +1,10 @@
 //! Pinned plusplus Tileset::read_graphics/write_graphics and Config PNG paths.
 //! LGPL-3.0-only. Shared codecs, PNG encoding and guarded staging supply I/O.
+use crate::image::encode_grayscale_png;
 use crate::{
     PngPlatform, ProjectError, SaveTarget, TilesetOutput,
     file_io::{optional_hash, prepare_target},
-    graphics::{encode_grayscale_png, validate_tileset},
+    graphics::validate_tileset,
     transaction::{Change, persist_pair},
 };
 use polished_map_core::{

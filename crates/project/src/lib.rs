@@ -44,23 +44,24 @@
 mod asset_names;
 mod asset_paths;
 pub mod attributed;
-mod blockset;
 pub mod codecs;
 mod collisions;
-mod discovery;
+mod colors;
+mod config;
 mod error;
-mod events;
 mod file_io;
 mod format;
 mod graphics;
+mod image;
 mod legacy_preferences;
-mod map_document;
+mod map;
+mod map_events;
 mod map_palette_plan;
 mod map_sizes;
+mod metatileset;
 mod native_fonts;
 mod palette_document;
 mod palette_map;
-mod palettes;
 
 /// Compatibility import for callers using the former branch-named module.
 #[doc(hidden)]
@@ -75,41 +76,40 @@ mod tiled_image;
 mod tileset;
 mod transaction;
 
-pub use blockset::{BlocksetDocument, prepare_blockset_save_as};
 pub use collisions::prepare_collision_save_as;
-pub use discovery::{
+pub use colors::{
+    MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,
+    roof_palette_path,
+};
+pub use config::{
     MapMetadata, TilesetChoice, TilesetOptions, discover_map, discover_unified_map,
     find_project_root, list_tilesets, map_constant, map_path_with_context, tileset_choices,
     tileset_options,
 };
 pub use error::ProjectError;
-pub use events::{EventDocument, EventScript, EventScriptError, event_script_path};
 pub use file_io::{SaveTarget, read_bounded};
 pub use format::{
     AttributeStorage, DetectedFormat, FormatDetectionError, FormatEvidence, FormatEvidenceKind,
     MapEncoding, ProjectFormat, detect_map_format, detect_tileset_format,
     find_unified_project_root, unified_tileset_choices,
 };
-pub use graphics::{
-    load_master_graphics, load_master_map_graphics, read_unified_tiles, write_new_png, write_png,
-    write_png_export,
-};
+pub use graphics::{load_master_graphics, load_master_map_graphics, read_unified_tiles};
 pub use legacy_preferences::{
     LegacyPreferenceError, LegacyPreferences, LegacyUserLocation, find_legacy_plusplus_preferences,
     find_legacy_preferences,
 };
-pub use map_document::{MapDocument, MapOpenReport, MapSummary, OpenOptions, prepare_save_as};
+pub use map::{MapDocument, MapOpenReport, MapSummary, OpenOptions, prepare_save_as};
+pub use map_events::{EventDocument, EventScript, EventScriptError, event_script_path};
 pub use map_palette_plan::MapPalettePlan;
 pub use map_sizes::{MapSizeOptions, inspect_map_sizes};
+pub use metatileset::{BlocksetDocument, prepare_blockset_save_as};
 pub use native_fonts::{FontPlatform, NativeFontFace, NativeFonts};
 pub use palette_document::{PaletteDocument, prepare_palette_export};
-pub use palettes::{
-    MasterGraphicsOptions, RoofPaletteLayout, parse_rgb_colors, parse_rgb_palettes,
-    roof_palette_path,
-};
 pub use png_export::{PngExportTarget, prepare_png_export};
 pub use png_import::PngPlatform;
 pub use print_fonts::{PrintFontFace, PrintFonts};
 pub use roof::{RoofDocument, list_roofs};
 pub use roof_layout::infer_roof_palette_layout;
 pub use tileset::{MasterTileMode, MasterTilesetDocument, TilesetOutput};
+
+pub use image::{write_new_png, write_png, write_png_export};

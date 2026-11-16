@@ -4,7 +4,7 @@ use std::path::Path;
 
 use polished_map_core::MapError;
 
-use crate::{ProjectError, map_document::decode_map_blocks, read_bounded};
+use crate::{ProjectError, map::decode_map_blocks, read_bounded};
 
 #[derive(Clone, Debug)]
 /// Candidate block-grid dimensions and a preferred choice for an open dialog.

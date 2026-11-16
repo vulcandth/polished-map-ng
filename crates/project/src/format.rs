@@ -14,7 +14,7 @@ use thiserror::Error;
 use crate::{
     MapMetadata, ProjectError,
     asset_paths::{AssetKind, is_file},
-    discovery::discover_unified_context,
+    config::discover_unified_context,
 };
 
 /// The on-disk attribute model, independent of application identity/preferences.
@@ -182,7 +182,7 @@ pub fn find_unified_project_root(map: &Path) -> Result<Option<PathBuf>, ProjectE
 
 /// Inventory both graphics layouts without choosing storage from the first item.
 pub fn unified_tileset_choices(root: &Path) -> Result<Vec<crate::TilesetChoice>, ProjectError> {
-    Ok(crate::discovery::unified_tileset_options(root, None)?
+    Ok(crate::config::unified_tileset_options(root, None)?
         .choices()
         .to_vec())
 }

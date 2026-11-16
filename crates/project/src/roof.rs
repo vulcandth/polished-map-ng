@@ -1,8 +1,9 @@
 //! master Config::roof_png_path and Main_Window::save_roof; separate dirty state.
+use crate::image::encode_grayscale_png;
 use crate::{
     ProjectError, SaveTarget, TilesetOutput,
     file_io::{optional_hash, persist_bytes, prepare_target},
-    graphics::{encode_grayscale_png, graphics_path, read_tiles, validate_tileset},
+    graphics::{graphics_path, read_tiles, validate_tileset},
 };
 use polished_map_core::Roof;
 use sha2::{Digest, Sha256};

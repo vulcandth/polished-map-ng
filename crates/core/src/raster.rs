@@ -1,28 +1,7 @@
 //! Validated classic graphics and shared CPU map composition. LGPL-3.0-only.
 use thiserror::Error;
 
-use crate::Map;
-
-/// Internal hue order is WHITE, DARK, LIGHT, BLACK, as in upstream colors.h.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Tile([u8; 64]);
-
-impl Tile {
-    /// Validate one tile's 64 row-major hue indices.
-    ///
-    /// # Errors
-    /// Returns [`RasterError::Hue`] if any hue is outside 0–3.
-    pub fn new(hues: [u8; 64]) -> Result<Self, RasterError> {
-        if let Some(&hue) = hues.iter().find(|&&h| h > 3) {
-            return Err(RasterError::Hue(hue));
-        }
-        Ok(Self(hues))
-    }
-    /// 64 row-major hue indices in the internal WHITE, DARK, LIGHT, BLACK order.
-    pub fn hues(&self) -> &[u8; 64] {
-        &self.0
-    }
-}
+use crate::{Map, Tile};
 
 /// Four RGB8 colors in internal hue order: white, dark, light, black.
 pub type Palette = [[u8; 3]; 4];
@@ -178,7 +157,7 @@ impl Graphics {
         for (slot, &tile_id) in metatile.iter().enumerate() {
             let tile = &self.tiles[usize::from(tile_id)];
             let palette = &self.palettes[usize::from(tile_id)];
-            for (pixel, &hue) in tile.0.iter().enumerate() {
+            for (pixel, &hue) in tile.hues().iter().enumerate() {
                 let x = (slot % 4) * 8 + pixel % 8;
                 let y = (slot / 4) * 8 + pixel / 8;
                 let offset = (y * 32 + x) * 3;

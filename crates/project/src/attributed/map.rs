@@ -4,7 +4,7 @@
 use crate::{
     MapMetadata, MapSizeOptions, OpenOptions, ProjectError, SaveTarget, TilesetChoice,
     TilesetOptions,
-    discovery::{self, Rules},
+    config::{self, Rules},
 };
 use polished_map_core::Map;
 use std::path::{Path, PathBuf};
@@ -19,7 +19,7 @@ pub fn find_project_root(map: &Path) -> Option<PathBuf> {
 /// # Errors
 /// Unreadable or oversized metadata returns a project error.
 pub fn discover_map(map: &Path, root: Option<&Path>) -> Result<MapMetadata, ProjectError> {
-    discovery::discover_with_rules(map, root, Rules::PlusPlus)
+    config::discover_with_rules(map, root, Rules::PlusPlus)
 }
 
 /// Inventory attributed tilesets and resolve an optional filename hint.
@@ -27,7 +27,7 @@ pub fn discover_map(map: &Path, root: Option<&Path>) -> Result<MapMetadata, Proj
 /// # Errors
 /// Returns directory/metadata I/O and format errors.
 pub fn tileset_options(root: &Path, hint: Option<&str>) -> Result<TilesetOptions, ProjectError> {
-    discovery::tileset_options_with_rules(root, hint, Rules::PlusPlus)
+    config::tileset_options_with_rules(root, hint, Rules::PlusPlus)
 }
 
 /// Return attributed tileset names and display labels in discovery order.

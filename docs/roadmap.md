@@ -51,7 +51,7 @@ format semantics.
 
 - [x] **R8:** Make source navigation familiar to upstream
   contributors without changing behavior or crate boundaries. Acceptance:
-  upstream-named codec/form/guide modules, preserved public imports, complete
+  broad upstream-named implementation families across core/project/GUI, preserved public imports, complete
   [exact-filename index](upstream-source-index.md), updated
   [source crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree), and required
   workspace/reference checks. [Verification](compatibility.md#source-layout-compatibility).
