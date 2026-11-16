@@ -7,20 +7,20 @@
 //!
 //! # Contributor entry points
 //!
-//! `editor` owns session state and coordinates feature modules. Its `startup`
+//! `main_window` owns session state and coordinates feature modules. Its `startup`
 //! module builds sessions, `frame` drives input/drawing, `documents` dispatches
 //! storage-specific operations, and `widgets` contains reusable controls.
 //! [`geometry`] holds testable layout calculations without creating a window.
-//! Editing and persistence belong in `polished_map_core` and
-//! `polished_map_project`, respectively.
+//! Editing and persistence belong in the shared `polished_map_core` backend.
 //!
 //! LGPL-3.0-only; upstream adaptations retain attribution in their modules.
 
 #![deny(missing_docs)]
 
-mod editor;
+mod gameboy_screen;
 pub mod geometry;
+mod main_window;
 
 #[cfg(feature = "native-tests")]
-pub use editor::run_native_preferences_probe;
-pub use editor::{Editor, NativeStartup, WINDOW_TITLE, application_icon};
+pub use main_window::run_native_preferences_probe;
+pub use main_window::{Editor, NativeStartup, WINDOW_TITLE, application_icon};

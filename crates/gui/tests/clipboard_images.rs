@@ -163,7 +163,7 @@ fn original_bmp_clipboard_and_png_precedence() {
 
     let dir = tempfile::tempdir().unwrap();
     let png = dir.path().join("pixel.png");
-    polished_map_project::write_png(
+    polished_map_core::write_png(
         &png,
         &polished_map_core::RgbImage {
             width: 1,

@@ -400,3 +400,6 @@ fn push_history(history: &mut VecDeque<Vec<u8>>, state: Vec<u8>) {
     }
     history.push_back(state);
 }
+
+mod document;
+pub use document::*;

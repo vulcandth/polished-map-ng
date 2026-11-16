@@ -2,7 +2,7 @@
 use crate::printing;
 use clap::{Args, Parser, Subcommand};
 use polished_map_core::PaletteSet;
-use polished_map_project::PngPlatform;
+use polished_map_core::PngPlatform;
 use serde_json::Value;
 use std::path::PathBuf;
 

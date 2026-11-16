@@ -4,6 +4,7 @@ This verifies compile-time wiring, not OS clipboard or browser operation. Run
 on each CI host, or supply --target to inspect another supported target graph.
 """
 import argparse
+import json
 from pathlib import Path
 import subprocess
 
@@ -12,6 +13,39 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def run(*args):
     return subprocess.check_output(args, cwd=ROOT, text=True, encoding="utf-8")
+
+
+
+def backend_errors(packages):
+    """Keep the shared core/CLI graph headless after backend consolidation."""
+    forbidden = {"polished-map-project", "polished-map-platform", "polished-map-gui", "egui", "egui-winit",
+                 "eframe", "winit", "wgpu", "wgpu-core", "wgpu-hal", "rfd", "arboard"}
+    errors = []
+    if "polished-map-core" not in packages:
+        errors.append("Headless graph is missing polished-map-core")
+    if unexpected := forbidden & packages:
+        errors.append("Unexpected native/GUI or retired backend dependency: "
+                      + ", ".join(sorted(unexpected)))
+    return errors
+
+
+def verify_headless(target):
+    metadata = json.loads(run("cargo", "metadata", "--no-deps", "--locked",
+                              "--format-version", "1"))
+    members = {p["name"] for p in metadata["packages"]
+               if p["id"] in metadata["workspace_members"]}
+    expected = {"polished-map-core", "polished-map-gui", "polished-map-cli",
+                "polished-map-platform"}
+    errors = []
+    if members != expected:
+        errors.append(f"Unexpected workspace members: {sorted(members)}")
+    for package in ("polished-map-core", "polished-map-cli"):
+        graph = run("cargo", "tree", "--locked", "-p", package, "--target", target,
+                    "--edges", "normal,build", "--prefix", "none", "--format", "{p}")
+        errors.extend(f"{package}: {error}" for error in
+                      backend_errors({line.split()[0] for line in graph.splitlines()}))
+    if errors:
+        raise SystemExit("Headless backend graph failed:\n" + "\n".join(errors))
 
 
 def main():
@@ -23,6 +57,7 @@ def main():
         for line in run("rustc", "-vV").splitlines()
         if line.startswith("host: ")
     )
+    verify_headless(target)
     graph = run(
         "cargo", "tree", "--locked", "-p", "polished-map-gui",
         "--target", target, "--edges", "normal,build", "--prefix", "none",
@@ -66,7 +101,7 @@ def main():
             errors.append(f"{name} missing features: {', '.join(sorted(missing))}")
     if errors:
         raise SystemExit(f"Native adapter graph failed for {target}:\n" + "\n".join(errors))
-    print(f"Verified production clipboard/image/browser and pinned drop/opacity/modal adapters for {target}")
+    print(f"Verified headless core/CLI and production clipboard/image/browser/drop/opacity/modal adapters for {target}")
 
 
 if __name__ == "__main__":

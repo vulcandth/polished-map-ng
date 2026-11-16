@@ -203,12 +203,7 @@ impl EventCursor {
 
     /// master Main_Window::update_gameboy_screen, in map-relative logical points.
     pub fn game_boy_screen(self, cell: f32) -> Rect {
-        Rect {
-            x: (f32::from(self.event_x) - 4.0) * cell,
-            y: (f32::from(self.event_y) - 4.0) * cell,
-            width: 10.0 * cell,
-            height: 9.0 * cell,
-        }
+        crate::gameboy_screen::bounds(self, cell)
     }
 }
 

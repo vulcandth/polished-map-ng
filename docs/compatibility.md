@@ -25,6 +25,41 @@ Remaining original-font and general M4 aesthetic matching are deferred by user
 direction. Functional focus, usable placement, input, clipboard and safe writes
 remain requirements. Human testers own remaining desktop acceptance.
 
+## Source-layout compatibility
+
+The [upstream contributor crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree)
+connects both pinned C++ trees to Rust ownership. The codec/model/form/main-window family moves
+preserve type names, existing tests and implementations; former project imports
+now use core, with model and document code sharing domain families. No parity oracle,
+snapshot, asset, serialization or launcher behavior was changed.
+
+Windows verification covers the required workspace format, all-target Clippy,
+test and strict public/private rustdoc checks, plus the production native-adapter
+dependency graph. Existing external integration tests still import `codecs::*`.
+The compiled pinned-master differentials passed for every bitplane pair/default
+palette, 12,390 bounded LZ cases, and assembly numbers/CHR tiles. These checks
+preserve the current behavior, including legacy LZ loader padding, rather than
+implementing the separately tracked inherited-defect corrections.
+
+Source comparison verified moved function bodies unchanged except module imports
+and the shared assembly helper's visibility. Contributor links/anchors and stale
+source-path references were checked. The [exact-filename index](upstream-source-index.md)
+was compared with both pinned git trees: 64 master files, two plusplus-only
+additions and four master-only files. The extracted `gameboy_screen` component
+retains the existing public geometry entry point; headless regressions cover
+normal/zoom bounds, fill color, outline order and viewport clipping. The
+[physical coverage ledger](upstream-source-index.md#physical-filename-coverage)
+records 32/35 real same-stem implementations (30/31 master translation-unit
+stems), versus 14/35 on the earlier PR and 7/35 on original main. Whole GUI
+module-family moves preserve asset include depths and named snapshot baselines;
+public root/attributed reexports remain unchanged. Shared outlined text preserves
+paint order, font, alignment and colors in both map and warp labels. The
+`visual-tests,native-tests` feature targets also pass all-target Clippy after the
+moves; this compiles, but does not execute, optional native/visual probes.
+A seeded random lookup over the complete inventory (seed 49, 12 filenames)
+covered actual module paths and an explicit foreign-toolkit exception. This is automated headless evidence, not a
+new native GUI campaign or completion of any remaining human acceptance gate.
+
 ## Palette and packaging review
 
 Polished Map NG's automatic fallback preserves the session palette in both themes
@@ -44,11 +79,11 @@ Their automated contracts are:
 
 | Review item | Implementation and regression evidence |
 |---|---|
-| Checkbox corners (#20) | Single inset corner pixels, with no orthogonal protrusions or bottom gradient overshoot; [silhouette and scaled rendering checks](../crates/gui/src/editor/menu_popup/marks/tests.rs). Radio/color source comparisons remain unchanged. |
-| Dropdown hit areas (#21) | [Shared full-width rows](../crates/gui/src/editor/widgets/dropdown.rs) retain text padding, selection and disabled behavior; both edges and keyboard activation are checked with a scrollable 40-item list at 1×/1.5×/2×. Existing long-list dialog checks retain bounded height. |
-| Menubar padding (#22) | Eight points per label side, reduced uniformly only to fit narrow windows; [geometry, navigation and minimum-width checks](../crates/gui/src/editor/menu_popup/tests.rs). |
-| Help content/spacing (#23–24) | The [restored upstream manual with targeted NG edits](../crates/gui/assets/help/ng-help.html), converted by [help_assets.py](../tools/help_assets.py); [GUI tests](../crates/gui/src/editor/help/tests.rs) cover attribution, current controls, list/rule separation, wrapping, links, scrolling and dismissal. [Preservation checks](../tools/test_help_assets.py) retain original prose, section order and merged controls. Pinned original sources remain verified evidence. |
-| Product name (#25) | Main title, Help, About and macOS bundle display name use Polished Map NG. Executable, app/bundle IDs and preference keys stay unchanged; [preference restart tests](../crates/gui/src/editor/preferences/unified_tests.rs) and [package tests](../tools/test_development_package.py) cover that boundary. |
+| Checkbox corners (#20) | Single inset corner pixels, with no orthogonal protrusions or bottom gradient overshoot; [silhouette and scaled rendering checks](../crates/gui/src/main_window/menu_popup/marks/tests.rs). Radio/color source comparisons remain unchanged. |
+| Dropdown hit areas (#21) | [Shared full-width rows](../crates/gui/src/main_window/widgets/dropdown.rs) retain text padding, selection and disabled behavior; both edges and keyboard activation are checked with a scrollable 40-item list at 1×/1.5×/2×. Existing long-list dialog checks retain bounded height. |
+| Menubar padding (#22) | Eight points per label side, reduced uniformly only to fit narrow windows; [geometry, navigation and minimum-width checks](../crates/gui/src/main_window/menu_popup/tests.rs). |
+| Help content/spacing (#23–24) | The [restored upstream manual with targeted NG edits](../crates/gui/assets/help/ng-help.html), converted by [help_assets.py](../tools/help_assets.py); [GUI tests](../crates/gui/src/main_window/help_window/tests.rs) cover attribution, current controls, list/rule separation, wrapping, links, scrolling and dismissal. [Preservation checks](../tools/test_help_assets.py) retain original prose, section order and merged controls. Pinned original sources remain verified evidence. |
+| Product name (#25) | Main title, Help, About and macOS bundle display name use Polished Map NG. Executable, app/bundle IDs and preference keys stay unchanged; [preference restart tests](../crates/gui/src/main_window/preferences/unified_tests.rs) and [package tests](../tools/test_development_package.py) cover that boundary. |
 | Cherry-tree application icon (#26) | Maintainer-supplied 32/48-pixel single-tree PNGs replace the application artwork in Windows ICO, macOS ICNS, Linux PNG, window fallback and About. [Provenance](../crates/gui/assets/application/NOTICE.md), source/derived hashes and embedded Windows frames are checked without claiming native shell acceptance. |
 
 The revised guide is available for Sylvie's optional pre-release proofreading.
@@ -87,8 +122,8 @@ never accept changed image baselines without inspecting them.
 
 ## Initial-release review
 
-The review on `main` preserves the five crate responsibilities and the existing
-GUI behavior. [Architecture](architecture.md#crate-and-module-layout-review)
+The current layout consolidates project I/O and CPU fonts into core while
+preserving GUI behavior and the separate platform boundary. [Architecture](architecture.md#crate-and-module-layout-review)
 records the boundary decision and extracted editor modules. No snapshot baseline
 or aesthetic change accompanies that extraction. The completed
 [R1–R4 review](roadmap.md#initial-release-review) was verified at
@@ -101,7 +136,7 @@ five pinned projects, unchanged visual baselines and dependency/license checks.
 
 Input/persistence inspection reproduced two panics and one incorrect palette write:
 
-- `tile_palettes::tests::commas_inside_comments_do_not_create_palette_rows`
+- `palette_map::tests::commas_inside_comments_do_not_create_palette_rows`
   failed with an out-of-range slice when a comma inside a `tilepal` comment was
   mistaken for another row. Row detection now agrees with the decoder and
   preserves the comment and CRLF bytes while editing the actual palette row.
@@ -126,12 +161,13 @@ identity, exact license/notice bytes and local documentation links. The packaged
 Windows CLI also inspected a synthetic two-block map successfully; no desktop
 GUI testing was performed for this review.
 
-The review inspected these boundaries:
+The historical R1-R4 review inspected these boundaries (the former Project
+responsibilities now live in Core document/adapter modules):
 
 | Boundary | Inspected concerns and disposition |
 |---|---|
-| Core | `map`, `tileset`, `plusplus`, `raster` and `printing`: private validated edit models, batch clone/commit behavior, bounded map/tile sizes, palette/bank indexing and Print mask bounds. Keep the pure model/render crate. `RgbImage` is an output/transfer record; the public PNG writer validates its dimensions and byte count. |
-| Project | `document`, `transaction`, `events`, `codecs`, `tile_palettes`, `png_import`, `graphics` and `print_fonts`: read/decode/allocation limits, unrelated ASM retention, observed hashes, staged replacement, permissions and multi-file recovery. Corrected the reproduced reader and palette serializer defects above. Staged multi-file saves remain recoverable, not a claimed filesystem transaction. |
+| Core | `map`, `tileset`, `plusplus`, `raster` and `printing`: private validated edit models, batch clone/commit behavior, bounded map/tile sizes, palette/bank indexing and Print mask bounds. Keep model/render operations independent of file I/O. `RgbImage` is an output/transfer record; the public PNG writer validates its dimensions and byte count. |
+| Project | `document`, `transaction`, `events`, `codecs`, `palette_map`, `png_import`, `graphics` and `print_fonts`: read/decode/allocation limits, unrelated ASM retention, observed hashes, staged replacement, permissions and multi-file recovery. Corrected the reproduced reader and palette serializer defects above. Staged multi-file saves remain recoverable, not a claimed filesystem transaction. |
 | GUI | Editor state/frame orchestration, Open/Save workers, document adapters, dialog dispatch and external drops: shared backend commands, pending-work/error handling, modal input guards and viewport-scoped transfer handling. Extracted cohesive modules; preserved command order and layout. |
 | CLI | Command dispatch and `printing`: preview/apply and overwrite hash guards, bounded JSON/font inputs, typed errors and lazy font selection for plain export. Keep the explicit command frontend and shared backend; stable autonomous API work remains its own roadmap objective. |
 | Platform | Windows color/font/home queries, script opener, macOS home lookup and native opacity: borrowed handles, bounded native buffers, main-thread/COM ownership, argument passing without shell interpolation, explicit unsupported/error results. Retain the narrow unsafe boundary and protocol regressions. |
@@ -191,39 +227,39 @@ and OS interaction requires M6. Pure appearance is subject to the approved defer
 
 | Original source / feature family | Current implementation and evidence |
 |---|---|
-| `main.cpp`: first path argument, startup theme/position/fullscreen/maximize | [GUI entry point](../crates/gui/src/main.rs), [preferences](preferences.md), [window title](../crates/gui/src/editor/window_title.rs) |
-| `main-window.cpp`: New/Open/Recent/Clear/Close, Save/Save As and each domain save, Exit | [File workflows](../crates/gui/src/editor/file_workflows.rs), [map-open tests](../crates/gui/src/editor/map_open_tests.rs), [recent paths](../crates/gui/src/editor/recent_maps.rs), [persistence tests](../crates/project/tests/persistence.rs) |
-| `main-window.cpp`: all eight menu groups, 27 toolbar positions, availability, shortcuts and mode changes | [Menus and tests](../crates/gui/src/editor/menus.rs), [toolbar tests](../crates/gui/src/editor/toolbar_tests.rs), [menu inventory](menus.md) |
-| `main-window.cpp`, `map.cpp`: map paint, fill, replace, swap, drag history, Undo/Redo, resize and event translation | [Map model](../crates/core/src/map.rs), [editing](../crates/core/tests/editing.rs), [resize](../crates/core/tests/resize.rs), [event workflows](../crates/gui/src/editor/event_workflow_tests.rs) |
-| `map-buttons.cpp`, `widgets.cpp`: sidebar selection/right-release editing, map/tile/pixel picking and painting, internal swap/Control-copy drags, enabled Drag and Drop | [Block gestures](../crates/gui/src/editor/block_workflow_tests.rs), [tile gestures](../crates/gui/src/editor/tileset_editor_tests.rs), [drag tests](../crates/gui/src/editor/drag_tests.rs), [palette tests](../crates/gui/src/editor/palette_editor_tests.rs) |
-| `main-window.cpp`, `widgets.cpp`: external URI/file drops and workspace eligibility | [Positioned drops](../crates/gui/src/editor/external_drop.rs), [native adapter evidence](#native-adapter-evidence) |
-| `main-window.cpp`, `ruler.cpp`, `gameboy-screen.cpp`: rulers, grids, IDs/hex, priority, event/warp overlays, status, zoom, pan, hover guide and numeric hotkeys | [Rulers](../crates/gui/src/editor/rulers.rs), [status](../crates/gui/src/editor/status_bar.rs), [hotkeys](../crates/gui/src/editor/block_hotkeys.rs), [event hover tests](../crates/gui/src/editor/event_workflow_tests.rs), [zoom tests](../crates/gui/src/editor/zoom_tests.rs) |
-| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/editor/block_editor.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) |
-| `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/editor/tileset_editor.rs), [editor tests](../crates/gui/src/editor/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/project/tests/tileset.rs) |
-| `roof-window.cpp`: nine-tile selection, pixel tools, internal/image clipboard, reversed roof display and independent save | [Roof editor tests](../crates/gui/src/editor/roof_editor_tests.rs), [roof workflows](../crates/gui/src/editor/roof_workflow_tests.rs), [project roof tests](../crates/project/tests/roof.rs) |
-| `palette-window.cpp`, `colors.cpp`: color/monochrome grids, RGB5 sliders/spinners, RGB8 hex, Windows chooser, color copy/paste/live swap/drag, six palette sets and export | [Palette editor](../crates/gui/src/editor/palette_editor.rs), [palette editor tests](../crates/gui/src/editor/palette_editor_tests.rs), [palette model tests](../crates/core/tests/palette_edit.rs) |
-| `option-dialogs.cpp`: Open/New size, tileset, roof and metadata choices | [M1a–M1e evidence](#discovery-and-codecs), [Map Options tests](../crates/gui/src/editor/map_options/tests.rs) |
-| `option-dialogs.cpp`: Resize dimensions/nine anchors, Add/Sub block count, Overworld Map Size | [Resize tests](../crates/core/tests/resize.rs), [block workflows](../crates/gui/src/editor/block_workflow_tests.rs), [overworld dialog/tests](../crates/gui/src/editor/overworld.rs) |
-| `option-dialogs.cpp`: Change Tileset and Change Roof, selection/defaults, cancel and dirty guards | [Tileset workflows](../crates/gui/src/editor/tileset_workflow_tests.rs), [roof workflows](../crates/gui/src/editor/roof_workflow_tests.rs), [dialog metrics](#controls-and-geometry) |
-| `event.cpp`, `map-events.cpp`, Event Options: 22 macros, coordinates/prefix/suffix, hover, drag, options, double-click script dispatch, Shift-click warp, load/save/view/reload/unload | [Parser/model tests](../crates/project/tests/events.rs), [GUI workflows](../crates/gui/src/editor/event_workflow_tests.rs), [source differential](../crates/project/tests/reference.rs) |
-| Print Options, `image.cpp`, `main-window.cpp`: five independent flags, Cancel/Copy/Export, image composition and PNG output | [Print dialog/tests](../crates/gui/src/editor/printing.rs), [source comparisons](../crates/project/tests/reference/printing.rs), [real-project Print](../crates/project/tests/real_print.rs), [PNG export](../crates/project/tests/png_export.rs) |
-| `tiled-image.cpp`, `parse-asm.cpp`: 2bpp, padded LZ, CHR/ASM, PNG depths/interlacing/platform alpha, bounded errors | [Codec tests](../crates/project/tests/codecs.rs), [reference suites](../crates/project/tests/reference.rs), [PNG imports](../crates/project/tests/png_import.rs) |
-| `palette-map.cpp`, `colors.cpp`, `tileset.cpp`: tilepal/priority, defaults, special/roof colors, compound graphics, 192/256 slots, trimmed PNG/ASM exports | [Graphics tests](../crates/project/tests/graphics.rs), [palettes](../crates/project/tests/palettes.rs), [tileset export tests](../crates/project/tests/tileset.rs) |
-| `config.cpp`, `utils.cpp`: project root, filename conventions, path precedence, constants/metadata, dimensions, compound suffixes and numeric ordering | [Discovery](#discovery-and-codecs), [asset paths](#discovery-and-codecs), [asset ordering](#discovery-and-codecs), [discovery tests](../crates/project/tests/discovery.rs) |
-| `widgets.cpp`, `hex-spinner.cpp`: defaults, numeric input, step/repeat/wrap/clamp, middle reset, labels, buttons, dropdowns, scrollbars and help HTML | Specialized GUI modules above and [popup tests](../crates/gui/src/editor/menu_popup/tests.rs) provide partial coverage |
-| `modal-dialog.cpp`: errors, warnings, success, unsaved confirmations and About | [Message dialog tests](../crates/gui/src/editor/message_dialog/tests.rs), [About](../crates/gui/src/editor/about.rs), individual workflow tests |
-| `help-window.cpp`: full help text, scrolling, external links, resizable nonmodal window and dismissal | [Help implementation](../crates/gui/src/editor/help.rs), [Help tests](../crates/gui/src/editor/help/tests.rs) |
-| `themes.cpp`, icon/resource/version headers: Greybird/Dark, fonts, inactive colors, application identity and imagery | [Fonts](../crates/gui/src/editor/fonts.rs), [menu marks](../crates/gui/src/editor/menu_popup/marks.rs), [asset audit](assets.md), [notices](../NOTICE.md) |
-| `preferences.cpp`, startup/exit callbacks: settings, recent files, geometry, legacy stores and `meta128` acknowledgment | [Preferences](preferences.md), [preference tests](../crates/gui/src/editor/preferences.rs), [recent paths](../crates/gui/src/editor/recent_maps.rs) |
+| `main.cpp`: first path argument, startup theme/position/fullscreen/maximize | [GUI entry point](../crates/gui/src/main.rs), [preferences](preferences.md), [window title](../crates/gui/src/main_window/window_title.rs) |
+| `main-window.cpp`: New/Open/Recent/Clear/Close, Save/Save As and each domain save, Exit | [File workflows](../crates/gui/src/main_window/file_workflows.rs), [map-open tests](../crates/gui/src/main_window/map_open_tests.rs), [recent paths](../crates/gui/src/main_window/recent_maps.rs), [persistence tests](../crates/core/tests/persistence.rs) |
+| `main-window.cpp`: all eight menu groups, 27 toolbar positions, availability, shortcuts and mode changes | [Menus and tests](../crates/gui/src/main_window/menus.rs), [toolbar tests](../crates/gui/src/main_window/toolbar_tests.rs), [menu inventory](menus.md) |
+| `main-window.cpp`, `map.cpp`: map paint, fill, replace, swap, drag history, Undo/Redo, resize and event translation | [Map model](../crates/core/src/map.rs), [editing](../crates/core/tests/editing.rs), [resize](../crates/core/tests/resize.rs), [event workflows](../crates/gui/src/main_window/event_workflow_tests.rs) |
+| `map-buttons.cpp`, `widgets.cpp`: sidebar selection/right-release editing, map/tile/pixel picking and painting, internal swap/Control-copy drags, enabled Drag and Drop | [Block gestures](../crates/gui/src/main_window/block_workflow_tests.rs), [tile gestures](../crates/gui/src/main_window/tileset_editor_tests.rs), [drag tests](../crates/gui/src/main_window/drag_tests.rs), [palette tests](../crates/gui/src/main_window/palette_editor_tests.rs) |
+| `main-window.cpp`, `widgets.cpp`: external URI/file drops and workspace eligibility | [Positioned drops](../crates/gui/src/main_window/external_drop.rs), [native adapter evidence](#native-adapter-evidence) |
+| `main-window.cpp`, `ruler.cpp`, `gameboy-screen.cpp`: rulers, grids, IDs/hex, priority, event/warp overlays, status, zoom, pan, hover guide and numeric hotkeys | [Rulers](../crates/gui/src/main_window/ruler.rs), [status](../crates/gui/src/main_window/status_bar.rs), [hotkeys](../crates/gui/src/main_window/block_hotkeys.rs), [event hover tests](../crates/gui/src/main_window/event_workflow_tests.rs), [zoom tests](../crates/gui/src/main_window/zoom_tests.rs) |
+| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/main_window/block_window.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/core/tests/blockset_documents.rs), [collision tests](../crates/core/tests/collisions.rs) |
+| `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/main_window/tileset_window.rs), [editor tests](../crates/gui/src/main_window/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/core/tests/tileset_documents.rs) |
+| `roof-window.cpp`: nine-tile selection, pixel tools, internal/image clipboard, reversed roof display and independent save | [Roof editor tests](../crates/gui/src/main_window/roof_editor_tests.rs), [roof workflows](../crates/gui/src/main_window/roof_workflow_tests.rs), [project roof tests](../crates/core/tests/roof_documents.rs) |
+| `palette-window.cpp`, `colors.cpp`: color/monochrome grids, RGB5 sliders/spinners, RGB8 hex, Windows chooser, color copy/paste/live swap/drag, six palette sets and export | [Palette editor](../crates/gui/src/main_window/palette_window.rs), [palette editor tests](../crates/gui/src/main_window/palette_editor_tests.rs), [palette model tests](../crates/core/tests/palette_edit.rs) |
+| `option-dialogs.cpp`: Open/New size, tileset, roof and metadata choices | [M1a–M1e evidence](#discovery-and-codecs), [Map Options tests](../crates/gui/src/main_window/option_dialogs/tests.rs) |
+| `option-dialogs.cpp`: Resize dimensions/nine anchors, Add/Sub block count, Overworld Map Size | [Resize tests](../crates/core/tests/resize.rs), [block workflows](../crates/gui/src/main_window/block_workflow_tests.rs), [overworld dialog/tests](../crates/gui/src/main_window/overworld.rs) |
+| `option-dialogs.cpp`: Change Tileset and Change Roof, selection/defaults, cancel and dirty guards | [Tileset workflows](../crates/gui/src/main_window/tileset_workflow_tests.rs), [roof workflows](../crates/gui/src/main_window/roof_workflow_tests.rs), [dialog metrics](#controls-and-geometry) |
+| `event.cpp`, `map-events.cpp`, Event Options: 22 macros, coordinates/prefix/suffix, hover, drag, options, double-click script dispatch, Shift-click warp, load/save/view/reload/unload | [Parser/model tests](../crates/core/tests/events.rs), [GUI workflows](../crates/gui/src/main_window/event_workflow_tests.rs), [source differential](../crates/core/tests/reference.rs) |
+| Print Options, `image.cpp`, `main-window.cpp`: five independent flags, Cancel/Copy/Export, image composition and PNG output | [Print dialog/tests](../crates/gui/src/main_window/printing.rs), [source comparisons](../crates/core/tests/reference/printing.rs), [real-project Print](../crates/core/tests/real_print.rs), [PNG export](../crates/core/tests/png_export.rs) |
+| `tiled-image.cpp`, `parse-asm.cpp`: 2bpp, padded LZ, CHR/ASM, PNG depths/interlacing/platform alpha, bounded errors | [Codec tests](../crates/core/tests/codecs.rs), [reference suites](../crates/core/tests/reference.rs), [PNG imports](../crates/core/tests/png_import.rs) |
+| `palette-map.cpp`, `colors.cpp`, `tileset.cpp`: tilepal/priority, defaults, special/roof colors, compound graphics, 192/256 slots, trimmed PNG/ASM exports | [Graphics tests](../crates/core/tests/graphics.rs), [palettes](../crates/core/tests/palette_files.rs), [tileset export tests](../crates/core/tests/tileset_documents.rs) |
+| `config.cpp`, `utils.cpp`: project root, filename conventions, path precedence, constants/metadata, dimensions, compound suffixes and numeric ordering | [Discovery](#discovery-and-codecs), [asset paths](#discovery-and-codecs), [asset ordering](#discovery-and-codecs), [discovery tests](../crates/core/tests/discovery.rs) |
+| `widgets.cpp`, `hex-spinner.cpp`: defaults, numeric input, step/repeat/wrap/clamp, middle reset, labels, buttons, dropdowns, scrollbars and help HTML | Specialized GUI modules above and [popup tests](../crates/gui/src/main_window/menu_popup/tests.rs) provide partial coverage |
+| `modal-dialog.cpp`: errors, warnings, success, unsaved confirmations and About | [Message dialog tests](../crates/gui/src/main_window/modal_dialog/tests.rs), [About](../crates/gui/src/main_window/about.rs), individual workflow tests |
+| `help-window.cpp`: full help text, scrolling, external links, resizable nonmodal window and dismissal | [Help implementation](../crates/gui/src/main_window/help_window.rs), [Help tests](../crates/gui/src/main_window/help_window/tests.rs) |
+| `themes.cpp`, icon/resource/version headers: Greybird/Dark, fonts, inactive colors, application identity and imagery | [Fonts](../crates/gui/src/main_window/fonts.rs), [menu marks](../crates/gui/src/main_window/menu_popup/marks.rs), [asset audit](assets.md), [notices](../NOTICE.md) |
+| `preferences.cpp`, startup/exit callbacks: settings, recent files, geometry, legacy stores and `meta128` acknowledgment | [Preferences](preferences.md), [preference tests](../crates/gui/src/main_window/preferences.rs), [recent paths](../crates/gui/src/main_window/recent_maps.rs) |
 | `directory-chooser.cpp`, native file/clipboard/browser/editor calls | [Platform adapters](../crates/platform/src/lib.rs), [native adapter evidence](#native-adapter-evidence), workflow tests |
 ## Discovery and codecs
 
-[Reference tests](../crates/project/tests/reference.rs) pair with the independent
+[Reference tests](../crates/core/tests/reference.rs) pair with the independent
 `tools/*_oracle.py` drivers in CI. They cover every 2bpp bitplane pair, bounded
 LZ/back-references, ASM/CHR parsing, PNG depths/Adam7/platform alpha behavior,
 metadata and asset-path precedence, numeric filename ordering and every
-representable Open factor-pair area. [Codec tests](../crates/project/tests/codecs.rs)
-and [PNG tests](../crates/project/tests/png_import.rs) cover malformed inputs.
+representable Open factor-pair area. [Codec tests](../crates/core/tests/codecs.rs)
+and [PNG tests](../crates/core/tests/png_import.rs) cover malformed inputs.
 
 Open sizes use decoded block counts, prefer 10×9 multiples, and honor explicit,
 filename and supported metadata context. Shared files require an actual tileset
@@ -231,9 +267,9 @@ choice. The GUI can acknowledge oversized prefixes; short files fail, and strict
 headless opens reject mismatches. ASM imports preserve source through binary
 Save As. Compound names, graphics row padding, output paths and PNG platform
 policy remain explicit contracts, covered by
-[asset paths](../crates/project/tests/reference/asset_paths.rs),
-[discovery](../crates/project/tests/reference/discovery.rs) and
-[map opens](../crates/project/tests/map_open.rs).
+[asset paths](../crates/core/tests/reference/asset_paths.rs),
+[discovery](../crates/core/tests/reference/discovery.rs) and
+[map opens](../crates/core/tests/map_open.rs).
 
 ## Editing and persistence
 
@@ -242,9 +278,9 @@ Core [map](../crates/core/tests/editing.rs), [resize](../crates/core/tests/resiz
 [roof](../crates/core/tests/roof.rs) and [palette](../crates/core/tests/palette_edit.rs)
 suites check validated commands and source history boundaries. Project tests
 cover guarded saves, unrelated ASM retention, hash conflicts, paired rollback and
-preserved recovery data. See [persistence](../crates/project/tests/persistence.rs),
-[collisions](../crates/project/tests/collisions.rs), [tilesets](../crates/project/tests/tileset.rs),
-[events](../crates/project/tests/events.rs) and [PNG export](../crates/project/tests/png_export.rs).
+preserved recovery data. See [persistence](../crates/core/tests/persistence.rs),
+[collisions](../crates/core/tests/collisions.rs), [tilesets](../crates/core/tests/tileset_documents.rs),
+[events](../crates/core/tests/events.rs) and [PNG export](../crates/core/tests/png_export.rs).
 
 GUI tests cover draft acceptance/cancellation, separate dirty domains, palette
 import continuations and save-feedback ordering. Resizing stages events with the
@@ -262,27 +298,27 @@ native font equivalence.
 
 | Area | Contract / evidence |
 |---|---|
-| Main client | Baseline 800×600; menu 21, toolbar 26, current reviewed status 26 (source status was 23). Buttons 24×24, eight six-point toolbar separators. [Toolbar tests](../crates/gui/src/editor/toolbar_tests.rs), [status tests](../crates/gui/src/editor/status_bar/tests.rs). |
-| Workspace | 32-point blocks, 64 zoomed; four-column sidebar plus scrollbar; inset pan bounds, initial strict-margin centering, fractional-scroll rulers. [Open scrolling](../crates/gui/src/editor/open_scroll_tests.rs), [pan](../crates/gui/src/editor/workspace_pan/tests.rs), [zoom](../crates/gui/src/editor/zoom_tests.rs). |
-| Numeric/default controls | Arrow wrap/repeat, typed clamp, Enter consumption, signed hex and middle-release reset. Palette baseline changes on swatch selection, not each channel edit. [Numeric](../crates/gui/src/editor/widgets/numeric_input/tests.rs), [defaults](../crates/gui/src/editor/widgets/default_value/tests.rs), [slider](../crates/gui/src/editor/widgets/nice_slider/tests.rs). |
-| Map Options | Measured labels/control rows, ten-point right inset, staged folder/roof overrides and bounded dropdowns. [Map Options tests](../crates/gui/src/editor/map_options/tests.rs). |
-| Asset previews | Stale background results cannot replace current selection; dropdown and preview scroll independently; tileset client fits available screen space. [Preview geometry](../crates/gui/src/editor/choice_preview.rs). |
-| Event fields | Opening single/multiline mode and bounds stay fixed. Actual wrapped text plus padding sets opening height; growth scrolls inside a fixed outer frame. [Event workflows](../crates/gui/src/editor/event_workflow_tests.rs). |
-| Menus | Pinned FLTK row/column measurement, indicators and contrast oracles; reviewed egui surface/gap changes are explicit deviations. Modal, mnemonic and per-event shortcut guards tested. [Popup tests](../crates/gui/src/editor/menu_popup/tests.rs). |
+| Main client | Baseline 800×600; menu 21, toolbar 26, current reviewed status 26 (source status was 23). Buttons 24×24, eight six-point toolbar separators. [Toolbar tests](../crates/gui/src/main_window/toolbar_tests.rs), [status tests](../crates/gui/src/main_window/status_bar/tests.rs). |
+| Workspace | 32-point blocks, 64 zoomed; four-column sidebar plus scrollbar; inset pan bounds, initial strict-margin centering, fractional-scroll rulers. [Open scrolling](../crates/gui/src/main_window/open_scroll_tests.rs), [pan](../crates/gui/src/main_window/workspace_pan/tests.rs), [zoom](../crates/gui/src/main_window/zoom_tests.rs). |
+| Numeric/default controls | Arrow wrap/repeat, typed clamp, Enter consumption, signed hex and middle-release reset. Palette baseline changes on swatch selection, not each channel edit. [Numeric](../crates/gui/src/main_window/widgets/hex_spinner/tests.rs), [defaults](../crates/gui/src/main_window/widgets/default_value/tests.rs), [slider](../crates/gui/src/main_window/widgets/nice_slider/tests.rs). |
+| Map Options | Measured labels/control rows, ten-point right inset, staged folder/roof overrides and bounded dropdowns. [Map Options tests](../crates/gui/src/main_window/option_dialogs/tests.rs). |
+| Asset previews | Stale background results cannot replace current selection; dropdown and preview scroll independently; tileset client fits available screen space. [Preview geometry](../crates/gui/src/main_window/choice_preview.rs). |
+| Event fields | Opening single/multiline mode and bounds stay fixed. Actual wrapped text plus padding sets opening height; growth scrolls inside a fixed outer frame. [Event workflows](../crates/gui/src/main_window/event_workflow_tests.rs). |
+| Menus | Pinned FLTK row/column measurement, indicators and contrast oracles; reviewed egui surface/gap changes are explicit deviations. Modal, mnemonic and per-event shortcut guards tested. [Popup tests](../crates/gui/src/main_window/menu_popup/tests.rs). |
 | Artwork/overlays | Source/decoded hashes, disabled arithmetic, priority patterns and warp masks have independent checks. [Asset provenance](assets.md) owns origins, rights and reproduction. |
 
 Ordered native-event regressions cover press/move/release batches delivered in
-one frame, including release outside a child: [pixel gestures](../crates/gui/src/editor/tileset_editor/pixels.rs),
-[asset transfers](../crates/gui/src/editor/drag_tests.rs), event dragging and
-[native viewport hit layers](../crates/gui/src/editor/dialog_host/tests.rs). They exercise
+one frame, including release outside a child: [pixel gestures](../crates/gui/src/main_window/tileset_window/pixels.rs),
+[asset transfers](../crates/gui/src/main_window/drag_tests.rs), event dragging and
+[native viewport hit layers](../crates/gui/src/main_window/dialog_host/tests.rs). They exercise
 both storage models and scales 1/2; single-scale tests are not mixed-monitor evidence.
 
 ## Print and fonts
 
-The [source Print differential](../crates/project/tests/reference/printing.rs)
+The [source Print differential](../crates/core/tests/reference/printing.rs)
 checks native-sized composition, clipping and independent Grid/IDs/Priority/
-Events/Warp IDs flags with controlled text masks. [Real-project Print](../crates/project/tests/real_print.rs)
-adds actual project data. GUI [worker/input tests](../crates/gui/src/editor/printing/tests.rs)
+Events/Warp IDs flags with controlled text masks. [Real-project Print](../crates/core/tests/real_print.rs)
+adds actual project data. GUI [worker/input tests](../crates/gui/src/main_window/printing/tests.rs)
 cover captured live drafts, asynchronous output, overwrite/cancel guards and
 native Copy events; [CLI tests](../crates/cli/tests/printing.rs) cover headless use.
 
@@ -323,7 +359,7 @@ profile isolation. CI runs it on Windows/macOS and isolated Linux Xvfb.
 It does not check unified legacy import (there is none), default OS directory
 discovery, moved/maximized/fullscreen windows, mixed DPI, Wayland placement,
 power loss or interactive canceled exits with documents. Unified setting isolation
-has [dedicated tests](../crates/gui/src/editor/preferences/unified_tests.rs). M5/PP3/U3
+has [dedicated tests](../crates/gui/src/main_window/preferences/unified_tests.rs). M5/PP3/U3
 remain open for integrated lifecycle acceptance.
 
 ## Plusplus source audit
@@ -373,12 +409,12 @@ No palette-map file belongs to a plusplus blockset.
 
 | Domain | Evidence |
 |---|---|
-| Attributes, bank mapping, brushes and raster | [Core tests](../crates/core/tests/plusplus.rs), [graphics](../crates/core/tests/plusplus_graphics.rs), [compiled original](../crates/project/tests/plusplus_reference.rs) |
-| Project graphics, compound output and roofs | [Graphics/persistence tests](../crates/project/tests/plusplus_graphics.rs), [project tests](../crates/project/tests/plusplus.rs) |
-| Metadata, maps and palette sessions | [Map tests](../crates/project/tests/plusplus_maps.rs), [palette oracle](../crates/project/tests/plusplus_palettes.rs) |
-| Catalog, scripts, warp rules and punctuation | [Events](../crates/project/tests/plusplus_events.rs), [all-macro GUI adapters](../crates/gui/src/editor/documents/tests.rs) |
-| Asset drafts, transfer/resize, switching and bank controls | [Session lifecycle](../crates/gui/src/editor/attributed_assets/tests.rs), [switching](../crates/gui/src/editor/attributed_assets/switching_tests.rs), [block](../crates/gui/src/editor/block_editor/attributed/tests.rs), [tile/roof](../crates/gui/src/editor/tileset_editor/attributed_tests.rs) |
-| Separate identity, settings and Help | [Application](../crates/gui/src/editor/application.rs), [settings tests](../crates/gui/src/editor/preferences/plusplus_tests.rs), [Help tests](../crates/gui/src/editor/help/tests.rs) |
+| Attributes, bank mapping, brushes and raster | [Core tests](../crates/core/tests/plusplus.rs), [graphics](../crates/core/tests/plusplus_graphics.rs), [compiled original](../crates/core/tests/plusplus_reference.rs) |
+| Project graphics, compound output and roofs | [Graphics/persistence tests](../crates/core/tests/attributed_graphics_files.rs), [project tests](../crates/core/tests/attributed_documents.rs) |
+| Metadata, maps and palette sessions | [Map tests](../crates/core/tests/plusplus_maps.rs), [palette oracle](../crates/core/tests/plusplus_palettes.rs) |
+| Catalog, scripts, warp rules and punctuation | [Events](../crates/core/tests/plusplus_events.rs), [all-macro GUI adapters](../crates/gui/src/main_window/documents/tests.rs) |
+| Asset drafts, transfer/resize, switching and bank controls | [Session lifecycle](../crates/gui/src/main_window/attributed_assets/tests.rs), [switching](../crates/gui/src/main_window/attributed_assets/switching_tests.rs), [block](../crates/gui/src/main_window/block_window/attributed/tests.rs), [tile/roof](../crates/gui/src/main_window/tileset_window/attributed_tests.rs) |
+| Separate identity, settings and Help | [Application](../crates/gui/src/main_window/application.rs), [settings tests](../crates/gui/src/main_window/preferences/plusplus_tests.rs), [Help tests](../crates/gui/src/main_window/help_window/tests.rs) |
 
 Baseline plusplus block client is 477×432: tile viewport (10,36,273,258),
 block grid (337,36,130,130), attribute rows y=176/202/228 and collision fields
@@ -410,16 +446,16 @@ at the pinned revisions; fixed parity rules remain unchanged.
 
 ## Unified Open/New and session transitions
 
-[Detection](../crates/project/tests/unified_detection.rs),
-[metadata](../crates/project/tests/unified_metadata.rs),
-[legacy source adapters](../crates/project/tests/unified_sources.rs),
-[ASM imports](../crates/project/tests/unified_import.rs),
-[context changes](../crates/project/tests/unified_context.rs) and
-[GUI workflows](../crates/gui/src/editor/unified_tests.rs) cover ambiguous/mixed assets,
+[Detection](../crates/core/tests/unified_detection.rs),
+[metadata](../crates/core/tests/unified_metadata.rs),
+[legacy source adapters](../crates/core/tests/unified_sources.rs),
+[ASM imports](../crates/core/tests/unified_import.rs),
+[context changes](../crates/core/tests/unified_context.rs) and
+[GUI workflows](../crates/gui/src/main_window/unified_tests.rs) cover ambiguous/mixed assets,
 canceled/failed adoption, both palette sessions and explicit context-changing
 Save As. Filename hints are emitted only when current inventory resolves them
 uniquely, including compound/numeric aliases. No headers or companion formats
-are silently converted. Combined [event tests](../crates/project/tests/unified_events.rs)
+are silently converted. Combined [event tests](../crates/core/tests/unified_events.rs)
 retain script `warp` disambiguation and untouched source.
 
 ## Five-project compatibility matrix
@@ -436,11 +472,11 @@ workflows here are headless interaction/persistence tests.
 | [pokecrystal](https://github.com/pret/pokecrystal/tree/bd983395006298e976ae1871ef092e87f3385506) | 236 | 18 | 388 | NewBarkTown passes | Open |
 | [Polished Crystal](https://github.com/Rangi42/polishedcrystal/tree/1226ea17bb0bdf5de1bad706a688fe89af573981) | 418 | 34 | 607 | NewBarkTown passes | Open |
 
-[Detection tests](../crates/project/tests/unified_detection.rs) assert all counts.
+[Detection tests](../crates/core/tests/unified_detection.rs) assert all counts.
 All 846 context-resolved classic maps load/render/edit/save/reopen in temporary
 copies; 418 attributed maps resolve/load their companions, supplemented by
 plusplus rendering/save suites. Maps needing a tileset choice are counted rather
-than silently skipped. [Event tests](../crates/project/tests/unified_events.rs)
+than silently skipped. [Event tests](../crates/core/tests/unified_events.rs)
 preserve source/catalog entries across 1,810 scripts. GUI cycles alternate all
 five projects and verify unchanged reference inputs.
 
@@ -451,7 +487,7 @@ metadata. Context-specific acceptance for unresolved shared maps remains U3.
 
 ## Unified cross-storage asset persistence
 
-The [real-asset GUI suite](../crates/gui/src/editor/unified_tests/real_assets.rs) edits,
+The [real-asset GUI suite](../crates/gui/src/main_window/unified_tests/real_assets.rs) edits,
 saves and reopens copied block definitions, supported collisions, tile/roof
 pixels, colors and events. It compares actual bytes/pixels, preserving maps during
 asset saves and all reference originals. Red/Yellow cover monochrome palettes and
@@ -567,7 +603,7 @@ interoperability. Those limitations remain U3 work.
 
 Current tests live in map-options, numeric-input, palette, event, popup, status,
 choice-preview and unified suites linked above; native fonts/roof inference have
-[font](../crates/project/src/native_fonts.rs) and [roof-layout](../crates/project/src/roof_layout.rs)
+[font](../crates/core/src/native_fonts.rs) and [roof-layout](../crates/core/src/roof_layout.rs)
 regressions. [Release records](releases.md) identify published revisions; the
 [roadmap](roadmap.md) retains completed work and future proposals. `paletteswap`,
 NPC previews, native menus/theme/search and other requested features remain

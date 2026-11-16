@@ -19,6 +19,12 @@ See [package policy](releases.md#binary-content-policy) and [asset rights](asset
 | serde/serde_json, eframe persistence | Validated application settings; native window records remain separate. See [preferences](preferences.md). |
 | OS-specific interop crates | Narrow Windows, AppKit, X11 and Wayland operations behind the platform/native boundaries. Target features are explicit so isolated crate builds do not rely on GUI feature unification. |
 
+Core now owns the shared codecs, persistence and CPU font dependencies formerly
+owned by project; GUI and CLI both depend on core. The production graph check
+rejects GUI/window/GPU and platform edges from core or CLI on every CI target.
+This is a headless runtime boundary, not a claim that dependencies contain no
+internal native code.
+
 The font adapter uses the existing modern font stack; the rejected fontdue/fontdb
 candidate is not in the lockfile. Xvfb/xauth and protocol peers are test tools,
 not application runtime dependencies. Accessibility remains enabled.

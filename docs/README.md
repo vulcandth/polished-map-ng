@@ -11,6 +11,7 @@
 ## Contributing and verification
 
 - [Contributor guide and source map](../CONTRIBUTING.md)
+- [Find Rust code by an original C++ filename](upstream-source-index.md): complete master/plusplus source index
 - [Roadmap](roadmap.md): authoritative completed work, next actions and open gates
 - [Architecture](architecture.md): crate boundaries and design decisions
 - [Compatibility evidence](compatibility.md#current-coverage-matrix): source

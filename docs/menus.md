@@ -95,6 +95,6 @@ Escape dismiss them without editing the project.
 
 Source-derived sizing, popup behavior, native adapters and their verification
 limits belong in [compatibility evidence](compatibility.md). Current definitions
-are in [menu specifications](../crates/gui/src/editor/menu_popup/specs.rs) and
-[command dispatch](../crates/gui/src/editor/menus.rs). Native acceptance and deferred
+are in [menu specifications](../crates/gui/src/main_window/menu_popup/specs.rs) and
+[command dispatch](../crates/gui/src/main_window/menus.rs). Native acceptance and deferred
 appearance matching are tracked in the [roadmap](roadmap.md).

@@ -1,7 +1,7 @@
 //! Command execution over validated core/project operations. LGPL-3.0-only.
 use crate::{args::*, output::*};
 use polished_map_core::{BlockCommand, Command, EventCommand, PaletteCommand, TileCommand};
-use polished_map_project::{
+use polished_map_core::{
     BlocksetDocument, EventDocument, MapDocument, MasterGraphicsOptions, MasterTilesetDocument,
     OpenOptions, PaletteDocument, ProjectError, RoofDocument, load_master_map_graphics,
     prepare_blockset_save_as, prepare_collision_save_as, prepare_palette_export, prepare_save_as,
