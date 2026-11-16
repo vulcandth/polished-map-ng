@@ -9,8 +9,8 @@ mod application;
 mod artwork;
 mod asset_drag;
 mod attributed_assets;
-mod block_editor;
 mod block_hotkeys;
+mod block_window;
 mod block_workflows;
 mod canvas;
 mod choice_preview;
@@ -36,8 +36,8 @@ mod menu_popup;
 mod menus;
 mod message_dialog;
 mod overworld;
-mod palette_editor;
 mod palette_session;
+mod palette_window;
 mod preferences;
 mod printing;
 mod priority;
@@ -52,7 +52,7 @@ mod sidebar;
 mod startup;
 mod startup_theme;
 mod status_bar;
-mod tileset_editor;
+mod tileset_window;
 mod tileset_workflows;
 mod toolbar;
 mod transparency;
@@ -99,7 +99,7 @@ mod zoom_tests;
 use crate::geometry;
 use application::Application;
 pub use artwork::application_icon;
-use block_editor::BlockForm;
+use block_window::BlockForm;
 #[cfg(test)]
 use canvas::append_line;
 pub use preferences::native_startup::NativeStartup;
@@ -259,8 +259,8 @@ pub struct Editor {
     save_ui: save_feedback::SaveUi,
     meta128: bool,
     block_form: Option<BlockForm>,
-    tileset_form: Option<tileset_editor::TilesetForm>,
-    palette_form: Option<palette_editor::PaletteForm>,
+    tileset_form: Option<tileset_window::TilesetForm>,
+    palette_form: Option<palette_window::PaletteForm>,
     roof_choice_form: Option<roof_workflows::RoofChoiceForm>,
     confirm_roof_change: bool,
     tileset_choice_form: Option<tileset_workflows::TilesetChoiceForm>,

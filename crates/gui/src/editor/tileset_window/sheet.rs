@@ -56,7 +56,7 @@ impl TilesetForm {
                 .drag
                 .is_some_and(|from| from == id || enabled && response.contains_pointer())
         {
-            super::super::block_editor::selection_border(ui, cell);
+            super::super::block_window::selection_border(ui, cell);
         }
         if !panning && response.clicked() {
             self.selected = id;

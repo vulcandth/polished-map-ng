@@ -59,17 +59,19 @@ mod map_palette_plan;
 mod map_sizes;
 mod native_fonts;
 mod palette_document;
+mod palette_map;
 mod palettes;
 
 /// Compatibility import for callers using the former branch-named module.
 #[doc(hidden)]
 pub use attributed as plusplus;
+mod parse_asm;
 mod png_export;
 mod png_import;
 mod print_fonts;
 mod roof;
 mod roof_layout;
-mod tile_palettes;
+mod tiled_image;
 mod tileset;
 mod transaction;
 

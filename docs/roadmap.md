@@ -49,6 +49,14 @@ format semantics.
 
 ## Initial-release review
 
+- [x] **R8:** Make source navigation familiar to upstream
+  contributors without changing behavior or crate boundaries. Acceptance:
+  upstream-named codec/form modules, preserved public imports, updated
+  [source crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree), and required
+  workspace/reference checks. [Verification](compatibility.md#source-layout-compatibility).
+  Native acceptance gates remain unchanged.
+
+
 Authorized November 12 on `main`; preserve functionality and deferred aesthetics.
 This preparation does not waive native parity or final release acceptance.
 

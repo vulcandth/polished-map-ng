@@ -39,6 +39,21 @@ without a GUI or display server. A smaller file is not by itself a reason for
 another crate. Font discovery/rasterization serves both GUI and headless Print
 and belongs in project, outside core.
 
+In particular, project depends on image codecs, filesystem transactions and font
+adapters used by both frontends; merging it into core would destroy the pure
+model boundary. Platform is currently consumed only by GUI, but keeps its narrow
+unsafe allowances and target-specific dependencies outside crates that forbid
+unsafe. Neither belongs in core. A future platform-to-GUI consolidation would
+need to justify losing that independently auditable boundary; it is not part of
+the source-layout convention.
+
+Upstream-familiar filenames identify matching responsibilities without copying
+the flat C++ tree. Project `tiled_image`, `parse_asm` and `palette_map` own separate
+codec families; public `codecs` remains their compatibility facade and error
+contract. GUI `block_window`, `palette_window` and `tileset_window` own forms,
+while their workflow modules remain separate. The [upstream source crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree)
+records one-to-many mappings and intentional naming differences.
+
 The [contributor source map](../CONTRIBUTING.md#where-to-make-a-change) routes common
 changes to their owning modules. GUI `lib.rs` is a small public facade;
 `editor.rs` owns private session state. Its child modules separate startup,

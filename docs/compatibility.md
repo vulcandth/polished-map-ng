@@ -25,6 +25,26 @@ Remaining original-font and general M4 aesthetic matching are deferred by user
 direction. Functional focus, usable placement, input, clipboard and safe writes
 remain requirements. Human testers own remaining desktop acceptance.
 
+## Source-layout compatibility
+
+The [upstream contributor crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree)
+connects both pinned C++ trees to Rust ownership. The codec/form module moves
+preserve public imports, existing tests and implementations; no parity oracle,
+snapshot, asset, serialization or launcher behavior was changed.
+
+Windows verification covers the required workspace format, all-target Clippy,
+test and strict public/private rustdoc checks, plus the production native-adapter
+dependency graph. Existing external integration tests still import `codecs::*`.
+The compiled pinned-master differentials passed for every bitplane pair/default
+palette, 12,390 bounded LZ cases, and assembly numbers/CHR tiles. These checks
+preserve the current behavior, including legacy LZ loader padding, rather than
+implementing the separately tracked inherited-defect corrections.
+
+Source comparison verified moved function bodies unchanged except module imports
+and the shared assembly helper's visibility. Contributor links/anchors and stale
+source-path references were checked. This is automated headless evidence, not a
+new native GUI campaign or completion of any remaining human acceptance gate.
+
 ## Palette and packaging review
 
 Polished Map NG's automatic fallback preserves the session palette in both themes
@@ -101,7 +121,7 @@ five pinned projects, unchanged visual baselines and dependency/license checks.
 
 Input/persistence inspection reproduced two panics and one incorrect palette write:
 
-- `tile_palettes::tests::commas_inside_comments_do_not_create_palette_rows`
+- `palette_map::tests::commas_inside_comments_do_not_create_palette_rows`
   failed with an out-of-range slice when a comma inside a `tilepal` comment was
   mistaken for another row. Row detection now agrees with the decoder and
   preserves the comment and CRLF bytes while editing the actual palette row.
@@ -131,7 +151,7 @@ The review inspected these boundaries:
 | Boundary | Inspected concerns and disposition |
 |---|---|
 | Core | `map`, `tileset`, `plusplus`, `raster` and `printing`: private validated edit models, batch clone/commit behavior, bounded map/tile sizes, palette/bank indexing and Print mask bounds. Keep the pure model/render crate. `RgbImage` is an output/transfer record; the public PNG writer validates its dimensions and byte count. |
-| Project | `document`, `transaction`, `events`, `codecs`, `tile_palettes`, `png_import`, `graphics` and `print_fonts`: read/decode/allocation limits, unrelated ASM retention, observed hashes, staged replacement, permissions and multi-file recovery. Corrected the reproduced reader and palette serializer defects above. Staged multi-file saves remain recoverable, not a claimed filesystem transaction. |
+| Project | `document`, `transaction`, `events`, `codecs`, `palette_map`, `png_import`, `graphics` and `print_fonts`: read/decode/allocation limits, unrelated ASM retention, observed hashes, staged replacement, permissions and multi-file recovery. Corrected the reproduced reader and palette serializer defects above. Staged multi-file saves remain recoverable, not a claimed filesystem transaction. |
 | GUI | Editor state/frame orchestration, Open/Save workers, document adapters, dialog dispatch and external drops: shared backend commands, pending-work/error handling, modal input guards and viewport-scoped transfer handling. Extracted cohesive modules; preserved command order and layout. |
 | CLI | Command dispatch and `printing`: preview/apply and overwrite hash guards, bounded JSON/font inputs, typed errors and lazy font selection for plain export. Keep the explicit command frontend and shared backend; stable autonomous API work remains its own roadmap objective. |
 | Platform | Windows color/font/home queries, script opener, macOS home lookup and native opacity: borrowed handles, bounded native buffers, main-thread/COM ownership, argument passing without shell interpolation, explicit unsupported/error results. Retain the narrow unsafe boundary and protocol regressions. |
@@ -198,10 +218,10 @@ and OS interaction requires M6. Pure appearance is subject to the approved defer
 | `map-buttons.cpp`, `widgets.cpp`: sidebar selection/right-release editing, map/tile/pixel picking and painting, internal swap/Control-copy drags, enabled Drag and Drop | [Block gestures](../crates/gui/src/editor/block_workflow_tests.rs), [tile gestures](../crates/gui/src/editor/tileset_editor_tests.rs), [drag tests](../crates/gui/src/editor/drag_tests.rs), [palette tests](../crates/gui/src/editor/palette_editor_tests.rs) |
 | `main-window.cpp`, `widgets.cpp`: external URI/file drops and workspace eligibility | [Positioned drops](../crates/gui/src/editor/external_drop.rs), [native adapter evidence](#native-adapter-evidence) |
 | `main-window.cpp`, `ruler.cpp`, `gameboy-screen.cpp`: rulers, grids, IDs/hex, priority, event/warp overlays, status, zoom, pan, hover guide and numeric hotkeys | [Rulers](../crates/gui/src/editor/rulers.rs), [status](../crates/gui/src/editor/status_bar.rs), [hotkeys](../crates/gui/src/editor/block_hotkeys.rs), [event hover tests](../crates/gui/src/editor/event_workflow_tests.rs), [zoom tests](../crates/gui/src/editor/zoom_tests.rs) |
-| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/editor/block_editor.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) |
-| `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/editor/tileset_editor.rs), [editor tests](../crates/gui/src/editor/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/project/tests/tileset.rs) |
+| `block-window.cpp`, `metatile.cpp`, `metatileset.cpp`: tile selection, all eight modifier brushes, four collision fields, block copy/paste/swap, count and paired saves | [Block editor](../crates/gui/src/editor/block_window.rs), [block model tests](../crates/core/tests/blockset.rs), [project blockset tests](../crates/project/tests/blockset.rs), [collision tests](../crates/project/tests/collisions.rs) |
+| `tileset-window.cpp`, `tile.cpp`, `tileset.cpp`: pixel paint/fill/replace/swap, tile copy/paste/live swap/delete, swatches 1–4, Alt+1–8 palettes, priority and clipboard images | [Tile editor](../crates/gui/src/editor/tileset_window.rs), [editor tests](../crates/gui/src/editor/tileset_editor_tests.rs), [tile model tests](../crates/core/tests/tileset.rs), [project tileset tests](../crates/project/tests/tileset.rs) |
 | `roof-window.cpp`: nine-tile selection, pixel tools, internal/image clipboard, reversed roof display and independent save | [Roof editor tests](../crates/gui/src/editor/roof_editor_tests.rs), [roof workflows](../crates/gui/src/editor/roof_workflow_tests.rs), [project roof tests](../crates/project/tests/roof.rs) |
-| `palette-window.cpp`, `colors.cpp`: color/monochrome grids, RGB5 sliders/spinners, RGB8 hex, Windows chooser, color copy/paste/live swap/drag, six palette sets and export | [Palette editor](../crates/gui/src/editor/palette_editor.rs), [palette editor tests](../crates/gui/src/editor/palette_editor_tests.rs), [palette model tests](../crates/core/tests/palette_edit.rs) |
+| `palette-window.cpp`, `colors.cpp`: color/monochrome grids, RGB5 sliders/spinners, RGB8 hex, Windows chooser, color copy/paste/live swap/drag, six palette sets and export | [Palette editor](../crates/gui/src/editor/palette_window.rs), [palette editor tests](../crates/gui/src/editor/palette_editor_tests.rs), [palette model tests](../crates/core/tests/palette_edit.rs) |
 | `option-dialogs.cpp`: Open/New size, tileset, roof and metadata choices | [M1a–M1e evidence](#discovery-and-codecs), [Map Options tests](../crates/gui/src/editor/map_options/tests.rs) |
 | `option-dialogs.cpp`: Resize dimensions/nine anchors, Add/Sub block count, Overworld Map Size | [Resize tests](../crates/core/tests/resize.rs), [block workflows](../crates/gui/src/editor/block_workflow_tests.rs), [overworld dialog/tests](../crates/gui/src/editor/overworld.rs) |
 | `option-dialogs.cpp`: Change Tileset and Change Roof, selection/defaults, cancel and dirty guards | [Tileset workflows](../crates/gui/src/editor/tileset_workflow_tests.rs), [roof workflows](../crates/gui/src/editor/roof_workflow_tests.rs), [dialog metrics](#controls-and-geometry) |
@@ -272,7 +292,7 @@ native font equivalence.
 | Artwork/overlays | Source/decoded hashes, disabled arithmetic, priority patterns and warp masks have independent checks. [Asset provenance](assets.md) owns origins, rights and reproduction. |
 
 Ordered native-event regressions cover press/move/release batches delivered in
-one frame, including release outside a child: [pixel gestures](../crates/gui/src/editor/tileset_editor/pixels.rs),
+one frame, including release outside a child: [pixel gestures](../crates/gui/src/editor/tileset_window/pixels.rs),
 [asset transfers](../crates/gui/src/editor/drag_tests.rs), event dragging and
 [native viewport hit layers](../crates/gui/src/editor/dialog_host/tests.rs). They exercise
 both storage models and scales 1/2; single-scale tests are not mixed-monitor evidence.
@@ -377,7 +397,7 @@ No palette-map file belongs to a plusplus blockset.
 | Project graphics, compound output and roofs | [Graphics/persistence tests](../crates/project/tests/plusplus_graphics.rs), [project tests](../crates/project/tests/plusplus.rs) |
 | Metadata, maps and palette sessions | [Map tests](../crates/project/tests/plusplus_maps.rs), [palette oracle](../crates/project/tests/plusplus_palettes.rs) |
 | Catalog, scripts, warp rules and punctuation | [Events](../crates/project/tests/plusplus_events.rs), [all-macro GUI adapters](../crates/gui/src/editor/documents/tests.rs) |
-| Asset drafts, transfer/resize, switching and bank controls | [Session lifecycle](../crates/gui/src/editor/attributed_assets/tests.rs), [switching](../crates/gui/src/editor/attributed_assets/switching_tests.rs), [block](../crates/gui/src/editor/block_editor/attributed/tests.rs), [tile/roof](../crates/gui/src/editor/tileset_editor/attributed_tests.rs) |
+| Asset drafts, transfer/resize, switching and bank controls | [Session lifecycle](../crates/gui/src/editor/attributed_assets/tests.rs), [switching](../crates/gui/src/editor/attributed_assets/switching_tests.rs), [block](../crates/gui/src/editor/block_window/attributed/tests.rs), [tile/roof](../crates/gui/src/editor/tileset_window/attributed_tests.rs) |
 | Separate identity, settings and Help | [Application](../crates/gui/src/editor/application.rs), [settings tests](../crates/gui/src/editor/preferences/plusplus_tests.rs), [Help tests](../crates/gui/src/editor/help/tests.rs) |
 
 Baseline plusplus block client is 477×432: tile viewport (10,36,273,258),

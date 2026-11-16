@@ -41,8 +41,8 @@ remain in launcher identities, serialized values and upstream reference tests.
 | File limits, conflicts or save errors | [Bounded reads and single-file writes](crates/project/src/file_io.rs), [paired transactions](crates/project/src/transaction.rs), [errors](crates/project/src/error.rs) |
 | Map file lifecycle or metadata | [Map document](crates/project/src/map_document.rs), [discovery](crates/project/src/discovery.rs) |
 | Event fields or markers | [Event dialog](crates/gui/src/editor/event_workflows/dialog.rs), [canvas](crates/gui/src/editor/event_workflows/canvas.rs); [source-preserving edits](crates/project/src/events.rs) |
-| Tile/roof pixel editing | [Draft and save lifecycle](crates/gui/src/editor/tileset_editor.rs), [dialog](crates/gui/src/editor/tileset_editor/dialog.rs), [clipboard](crates/gui/src/editor/tileset_editor/clipboard.rs) |
-| Palette controls or numeric inputs | [Palette form](crates/gui/src/editor/palette_editor.rs), [reusable widgets](crates/gui/src/editor/widgets.rs) |
+| Tile/roof pixel editing | [Draft and save lifecycle](crates/gui/src/editor/tileset_window.rs), [dialog](crates/gui/src/editor/tileset_window/dialog.rs), [clipboard](crates/gui/src/editor/tileset_window/clipboard.rs) |
+| Palette controls or numeric inputs | [Palette form](crates/gui/src/editor/palette_window.rs), [reusable widgets](crates/gui/src/editor/widgets.rs) |
 | Menu commands, layout or startup | [Menu specs](crates/gui/src/editor/menu_popup/specs.rs), [geometry](crates/gui/src/geometry.rs), [frame](crates/gui/src/editor/frame.rs), [startup](crates/gui/src/editor/startup.rs) |
 | Preferences, native windows | [Preferences](crates/gui/src/editor/preferences.rs), [native startup](crates/gui/src/editor/preferences/native_startup.rs), [dialog host](crates/gui/src/editor/dialog_host.rs) |
 
@@ -50,6 +50,52 @@ Follow an operation from GUI/CLI orchestration to a project document, then to it
 core command. Keep validation in the backend; the UI owns drafts and user consent.
 Tests for a feature live beside it or in the corresponding crate's `tests/`.
 Files named `plusplus_reference` deliberately identify an upstream test oracle.
+
+### Coming from the C++ source tree
+
+Compare against the pinned [master source](https://github.com/Rangi42/polished-map/tree/8b9bdc2b8aac8c865809516c2123af69c498da0b/src)
+and [plusplus source](https://github.com/Rangi42/polished-map/tree/27c1f8479107c7495ac0c1818900190a137da6e1/src),
+not an unpinned branch. Both use a flat `src/`; NG keeps Cargo's `crates/*/src/`
+and separates models, file I/O and presentation. Use underscore spellings for
+upstream hyphenated names when the responsibility matches. A source family can
+have several owners here; do not move I/O into core to recreate a C++ class.
+
+Paths below are relative to the repository root. Start at the linked file, then
+follow its ordinary Rust child modules. Both upstreams apply unless noted.
+
+| Upstream source family | NG implementation entry points |
+|---|---|
+| `main.cpp`, `main-window.*` | [Launchers](crates/gui/src/lib.rs), [session and module registry](crates/gui/src/editor.rs), [frame](crates/gui/src/editor/frame.rs), [open](crates/gui/src/editor/map_open.rs), [save](crates/gui/src/editor/map_save.rs) |
+| `block-window.*` | [Block window](crates/gui/src/editor/block_window.rs), [attributed controls](crates/gui/src/editor/block_window/attributed.rs) |
+| `tileset-window.*`, `roof-window.*` | [Shared tile/roof window](crates/gui/src/editor/tileset_window.rs), [dialog](crates/gui/src/editor/tileset_window/dialog.rs), [storage-specific drafts](crates/gui/src/editor/tileset_window/draft.rs), [roof workflow](crates/gui/src/editor/roof_workflows.rs) |
+| `palette-window.*` | [Palette window](crates/gui/src/editor/palette_window.rs), [persistent palette sessions](crates/gui/src/editor/palette_session.rs) |
+| `tiled-image.*` | [2bpp and LZ codecs](crates/project/src/tiled_image.rs), [PNG import](crates/project/src/png_import.rs); existing public imports stay in [codecs](crates/project/src/codecs.rs) |
+| `parse-asm.*` (master) | [Indented db/dw parser](crates/project/src/parse_asm.rs); public `codecs::parse_asm` remains unchanged |
+| `palette-map.*` (master) | [Tilepal parsing and source-preserving writes](crates/project/src/palette_map.rs); not the RGB palette bank |
+| `config.*` | [Discovery](crates/project/src/discovery.rs), [asset paths](crates/project/src/asset_paths.rs), [format detection](crates/project/src/format.rs) |
+| `map.*` | [Editing/history](crates/core/src/map.rs), [file lifecycle](crates/project/src/map_document.rs) |
+| `metatile.*`, `metatileset.*` | [Block model](crates/core/src/blockset.rs), [block persistence](crates/project/src/blockset.rs), [attributed persistence](crates/project/src/attributed/blockset.rs) |
+| `tile.*`, `tileset.*`, `deep-tile.*` (plusplus) | [Classic edits](crates/core/src/tileset.rs), [attributed models](crates/core/src/attributed.rs), [classic persistence](crates/project/src/tileset.rs), [attributed persistence](crates/project/src/attributed/tileset.rs) |
+| `image.*`, rendering parts of `tile.*`/`tileset.*` | [CPU rasterization](crates/core/src/raster.rs), [attributed rendering](crates/core/src/attributed/graphics.rs), [project composition](crates/project/src/graphics.rs), [PNG export](crates/project/src/png_export.rs) |
+| `colors.*` | [Palette models](crates/core/src/palettes.rs), [RGB source decoding](crates/project/src/palettes.rs), [palette document](crates/project/src/palette_document.rs) |
+| `event.*`, `map-events.*` | [Event model](crates/core/src/events.rs), [source-preserving document](crates/project/src/events.rs), [GUI workflows](crates/gui/src/editor/event_workflows.rs) |
+| `map-buttons.*`, `ruler.*`, `gameboy-screen.*` | [Map cell decoration](crates/gui/src/editor/map_buttons.rs), [rulers](crates/gui/src/editor/rulers.rs), [guide geometry](crates/gui/src/geometry.rs) |
+| `modal-dialog.*`, `option-dialogs.*`, `directory-chooser.*` | [Dialog hosting](crates/gui/src/editor/dialog_host.rs), [dialog dispatch](crates/gui/src/editor/editor_dialogs.rs), [file workflows](crates/gui/src/editor/file_workflows.rs) |
+| `preferences.*`, `themes.*` | [Preferences](crates/gui/src/editor/preferences.rs), [startup theme](crates/gui/src/editor/startup_theme.rs), [legacy import](crates/project/src/legacy_preferences.rs) |
+| `widgets.*`, `hex-spinner.*`, `help-window.*` | [Widgets](crates/gui/src/editor/widgets.rs), [numeric input](crates/gui/src/editor/widgets/numeric_input.rs), [Help](crates/gui/src/editor/help.rs) |
+
+Upstream `res/` maps to [GUI assets](crates/gui/assets), not a new root resource
+tree: build scripts and packaging already consume those paths. Upstream `doc/`
+and Help resources map to [documentation](docs/README.md) and the Help module;
+`include/`/`ide/`/`Makefile` responsibilities are handled by Cargo, platform adapters
+and [build tooling](tools/README.md), not copied C++ build directories. Upstream
+`example/` and external game projects are reference inputs, not release assets.
+
+Keep the established `Map`, `Blockset`, `Tileset`, `Graphics`, `Master*` APIs and
+`plusplus` compatibility aliases. Form implementations use `*_window`; workflow
+modules still describe operations. Existing `*_editor_tests` names intentionally
+remain stable for test selectors. The shared tile/roof form avoids duplicating
+`roof-window` just to mimic the original filenames.
 
 ### Rust API documentation
 

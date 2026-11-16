@@ -211,7 +211,7 @@ impl Editor {
                     ),
                 );
                 if response.hovered() {
-                    super::block_editor::selection_border(ui, cell);
+                    super::block_window::selection_border(ui, cell);
                 }
                 // Keyboard/accessibility activation has no native pointer event.
                 // Pointer clicks were already handled in chronological order.
@@ -289,7 +289,7 @@ impl Editor {
                     form.hue = hue;
                 }
                 if form.hue == hue {
-                    super::block_editor::selection_border(ui, cell);
+                    super::block_window::selection_border(ui, cell);
                 }
             }
             if !form.roof && !form.draft.is_attributed() {

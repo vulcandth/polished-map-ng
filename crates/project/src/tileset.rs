@@ -9,8 +9,9 @@ use crate::{
         encode_grayscale_png, graphics_path, palette_map_path, read_tiles, tile_slot,
         validate_tileset,
     },
+    palette_map,
     palettes::map_palette_bank,
-    read_bounded, tile_palettes,
+    read_bounded,
     transaction::{Change, persist_pair},
 };
 use polished_map_core::{
@@ -629,7 +630,7 @@ impl MasterTilesetDocument {
         let allow_priority = self.allow_priority;
         let palette_bytes = if let Some((target, raw)) = &self.palette_source {
             let canonical = draft.palette_map_asm(self.allow_256, allow_priority)?;
-            let bytes = tile_palettes::encode(&target.path, raw, &canonical)?;
+            let bytes = palette_map::encode(&target.path, raw, &canonical)?;
             changes.push(Change {
                 path: target.path.clone(),
                 expected: target.hash,

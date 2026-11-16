@@ -584,7 +584,7 @@ impl Editor {
                             .drag
                             .is_some_and(|from| from == slot || response.contains_pointer())
                     {
-                        super::block_editor::selection_border(ui, r);
+                        super::block_window::selection_border(ui, r);
                     }
                     if response.clicked() {
                         form.select(slot);

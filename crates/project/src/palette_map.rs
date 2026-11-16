@@ -1,4 +1,36 @@
-//! Preserve unrelated palette-map assembly when applying tile attribute changes.
+//! Tile palette-map parsing and source-preserving edits.
+//! Adapted from pinned master palette-map.cpp; LGPL-3.0-only.
+use crate::{codecs::CodecError, parse_asm::indented_macro};
+
+/// Palette IDs retain the upstream priority bit. Bank arguments are ignored upstream.
+pub fn parse_palette_map(text: &str) -> Result<Vec<u8>, CodecError> {
+    let names = [
+        "GRAY", "RED", "GREEN", "WATER", "YELLOW", "BROWN", "ROOF", "TEXT",
+    ];
+    let mut palettes = Vec::new();
+    for (line, raw) in text.lines().enumerate() {
+        let Some(("tilepal", arguments)) = indented_macro(raw) else {
+            continue;
+        };
+        for token in arguments.split(',').skip(1) {
+            let token = token.trim();
+            let (priority, name) = token
+                .strip_prefix("PRIORITY_")
+                .map_or((0, token), |s| (128, s));
+            let index = names
+                .iter()
+                .position(|&n| n == name)
+                .filter(|_| palettes.len() < 256)
+                .ok_or_else(|| CodecError::Palette {
+                    line: line + 1,
+                    value: token.into(),
+                })?;
+            palettes.push(index as u8 | priority);
+        }
+    }
+    Ok(palettes)
+}
+
 use crate::{ProjectError, codecs};
 use std::path::Path;
 
