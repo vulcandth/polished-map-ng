@@ -42,7 +42,11 @@ implementing the separately tracked inherited-defect corrections.
 
 Source comparison verified moved function bodies unchanged except module imports
 and the shared assembly helper's visibility. Contributor links/anchors and stale
-source-path references were checked. This is automated headless evidence, not a
+source-path references were checked. The [exact-filename index](upstream-source-index.md)
+was compared with both pinned git trees: 64 master files, two plusplus-only
+additions and four master-only files. The extracted `gameboy_screen` component
+retains the existing public geometry entry point; headless regressions cover
+normal/zoom bounds, fill color, outline order and viewport clipping. This is automated headless evidence, not a
 new native GUI campaign or completion of any remaining human acceptance gate.
 
 ## Palette and packaging review

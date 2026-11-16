@@ -16,7 +16,7 @@ fn marker_colors(kind: EventKind) -> (Color32, Color32) {
     )
 }
 
-/// master map-buttons.cpp::draw_selection_border and gameboy-screen.cpp::draw.
+/// Event selection and guide dispatch; painting lives in `crate::gameboy_screen`.
 pub(in crate::editor) fn draw_event_cursor(
     ui: &egui::Ui,
     origin: Pos2,
@@ -34,21 +34,12 @@ pub(in crate::editor) fn draw_event_cursor(
         map_buttons::selection(ui.painter(), area, cell == 32.0);
     }
     if state.game_boy {
-        let r = cursor.game_boy_screen(cell);
-        let area = Rect::from_min_size(origin + Vec2::new(r.x, r.y), Vec2::new(r.width, r.height));
-        state.screen = Some(area);
-        // The original 320x288 embedded PNG is uniformly RGBA(224,255,0,64).
-        // Recreate its flat fill; no source bitmap is included.
-        ui.painter()
-            .rect_filled(area, 0.0, Color32::from_rgba_unmultiplied(224, 255, 0, 64));
-        ui.painter()
-            .rect_stroke(area, 0.0, (1.0, Color32::BLACK), egui::StrokeKind::Inside);
-        ui.painter().rect_stroke(
-            area.shrink(1.0),
-            0.0,
-            (1.0, Color32::WHITE),
-            egui::StrokeKind::Inside,
-        );
+        state.screen = Some(crate::gameboy_screen::draw(
+            ui.painter(),
+            origin,
+            cursor,
+            cell,
+        ));
     }
 }
 

@@ -19,6 +19,7 @@
 #![deny(missing_docs)]
 
 mod editor;
+mod gameboy_screen;
 pub mod geometry;
 
 #[cfg(feature = "native-tests")]

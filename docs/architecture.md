@@ -52,7 +52,11 @@ the flat C++ tree. Project `tiled_image`, `parse_asm` and `palette_map` own sepa
 codec families; public `codecs` remains their compatibility facade and error
 contract. GUI `block_window`, `palette_window` and `tileset_window` own forms,
 while their workflow modules remain separate. The [upstream source crosswalk](../CONTRIBUTING.md#coming-from-the-c-source-tree)
-records one-to-many mappings and intentional naming differences.
+records one-to-many mappings and intentional naming differences. Its
+[exact-filename index](upstream-source-index.md) covers every pinned upstream
+source/header filename. Self-contained components such as `gameboy_screen` own
+their real implementation under the recognizable name, not a navigation-only
+facade; the public geometry entry point delegates to the same guide bounds.
 
 The [contributor source map](../CONTRIBUTING.md#where-to-make-a-change) routes common
 changes to their owning modules. GUI `lib.rs` is a small public facade;
